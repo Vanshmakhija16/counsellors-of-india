@@ -28,17 +28,27 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Patient not found' }, { status: 404 })
     }
 
+    // Verify the scale exists in assessment_scales
+    const { data: scale, error: scaleErr } = await supabase
+      .from('assessment_scales')
+      .select('id')
+      .eq('id', instrumentId)
+      .maybeSingle()
+    if (scaleErr || !scale) {
+      return NextResponse.json({ error: 'Assessment not found' }, { status: 404 })
+    }
+
     const token = randomBytes(32).toString('hex')
     const expiresAt = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString()
 
     const { data: invite, error: invErr } = await supabase
       .from('screening_invites')
       .insert({
-        therapist_id: session.user.id,
-        patient_id: patientId,
+        therapist_id:  session.user.id,
+        patient_id:    patientId,
         instrument_id: instrumentId,
         token,
-        expires_at: expiresAt,
+        expires_at:    expiresAt,
       })
       .select('*')
       .single()

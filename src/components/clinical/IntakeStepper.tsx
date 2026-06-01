@@ -3,21 +3,35 @@
 import { useState, useCallback } from 'react'
 import { ChevronRight, ChevronLeft, Check, AlertTriangle, Save } from 'lucide-react'
 import {
-  upsertIntake,
+  updateIntake,
   finalizeIntake,
   hasRiskFlags,
+  FAMILY_STRUCTURE_OPTIONS,
+  MARITAL_STATUS_OPTIONS,
+  MARRIAGE_TYPE_OPTIONS,
+  LIVING_WITH_OPTIONS,
+  EDUCATION_OPTIONS,
+  OCCUPATION_OPTIONS,
+  SUBSTANCE_FREQUENCY_OPTIONS,
   type PatientIntake,
   type IntakeHistory,
   type IntakeFamily,
   type IntakeSocial,
   type IntakeRisk,
+  type FamilyStructure,
+  type MaritalStatus,
+  type MarriageType,
+  type LivingWith,
+  type EducationLevel,
+  type OccupationType,
+  type SubstanceFrequency,
 } from '@/lib/clinical/intake'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface IntakeStepperProps {
-  patientId: string
-  initial: PatientIntake | null
+  /** The draft intake row to edit. Caller obtains it via getOrCreateDraftIntake. */
+  intake: PatientIntake
   /** called after a successful finalize */
   onFinalized?: (intake: PatientIntake) => void
 }
@@ -82,6 +96,78 @@ function Textarea({
   )
 }
 
+function Select<T extends string>({
+  value,
+  onChange,
+  options,
+  onBlur,
+  placeholder = '— Select —',
+}: {
+  value: T | null | undefined
+  onChange: (v: T | null) => void
+  options: { value: T; label: string }[]
+  onBlur?: () => void
+  placeholder?: string
+}) {
+  return (
+    <select
+      value={value ?? ''}
+      onChange={(e) => {
+        const next = e.target.value
+        onChange(next === '' ? null : (next as T))
+      }}
+      onBlur={onBlur}
+      className="w-full h-11 px-3 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#a3b8b4] focus:border-transparent"
+    >
+      <option value="">{placeholder}</option>
+      {options.map((opt) => (
+        <option key={opt.value} value={opt.value}>
+          {opt.label}
+        </option>
+      ))}
+    </select>
+  )
+}
+
+function MultiSelect<T extends string>({
+  value,
+  onChange,
+  options,
+}: {
+  value: T[] | null | undefined
+  onChange: (v: T[]) => void
+  options: { value: T; label: string }[]
+}) {
+  const selected = new Set(value ?? [])
+  function toggle(v: T) {
+    const next = new Set(selected)
+    if (next.has(v)) next.delete(v)
+    else next.add(v)
+    onChange(Array.from(next))
+  }
+  return (
+    <div className="flex flex-wrap gap-2">
+      {options.map((opt) => {
+        const on = selected.has(opt.value)
+        return (
+          <button
+            key={opt.value}
+            type="button"
+            onClick={() => toggle(opt.value)}
+            className={`h-8 px-3 rounded-full text-xs font-medium border transition ${
+              on
+                ? 'bg-[#d4e4e1] text-[#2d4a47] border-[#b8ceca]'
+                : 'bg-white text-gray-600 border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            {opt.label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
 function YesNoRow({
   label,
   value,
@@ -131,15 +217,25 @@ function PresentingPane({
     <div>
       <SectionHeader
         label="Presenting Concern"
-        desc="Capture the chief complaint in the client's own words"
+        desc="Capture the chief complaint in the client's own words — unfiltered, no leading suggestions."
       />
-      <FieldLabel label="What brings the client in today?" />
+
+      <FieldLabel label='Chief complaint — "What brings you here today?"' />
       <Textarea
         value={value}
         onChange={onChange}
         onBlur={onBlur}
-        placeholder="Describe the primary reason for seeking therapy, including onset, duration, and impact on daily functioning…"
-        rows={8}
+        placeholder={[
+          "Capture the client's own words. Then add:",
+          '',
+          '• Duration — less than a week / 1–4 weeks / 1–6 months / 6–12 months / more than a year',
+          '• Onset — acute trigger (loss, change, event) or gradual build-up',
+          '• Impact on daily life — work/study, relationships, sleep, appetite, energy',
+          '• Physical / somatic complaints — headache, body pain, fatigue, palpitations (often the first language of distress in Indian clients)',
+          '• What they have tried so far — self-help, prayer, family advice, medication, other therapy, traditional healer',
+          '• What they hope to get from therapy — symptom relief, insight, coping skills, relationship help, life direction',
+        ].join('\n')}
+        rows={12}
       />
       <p className="text-[11px] text-[#9ca3af] mt-2">{value.length}/4000 characters</p>
     </div>
@@ -155,23 +251,96 @@ function HistoryPane({
   onChange: (v: IntakeHistory) => void
   onBlur: () => void
 }) {
-  function upd(key: keyof IntakeHistory, val: string) {
+  function upd<K extends keyof IntakeHistory>(key: K, val: IntakeHistory[K]) {
     onChange({ ...value, [key]: val })
   }
   return (
     <div>
       <SectionHeader
-        label="History"
-        desc="Previous therapy, medical, psychiatric, and developmental background"
+        label="Mental & Medical History"
+        desc="Past therapy, prior diagnoses, faith-based recourse, chronic conditions, current medications, sleep/appetite, and substance use."
       />
+
+      {/* ─── Substance frequencies (quick capture) ──────────────────── */}
+      <div className="mb-6 rounded-xl border border-[#e8e4df] bg-[#fdf8f6] p-4">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#6b7280] mb-3">
+          Substance use frequency
+        </p>
+        <div className="grid gap-4 sm:grid-cols-3">
+          <div>
+            <FieldLabel label="Tobacco / smoking" optional />
+            <Select<SubstanceFrequency>
+              value={value.tobacco_frequency ?? null}
+              onChange={(v) => {
+                upd('tobacco_frequency', v)
+                onBlur()
+              }}
+              options={SUBSTANCE_FREQUENCY_OPTIONS}
+            />
+          </div>
+          <div>
+            <FieldLabel label="Alcohol" optional />
+            <Select<SubstanceFrequency>
+              value={value.alcohol_frequency ?? null}
+              onChange={(v) => {
+                upd('alcohol_frequency', v)
+                onBlur()
+              }}
+              options={SUBSTANCE_FREQUENCY_OPTIONS}
+            />
+          </div>
+          <div>
+            <FieldLabel label="Gutka / pan masala" optional />
+            <Select<SubstanceFrequency>
+              value={value.gutka_frequency ?? null}
+              onChange={(v) => {
+                upd('gutka_frequency', v)
+                onBlur()
+              }}
+              options={SUBSTANCE_FREQUENCY_OPTIONS}
+            />
+          </div>
+        </div>
+      </div>
+
       <div className="space-y-5">
         {[
-          { key: 'previous_therapy' as const, label: 'Previous therapy / counselling', placeholder: 'Types of therapy, approximate dates, outcomes…' },
-          { key: 'psychiatric_history' as const, label: 'Psychiatric history', placeholder: 'Diagnoses, hospitalisations, medications history…' },
-          { key: 'medical_history' as const, label: 'Medical history', placeholder: 'Chronic conditions, surgeries, significant illnesses…' },
-          { key: 'medications' as const, label: 'Current medications', placeholder: 'Name, dose, prescribing physician, compliance…' },
-          { key: 'substance_use' as const, label: 'Substance use', placeholder: 'Alcohol, drugs, tobacco — frequency and quantity…' },
-          { key: 'developmental' as const, label: 'Developmental / early history', placeholder: 'Birth complications, milestones, early adversity…' },
+          {
+            key: 'previous_therapy' as const,
+            label: 'Previous therapy / counselling',
+            placeholder:
+              'Yes / No. If yes: who they saw (psychiatrist, psychologist, counsellor), when, how long, what helped or did not help.',
+          },
+          {
+            key: 'psychiatric_history' as const,
+            label: 'Prior psychiatric history & faith-based recourse',
+            placeholder:
+              'Past diagnoses (depression, anxiety, OCD, bipolar, etc.). Any hospitalisations or crisis-centre visits.\n\nFaith healer / astrologer / temple visits for this concern — non-judgmental. Often the first recourse in India and useful for understanding the client’s model of their own distress.',
+          },
+          {
+            key: 'medical_history' as const,
+            label: 'Chronic medical conditions',
+            placeholder:
+              'Diabetes, thyroid, PCOS, hypertension, epilepsy, chronic pain — many carry psychiatric comorbidity. Recent surgeries or significant illness.\n\nFamily psychiatric history: known conditions in first-degree relatives (relation + condition).',
+          },
+          {
+            key: 'medications' as const,
+            label: 'Current medications',
+            placeholder:
+              'List both psychiatric and non-psychiatric: name, dose, prescribing doctor, compliance.\n\nRecent physical health changes — weight loss/gain, fatigue, hormonal shifts.',
+          },
+          {
+            key: 'substance_use' as const,
+            label: 'Substance use',
+            placeholder:
+              'Tobacco / smoking — Never · Occasionally · Daily (type + quantity)\nAlcohol — Never · Rarely · Social · Weekly · Daily (approx units/week)\nGutka / pan masala — yes/no\nCannabis, prescription misuse, others — free text\n\nDoes the client feel their use is a problem? Yes / No / Unsure.',
+          },
+          {
+            key: 'developmental' as const,
+            label: 'Sleep, appetite & developmental notes',
+            placeholder:
+              'Sleep baseline — approx hours, trouble falling asleep, staying asleep, early waking.\nAppetite / eating — changes, weight concern.\nDevelopmental / early history if relevant — birth complications, milestones, early adversity.',
+          },
         ].map(({ key, label, placeholder }) => (
           <div key={key}>
             <FieldLabel label={label} optional />
@@ -198,21 +367,97 @@ function FamilyPane({
   onChange: (v: IntakeFamily) => void
   onBlur: () => void
 }) {
-  function upd(key: keyof IntakeFamily, val: string) {
+  function upd<K extends keyof IntakeFamily>(key: K, val: IntakeFamily[K]) {
     onChange({ ...value, [key]: val })
   }
+  const isMarried = value.marital_status === 'married'
   return (
     <div>
       <SectionHeader
         label="Family & Relationships"
-        desc="Family structure, history of mental illness, childhood and current relationships"
+        desc="In India, distress is often expressed through failing family roles. Capture structure and pressures up front."
       />
+
+      {/* ─── Quick facts ───────────────────────────────────────── */}
+      <div className="mb-6 grid gap-4 sm:grid-cols-2">
+        <div>
+          <FieldLabel label="Family structure" optional />
+          <Select<FamilyStructure>
+            value={value.family_structure_type ?? null}
+            onChange={(v) => {
+              upd('family_structure_type', v)
+              onBlur()
+            }}
+            options={FAMILY_STRUCTURE_OPTIONS}
+          />
+        </div>
+        <div>
+          <FieldLabel label="Marital status" optional />
+          <Select<MaritalStatus>
+            value={value.marital_status ?? null}
+            onChange={(v) => {
+              upd('marital_status', v)
+              // Clear marriage_type if no longer married
+              if (v !== 'married' && value.marriage_type) {
+                upd('marriage_type', null)
+              }
+              onBlur()
+            }}
+            options={MARITAL_STATUS_OPTIONS}
+          />
+        </div>
+        {isMarried && (
+          <div>
+            <FieldLabel label="Marriage type" optional />
+            <Select<MarriageType>
+              value={value.marriage_type ?? null}
+              onChange={(v) => {
+                upd('marriage_type', v)
+                onBlur()
+              }}
+              options={MARRIAGE_TYPE_OPTIONS}
+            />
+          </div>
+        )}
+        <div className={isMarried ? '' : 'sm:col-span-2'}>
+          <FieldLabel label="Living with (pick all that apply)" optional />
+          <MultiSelect<LivingWith>
+            value={value.living_with ?? null}
+            onChange={(v) => {
+              upd('living_with', v.length === 0 ? null : v)
+              onBlur()
+            }}
+            options={LIVING_WITH_OPTIONS}
+          />
+        </div>
+      </div>
+
       <div className="space-y-5">
         {[
-          { key: 'family_structure' as const, label: 'Family structure', placeholder: 'Parents, siblings, partner, children — living/deceased, quality of relationships…' },
-          { key: 'family_mental_health' as const, label: 'Family mental health history', placeholder: 'Known diagnoses, substance abuse, or significant distress in first-degree relatives…' },
-          { key: 'childhood' as const, label: 'Childhood & upbringing', placeholder: 'Attachment, trauma, adverse events, cultural and religious context…' },
-          { key: 'relationships' as const, label: 'Current relationships', placeholder: 'Partner, friendships, social support — conflicts, quality, isolation…' },
+          {
+            key: 'family_structure' as const,
+            label: 'Family structure',
+            placeholder:
+              'Nuclear / Joint / Extended — note the type. Then list members: parents, siblings, spouse, children, in-laws — living or deceased.\n\nIndian family dynamics drive many presentations; capture quality of relationships briefly.',
+          },
+          {
+            key: 'family_mental_health' as const,
+            label: 'Marital / relationship status & children',
+            placeholder:
+              'Status — Single · Married · Separated · Divorced · Widowed · Live-in · Other.\nIf married — arranged / love marriage (optional, but useful for couples presenting with conflict).\nChildren — number and ages if relevant.',
+          },
+          {
+            key: 'childhood' as const,
+            label: 'Living with',
+            placeholder:
+              'Who does the client live with? Alone · Parents · Spouse · In-laws · Roommates · Other (multi-select OK).\n\nKey for safety planning and for understanding who is in the room around them.',
+          },
+          {
+            key: 'relationships' as const,
+            label: 'Family pressures & support quality',
+            placeholder:
+              'Conflicts, expectations, financial dependence, intergenerational tension. Who supports them, who isolates them.\n\nUseful prompts: not earning enough, not married on time, no children yet, caregiving load, in-law dynamics.',
+          },
         ].map(({ key, label, placeholder }) => (
           <div key={key}>
             <FieldLabel label={label} optional />
@@ -239,23 +484,80 @@ function SocialPane({
   onChange: (v: IntakeSocial) => void
   onBlur: () => void
 }) {
-  function upd(key: keyof IntakeSocial, val: string) {
+  function upd<K extends keyof IntakeSocial>(key: K, val: IntakeSocial[K]) {
     onChange({ ...value, [key]: val })
   }
   return (
     <div>
       <SectionHeader
-        label="Social & Cultural Context"
-        desc="Living situation, work/education, support network, stressors"
+        label="Education, Work & Cultural Context"
+        desc="Education, occupation, income, academic/work pressure, support and culture."
       />
+
+      {/* ─── Quick facts ───────────────────────────────────────── */}
+      <div className="mb-6 grid gap-4 sm:grid-cols-2">
+        <div>
+          <FieldLabel label="Highest education" optional />
+          <Select<EducationLevel>
+            value={value.highest_education ?? null}
+            onChange={(v) => {
+              upd('highest_education', v)
+              onBlur()
+            }}
+            options={EDUCATION_OPTIONS}
+          />
+        </div>
+        <div>
+          <FieldLabel label="Occupation status" optional />
+          <Select<OccupationType>
+            value={value.occupation_type ?? null}
+            onChange={(v) => {
+              upd('occupation_type', v)
+              onBlur()
+            }}
+            options={OCCUPATION_OPTIONS}
+          />
+        </div>
+      </div>
+
       <div className="space-y-5">
         {[
-          { key: 'living_situation' as const, label: 'Living situation', placeholder: 'Who does the client live with, housing stability…' },
-          { key: 'occupation' as const, label: 'Occupation / employment', placeholder: 'Current role, work stress, job security…' },
-          { key: 'education' as const, label: 'Educational background', placeholder: 'Highest level completed, current enrollment…' },
-          { key: 'support_network' as const, label: 'Support network', placeholder: 'Close friends, community ties, religious affiliation…' },
-          { key: 'cultural_background' as const, label: 'Cultural & religious background', placeholder: 'Ethnicity, religion, relevant cultural factors affecting presentation…' },
-          { key: 'stressors' as const, label: 'Current psychosocial stressors', placeholder: 'Financial, legal, housing, relationship stressors…' },
+          {
+            key: 'education' as const,
+            label: 'Highest education',
+            placeholder:
+              'Below 10th · 10th · 12th · Graduate · Postgraduate · Doctoral · Other.\nNote subject/stream if relevant (engineering, medical, commerce, arts).',
+          },
+          {
+            key: 'occupation' as const,
+            label: 'Occupation & work context',
+            placeholder:
+              'Student · Employed · Self-employed · Homemaker · Unemployed · Retired.\n\nIf employed/self-employed — current role, industry, job security, hours.\nIf student — institution, year, exam pressure (NEET, JEE, board, university).',
+          },
+          {
+            key: 'living_situation' as const,
+            label: 'Monthly income / financial stress',
+            placeholder:
+              'Approx household income bracket. Note dependence on family, debts, or recent financial shocks.\n\nFinancial stress is a major driver in Indian urban contexts — capture even if the client downplays it.',
+          },
+          {
+            key: 'stressors' as const,
+            label: 'Academic / work pressure (rate 1–10)',
+            placeholder:
+              'Self-reported pressure: 1 = none, 10 = crushing. Especially important for students 15–25.\n\nList the top 2–3 specific stressors driving the rating (exams, manager, performance review, family expectations, layoffs, deadlines).',
+          },
+          {
+            key: 'support_network' as const,
+            label: 'Support network',
+            placeholder:
+              'Close friends, peer group, mentors, community ties, religious affiliation.\nWho can they call at 11 pm? Who knows they are seeking therapy?',
+          },
+          {
+            key: 'cultural_background' as const,
+            label: 'Cultural, religious & language context',
+            placeholder:
+              'Language(s) preferred for therapy. Religion / spiritual practice if relevant. Caste, region, migration status if it shapes the presentation.\n\nNote any cultural framing the client uses for their distress.',
+          },
         ].map(({ key, label, placeholder }) => (
           <div key={key}>
             <FieldLabel label={label} optional />
@@ -375,18 +677,20 @@ const defaultRisk: IntakeRisk = {
   risk_notes: null,
 }
 
-export default function IntakeStepper({ patientId, initial, onFinalized }: IntakeStepperProps) {
+export default function IntakeStepper({ intake, onFinalized }: IntakeStepperProps) {
+  const intakeId = intake.id
+
   const [step, setStep] = useState(0)
   const [saving, setSaving] = useState(false)
   const [finalizing, setFinalizing] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
 
-  const [presenting, setPresenting] = useState(initial?.presenting_concern ?? '')
-  const [history, setHistory] = useState<IntakeHistory>(initial?.history ?? defaultHistory)
-  const [family, setFamily] = useState<IntakeFamily>(initial?.family ?? defaultFamily)
-  const [social, setSocial] = useState<IntakeSocial>(initial?.social ?? defaultSocial)
-  const [risk, setRisk] = useState<IntakeRisk>(initial?.risk ?? defaultRisk)
+  const [presenting, setPresenting] = useState(intake.presenting_concern ?? '')
+  const [history, setHistory] = useState<IntakeHistory>(intake.history ?? defaultHistory)
+  const [family, setFamily] = useState<IntakeFamily>(intake.family ?? defaultFamily)
+  const [social, setSocial] = useState<IntakeSocial>(intake.social ?? defaultSocial)
+  const [risk, setRisk] = useState<IntakeRisk>(intake.risk ?? defaultRisk)
 
   const buildPayload = useCallback(() => ({
     presenting_concern: presenting.trim() || null,
@@ -400,21 +704,21 @@ export default function IntakeStepper({ patientId, initial, onFinalized }: Intak
     setSaving(true)
     setSaveError(null)
     try {
-      await upsertIntake(patientId, buildPayload())
+      await updateIntake(intakeId, buildPayload())
       setLastSaved(new Date())
     } catch (e: unknown) {
       setSaveError(e instanceof Error ? e.message : 'Auto-save failed')
     } finally {
       setSaving(false)
     }
-  }, [patientId, buildPayload])
+  }, [intakeId, buildPayload])
 
   async function handleFinalize() {
     setFinalizing(true)
     setSaveError(null)
     try {
-      await upsertIntake(patientId, buildPayload())
-      const result = await finalizeIntake(patientId)
+      await updateIntake(intakeId, buildPayload())
+      const result = await finalizeIntake(intakeId)
       onFinalized?.(result)
     } catch (e: unknown) {
       setSaveError(e instanceof Error ? e.message : 'Failed to finalize')

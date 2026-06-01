@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { MapPin, Star, Clock, CheckCircle } from 'lucide-react'
+import { MapPin, Star, Clock, CheckCircle, Sparkles } from 'lucide-react'
 
 const templates = [
   {
@@ -55,8 +55,8 @@ export default function TemplateShowcase() {
   const current = templates.find(t => t.id === active)!
 
   return (
-    <section className="py-24 bg-white">
-      <div className="max-w-5xl mx-auto px-6">
+<section className="py-24 bg-gradient-to-b from-[#f8fbfa] to-white overflow-visible">
+        <div className="max-w-5xl mx-auto px-6">
 
         {/* Heading */}
         <div className="text-center mb-12">
@@ -94,26 +94,48 @@ export default function TemplateShowcase() {
         </div>
 
         {/* Preview card */}
-        <div className="max-w-sm mx-auto">
-          <div className="text-xs text-center text-gray-400 mb-3 font-medium tracking-wide uppercase">
+<div className="max-w-sm mx-auto pt-14">
+            <div className="text-xs text-center text-gray-400 mb-3 font-medium tracking-wide uppercase">
             Live preview — {current.name} template
           </div>
 
-          <div className="bg-white rounded-2xl border border-gray-200 shadow-md overflow-hidden">
+<div
+  className="
+    bg-white rounded-2xl border border-gray-200 overflow-hidden
+    shadow-[0_28px_70px_rgba(0,0,0,0.14)]
+    transition-all duration-500
+    relative z-10
+    -translate-y-6 scale-[1.03]
+  "
+
+>
+
+
+  <div
+    className="absolute inset-0 rounded-2xl pointer-events-none"
+    style={{
+      boxShadow: `0 0 0 1px ${current.accent}20`,
+    }}
+  />
+
 
             {/* Template header banner */}
             <div
-              className="h-24 w-full"
+              className="h-28 w-full"
               style={{ backgroundColor: current.accentLight }}
             />
 
             {/* Avatar + info */}
-            <div className="px-6 pb-6 -mt-10">
-
+<div className="px-6 pb-6 -mt-14 relative z-20">
               {/* Avatar */}
               <div
-                className="w-20 h-20 rounded-full border-4 border-white flex items-center justify-center text-white text-2xl font-semibold shadow-sm mb-3"
-                style={{ backgroundColor: current.accent }}
+className="
+  w-20 h-20 rounded-full border-4 border-white
+  flex items-center justify-center
+  text-white text-2xl font-semibold
+  shadow-[0_10px_30px_rgba(0,0,0,0.18)]
+  mb-3
+"                style={{ backgroundColor: current.accent }}
               >
                 {current.therapist.split(' ').map(w => w[0]).join('').slice(0, 2)}
               </div>
@@ -193,15 +215,24 @@ export default function TemplateShowcase() {
 
         {/* CTA */}
         <div className="text-center mt-10">
-          <Link
-            href="/signup"
-            className="inline-flex items-center gap-2 bg-[#a3b8b4] text-white
-                       px-8 py-3 rounded-lg font-medium hover:bg-[#7d9e99] transition"
-          >
-            Create your free profile
-          </Link>
-          <p className="text-xs text-gray-400 mt-2">
-            Free plan available · No credit card required
+          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
+            <Link
+              href="/try"
+              className="inline-flex items-center gap-2 bg-[#1c1c1e] text-white
+                         px-8 py-3 rounded-lg font-medium hover:bg-black transition"
+            >
+              <Sparkles size={16} /> Try with my details
+            </Link>
+            <Link
+              href="/signup"
+              className="inline-flex items-center gap-2 bg-white text-[#5a7f7a] border border-[#cdded9]
+                         px-8 py-3 rounded-lg font-medium hover:border-[#a3b8b4] transition"
+            >
+              Create your free profile
+            </Link>
+          </div>
+          <p className="text-xs text-gray-400 mt-3">
+            See your name on a real template in seconds · No signup needed
           </p>
         </div>
 

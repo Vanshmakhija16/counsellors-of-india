@@ -22,7 +22,6 @@ export default function NewScreeningPage({
   const [instrument, setInstrument] = useState<InstrumentWithItems | null>(null)
   const [loading, setLoading] = useState(true)
   const [loadErr, setLoadErr] = useState<string | null>(null)
-
   const [answers, setAnswers] = useState<Record<string, number>>({})
   const [notes, setNotes] = useState('')
   const [submitting, setSubmitting] = useState(false)
@@ -85,9 +84,16 @@ export default function NewScreeningPage({
       router.push(`/clinical/patients/${patientId}/screening/${sess.id}`)
       router.refresh()
     } catch (e: unknown) {
-      console.error('[Screening] submit failed:', e)
-      setSubmitErr(e instanceof Error ? e.message : 'Failed to save')
-    } finally {
+  console.error('SUBMIT ERROR FULL:', e)
+
+  if (e instanceof Error) {
+    console.error('MESSAGE:', e.message)
+    console.error('STACK:', e.stack)
+    setSubmitErr(e.message)
+  } else {
+    setSubmitErr(JSON.stringify(e))
+  }
+} finally {
       setSubmitting(false)
     }
   }

@@ -166,7 +166,7 @@ if (photoFile) {
   )
 
   return (
-    <div className="p-8 max-w-2xl">
+    <div className="p-5 sm:p-8 max-w-2xl">
 
       {/* Header */}
       <div className="mb-8">
@@ -264,7 +264,7 @@ if (photoFile) {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
             label="City"
             value={form.city}
@@ -279,7 +279,7 @@ if (photoFile) {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
             label="Session fee (₹)"
             type="number"
@@ -309,7 +309,7 @@ if (photoFile) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
             label="Years of experience"
             type="number"

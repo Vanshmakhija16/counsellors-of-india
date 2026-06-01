@@ -1,9 +1,12 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
-import { ClipboardList, Stethoscope, BookOpen, ArrowRight, Pencil, AlertTriangle } from 'lucide-react'
+import { ClipboardList, Stethoscope, BookOpen, ArrowRight, Pencil, AlertTriangle, Calendar, FileText, Clock } from 'lucide-react'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { hasRiskFlags } from '@/lib/clinical/intake'
 import { getIntakeServer } from '@/lib/clinical/intake.server'
+import { listAppointmentsForPatientServer } from '@/lib/clinical/appointments.server'
+import { listNotesForPatientServer } from '@/lib/clinical/notes.server'
+import type { AppointmentStatus } from '@/lib/clinical/appointments'
 import type { Patient } from '@/lib/clinical/patients'
 
 export default async function PatientOverviewPage({
@@ -21,9 +24,18 @@ export default async function PatientOverviewPage({
   if (error || !data) notFound()
   const patient = data as Patient
 
-  // Load intake for risk banner
-  const intake = await getIntakeServer(id).catch(() => null)
+  // Load intake (for risk banner), appointments + notes (for activity)
+  const [intake, appointments, notes] = await Promise.all([
+    getIntakeServer(id).catch(() => null),
+    listAppointmentsForPatientServer(id).catch(() => []),
+    listNotesForPatientServer(id).catch(() => []),
+  ])
   const riskFlagged = hasRiskFlags(intake?.risk)
+  const upcomingAppointments = appointments
+    .filter((a) => a.status === 'upcoming' || a.status === 'rescheduled')
+    .slice(0, 3)
+  const pastAppointments = appointments.filter((a) => a.status === 'completed').slice(0, 5)
+  const recentNotes = notes.slice(0, 3)
 
   const created = new Date(patient.created_at).toLocaleDateString('en-IN', {
     day: 'numeric', month: 'short', year: 'numeric',
@@ -100,15 +112,106 @@ export default async function PatientOverviewPage({
           </section>
 
           <section>
-            <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6b7280] mb-3">
-              Activity
-            </h2>
-            <div className="bg-white rounded-xl border border-[#e8e4df] px-6 py-10 text-center">
-              <p className="text-sm font-medium text-[#6b7280]">No activity yet</p>
-              <p className="text-xs text-[#6b7280] mt-1">
-                Intake, screenings, and notes will appear here once recorded.
-              </p>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6b7280]">
+                Appointments
+              </h2>
+              <Link
+                href="/dashboard/appointments"
+                className="text-xs text-[#2d4a47] font-medium hover:underline"
+              >
+                Manage →
+              </Link>
             </div>
+            {appointments.length === 0 ? (
+              <div className="bg-white rounded-xl border border-[#e8e4df] px-6 py-8 text-center">
+                <Calendar size={24} className="text-[#e8e4df] mx-auto mb-2" />
+                <p className="text-sm font-medium text-[#6b7280]">No appointments yet</p>
+                <p className="text-xs text-[#6b7280] mt-1">
+                  When a session is booked for this patient it will appear here.
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {upcomingAppointments.length > 0 && (
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-[#9ca3af] mb-2">Upcoming</p>
+                    <ul className="bg-white rounded-xl border border-[#e8e4df] divide-y divide-[#e8e4df]">
+                      {upcomingAppointments.map((a) => (
+                        <li key={a.id} className="px-5 py-3 flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-medium text-[#1c1c1e]">
+                              {formatDateTime(a.scheduled_at)}
+                            </p>
+                            <p className="text-xs text-[#6b7280] mt-0.5">
+                              {a.duration_mins} min
+                            </p>
+                          </div>
+                          <StatusPill status={a.status} />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {pastAppointments.length > 0 && (
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-[#9ca3af] mb-2">
+                      Recent sessions
+                    </p>
+                    <ul className="bg-white rounded-xl border border-[#e8e4df] divide-y divide-[#e8e4df]">
+                      {pastAppointments.map((a) => (
+                        <li key={a.id} className="px-5 py-3 flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-medium text-[#1c1c1e]">
+                              {formatDateTime(a.scheduled_at)}
+                            </p>
+                            <p className="text-xs text-[#6b7280] mt-0.5">{a.duration_mins} min</p>
+                          </div>
+                          <StatusPill status={a.status} />
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </section>
+
+          <section>
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6b7280]">
+                Recent notes
+              </h2>
+              <Link
+                href="/dashboard/notes"
+                className="text-xs text-[#2d4a47] font-medium hover:underline"
+              >
+                All notes →
+              </Link>
+            </div>
+            {recentNotes.length === 0 ? (
+              <div className="bg-white rounded-xl border border-[#e8e4df] px-6 py-8 text-center">
+                <FileText size={24} className="text-[#e8e4df] mx-auto mb-2" />
+                <p className="text-sm font-medium text-[#6b7280]">No notes yet</p>
+                <p className="text-xs text-[#6b7280] mt-1">
+                  Mark a session complete to capture notes against this patient.
+                </p>
+              </div>
+            ) : (
+              <ul className="space-y-3">
+                {recentNotes.map((n) => (
+                  <li key={n.id} className="bg-white rounded-xl border border-[#e8e4df] p-5">
+                    <p className="flex items-center gap-1.5 text-xs text-[#9ca3af] mb-2">
+                      <Clock size={11} /> {formatDateTime(n.created_at)}
+                      {n.updated_at !== n.created_at && <span> · edited</span>}
+                    </p>
+                    <p className="text-sm text-[#1c1c1e] whitespace-pre-wrap leading-relaxed line-clamp-4">
+                      {n.content}
+                    </p>
+                  </li>
+                ))}
+              </ul>
+            )}
           </section>
         </div>
 
@@ -171,4 +274,27 @@ function Row({ label, value }: { label: string; value: string | null | undefined
       </span>
     </div>
   )
+}
+
+function StatusPill({ status }: { status: AppointmentStatus }) {
+  const styles: Record<AppointmentStatus, string> = {
+    upcoming: 'bg-amber-50 text-amber-700 border-amber-200',
+    rescheduled: 'bg-blue-50 text-blue-700 border-blue-200',
+    completed: 'bg-[#d4e4e1] text-[#2d4a47] border-[#b8ceca]',
+  }
+  return (
+    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border uppercase tracking-wide ${styles[status]}`}>
+      {status}
+    </span>
+  )
+}
+
+function formatDateTime(iso: string) {
+  return new Date(iso).toLocaleDateString('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }

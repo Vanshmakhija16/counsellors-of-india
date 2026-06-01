@@ -1,7 +1,12 @@
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
+import { getColor } from '@/lib/template'
 import StaticProfile from '@/components/booking/templates/StaticProfile'
 import ClassicTemplate from '@/components/booking/templates/ClassicTemplate'
+import ClassicTemplate2 from '@/components/booking/templates/ClassicTemplate2'
+import ClassicTemplate3 from '@/components/booking/templates/ClassicTemplate3'
+import ClassicTemplate4 from '@/components/booking/templates/ClassicTemplate4'
+import ClassicTemplate5 from '@/components/booking/templates/ClassicTemplate5'
 
 export default async function TherapistPublicPage({
   params,
@@ -19,7 +24,21 @@ export default async function TherapistPublicPage({
 
   if (!therapist) notFound()
 
-  // Map DB row → TherapistProfile
+  const hiddenSections: string[] = therapist.hidden_sections ?? []
+  const color = getColor(therapist.color_id ?? 'teal')
+
+  // CSS variable injection — overrides :root defaults in every template's stylesheet
+  const brandStyle = `
+    :root {
+      --brand: ${color.primary};
+      --brand-light: ${color.light};
+      --brand-dark: ${color.dark};
+      --warm-accent: ${color.primary};
+      --teal: ${color.primary};
+      --teal-mid: ${color.primary};
+    }
+  `
+
   const profile = {
     id:               therapist.id,
     name:             therapist.full_name ?? '',
@@ -43,15 +62,19 @@ export default async function TherapistPublicPage({
     approach_text:    therapist.approach_text ?? '',
     education:        therapist.education ?? [],
     certifications:   therapist.certifications ?? [],
-    // Availability schedule for Growth plan
     availability:     therapist.availability ?? null,
+    profile_content:  therapist.profile_content ?? {},
   }
 
   if (therapist.plan === 'free') {
-    return <StaticProfile therapist={profile} />
+    return (
+      <>
+        <style>{brandStyle}</style>
+        <StaticProfile therapist={profile} />
+      </>
+    )
   }
 
-  // Growth / Pro — fetch booked appointments to mark slots as taken
   const { data: booked } = await supabase
     .from('appointments')
     .select('scheduled_at')
@@ -59,7 +82,6 @@ export default async function TherapistPublicPage({
     .in('status', ['pending', 'confirmed'])
     .gte('scheduled_at', new Date().toISOString())
 
-  // Published client feedback
   const { data: feedbacks } = await supabase
     .from('feedbacks')
     .select('id, client_name, client_role, rating, text, created_at')
@@ -67,11 +89,22 @@ export default async function TherapistPublicPage({
     .eq('is_published', true)
     .order('created_at', { ascending: false })
 
+  const bookedTimes = booked?.map(b => b.scheduled_at) ?? []
+
+  const Template = (() => {
+    switch (therapist.template_id) {
+      case 'classic2': return <ClassicTemplate2 therapist={profile} bookedTimes={bookedTimes} hiddenSections={hiddenSections} />
+      case 'classic3': return <ClassicTemplate3 therapist={profile} bookedTimes={bookedTimes} hiddenSections={hiddenSections} />
+      case 'classic4': return <ClassicTemplate4 therapist={profile} bookedTimes={bookedTimes} hiddenSections={hiddenSections} />
+      case 'classic5': return <ClassicTemplate5 therapist={profile} bookedTimes={bookedTimes} hiddenSections={hiddenSections} />
+      default:         return <ClassicTemplate  therapist={profile} bookedTimes={bookedTimes} feedbacks={feedbacks ?? []} hiddenSections={hiddenSections} />
+    }
+  })()
+
   return (
-    <ClassicTemplate
-      therapist={profile}
-      bookedTimes={booked?.map(b => b.scheduled_at) ?? []}
-      feedbacks={feedbacks ?? []}
-    />
+    <>
+      <style>{brandStyle}</style>
+      {Template}
+    </>
   )
 }

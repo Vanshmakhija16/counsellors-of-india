@@ -27,7 +27,10 @@ export default function PatientHeader({ patient }: { patient: Patient }) {
                 {formatPatientName(patient)}
               </h1>
               <p className="text-sm text-[#6b7280] mt-1">
-                {calculateAge(patient.dob)} yrs
+                {(() => {
+                  const age = calculateAge(patient.dob)
+                  return age !== null ? `${age} yrs` : 'Age not set'
+                })()}
                 {patient.gender ? ` · ${patient.gender}` : ''}
                 {patient.pronouns ? ` · ${patient.pronouns}` : ''}
               </p>

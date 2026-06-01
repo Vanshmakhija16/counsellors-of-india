@@ -25,13 +25,15 @@ export default async function PatientDetailLayout({
   if (error || !data) notFound()
   const patient = data as Patient
 
-  // Resolve completion flags for JourneyStepper
-  const [intakeRow, diagnosesRow, sessionsRow] = await Promise.all([
+  // Resolve completion flags for JourneyStepper.
+  // Intake is "complete" if any finalised version exists for this patient.
+  const [finalIntakeRow, diagnosesRow, sessionsRow] = await Promise.all([
     supabase
       .from('patient_intakes')
-      .select('status')
+      .select('id')
       .eq('patient_id', id)
-      .maybeSingle()
+      .eq('status', 'final')
+      .limit(1)
       .then((r) => r.data),
     supabase
       .from('patient_diagnoses')
@@ -48,7 +50,7 @@ export default async function PatientDetailLayout({
   ])
 
   const completed = {
-    intake: (intakeRow as any)?.status === 'final',
+    intake: Array.isArray(finalIntakeRow) && finalIntakeRow.length > 0,
     diagnosis: Array.isArray(diagnosesRow) && diagnosesRow.length > 0,
     screening: Array.isArray(sessionsRow) && sessionsRow.length > 0,
   }
@@ -60,7 +62,7 @@ export default async function PatientDetailLayout({
         className="inline-flex items-center gap-1.5 text-xs font-medium text-[#6b7280] hover:text-[#1c1c1e] transition mb-4"
       >
         <ArrowLeft size={14} />
-        Back to patients
+        Back to Clients
       </Link>
 
       <PatientHeader patient={patient} />

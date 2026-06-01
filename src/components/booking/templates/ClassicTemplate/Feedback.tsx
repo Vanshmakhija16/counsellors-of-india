@@ -51,7 +51,8 @@ export default function Feedback({ feedbacks }: FeedbackProps) {
   return (
     <section
       id="feedback"
-      className="relative overflow-hidden border-t border-[#b46b50] bg-[#efe7d6] px-6 py-20 lg:px-12 lg:py-24"
+      className="relative overflow-hidden bg-[#1a1a18] px-6 py-20 lg:px-12 lg:py-24"
+      style={{ borderTop: '3px solid #b46b50' }}
     >
       {/* warm atmospheric wash */}
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_20%,rgba(160,122,74,0.10),transparent_45%)]" />
@@ -69,7 +70,7 @@ export default function Feedback({ feedbacks }: FeedbackProps) {
             </div>
 
             <h2
-              className="mt-6 text-[36px] leading-[1.02] tracking-[-0.03em] text-[#1a1a18] lg:text-[52px]"
+              className="mt-6 text-[36px] leading-[1.02] tracking-[-0.03em] text-[#f3ece4] lg:text-[52px]"
               style={{ fontFamily: 'var(--font-fraunces), serif' }}
             >
               In their own{' '}
@@ -95,7 +96,7 @@ export default function Feedback({ feedbacks }: FeedbackProps) {
         </div>
 
         {/* Featured testimonial — large editorial card */}
-        <article className="relative mt-12 overflow-hidden rounded-[24px] border border-[#b46b50] bg-[#f5ecd6] p-8 shadow-[0_20px_60px_-30px_rgba(31,42,35,0.18)] lg:p-14">
+        <article className="relative mt-12 overflow-hidden rounded-[24px] border border-[#b46b50]/40 bg-[#252520] p-8 shadow-[0_20px_60px_-30px_rgba(0,0,0,0.4)] lg:p-14">
           {/* large quote glyph */}
           <Quote
             size={64}
@@ -107,7 +108,7 @@ export default function Feedback({ feedbacks }: FeedbackProps) {
             <StarRow rating={featured.rating} size={18} />
 
             <blockquote
-              className="mt-5 max-w-[820px] text-[20px] italic leading-[1.55] text-[#1a1a18] lg:text-[28px] lg:leading-[1.5]"
+              className="mt-5 max-w-[820px] text-[20px] italic leading-[1.55] text-[#f3ece4] lg:text-[28px] lg:leading-[1.5]"
               style={{ fontFamily: 'var(--font-fraunces), serif' }}
             >
               &ldquo;{featured.text}&rdquo;
@@ -115,7 +116,7 @@ export default function Feedback({ feedbacks }: FeedbackProps) {
 
             <div className="mt-8 flex items-end justify-between gap-4">
               <div>
-                <p className="text-[14px] font-semibold tracking-[0.02em] text-[#1a1a18]">
+                <p className="text-[14px] font-semibold tracking-[0.02em] text-[#f3ece4]">
                   {featured.client_name}
                 </p>
                 {featured.client_role && (
@@ -163,7 +164,7 @@ export default function Feedback({ feedbacks }: FeedbackProps) {
                   key={f.id}
                   type="button"
                   onClick={() => setActive(origIdx)}
-                  className="group relative overflow-hidden rounded-[18px] border border-[#b46b50] bg-[#f5ecd6] p-6 text-left transition-all duration-500 hover:-translate-y-1 hover:border-[#b46b50] hover:shadow-[0_10px_30px_rgba(0,0,0,0.04)]"
+                  className="group relative overflow-hidden rounded-[18px] border border-[#2a2a28] bg-[#252520] p-6 text-left transition-all duration-500 hover:-translate-y-1 hover:border-[#b46b50] hover:shadow-[0_10px_30px_rgba(0,0,0,0.2)]"
                 >
                   <div className="flex items-start justify-between">
                     <StarRow rating={f.rating} size={12} />
@@ -173,15 +174,15 @@ export default function Feedback({ feedbacks }: FeedbackProps) {
                   </div>
 
                   <p
-                    className="mt-4 line-clamp-4 text-[15px] leading-[1.55] italic text-[#6b6056]"
+                    className="mt-4 line-clamp-4 text-[15px] leading-[1.55] italic text-[#8b8074]"
                     style={{ fontFamily: 'var(--font-fraunces), serif' }}
                   >
                     &ldquo;{f.text}&rdquo;
                   </p>
 
-                  <div className="mt-4 flex items-center justify-between border-t border-[#e2d4b8] pt-3">
+                  <div className="mt-4 flex items-center justify-between border-t border-[#2a2a28] pt-3">
                     <div>
-                      <p className="text-[12.5px] font-semibold text-[#1a1a18]">
+                      <p className="text-[12.5px] font-semibold text-[#f3ece4]">
                         {f.client_name}
                       </p>
                       {f.client_role && (

@@ -74,7 +74,8 @@ export default function StaticProfile({ therapist }: Props) {
 
         .ed-root {
           font-family: 'Inter', sans-serif;
-          background: #f4f1ec;
+          // background: #f4f1ec;
+          background: white;
           color: #1a1a1a;
           -webkit-font-smoothing: antialiased;
         }
@@ -1196,6 +1197,43 @@ export default function StaticProfile({ therapist }: Props) {
           letter-spacing: 0;
           color: #8a8a85;
           margin-left: 6px;
+        }
+
+        /* ─────────── SECTION SEPARATORS ─────────── */
+        /* Every public-facing section gets a visible top border so
+           sections read as distinct pages, not one long scroll. */
+        .ed-profile,
+        .ed-manifesto,
+        .ed-about,
+        .ed-pullquote,
+        .ed-how,
+        .ed-spec,
+        .ed-philo,
+        .ed-cta {
+          border-top: 1px solid rgba(26,26,26,0.13);
+          border-bottom: 1px solid rgba(26,26,26,0.13);
+        }
+        /* Dark section: use lighter rule */
+        .ed-philo {
+          border-color: rgba(236,231,223,0.12);
+        }
+        /* Index strip gets its own pair of rules */
+        .ed-index {
+          border-top: 1.5px solid rgba(26,26,26,0.18);
+          border-bottom: 1.5px solid rgba(26,26,26,0.18);
+        }
+
+        /* ─────────── SECTION LABELS (left-rail numbers) ─────────── */
+        /* Add a small coloured square before each section tag so the
+           section-number acts as a visual anchor */
+        .ed-section-tag::after {
+          content: '';
+          display: block;
+          width: 6px;
+          height: 6px;
+          background: #6b7d6e;
+          border-radius: 50%;
+          margin-top: 10px;
         }
 
         /* ─────────── RESPONSIVE ─────────── */

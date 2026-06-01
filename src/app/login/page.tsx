@@ -1,23 +1,37 @@
 'use client'
+export const dynamic = 'force-dynamic'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import AuthLayout from '@/components/layout/AuthLayout'
-import Card from '@/components/ui/Card'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
+import { Eye, EyeOff } from 'lucide-react'
 
 export default function LoginPage() {
-  const router = useRouter()
-  const supabase = createClient()
+  return (
+    <Suspense fallback={<AuthLayout title="Welcome back"><div className="bg-white rounded-2xl border border-[#ece5d9] shadow-sm p-8"><div className="h-64" /></div></AuthLayout>}>
+      <LoginForm />
+    </Suspense>
+  )
+}
 
-  const [email, setEmail]       = useState('')
+function LoginForm() {
+  const router       = useRouter()
+  const searchParams = useSearchParams()
+  const supabase     = createClient()
+
+  // Where to go after login — defaults to /dashboard
+  // e.g. /login?redirect=/pricing?plan=growth
+  const redirectTo = searchParams.get('redirect') ?? '/dashboard'
+
+  const [email,    setEmail]    = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError]       = useState('')
-  const [loading, setLoading]   = useState(false)
-
+  const [error,    setError]    = useState('')
+  const [loading,  setLoading]  = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   async function handleLogin(e: React.FormEvent) {
     e.preventDefault()
     setLoading(true)
@@ -29,17 +43,18 @@ export default function LoginPage() {
     })
 
     if (loginError) {
-      setError('Invalid email or password')
+      setError('Invalid email or password.')
       setLoading(false)
       return
     }
 
-    router.push('/dashboard')
+    // Respect the ?redirect param — sends therapist back to wherever they came from
+    router.push(redirectTo)
   }
 
   return (
     <AuthLayout title="Welcome back">
-      <Card padding="lg">
+      <div className="bg-white rounded-2xl border border-[#ece5d9] shadow-[0_20px_60px_-30px_rgba(31,28,24,0.25)] p-7 sm:p-8">
         <form onSubmit={handleLogin} className="space-y-5">
 
           <Input
@@ -53,40 +68,53 @@ export default function LoginPage() {
 
           <div className="space-y-1.5">
             <div className="flex justify-between items-center">
-              <label className="text-sm font-medium text-gray-500">
-                Password
-              </label>
-              <Link href="/forgot-password"
-                className="text-xs text-[#5a7f7a] hover:underline">
+              <label className="text-sm font-medium text-gray-500">Password</label>
+              <Link href="/forgot-password" className="text-xs text-[#E07A12] hover:underline">
                 Forgot password?
               </Link>
             </div>
-            <Input
-              type="password"
-              required
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Your password"
-            />
+<div className="relative">
+  <Input
+    type={showPassword ? 'text' : 'password'}
+    required
+    value={password}
+    onChange={e => setPassword(e.target.value)}
+    placeholder="Your password"
+  />
+
+  <button
+    type="button"
+    onClick={() => setShowPassword(!showPassword)}
+    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 transition"
+  >
+    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+  </button>
+</div>
           </div>
 
           {error && (
-            <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">
-              {error}
-            </p>
+            <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">{error}</p>
           )}
 
-          <Button type="submit" fullWidth loading={loading}>
-            Log In
+          <Button
+            type="submit"
+            fullWidth
+            loading={loading}
+            className="bg-[#FF9933]! hover:bg-[#E07A12]! text-white! h-12! rounded-xl! shadow-lg shadow-[#FF9933]/25"
+          >
+            Sign in
           </Button>
 
         </form>
-      </Card>
+      </div>
 
-      <p className="text-center text-sm text-gray-500 mt-6">
+      <p className="text-center text-sm text-[#6E685F] mt-6">
         Don't have an account?{' '}
-        <Link href="/signup" className="text-[#5a7f7a] font-medium hover:underline">
-          Sign up free
+        <Link
+          href={`/signup${redirectTo !== '/dashboard' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`}
+          className="text-[#E07A12] font-medium hover:underline"
+        >
+          Create free account
         </Link>
       </p>
     </AuthLayout>

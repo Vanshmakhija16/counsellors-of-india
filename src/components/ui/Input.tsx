@@ -26,7 +26,7 @@ export default function Input({
         className={`
           w-full h-11 px-4 rounded-lg border text-gray-900
           placeholder-gray-400 transition
-          focus:outline-none focus:ring-2 focus:ring-[#a3b8b4] focus:border-transparent
+          focus:outline-none focus:ring-2 focus:ring-[#FF9933]/50 focus:border-transparent
           ${error ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-white'}
           ${className}
         `}

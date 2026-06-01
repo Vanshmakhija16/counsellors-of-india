@@ -44,7 +44,7 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
         heroLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}
     >
-      <div className="relative z-10 mx-auto max-w-[1180px]">
+      <div className="relative z-10 mx-auto  pl-10 pr-7 max-w-[1180px]">
         <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20">
 
           {/* ─────────── LEFT — editorial copy ─────────── */}
@@ -52,7 +52,7 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
 
             {/* eyebrow — short bar, true bullet, generous tracking */}
             <div className="flex items-center gap-3">
-              <span className="h-[1.5px] w-6 bg-[#b46b50]" />
+              {/* <span className="h-[1.5px] w-6 bg-[#b46b50]" /> */}
               <p
                 className="text-[10.5px] font-medium uppercase text-[#b46b50]"
                 style={{ letterSpacing: '0.34em', fontFamily: 'var(--font-dm-sans), sans-serif' }}
@@ -69,7 +69,7 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
 
             {/* HEADLINE — monumental, single voice (Fraunces) */}
             <h1
-              className="mt-14 text-[56px] leading-[0.96] tracking-[-0.025em] text-[#1a1a18] lg:text-[96px]"
+              className="mt-10 text-[56px] leading-[0.96] tracking-[-0.025em] text-[#1a1a18] lg:text-[96px]"
               style={{ fontFamily: 'var(--font-fraunces), serif', fontWeight: 300 }}
             >
               {therapist.name}
@@ -150,20 +150,20 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
           {/* ─────────── RIGHT — arch portrait (alcove shape) ─────────── */}
           <div className="order-1 flex justify-center lg:order-2 lg:justify-end">
             <div className="relative">
-              {/* outer arch ring — thin, even gap */}
+              {/* outer circle ring — thin, even gap */}
               <div
                 className="pointer-events-none absolute -inset-4 hidden lg:block"
                 style={{
                   border: '1px solid rgba(26,26,24,0.10)',
-                  borderRadius: '9999px 9999px 16px 16px',
+                  borderRadius: '9999px',
                 }}
               />
 
-              {/* the arch portrait */}
+              {/* the circular portrait */}
               <div
-                className="relative h-[440px] w-[320px] overflow-hidden bg-[#d8c9b0] shadow-[0_30px_80px_-30px_rgba(26,26,24,0.35)] lg:h-[560px] lg:w-[440px]"
+                className="relative h-[340px] w-[340px] overflow-hidden bg-[#d8c9b0] shadow-[0_30px_80px_-30px_rgba(26,26,24,0.35)] lg:h-[440px] lg:w-[440px]"
                 style={{
-                  borderRadius: '9999px 9999px 12px 12px',
+                  borderRadius: '9999px',
                 }}
               >
                 {therapist.image ? (

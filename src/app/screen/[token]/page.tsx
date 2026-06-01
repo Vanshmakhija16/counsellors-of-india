@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation'
 import { getInviteByToken } from '@/lib/clinical/invites.server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
-import type { InstrumentWithItems } from '@/lib/clinical/screening'
+import type { InstrumentWithItems, InstrumentItem, InstrumentOption, SeverityBand } from '@/lib/clinical/screening'
 import PublicScreeningForm from './PublicScreeningForm'
 
 export const dynamic = 'force-dynamic'
@@ -17,36 +17,86 @@ export default async function PublicScreenPage({
   if (!invite) notFound()
 
   if (invite.expired) {
-    return <StatusPage title="Link expired" desc="This screening link has expired. Please contact your therapist to request a new one." />
+    return (
+      <StatusPage
+        title="Link expired"
+        desc="This screening link has expired. Please contact your therapist to request a new one."
+      />
+    )
   }
   if (invite.used) {
-    return <StatusPage title="Already submitted" desc="You've already completed this screening. Thank you!" success />
+    return (
+      <StatusPage
+        title="Already submitted"
+        desc="You've already completed this screening. Thank you!"
+        success
+      />
+    )
   }
 
-  // Fetch instrument + items using service-role / server client
   const supabase = await createServerSupabaseClient()
-  const { data: instRow } = await supabase
-    .from('instruments')
-    .select('*')
-    .eq('id', invite.instrument_id)
-    .maybeSingle()
-  const { data: itemRows } = await supabase
-    .from('instrument_items')
-    .select('*')
-    .eq('instrument_id', invite.instrument_id)
-    .order('position', { ascending: true })
 
-  if (!instRow) notFound()
+  // assessment_scales.id IS the text slug (e.g. 'phq-9')
+  const scaleId = invite.instrument_id
+
+  const { data: scaleRow } = await supabase
+    .from('assessment_scales')
+    .select('id, name, description, timeframe, max_score, scoring_interpretation')
+    .eq('id', scaleId)
+    .maybeSingle()
+
+  if (!scaleRow) notFound()
+  const scale = scaleRow as Record<string, unknown>
+
+  // Fetch questions ordered by question_number
+  const { data: questionRows } = await supabase
+    .from('assessment_questions')
+    .select('id, scale_id, question_number, question_text, is_reverse_scored, category')
+    .eq('scale_id', scaleId)
+    .order('question_number', { ascending: true })
+
+  // Fetch options ordered by display_order
+  const { data: optionRows } = await supabase
+    .from('assessment_options')
+    .select('option_text, score_value, display_order')
+    .eq('scale_id', scaleId)
+    .order('display_order', { ascending: true })
+
+  const options: InstrumentOption[] = (optionRows ?? []).map((o: Record<string, unknown>) => ({
+    value: o.score_value as number,
+    label: o.option_text as string,
+  }))
+
+  const items: InstrumentItem[] = (questionRows ?? []).map((q: Record<string, unknown>) => ({
+    id:            q.id as string,
+    instrument_id: scaleId,
+    position:      (q.question_number ?? 0) as number,
+    prompt:        (q.question_text ?? '') as string,
+    is_critical:   false,
+  }))
+
+  const rawBands = scale.scoring_interpretation as SeverityBand[] | null
+  const severityBands: SeverityBand[] = Array.isArray(rawBands) ? rawBands : []
 
   const instrument: InstrumentWithItems = {
-    ...(instRow as any),
-    items: (itemRows ?? []) as any[],
+    id:             scaleId,
+    slug:           scaleId,
+    name:           (scale.name ?? '') as string,
+    short_name:     (scale.name ?? '') as string,
+    description:    (scale.description ?? null) as string | null,
+    domain:         'general',
+    recall_window:  (scale.timeframe ?? null) as string | null,
+    min_score:      0,
+    max_score:      (scale.max_score ?? 0) as number,
+    severity_bands: severityBands,
+    options,
+    is_active:      true,
+    items,
   }
 
   return (
     <div className="min-h-screen bg-[#f6f3ef] py-12 px-4">
       <div className="max-w-xl mx-auto">
-        {/* Header */}
         <div className="mb-8 text-center">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-[#6b7280] mb-1">
             Counsellors of India
@@ -55,7 +105,7 @@ export default async function PublicScreenPage({
             className="text-2xl font-semibold text-[#1c1c1e]"
             style={{ fontFamily: 'var(--font-fraunces), serif' }}
           >
-            {invite.instrument_short_name}
+            {invite.instrument_name}
           </h1>
           <p className="text-sm text-[#6b7280] mt-1">
             Hi {invite.patient_first_name} — please answer each question honestly.

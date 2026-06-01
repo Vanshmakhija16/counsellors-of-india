@@ -25,18 +25,24 @@ export async function middleware(request: NextRequest) {
     }
   )
 
+  // IMPORTANT: always call getUser() — this refreshes the session cookie.
+  // Without this, server components on /clinical/* get a stale/empty session
+  // and RLS blocks every DB query → patient not found → 404.
   const { data: { user } } = await supabase.auth.getUser()
 
-  // Not logged in → redirect to login
-  if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
+  const { pathname } = request.nextUrl
+
+  // Not logged in → redirect to login for all protected routes
+  if (!user && (
+    pathname.startsWith('/dashboard') ||
+    pathname.startsWith('/clinical') ||
+    pathname.startsWith('/onboarding')
+  )) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
   // Already logged in → redirect away from auth pages
-  if (user && (
-    request.nextUrl.pathname === '/login' ||
-    request.nextUrl.pathname === '/signup'
-  )) {
+  if (user && (pathname === '/login' || pathname === '/signup')) {
     return NextResponse.redirect(new URL('/dashboard', request.url))
   }
 
@@ -44,5 +50,12 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/login', '/signup'],
+  // Match every protected route so the session cookie is always refreshed
+  matcher: [
+    '/dashboard/:path*',
+    '/clinical/:path*',
+    '/onboarding/:path*',
+    '/login',
+    '/signup',
+  ],
 }

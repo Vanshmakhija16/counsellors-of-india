@@ -49,7 +49,7 @@ function fromPatient(p: Patient): FormState {
   return {
     first_name: p.first_name,
     last_name: p.last_name,
-    dob: p.dob,
+    dob: p.dob ?? '',
     gender: p.gender ?? '',
     pronouns: p.pronouns ?? '',
     marital_status: p.marital_status ?? '',

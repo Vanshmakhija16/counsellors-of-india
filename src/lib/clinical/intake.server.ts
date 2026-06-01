@@ -8,6 +8,8 @@ export async function getIntakeServer(patientId: string): Promise<PatientIntake 
     .from('patient_intakes')
     .select('*')
     .eq('patient_id', patientId)
+    .order('version', { ascending: false })
+    .limit(1)
     .maybeSingle()
   if (error) throw error
   return (data as PatientIntake) ?? null

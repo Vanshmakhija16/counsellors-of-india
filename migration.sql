@@ -979,3 +979,113 @@ CREATE POLICY "authenticated writes clinical-resources"
   );
 
 
+
+
+-- ══════════════════════════════════════════════════════
+-- CLINICAL MODULE — Phase 5a: Versioned intake history
+-- Switches patient_intakes from one-row-per-patient to many-rows
+-- with an incrementing `version`. Existing rows are preserved at v1.
+-- ══════════════════════════════════════════════════════
+
+-- Drop the UNIQUE constraint that limited each patient to one intake.
+ALTER TABLE patient_intakes
+  DROP CONSTRAINT IF EXISTS patient_intakes_patient_id_key;
+
+-- Add version column (existing rows become version = 1).
+ALTER TABLE patient_intakes
+  ADD COLUMN IF NOT EXISTS version int NOT NULL DEFAULT 1;
+
+-- A patient can have at most one intake at each version.
+-- (Application code allocates the next version on insert.)
+CREATE UNIQUE INDEX IF NOT EXISTS uq_patient_intakes_patient_version
+  ON patient_intakes (patient_id, version);
+
+CREATE INDEX IF NOT EXISTS idx_patient_intakes_patient_latest
+  ON patient_intakes (patient_id, created_at DESC);
+
+
+-- ══════════════════════════════════════════════════════
+-- CLINICAL MODULE — Phase 5b: Appointments ↔ Patients,
+--                     status vocab, and session notes
+-- ══════════════════════════════════════════════════════
+
+-- ─── 1. Link appointments to patients ─────────────────────────
+-- Adds patient_id as a nullable FK. Existing appointments stay unlinked
+-- until a therapist links them manually OR until the email backfill
+-- below finds a matching patient.
+ALTER TABLE appointments
+  ADD COLUMN IF NOT EXISTS patient_id uuid REFERENCES patients(id) ON DELETE SET NULL;
+
+CREATE INDEX IF NOT EXISTS idx_appointments_patient
+  ON appointments (patient_id, scheduled_at DESC);
+
+-- Best-effort backfill: link an appointment to a patient whose email matches
+-- AND who belongs to the same therapist. Skips ambiguous matches.
+UPDATE appointments a
+SET patient_id = p.id
+FROM patients p
+WHERE a.patient_id IS NULL
+  AND a.client_email IS NOT NULL
+  AND lower(p.email) = lower(a.client_email)
+  AND p.therapist_id = a.therapist_id;
+
+
+-- ─── 2. Rename status vocab to upcoming / rescheduled / completed ─
+-- Per the spec, we drop the old check constraint, wipe existing rows
+-- (the user opted to start fresh), and install the new vocab.
+ALTER TABLE appointments
+  DROP CONSTRAINT IF EXISTS appointments_status_check;
+
+DELETE FROM appointments;
+
+ALTER TABLE appointments
+  ALTER COLUMN status SET DEFAULT 'upcoming';
+
+ALTER TABLE appointments
+  ADD CONSTRAINT appointments_status_check
+  CHECK (status IN ('upcoming','rescheduled','completed'));
+
+
+-- ─── 3. Session notes (one or many per appointment OR free-standing) ─
+CREATE TABLE IF NOT EXISTS session_notes (
+  id              uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  therapist_id    uuid NOT NULL REFERENCES therapists(id) ON DELETE CASCADE,
+  patient_id      uuid NOT NULL REFERENCES patients(id)   ON DELETE CASCADE,
+  appointment_id  uuid REFERENCES appointments(id) ON DELETE SET NULL,
+  content         text NOT NULL DEFAULT '',
+  created_at      timestamptz NOT NULL DEFAULT now(),
+  updated_at      timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_session_notes_patient
+  ON session_notes (patient_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_session_notes_therapist
+  ON session_notes (therapist_id, created_at DESC);
+
+CREATE INDEX IF NOT EXISTS idx_session_notes_appointment
+  ON session_notes (appointment_id);
+
+DROP TRIGGER IF EXISTS session_notes_set_updated_at ON session_notes;
+CREATE TRIGGER session_notes_set_updated_at
+  BEFORE UPDATE ON session_notes
+  FOR EACH ROW EXECUTE FUNCTION set_updated_at();
+
+ALTER TABLE session_notes ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "therapist manages own session notes" ON session_notes;
+CREATE POLICY "therapist manages own session notes"
+  ON session_notes FOR ALL
+  USING (auth.uid() = therapist_id)
+  WITH CHECK (auth.uid() = therapist_id);
+
+
+-- ══════════════════════════════════════════════════════
+-- CLINICAL MODULE — Phase 5c: Allow patients without DOB
+-- Booking-created patients are auto-created from a public form
+-- that does not collect DOB. Make the column nullable so the
+-- therapist can fill it in later from the Edit page.
+-- ══════════════════════════════════════════════════════
+
+ALTER TABLE patients
+  ALTER COLUMN dob DROP NOT NULL;

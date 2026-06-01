@@ -13,38 +13,25 @@ export default function Expertise({ therapist }: ExpertiseProps) {
   return (
     <section
       id="expertise"
-      className="relative overflow-hidden border-t border-[#e8dfc8] bg-[#efe7d6] px-6 py-20 lg:px-12 lg:py-24"
+      className="relative overflow-hidden bg-[#e3d5c0] px-6 py-20 lg:px-12 lg:py-14"
+      style={{ borderTop: '2px solid #c9b59a', borderBottom: '2px solid #c9b59a' }}
     >
-      <div className="pointer-events-none absolute right-[-100px] top-[-80px] h-[280px] w-[280px] rounded-full bg-[#e8dfc8] blur-3xl opacity-50" />
+      <div className="pointer-events-none absolute right-[-100px] top-[-80px] h-[280px] w-[280px] rounded-full bg-[#d8c9b0] blur-3xl opacity-50" />
 
       <div className="relative mx-auto max-w-[1180px]">
-        <div className="grid items-end gap-10 border-b border-[#e8dfc8] pb-12 lg:grid-cols-[1.1fr_0.9fr]">
+        <div className="grid items-end gap-10 border-b border-[#c9b59a] pb-12 lg:grid-cols-[1.1fr_0.9fr]">
           <div>
-            <p className="flex items-center gap-3 text-[11px] font-medium uppercase tracking-[0.30em] text-[#b46b50]">
-              <span className="h-px w-7 bg-[#b46b50]" />
-              03 — Areas of Expertise
+            <p className="flex items-center gap-3 text-[13px] font-bold uppercase tracking-[0.30em] text-[#b46b50]">
+              Areas of Expertise
             </p>
-
-            <h2
-              className="mt-6 text-[34px] leading-[1.02] tracking-[-0.03em] text-[#1a1a18] lg:text-[44px]"
-              style={{ fontFamily: 'var(--font-fraunces), serif' }}
-            >
-              Thoughtful support for{' '}
-              <span className="italic text-[#6b6056]">emotional wellbeing.</span>
-            </h2>
           </div>
-
-          <p className="max-w-[480px] text-[15px] leading-[1.85] text-[#6b6056]">
-            Personalized therapeutic support designed around your experiences,
-            emotional patterns, and long-term healing journey.
-          </p>
         </div>
 
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {specialties.map((s, i) => (
             <article
               key={s}
-              className="group relative overflow-hidden rounded-[20px] border border-[#e8dfc8] bg-[#f5ecd6] p-6 transition-all duration-500 hover:-translate-y-1 hover:border-[#b46b50] hover:shadow-[0_10px_30px_rgba(0,0,0,0.04)]"
+              className="group relative overflow-hidden rounded-[20px] border border-[#c9b59a] bg-[#ede0cb] p-6 transition-all duration-500 hover:-translate-y-1 hover:border-[#b46b50] hover:shadow-[0_10px_30px_rgba(0,0,0,0.07)]"
             >
               <div className="flex items-start justify-between">
                 <span className="text-[10px] font-semibold uppercase tracking-[0.24em] text-[#b46b50]">

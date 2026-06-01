@@ -1,14 +1,15 @@
 'use client'
 
+import { useState } from 'react'
 import type { TherapistProfile } from '../templateUtils'
 
 interface AboutProps {
   therapist: TherapistProfile
-  /** unused — booking has been moved to the Hero card + dedicated Booking section */
   days?: { label: string; date: number; month: string }[]
 }
 
 export default function About({ therapist }: AboutProps) {
+  const [expanded, setExpanded] = useState(false)
   const yearsLabel =
     (therapist.experience ?? 0) > 0
       ? `${therapist.experience}+ years`
@@ -17,21 +18,22 @@ export default function About({ therapist }: AboutProps) {
   return (
     <section
       id="about"
-      className="relative overflow-hidden border-t border-[#b46b50] bg-[#efe7d6]"
+      className="relative overflow-hidden bg-[#1a1a18]"
+      style={{ borderTop: '3px solid #b46b50' }}
     >
       <div className="mx-auto max-w-[1180px] px-6 py-20 lg:px-12 lg:py-24">
         <div className="grid items-start gap-14 lg:grid-cols-[1.05fr_360px]">
           {/* LEFT — bio + philosophy */}
           <div className="max-w-[680px]">
             <div className="mb-6 flex items-center gap-3">
-              <span className="h-px w-7 bg-[#b46b50]" />
+              {/* <span className="h-px w-7 bg-[#b46b50]" /> */}
               <p className="text-[11px] font-medium uppercase tracking-[0.30em] text-[#b46b50]">
-                01 — About
+                About Me
               </p>
             </div>
 
             <h2
-              className="max-w-[560px] text-[34px] leading-[1.02] tracking-[-0.03em] text-[#1a1a18] lg:text-[44px]"
+              className="max-w-[560px] text-[34px] leading-[1.02] tracking-[-0.03em] text-[#f3ece4] lg:text-[44px]"
               style={{ fontFamily: 'var(--font-fraunces), serif' }}
             >
               A practice built on listening
@@ -39,9 +41,9 @@ export default function About({ therapist }: AboutProps) {
 
             <div className="mt-7 space-y-6">
               {therapist.bio ? (
-                <p className="text-[17px] leading-[1.85] text-[#2d4a3e]">
+                <p className="text-[17px] leading-[1.85] text-[#c8b99a]">
                   <span
-                    className="mr-2 float-left text-[52px] leading-[0.85] text-[#2d4a3e]"
+                    className="mr-2 float-left text-[52px] leading-[0.85] text-[#b46b50]"
                     style={{ fontFamily: 'var(--font-fraunces), serif' }}
                   >
                     {therapist.bio.trim().charAt(0) || 'I'}
@@ -50,9 +52,9 @@ export default function About({ therapist }: AboutProps) {
                 </p>
               ) : (
                 <>
-                  <p className="text-[17px] leading-[1.85] text-[#2d4a3e]">
+                  <p className="text-[17px] leading-[1.85] text-[#c8b99a]">
                     <span
-                      className="mr-2 float-left text-[52px] leading-[0.85] text-[#2d4a3e]"
+                      className="mr-2 float-left text-[52px] leading-[0.85] text-[#b46b50]"
                       style={{ fontFamily: 'var(--font-fraunces), serif' }}
                     >
                       I
@@ -63,7 +65,7 @@ export default function About({ therapist }: AboutProps) {
                     performative.
                   </p>
 
-                  <p className="text-[17px] leading-[1.85] text-[#2d4a3e]">
+                  <p className="text-[17px] leading-[1.85] text-[#c8b99a]">
                     Sessions are collaborative. We move at your pace, with
                     curiosity rather than judgement. Most clients experience
                     meaningful shifts within 8–12 sessions.
@@ -72,33 +74,52 @@ export default function About({ therapist }: AboutProps) {
               )}
 
               {therapist.approach_text && (
-                <p className="text-[17px] leading-[1.85] text-[#2d4a3e]">
+                <p className="text-[17px] leading-[1.85] text-[#c8b99a]">
                   {therapist.approach_text}
                 </p>
               )}
             </div>
 
-            {/* pull quote */}
-            <div className="mt-10 border-l-2 border-[#b46b50] bg-[#f5ecd6] px-6 py-6">
+            {/* Read More button */}
+            <button
+              onClick={() => setExpanded(prev => !prev)}
+              className="mt-8 flex items-center gap-2 text-[13px] font-medium uppercase tracking-[0.20em] text-[#b46b50] transition-opacity hover:opacity-70"
+            >
+              {expanded ? 'Read Less' : 'Read More'}
+              <svg
+                className={`h-3.5 w-3.5 transition-transform duration-300 ${expanded ? 'rotate-180' : ''}`}
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                viewBox="0 0 24 24"
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </button>
+
+            {/* pull quote — visible only when expanded */}
+            <div className={`overflow-hidden transition-all duration-500 ${expanded ? 'mt-10 max-h-[200px] opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className="border-l-2 border-[#b46b50] bg-[#252520] px-6 py-6">
               <p
-                className="text-[22px] italic leading-[1.5] tracking-[-0.01em] text-[#6b6056]"
+                className="text-[22px] italic leading-[1.5] tracking-[-0.01em] text-[#c8b99a]"
                 style={{ fontFamily: 'var(--font-fraunces), serif' }}
               >
                 "Therapy is not about being fixed. It is about being understood."
               </p>
             </div>
+            </div>
           </div>
 
           {/* RIGHT — credentials & highlights card */}
           <aside className="lg:sticky lg:top-24">
-            <div className="overflow-hidden rounded-[20px] border border-[#b46b50] bg-[#f5ecd6] shadow-[0_8px_28px_-12px_rgba(31,42,35,0.12)]">
+            <div className="overflow-hidden rounded-[20px] border border-[#b46b50]/40 bg-[#252520] shadow-[0_8px_28px_-12px_rgba(0,0,0,0.5)]">
               {/* header strip */}
-              <div className="border-b border-[#efe7d6] bg-[#f5ecd6] px-6 py-4">
+              <div className="border-b border-[#2a2a28] bg-[#1e1e1c] px-6 py-4">
                 <p className="text-[10px] font-semibold uppercase tracking-[0.28em] text-[#6b6056]">
                   Credentials
                 </p>
                 <p
-                  className="mt-2 text-[22px] leading-tight tracking-[-0.02em] text-[#1a1a18]"
+                  className="mt-2 text-[22px] leading-tight tracking-[-0.02em] text-[#f3ece4]"
                   style={{ fontFamily: 'var(--font-fraunces), serif' }}
                 >
                   {therapist.name || 'Your therapist'}
@@ -111,10 +132,10 @@ export default function About({ therapist }: AboutProps) {
               </div>
 
               {/* stats row */}
-              <div className="grid grid-cols-2 divide-x divide-[#efe7d6] border-b border-[#efe7d6] text-center">
+              <div className="grid grid-cols-2 divide-x divide-[#2a2a28] border-b border-[#2a2a28] text-center">
                 <div className="px-4 py-5">
                   <p
-                    className="text-[26px] leading-none tracking-[-0.02em] text-[#1a1a18]"
+                    className="text-[26px] leading-none tracking-[-0.02em] text-[#f3ece4]"
                     style={{ fontFamily: 'var(--font-fraunces), serif' }}
                   >
                     {yearsLabel}
@@ -125,7 +146,7 @@ export default function About({ therapist }: AboutProps) {
                 </div>
                 <div className="px-4 py-5">
                   <p
-                    className="text-[26px] leading-none tracking-[-0.02em] text-[#1a1a18]"
+                    className="text-[26px] leading-none tracking-[-0.02em] text-[#f3ece4]"
                     style={{ fontFamily: 'var(--font-fraunces), serif' }}
                   >
                     {therapist.sessionDuration} min
@@ -137,7 +158,7 @@ export default function About({ therapist }: AboutProps) {
               </div>
 
               {/* meta list */}
-              <div className="space-y-4 px-6 py-5 text-[13px] text-[#6b6056]">
+              <div className="space-y-4 px-6 py-5 text-[13px] text-[#8b8074]">
                 {therapist.location && (
                   <div className="flex items-start gap-3">
                     <svg
@@ -193,12 +214,12 @@ export default function About({ therapist }: AboutProps) {
               </div>
 
               {/* education */}
-              {therapist.education && therapist.education.length > 0 && (
-                <div className="border-t border-[#efe7d6] px-6 py-5">
+              {/* {therapist.education && therapist.education.length > 0 && (
+                <div className="border-t border-[#2a2a28] px-6 py-5">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#6b6056]">
                     Education
                   </p>
-                  <ul className="mt-3 space-y-2 text-[12.5px] leading-[1.55] text-[#6b6056]">
+                  <ul className="mt-3 space-y-2 text-[12.5px] leading-[1.55] text-[#8b8074]">
                     {therapist.education.map((e) => (
                       <li key={e} className="flex gap-2">
                         <span className="mt-1 h-1 w-1 flex-shrink-0 rounded-full bg-[#b46b50]" />
@@ -207,11 +228,11 @@ export default function About({ therapist }: AboutProps) {
                     ))}
                   </ul>
                 </div>
-              )}
+              )} */}
 
               {/* certifications */}
               {therapist.certifications && therapist.certifications.length > 0 && (
-                <div className="border-t border-[#efe7d6] px-6 py-5">
+                <div className="border-t border-[#2a2a28] px-6 py-5">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#6b6056]">
                     Certifications
                   </p>
@@ -219,7 +240,7 @@ export default function About({ therapist }: AboutProps) {
                     {therapist.certifications.map((c) => (
                       <span
                         key={c}
-                        className="rounded-full border border-[#b46b50] bg-white/60 px-2.5 py-1 text-[11px] text-[#6b6056]"
+                        className="rounded-full border border-[#b46b50]/40 bg-[#1a1a18] px-2.5 py-1 text-[11px] text-[#8b8074]"
                       >
                         {c}
                       </span>

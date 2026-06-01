@@ -581,3 +581,15 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+/* ─────────────────────────────────────
+   GLOBAL RESPONSIVE SAFETY NET
+   Prevents accidental horizontal scroll on phones without altering any
+   intentional layout. Internal horizontal scrollers (carousels, marquees)
+   keep working because they manage their own overflow on inner elements.
+───────────────────────────────────── */
+html, body {
+  max-width: 100%;
+  /* clip (not hidden) avoids breaking position:sticky descendants */
+  overflow-x: clip;
+}

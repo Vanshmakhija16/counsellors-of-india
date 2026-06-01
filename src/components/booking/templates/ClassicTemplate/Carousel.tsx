@@ -18,12 +18,12 @@ export default function Carousel({ slide, slides, carouselIndex, carouselAnim, g
   return (
       <section
         id="carousel"
-        className="ct-carousel-section relative overflow-hidden border-t border-[#e8dfc8] bg-[#efe7d6] px-6 py-20 lg:px-12 lg:py-24"
+        className="ct-carousel-section relative overflow-hidden bg-[#1a1a18] px-6 py-20 lg:px-12 lg:py-24"
       >
         <div className="ct-carousel-section__inner mx-auto max-w-[1180px]">
 
-          <p className="ct-section-label ct-carousel-section__label">
-            <span className="ct-section-label__line" />04 — Explore
+          <p className="ct-section-label font-bold ct-carousel-section__label">
+             Explore
           </p>
 
           <div className="ct-carousel-wrap">

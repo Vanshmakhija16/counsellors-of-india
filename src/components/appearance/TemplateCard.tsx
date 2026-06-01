@@ -10,6 +10,10 @@ interface Props {
 
 const thumbnails: Record<string, string> = {
   classic:  'bg-white border-t-4',
+  classic2: 'bg-[#0b0d0e]',
+  classic3: 'bg-[#f5f0e8]',
+  classic4: 'bg-[#080808]',
+  classic5: 'bg-[#080808]',
   modern:   'bg-gray-800',
   warm:     'bg-orange-50',
   premium:  'bg-gray-950',
@@ -46,6 +50,78 @@ export default function TemplateCard({ template, color, selected, onSelect }: Pr
               <div className="h-1 w-4/5 bg-gray-100 rounded" />
               <div className="h-5 w-full rounded mt-auto"
                 style={{ backgroundColor: c.primary }} />
+            </>
+          )}
+          {template.id === 'classic2' && (
+            <>
+              <div className="flex items-center justify-between mt-1">
+                <div className="w-6 h-6 border" style={{ borderColor: '#c9a35a' }} />
+                <div className="h-1 w-10 rounded" style={{ background: '#ece5d7', opacity: 0.7 }} />
+              </div>
+              <div
+                className="h-3 w-3/4 mt-1 italic"
+                style={{ background: '#c9a35a', borderRadius: 1 }}
+              />
+              <div className="h-1 w-full rounded" style={{ background: '#2a2f33' }} />
+              <div className="h-1 w-2/3 rounded" style={{ background: '#2a2f33' }} />
+              <div
+                className="h-5 w-full mt-auto"
+                style={{ background: '#c9a35a', borderRadius: 1 }}
+              />
+            </>
+          )}
+          {template.id === 'classic3' && (
+            <>
+              <div className="flex items-center justify-between mt-1">
+                <div
+                  className="w-5 h-5 italic"
+                  style={{ border: '1px solid #8b6f47', color: '#8b6f47' }}
+                />
+                <div className="h-1 w-8 rounded" style={{ background: '#8b6f47', opacity: 0.7 }} />
+              </div>
+              <div className="h-px w-full" style={{ background: '#d8cdb8' }} />
+              <div
+                className="h-3 w-3/4 mt-1"
+                style={{ background: '#1a1612', borderRadius: 1 }}
+              />
+              <div className="h-1 w-2/3 rounded" style={{ background: '#8b6f47' }} />
+              <div className="h-1 w-full rounded" style={{ background: '#d8cdb8' }} />
+              <div
+                className="h-5 w-full mt-auto"
+                style={{ background: '#1a1612', borderRadius: 1 }}
+              />
+            </>
+          )}
+          {template.id === 'classic4' && (
+            <>
+              {/* Gold nav bar */}
+              <div className="flex items-center justify-between mt-0.5">
+                <div
+                  className="w-5 h-5 flex items-center justify-center"
+                  style={{ border: '1px solid #D4AF37', color: '#D4AF37', fontSize: 8, fontStyle: 'italic' }}
+                >
+                  P
+                </div>
+                <div className="h-0.5 w-12 rounded" style={{ background: '#D4AF37', opacity: 0.4 }} />
+              </div>
+              {/* Thin gold rule */}
+              <div className="h-px w-full" style={{ background: '#D4AF37', opacity: 0.2 }} />
+              {/* Hero name area — large serif */}
+              <div
+                className="h-4 w-2/3 mt-1"
+                style={{ background: '#E8E8E8', opacity: 0.9, borderRadius: 0 }}
+              />
+              <div
+                className="h-2.5 w-1/2"
+                style={{ background: '#D4AF37', opacity: 0.6, borderRadius: 0 }}
+              />
+              {/* Bio line */}
+              <div className="h-1 w-full rounded" style={{ background: '#2a2a2a' }} />
+              {/* Gold CTA */}
+              <div
+                className="h-5 w-full mt-auto"
+                style={{ background: '#D4AF37', borderRadius: 0 }}
+              />
             </>
           )}
           {template.id === 'modern' && (

@@ -1,0 +1,46 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node -e ' *)",
+      "Bash(node -e \"const p=require\\('./package.json'\\);console.log\\(JSON.stringify\\(p.scripts,null,1\\)\\)\")",
+      "Bash(npx eslint *)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(netstat -ano)",
+      "Bash(curl -s -o /tmp/coi.html -w \"%{http_code}\" http://localhost:3000/)",
+      "Read(//tmp/**)",
+      "Bash(node -e 'const p=require\\(\"./package.json\"\\);const d={...p.dependencies,...p.devDependencies};console.log\\(Object.keys\\(d\\).filter\\(k=>/puppeteer|playwright|@playwright/.test\\(k\\)\\).join\\(\",\"\\)||\"none\"\\)')",
+      "Bash(curl -s -o /tmp/c.html -w \"HTTP %{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(node -e 'const s=require\\(\"fs\"\\).readFileSync\\(\"src/app/page.tsx\",\"utf8\"\\);let i=-1;while\\(\\(i=s.indexOf\\(\"Lenis\",i+1\\)\\)>=0\\){console.log\\(JSON.stringify\\(s.slice\\(i-30,i+50\\)\\)\\);}')",
+      "Bash(node -e 'const s=require\\(\"fs\"\\).readFileSync\\(\"src/app/page.tsx\",\"utf8\"\\);const L=s.split\\(\"\\\\n\"\\);for\\(let i=4346;i<4353;i++\\)console.log\\(\\(i+1\\)+\": \"+L[i]\\);')",
+      "Bash(node -e 'const s=require\\(\"fs\"\\).readFileSync\\(\"src/app/page.tsx\",\"utf8\"\\);const m=s.match\\(/const cardRefs = useRef<[^>]+>/\\);console.log\\(JSON.stringify\\(m&&m[0]\\)\\);')",
+      "Bash(node -e 'const p=require\\(\"./node_modules/gsap/package.json\"\\);console.log\\(\"module:\",p.module,\"main:\",p.main,\"exports:\",JSON.stringify\\(p.exports&&p.exports[\"./ScrollTrigger\"]||p.exports&&p.exports[\".\"]||\"n/a\"\\)\\);')",
+      "Bash(curl -s http://localhost:3000/ -o /tmp/c.html)",
+      "Bash(curl -s http://localhost:3000/ -o coi_dump.html)",
+      "Bash(node)",
+      "Bash(node -e 'const fs=require\\(\"fs\"\\);try{console.log\\(fs.readdirSync\\(\"src/app/try\"\\)\\);}catch\\(e\\){console.log\\(\"no /try folder\"\\);}')",
+      "Bash(curl -s http://localhost:3000/ -o coi.html)",
+      "Bash(curl -s -o coi.html -w \"HTTP %{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(node -e 'const h=require\\(\"fs\"\\).readFileSync\\(\"coi.html\",\"utf8\"\\);console.log\\(\"compile errors:\",/Failed to compile|Module not found/.test\\(h\\)?\"YES\":\"no\"\\);')",
+      "Bash(node -e 'const s=require\\(\"fs\"\\).readFileSync\\(\"src/app/page.tsx\",\"utf8\"\\);const i=s.indexOf\\(\".td-eyebrow{\"\\);const blk=s.slice\\(i,s.indexOf\\(\"}\",i\\)\\);const m=blk.match\\(/color:\\\\s*\\([^;]+\\);/\\);console.log\\(\"eyebrow color:\", m?m[1]:\"none\"\\);')",
+      "Bash(node -e 'const h=require\\(\"fs\"\\).readFileSync\\(process.platform===\"win32\"?\"C:/tmp/c.html\":\"/tmp/c.html\",\"utf8\"\\);console.log\\(\"Find your therapist:\",h.includes\\(\"Find your therapist\"\\)\\);console.log\\(\"changing lives:\",h.includes\\(\"changing lives\"\\)\\);')",
+      "Bash(curl -s http://localhost:3000/)",
+      "Bash(node -e 'const p=require\\(\"./package.json\"\\);const d={...p.dependencies,...p.devDependencies};console.log\\(\"tailwindcss:\",d.tailwindcss||\"NONE\"\\);console.log\\(\"@tailwindcss/postcss:\",d[\"@tailwindcss/postcss\"]||\"none\"\\);')",
+      "Bash(echo \"exit-check: $\\(npx tsc --noEmit -p tsconfig.json 2>&1)",
+      "Bash(curl -s -o /dev/null -w '%{http_code}' http://localhost:3000__TRACKED_VAR__)",
+      "Bash(npm run *)",
+      "Bash(echo \"started dev server in background, pid $!\")",
+      "Bash(rm -f live_exp.tsx.txt live_exp.css.txt /tmp/coi.html /tmp/devlog.txt 2>/dev/null *)",
+      "Bash(curl -s -o /tmp/p4.html -w \"%{http_code}\" http://localhost:3000/preview/classic4)",
+      "Bash(node -e 'const s=require\\(\"fs\"\\).readFileSync\\(\"src/app/page.tsx\",\"utf8\"\\);console.log\\(\"useEffect imported:\", /import \\\\{[^}]*useEffect/.test\\(s\\)\\);')",
+      "Bash(curl -s \"http://localhost:3000/preview/classic4?embed=1\")",
+      "Bash(curl -s \"http://localhost:3000/preview/classic4\")",
+      "Bash(curl -s \"http://localhost:3000/\")",
+      "Bash(node -e 'const s=require\\(\"fs\"\\).readFileSync\\(\"src/app/dashboard/appearance/page.tsx\",\"utf8\"\\);console.log\\(\"unlocked uses:\", \\(s.match\\(/\\\\bunlocked\\\\b/g\\)||[]\\).length\\);')",
+      "Bash(curl -s -o /tmp/h.html -w \"HTTP %{http_code}\\\\n\" http://localhost:3000/)",
+      "Bash(node -e *)"
+    ],
+    "additionalDirectories": [
+      "\\tmp"
+    ]
+  }
+}

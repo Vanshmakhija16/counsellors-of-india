@@ -27,32 +27,72 @@ export default async function ScreeningResultPage({
   if (!sessRow) notFound()
   const session = sessRow as ScreeningSession
 
-  const [{ data: instRow }, { data: itemsData }, { data: respData }] = await Promise.all([
-    supabase.from('instruments').select('*').eq('id', session.instrument_id).maybeSingle(),
+  // instrument_id IS the text scale id
+  const scaleId = session.instrument_id
+
+  const { data: scaleRow } = await supabase
+    .from('assessment_scales')
+    .select('id, name, description, timeframe, max_score, scoring_interpretation')
+    .eq('id', scaleId)
+    .maybeSingle()
+  if (!scaleRow) notFound()
+  const scale = scaleRow as Record<string, unknown>
+
+  const [{ data: questionRows }, { data: optionRows }, { data: respData }] = await Promise.all([
     supabase
-      .from('instrument_items')
+      .from('assessment_questions')
+      .select('id, scale_id, question_number, question_text, category')
+      .eq('scale_id', scaleId)
+      .order('question_number', { ascending: true }),
+    supabase
+      .from('assessment_options')
+      .select('option_text, score_value, display_order')
+      .eq('scale_id', scaleId)
+      .order('display_order', { ascending: true }),
+    supabase
+      .from('screening_responses')
       .select('*')
-      .eq('instrument_id', session.instrument_id)
-      .order('position', { ascending: true }),
-    supabase.from('screening_responses').select('*').eq('session_id', sessionId),
+      .eq('session_id', sessionId),
   ])
 
-  if (!instRow) notFound()
-  const instrument = instRow as Instrument
-  const items = (itemsData ?? []) as InstrumentItem[]
-  const responses = (respData ?? []) as ScreeningResponse[]
-  const respByItem = new Map(responses.map((r) => [r.item_id, r.value]))
-  const optionsByValue = new Map<number, InstrumentOption>(
-    instrument.options.map((o) => [o.value, o])
-  )
+  const options: InstrumentOption[] = (optionRows ?? []).map((o: Record<string, unknown>) => ({
+    value: o.score_value as number,
+    label: o.option_text as string,
+  }))
+
+  const items: InstrumentItem[] = (questionRows ?? []).map((q: Record<string, unknown>) => ({
+    id:            q.id as string,
+    instrument_id: scaleId,
+    position:      (q.question_number ?? 0) as number,
+    prompt:        (q.question_text ?? '') as string,
+    is_critical:   false,
+  }))
+
+  const rawBands = scale.scoring_interpretation as SeverityBand[] | null
+  const severityBands: SeverityBand[] = Array.isArray(rawBands) ? rawBands : []
+
+  const instrument: Instrument = {
+    id:             scaleId,
+    slug:           scaleId,
+    name:           (scale.name ?? '') as string,
+    short_name:     (scale.name ?? '') as string,
+    description:    (scale.description ?? null) as string | null,
+    domain:         'general',
+    recall_window:  (scale.timeframe ?? null) as string | null,
+    min_score:      0,
+    max_score:      (scale.max_score ?? 0) as number,
+    severity_bands: severityBands,
+    options,
+    is_active:      true,
+  }
+
+  const responses      = (respData ?? []) as ScreeningResponse[]
+  const respByItem     = new Map(responses.map((r) => [r.item_id, r.value]))
+  const optionsByValue = new Map<number, InstrumentOption>(options.map((o) => [o.value, o]))
 
   const date = new Date(session.administered_at).toLocaleDateString('en-IN', {
-    weekday: 'short',
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
+    weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+    hour: '2-digit', minute: '2-digit',
   })
 
   return (
@@ -71,16 +111,15 @@ export default async function ScreeningResultPage({
               className="text-2xl font-semibold text-[#1c1c1e]"
               style={{ fontFamily: 'var(--font-fraunces), serif' }}
             >
-              {instrument.short_name}
+              {instrument.name}
             </h1>
-            <p className="text-sm text-[#6b7280] mt-1">{instrument.name}</p>
             <p className="text-xs text-[#6b7280] mt-2">{date}</p>
           </div>
           <div className="text-right">
             <p className="text-[10px] uppercase tracking-wider text-[#9ca3af]">Total score</p>
             <p className="text-4xl font-semibold text-[#1c1c1e]">{session.total_score}</p>
             <p className="text-xs text-[#6b7280] mt-1">
-              range {instrument.min_score}–{instrument.max_score}
+              out of {instrument.max_score}
             </p>
           </div>
         </div>
@@ -89,7 +128,7 @@ export default async function ScreeningResultPage({
           <SeverityChip label={session.severity_label} />
           {session.flagged && (
             <span className="inline-flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wider text-amber-800 bg-amber-50 border border-amber-200 px-2 py-1 rounded-full">
-              <AlertTriangle size={11} /> Critical-item flag
+              <AlertTriangle size={11} /> Flagged
             </span>
           )}
         </div>
@@ -112,7 +151,7 @@ export default async function ScreeningResultPage({
         </h2>
         <ol className="bg-white rounded-xl border border-[#e8e4df] divide-y divide-[#e8e4df]">
           {items.map((item) => {
-            const v = respByItem.get(item.id)
+            const v   = respByItem.get(item.id)
             const opt = v !== undefined ? optionsByValue.get(v) : undefined
             return (
               <li key={item.id} className="px-5 py-4 flex items-start gap-4">
@@ -120,23 +159,10 @@ export default async function ScreeningResultPage({
                   {String(item.position).padStart(2, '0')}
                 </span>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-[#1c1c1e]">
-                    {item.prompt}
-                    {item.is_critical && (
-                      <span className="ml-2 inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-amber-700">
-                        <AlertTriangle size={11} /> Critical
-                      </span>
-                    )}
-                  </p>
+                  <p className="text-sm text-[#1c1c1e]">{item.prompt}</p>
                 </div>
                 <div className="text-right shrink-0">
-                  <span
-                    className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium ${
-                      item.is_critical && (v ?? 0) > 0
-                        ? 'bg-amber-50 text-amber-800 border border-amber-200'
-                        : 'bg-[#d4e4e1] text-[#2d4a47]'
-                    }`}
-                  >
+                  <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium bg-[#d4e4e1] text-[#2d4a47]">
                     <span className="font-semibold">{v ?? '—'}</span>
                     <span className="opacity-70">{opt?.label ?? ''}</span>
                   </span>
@@ -160,22 +186,20 @@ function SeverityChip({ label }: { label: string }) {
     ? 'bg-orange-50 text-orange-700 border-orange-200'
     : 'bg-[#d4e4e1] text-[#2d4a47] border-[#b8ceca]'
   return (
-    <span
-      className={`inline-flex items-center text-[11px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full border ${style}`}
-    >
+    <span className={`inline-flex items-center text-[11px] font-semibold uppercase tracking-wider px-2 py-1 rounded-full border ${style}`}>
       {label}
     </span>
   )
 }
 
 function SeverityScale({ bands, score }: { bands: SeverityBand[]; score: number }) {
-  if (bands.length === 0) return null
+  if (!bands || bands.length === 0) return null
   const max = bands[bands.length - 1].max
   return (
     <div className="mt-5">
       <div className="flex h-2 rounded-full overflow-hidden border border-[#e8e4df]">
         {bands.map((b, i) => {
-          const width = ((b.max - b.min + 1) / (max + 1)) * 100
+          const width  = ((b.max - b.min + 1) / (max + 1)) * 100
           const colors = ['bg-[#d4e4e1]', 'bg-orange-200', 'bg-amber-300', 'bg-amber-500', 'bg-red-500']
           return (
             <div
@@ -188,10 +212,7 @@ function SeverityScale({ bands, score }: { bands: SeverityBand[]; score: number 
         })}
       </div>
       <div className="relative mt-1 h-3">
-        <div
-          className="absolute -translate-x-1/2"
-          style={{ left: `${(score / max) * 100}%` }}
-        >
+        <div className="absolute -translate-x-1/2" style={{ left: `${(score / max) * 100}%` }}>
           <div className="w-0 h-0 border-l-[5px] border-r-[5px] border-t-[6px] border-l-transparent border-r-transparent border-t-[#1c1c1e]" />
         </div>
       </div>

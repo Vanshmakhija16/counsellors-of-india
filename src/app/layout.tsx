@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { Cormorant_Garamond, DM_Sans, Fraunces } from 'next/font/google'
 import './globals.css'
-import LiquidInkCursor from '@/components/ui/LiquidInkCursor'
+// import LiquidInkCursor from '@/components/ui/LiquidInkCursor'
 
 const cormorant = Cormorant_Garamond({
   variable: '--font-cormorant',
@@ -35,7 +35,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${cormorant.variable} ${fraunces.variable} ${dmSans.variable} h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col bg-stone-50 font-[var(--font-dm-sans)]" suppressHydrationWarning>
-        <LiquidInkCursor />
+        {/* <LiquidInkCursor /> */}
         {children}
       </body>
     </html>

@@ -25,10 +25,13 @@ export default function DashboardPage() {
     if (!therapist) return
 
     async function fetchAppointments() {
+      // Only show non-completed appointments — completed ones live in history
+      // and shouldn't muddle the "upcoming" widget.
       const { data } = await supabase
         .from('appointments')
         .select('*')
         .eq('therapist_id', therapist!.id)
+        .in('status', ['upcoming', 'rescheduled'])
         .order('scheduled_at', { ascending: true })
         .limit(5)
 
@@ -38,7 +41,7 @@ export default function DashboardPage() {
         const today = new Date().toDateString()
         setStats({
           total:   data.length,
-          pending: data.filter(a => a.status === 'pending').length,
+          pending: data.filter(a => a.status === 'rescheduled').length,
           today:   data.filter(a =>
             new Date(a.scheduled_at).toDateString() === today
           ).length,
@@ -68,7 +71,7 @@ export default function DashboardPage() {
   const profileComplete = therapist?.is_profile_complete
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-5 sm:p-8 max-w-5xl">
 
       {/* Welcome */}
       <div className="mb-8">
@@ -86,7 +89,7 @@ export default function DashboardPage() {
       {/* Profile incomplete warning */}
       {!profileComplete && (
         <div className="mb-6 p-4 bg-amber-50 border border-amber-200
-                        rounded-xl flex items-center justify-between">
+                        rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <AlertCircle size={18} className="text-amber-600 shrink-0" />
             <div>
@@ -108,12 +111,12 @@ export default function DashboardPage() {
 
       {/* Booking link */}
       <div className="mb-8 p-5 bg-[#d4e4e1] rounded-xl border border-[#b8ceca]
-                      flex items-center justify-between">
+                      flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <p className="text-xs font-semibold text-[#2d4a47] uppercase tracking-widest mb-1">
             Your booking link
           </p>
-          <p className="text-sm font-medium text-[#2d4a47]">
+          <p className="text-sm font-medium text-[#2d4a47] break-all">
             counsellorsofindia.com/{therapist?.username}
           </p>
         </div>
@@ -141,11 +144,11 @@ export default function DashboardPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {[
           { icon: Calendar, label: 'Total bookings', value: stats.total, color: 'bg-[#d4e4e1] text-[#2d4a47]' },
           { icon: Clock,    label: 'Today\'s sessions', value: stats.today, color: 'bg-amber-50 text-amber-700' },
-          { icon: Users,    label: 'Pending confirmation', value: stats.pending, color: 'bg-blue-50 text-blue-700' },
+          { icon: Users,    label: 'Rescheduled', value: stats.pending, color: 'bg-blue-50 text-blue-700' },
         ].map(stat => (
           <div key={stat.label}
             className="bg-white rounded-xl border border-[#e8e4df] p-5">
@@ -164,7 +167,7 @@ export default function DashboardPage() {
 
       {/* Recent appointments */}
       <div className="bg-white rounded-xl border border-[#e8e4df]">
-        <div className="px-6 py-4 border-b border-[#e8e4df] flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-4 border-b border-[#e8e4df] flex items-center justify-between gap-2">
           <h2 className="text-base font-semibold text-[#1c1c1e]">
             Upcoming appointments
           </h2>
@@ -188,7 +191,7 @@ export default function DashboardPage() {
           <div className="divide-y divide-[#e8e4df]">
             {appointments.map(apt => (
               <div key={apt.id}
-                className="px-6 py-4 flex items-center justify-between">
+                className="px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
                 <div>
                   <p className="text-sm font-semibold text-[#1c1c1e]">
                     {apt.client_name}
@@ -205,11 +208,11 @@ export default function DashboardPage() {
                 </div>
                 <span className={`
                   text-xs font-medium px-2.5 py-1 rounded-full
-                  ${apt.status === 'confirmed'
-                    ? 'bg-[#d4e4e1] text-[#2d4a47]'
-                    : apt.status === 'pending'
+                  ${apt.status === 'upcoming'
                     ? 'bg-amber-50 text-amber-700'
-                    : 'bg-gray-100 text-gray-500'}
+                    : apt.status === 'rescheduled'
+                    ? 'bg-blue-50 text-blue-700'
+                    : 'bg-[#d4e4e1] text-[#2d4a47]'}
                 `}>
                   {apt.status}
                 </span>
