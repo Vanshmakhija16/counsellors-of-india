@@ -20,6 +20,12 @@ jobs:
         with:
           node-version: '20.x'
 
+      - name: Set environment variables
+        run: |
+          echo "NEXT_PUBLIC_SUPABASE_URL=${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}" >> $GITHUB_ENV
+          echo "SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}" >> $GITHUB_ENV
+
       - name: Install dependencies
         run: npm install
 
@@ -27,7 +33,7 @@ jobs:
         run: npm run build
 
       - name: Zip artifact for deployment
-        run: zip -r release.zip .next standalone public package.json package-lock.json next.config.ts
+        run: zip -r release.zip .next public package.json package-lock.json next.config.ts
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
