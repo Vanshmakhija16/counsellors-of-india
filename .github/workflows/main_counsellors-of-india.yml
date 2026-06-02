@@ -1,4 +1,4 @@
-```yml
+
 name: Build and deploy Node.js app to Azure Web App - counsellors-of-india
 
 on:
@@ -67,4 +67,3 @@ jobs:
           slot-name: 'Production'
           package: .
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_B30018024A434004990843E464909E9E }}
-```
