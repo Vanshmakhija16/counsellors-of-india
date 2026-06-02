@@ -1425,7 +1425,7 @@ btn-gold:hover{background:#9c701f;transform:translateY(-1px);box-shadow:0 6px 22
 .nav .btn-line:hover{color:var(--ink);background:rgba(19,20,15,.05);border-color:transparent}
 .nav .btn-dark{background:var(--wn-saffron,#FF9933);color:#fff;border:1px solid transparent;box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 6px 18px -6px rgba(255,153,51,.55)}
 .nav .btn-dark:hover{background:var(--wn-saffron-deep,#E07A12);transform:translateY(-1px);box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 10px 24px -8px rgba(255,153,51,.55)}
-@media(max-width:820px){.nav .nav-mid{display:none}.nav{height:56px;top:12px;padding:0 10px 0 18px}}
+@media(max-width:980px){.nav .nav-mid,.nav .nav-r{display:none}}
 
 
 .logo{
@@ -1525,13 +1525,15 @@ btn-gold:hover{background:#9c701f;transform:translateY(-1px);box-shadow:0 6px 22
     0 8px 22px -4px rgba(63,90,74,.4);
 }
 
-@media (max-width: 820px){
+@media (max-width: 980px){
 
   .nav{
     top: 12px;
     left: 10px;
     right: 10px;
+    transform: none;        /* cancel the desktop translateX(-50%) centering */
     width: auto;
+    max-width: none;
     height: 60px;
     padding: 0 10px 0 16px;
     border-radius: 999px;
@@ -1547,27 +1549,10 @@ btn-gold:hover{background:#9c701f;transform:translateY(-1px);box-shadow:0 6px 22
     height: 34px;
   }
 
-  .nav-mid{
-    display: none;
-  }
-
+  /* hamburger-only on mobile: hide the desktop links + CTAs entirely */
+  .nav-mid,
   .nav-r{
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .btn{
-    height: 38px;
-    padding: 0 14px;
-    font-size: 12px;
-    white-space: nowrap;
-  }
-
-  .btn-dark{
-    padding: 0 12px;
-        display: none;
-
+    display: none;
   }
 
 }
@@ -1742,7 +1727,7 @@ btn-gold:hover{background:#9c701f;transform:translateY(-1px);box-shadow:0 6px 22
 
 /* MOBILE */
 
-@media (max-width: 820px){
+@media (max-width: 980px){
 
   .nav-mid{
     display: none;
@@ -3810,13 +3795,11 @@ padding:
 
    
 .td-section, .tmpl-section, .how-section, .price-section, .faq-section{
-  // position:relative;
-  margin-top:-72px;
-  // border-top-left-radius:66px;
-
-  // border-top-right-radius:66px;
-  // box-shadow:0 -24px 56px -24px rgba(19,20,15,.22), 0 -1px 0 0 rgba(255,255,255,.65) inset;
-  // overflow-x:clip;
+  position:relative;
+  /* sections sit flush in normal flow — no negative-margin overlap.
+     (the old "stacked layers" lift was removed because its rounded-top +
+     shadow cues were disabled, leaving sections colliding into each other) */
+  margin-top:0;
 }
 /* Each section gets its own surface color so the rise is visible against neighbours.
    Colors stay inside the existing palette (--bg / --bg2 / --bg3 / --paper / --ink). */
@@ -3862,15 +3845,15 @@ padding:
 /* Match dark "final" footer to the ladder so it caps the stack cleanly */
 .final{
   position:relative;z-index:7;
-  margin-top:-56px;
+  margin-top:0;
   border-top-left-radius:36px;border-top-right-radius:36px;
   box-shadow:0 -22px 50px -24px rgba(19,20,15,.35);
 }
 
-/* Mobile: keep the layered look but with a gentler radius/lift */
+/* Mobile: sections stay flush (no overlap), rounded tops kept for the soft step */
 @media (max-width: 720px){
   .td-section, .tmpl-section, .how-section, .price-section, .faq-section, .final{
-    margin-top:-48px;
+    margin-top:0;
     border-top-left-radius:36px;border-top-right-radius:36px;
   }
 }
@@ -3956,11 +3939,11 @@ padding:
 /* ── Visual column — FIX 1 + 2: proper portrait ratio and a grounding surface ── */
 .how-v2 .how-row-visual{
   position: relative;
-  aspect-ratio: 9 / 18;   /* exact iPhone ratio */
+  aspect-ratio: 16 / 11;   /* laptop landscape — leaves room for the hinge lip */
   width: 100%;
-  max-width: none;   
+  max-width: none;
   margin: 0 auto;
-  perspective: 1200px;
+  perspective: 1600px;
 }
 
 /* FIX 1 + 3 + 6: card is no longer transparent/invisible.
@@ -3979,9 +3962,9 @@ padding:
 /* FIX 3: .smock no longer uses height: 97% (which collapses inside an absolute parent).
    Instead it fills the card via explicit sizing from its aspect-ratio + width. */
 .how-v2 .how-row-card .smock{
-  width: 46%;              /* relative to the card width, not to a phantom height */
+  width: 96%;              /* laptop fills the card width */
   height: auto;            /* let aspect-ratio drive the height */
-  /* FIX 6: float animation moved here so the shadow lifts with the phone */
+  /* float animation lives here so the shadow lifts with the screen */
   animation: howFloat 7s ease-in-out infinite;
   /* drop shadow that softens at float peak (handled by translateY in the keyframe) */
   filter: drop-shadow(0 28px 36px rgba(0,0,0,.38)) drop-shadow(0 6px 12px rgba(0,0,0,.22));
@@ -4013,89 +3996,103 @@ padding:
   50%      { transform: translateY(-12px);   }   /* slightly more lift than before (-10px) */
 }
 
-/* ── How-it-works step mockups (mobile phone screens) ───────────── */
+/* ── How-it-works step mockups (laptop / desktop app screens) ────────
+   The frame is now a browser window on a laptop, not a phone. We keep
+   container-type:inline-size so every cqw-based .smk-* style keeps scaling. */
 .smock{
   --c-ink:#1F1C18; --c-mut:#9a9183; --c-line:#ece6db; --c-paper:#fff;
   --c-saf:#FF9933; --c-saf2:#E07A12; --c-soft:#FBF3E6;
   position: relative;
-  /* FIX 3: removed height:97% — width+aspect-ratio now drive the size correctly */
-  aspect-ratio: 9 / 19.5;
+  /* landscape laptop screen */
+  aspect-ratio: 16 / 10;
   width: 100%;
   display: flex; flex-direction: column; overflow: visible;
-  /* titanium iPhone frame */
-  border-radius: clamp(26px,1cqw,46px);
+  /* slim aluminium laptop lid framing the screen */
+  border-radius: clamp(10px,1.4cqw,16px);
   background:
-    linear-gradient(135deg,#cfcabf 0%,#7c776e 18%,#b9b3a8 40%,#6f6a61 70%,#a39d92 100%);
-  padding: clamp(4px,1.5cqw,8px);
+    linear-gradient(135deg,#d7d2c8 0%,#a8a298 30%,#cdc7bc 55%,#9e988e 80%,#c3bdb2 100%);
+  padding: clamp(4px,1.1cqw,9px);
   box-shadow:
-    inset 0 0 0 1.5px rgba(255,255,255,.35),
-    inset 0 0 0 3px rgba(0,0,0,.35);
-  /* NOTE: outer drop-shadow moved to .how-row-card .smock above so it floats with the phone */
+    inset 0 0 0 1px rgba(255,255,255,.4),
+    inset 0 0 0 2px rgba(0,0,0,.28);
+  /* NOTE: outer drop-shadow lives on .how-row-card .smock so it floats with the screen */
   container-type: inline-size;
   font-family: var(--sans); color: var(--c-ink);
-  font-size: clamp(6.5px,3.4cqw,13px);
+  font-size: clamp(7px,2.05cqw,15px);
 }
 
-/* the black inner bezel that hugs the screen */
+/* the dark inner bezel that hugs the screen */
 .smock-body{
   position:relative; flex:1; min-height:0; overflow:hidden;
-  border-radius:clamp(22px,7.5cqw,40px);
+  border-radius:clamp(7px,1cqw,11px);
   background:linear-gradient(180deg,#FBF6EE 0%,#F6EDDF 100%);
-  box-shadow:inset 0 0 0 clamp(2px,1cqw,5px) #08070a;
+  box-shadow:inset 0 0 0 clamp(2px,.7cqw,4px) #0c0b0e;
   display:flex; flex-direction:column;
 }
 /* screen glass reflection */
 .smock-body::after{
   content:''; position:absolute; inset:0; pointer-events:none; z-index:6;
-  background:linear-gradient(125deg, rgba(255,255,255,.16) 0%, rgba(255,255,255,0) 22%);
+  background:linear-gradient(118deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 26%);
   border-radius:inherit;
 }
-/* Dynamic Island */
-.smock-notch{
-  position:absolute; top:clamp(7px,2.4cqw,14px); left:50%; transform:translateX(-50%);
-  width:30%; height:clamp(9px,3cqw,18px); border-radius:999px;
-  background:#000; z-index:7;
-  display:flex; align-items:center; justify-content:flex-end; gap:0; padding-right:8%;
-  box-shadow:0 0 0 1px rgba(255,255,255,.04);
-}
-.smock-cam{width:.6em;height:.6em;border-radius:50%;
-  background:radial-gradient(circle at 35% 30%, #2b3a52 0%, #0a0e16 60%);
-  box-shadow:0 0 0 1px rgba(70,110,160,.35)}
-/* side buttons */
-.smock::before{
-  content:''; position:absolute; right:-2px; top:30%; width:3px; height:14%;
-  border-radius:0 3px 3px 0; z-index:-1;
-  background:linear-gradient(180deg,#9a948a,#6f6a61);
-  box-shadow:0 1px 2px rgba(0,0,0,.4);
-}
+/* laptop base / hinge lip below the lid */
 .smock::after{
-  content:''; position:absolute; left:-2px; top:24%; width:3px; height:22%;
-  border-radius:3px 0 0 3px; z-index:-1;
-  background:
-    linear-gradient(180deg,#9a948a,#6f6a61) top/100% 44% no-repeat,
-    linear-gradient(180deg,#9a948a,#6f6a61) bottom/100% 44% no-repeat;
-  box-shadow:0 1px 2px rgba(0,0,0,.4);
+  content:''; position:absolute; left:50%; bottom:clamp(-7px,-1.1cqw,-11px);
+  transform:translateX(-50%);
+  width:118%; height:clamp(5px,.9cqw,9px);
+  border-radius:0 0 14px 14px;
+  background:linear-gradient(180deg,#c3bdb2 0%,#9a948a 55%,#7c766c 100%);
+  box-shadow:0 4px 10px -4px rgba(0,0,0,.4);
+  z-index:-1;
 }
-/* iOS status bar */
+/* the notch in the hinge lip (trackpad/opening cue) */
+.smock::before{
+  content:''; position:absolute; left:50%; bottom:clamp(-7px,-1.1cqw,-11px);
+  transform:translateX(-50%);
+  width:14%; height:clamp(5px,.9cqw,9px);
+  border-radius:0 0 8px 8px;
+  background:#8d877d;
+  z-index:-1;
+}
+
+/* browser chrome bar — repurposes the old .smock-status node */
 .smock-status{
   position:relative; z-index:7; flex-shrink:0;
-  display:flex; align-items:center; justify-content:space-between;
-  padding:clamp(5px,2cqw,11px) clamp(12px,5cqw,22px) 2px;
-  font-size:.78em; color:var(--c-ink);
+  display:flex; align-items:center; gap:.7em;
+  padding:clamp(5px,1.3cqw,10px) clamp(8px,1.8cqw,14px);
+  background:linear-gradient(180deg,#F4EEE4 0%,#EFE7DA 100%);
+  border-bottom:1px solid rgba(0,0,0,.06);
 }
-.smock-time{font-weight:700; letter-spacing:.02em}
-.smock-stat-r{display:flex; align-items:center; gap:.45em}
-.smock-signal{display:inline-block; width:1.05em; height:.72em;
-  background:
-    linear-gradient(var(--c-ink),var(--c-ink)) left 0 bottom/.18em .35em no-repeat,
-    linear-gradient(var(--c-ink),var(--c-ink)) left .27em bottom/.18em .5em no-repeat,
-    linear-gradient(var(--c-ink),var(--c-ink)) left .54em bottom/.18em .65em no-repeat,
-    linear-gradient(var(--c-ink),var(--c-ink)) left .81em bottom/.18em .8em no-repeat}
-.smock-wifi{width:.85em;height:.7em;border-radius:50% 50% 0 0;
-  border:.16em solid var(--c-ink); border-bottom:0; clip-path:inset(0 0 50% 0)}
-.smock-batt{width:1.25em;height:.62em;border:.13em solid var(--c-ink); border-radius:.18em; position:relative;
-  background:linear-gradient(var(--c-ink),var(--c-ink)) left/72% 100% no-repeat; background-clip:content-box; padding:.05em}
-.smock-batt::after{content:'';position:absolute;right:-.16em;top:28%;height:44%;width:.1em;border-radius:0 .1em .1em 0;background:var(--c-ink)}
+/* traffic-light dots */
+.smock-status::before{
+  content:''; flex-shrink:0;
+  width:.55em; height:.55em; border-radius:50%;
+  background:#E8A6A0;
+  box-shadow:
+    1em 0 0 #EFCD8E,
+    2em 0 0 #A7CBB1;
+}
+/* address pill grows to fill the bar */
+.smock-time{
+  flex:1; min-width:0;
+  margin-left:2.4em;
+  display:flex; align-items:center; gap:.4em;
+  background:#fff;
+  border:1px solid rgba(0,0,0,.07);
+  border-radius:999px;
+  padding:.32em .8em;
+  font-size:.74em; font-weight:500; letter-spacing:.01em;
+  color:#8a7f72;
+  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+  box-shadow:0 1px 2px rgba(0,0,0,.03) inset;
+}
+.smock-time::before{
+  content:''; flex-shrink:0;
+  width:.62em; height:.62em; border-radius:50%;
+  border:1.5px solid var(--c-saf);
+}
+/* the old status icons collapse — not needed on a browser bar */
+.smock-stat-r,.smock-signal,.smock-wifi,.smock-batt{ display:none; }
 
 /* a scrollable app screen *//* ═══════════════════════════════════════════════════════════════
    SMK SCREEN SYSTEM — refined edition
@@ -4592,6 +4589,74 @@ padding:
   border: 1px solid rgba(200,150,50,.2);
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   DESKTOP LAYOUTS for the laptop mock screens
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── Step 1 · auth screen (centred card on a warm canvas) ──────── */
+.smk-auth{
+  align-items: center;
+  justify-content: flex-start;
+  gap: .9em;
+  padding: clamp(10px,3cqw,26px) clamp(10px,3cqw,26px) clamp(8px,2cqw,18px);
+  background:
+    radial-gradient(ellipse 55% 45% at 85% 6%, rgba(255,153,51,.08) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 50% at 8% 96%, rgba(255,217,176,.22) 0%, transparent 65%),
+    linear-gradient(180deg,#F8F4EE 0%,#F2ECE2 100%);
+  overflow-y: auto;
+}
+.smk-auth-head{ text-align: center; display:flex; flex-direction:column; align-items:center; gap:.3em; }
+.smk-auth-head .smk-appbrand{ border:0; padding:0; font-size:1.15em; }
+.smk-auth-title{
+  font-family: var(--serif);
+  font-size: 1em;
+  color: #3D3A33;
+  letter-spacing: -.01em;
+}
+.smk-auth-card{ width: min(66%, 23em); gap: .42em; padding: clamp(9px,2.6cqw,15px); }
+.smk-auth-card .smk-avatar{ width: clamp(28px,11cqw,44px); height: clamp(28px,11cqw,44px); margin-bottom: -.1em; }
+.smk-auth-card .smk-uplab{ font-size: .68em; }
+.smk-auth-card .smk-field{ gap: 2px; }
+
+/* ── Steps 2–4 · app shell (sidebar + main) ───────────────────── */
+.smk-app{
+  flex: 1; min-height: 0;
+  display: grid;
+  grid-template-columns: clamp(70px,22cqw,150px) 1fr;
+  overflow: hidden;
+  background: linear-gradient(180deg,#FBF8F2 0%,#F6F0E6 100%);
+}
+.smk-side{
+  display: flex; flex-direction: column; gap: .9em;
+  padding: clamp(8px,2.2cqw,16px) clamp(7px,1.8cqw,13px);
+  background: linear-gradient(180deg,#FFFFFF 0%,#FCF8F1 100%);
+  border-right: 1px solid rgba(236,230,219,.9);
+}
+.smk-side .smk-appbrand{ border:0; padding:0; justify-content:flex-start; font-size:.92em; }
+.smk-nav{ display:flex; flex-direction:column; gap:.18em; }
+.smk-nav span{
+  font-size: .8em; font-weight: 500;
+  color: #8a7f72;
+  padding: .5em .7em;
+  border-radius: 9px;
+}
+.smk-nav span.on{
+  background: linear-gradient(135deg, rgba(255,153,51,.14), rgba(255,153,51,.06));
+  color: #b46410; font-weight: 700;
+  box-shadow: inset 0 0 0 1px rgba(255,153,51,.18);
+}
+.smk-main{
+  min-width: 0; min-height: 0; overflow: hidden;
+  display: flex; flex-direction: column; gap: .6em;
+  padding: clamp(9px,2.6cqw,20px) clamp(10px,2.8cqw,22px);
+}
+.smk-mainhead{ display:flex; flex-direction:column; gap:.4em; }
+.smk-grid2{ display:grid; grid-template-columns:1fr 1fr; gap:.5em; }
+.smk-cta-inline{ align-self:flex-start; padding:.62em 1.4em; }
+.smk-stats-3{ grid-template-columns: repeat(3, 1fr); }
+.smk-chart-wrap{ display:flex; flex-direction:column; gap:.35em; margin-top:.1em; }
+.smk-chart-wrap .smk-chart{ border-top:0; height:3.4em; }
+
 /* ── Responsive ────────────────────────────────────────────────── */
 @media (max-width: 860px) {
   .how-v2 .how-row,
@@ -4601,8 +4666,8 @@ padding:
     gap: 2rem;
   }
   .how-v2 .how-row-visual {
-    aspect-ratio: 9 / 19.5;
-    max-width: 260px;
+    aspect-ratio: 16 / 11;
+    max-width: 460px;
     margin: 0 auto;
   }
 }
@@ -5025,7 +5090,8 @@ padding:
   overflow:hidden;
   min-height:min(78vh,600px);
   display:flex;align-items:center;justify-content:center;
-  padding:clamp(3rem,9vh,7rem) clamp(1.25rem,5vw,3rem);
+  /* guarantee comfortable gutters at both ends (min 20px) */
+  padding:clamp(3rem,9vh,7rem) max(20px,clamp(1.25rem,5vw,3rem));
 }
 /* faint concentric ring framing the wordmark */
 .hangmark::before{
@@ -5056,6 +5122,7 @@ padding:
 .hangmark-stage{
   position:relative;z-index:1;
   display:flex;flex-direction:column;align-items:center;text-align:center;
+  width:100%;max-width:100%;
 }
 /* eyebrow — sits ABOVE the rod */
 .hangmark-eyebrow{
@@ -5095,10 +5162,14 @@ padding:
 .hangmark-word{
   margin:0;
   font-family:'times new roman','Instrument Serif',Georgia,serif;
-  font-weight:400;line-height:.9;letter-spacing:-.012em;
-  font-size:clamp(2.8rem,9vw,10rem);
+  font-weight:400;line-height:.95;letter-spacing:-.012em;
+  /* sized so the full wordmark fits within the section padding on every width.
+     ~6.4vw keeps "Counsellors of India" (≈20 chars) inside the viewport with
+     comfortable side gutters; capped at 7rem so it stays elegant on desktop. */
+  font-size:clamp(1.5rem,6.4vw,7rem);
   color:#FF9933;
   display:flex;flex-wrap:nowrap;justify-content:center;white-space:nowrap;
+  max-width:100%;
 }
 /* each letter fades in staggered, then sways gently as if hanging */
 .hangmark-ch{
@@ -5164,11 +5235,20 @@ padding:
 .mobile-sidebar{
   position: fixed;
   top: 12px;
-  right: -100%;
+  right: 12px;
   width: 88%;
   max-width: 380px;
   height: calc(100vh - 24px);
   border-radius: 32px 0 0 32px;
+
+  /* hidden off-canvas by default. We use transform (not right:-100%)
+     because an ancestor .nav has transform/backdrop-filter, which makes
+     position:fixed resolve against the nav pill — not the viewport — so a
+     percentage offset wouldn't push the panel fully off-screen. translateX
+     is always relative to the element's own width, so it hides reliably. */
+  transform: translateX(calc(100% + 24px));
+  visibility: hidden;
+  pointer-events: none;
 
   background:
     linear-gradient(
@@ -5195,7 +5275,8 @@ padding:
   flex-direction: column;
 
   transition:
-    right 0.55s cubic-bezier(.16,1,.3,1);
+    transform 0.55s cubic-bezier(.16,1,.3,1),
+    visibility 0s linear 0.55s;
 
   overflow: hidden;
   z-index: 999;
@@ -5296,7 +5377,12 @@ padding:
 }
 
 .mobile-sidebar.show{
-  right: 0;
+  transform: translateX(0);
+  visibility: visible;
+  pointer-events: auto;
+  transition:
+    transform 0.55s cubic-bezier(.16,1,.3,1),
+    visibility 0s linear 0s;
 }
 
 /* GLOW */
@@ -5537,6 +5623,13 @@ padding:
 
   cursor: pointer;
 
+  /* sit above the pill, overlay (998) and sidebar (999) so the
+     X stays tappable while the menu is open */
+  position: relative;
+  z-index: 1200;
+
+  flex-shrink: 0;
+
   transition: all 0.35s ease;
 }
 
@@ -5569,7 +5662,7 @@ padding:
 
 /* MOBILE */
 
-@media (max-width: 820px){
+@media (max-width: 980px){
 
   .nav-mid,
   .nav-r{
@@ -5578,6 +5671,50 @@ padding:
 
   .menu-btn{
     display: flex;
+  }
+}
+
+/* small phones — tighten the pill + give the sidebar a touch more room */
+@media (max-width: 480px){
+
+  .nav{
+    height: 54px;shows 
+    padding: 0 8px 0 14px;
+  }
+
+  .menu-btn{
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+  }
+
+  .mobile-sidebar{
+    width: 92%;
+    padding: 20px 18px;
+    border-radius: 28px 0 0 28px;
+  }
+
+  .sidebar-top{
+    margin-bottom: 32px;
+  }
+
+  .sidebar-links a{
+    padding: 15px 18px;
+    font-size: 15px;
+  }
+}
+
+/* respect users who prefer reduced motion — kill the animated gradient */
+@media (prefers-reduced-motion: reduce){
+
+  .mobile-sidebar{
+    animation: none;
+  }
+
+  .menu-btn,
+  .menu-btn span,
+  .sidebar-links a{
+    transition: none;
   }
 }
 
@@ -5903,29 +6040,32 @@ function BigWordmark() {
    1) sign-up page  2) build-your-profile form  3) dashboard + shareable link
    4) appointments list. They scale to fill the card. */
 function StepMock({ step }: { step: number }) {
+  // The browser URL shown in the chrome bar, per step.
+  const url = [
+    'counsellorsofindia.com/signup',
+    'counsellorsofindia.com/dashboard/profile',
+    'counsellorsofindia.com/dashboard',
+    'counsellorsofindia.com/dashboard/appointments',
+  ][step] ?? 'counsellorsofindia.com'
+
   return (
     <div className="smock">
-      {/* iPhone frame */}
-      <div className="smock-notch"><span className="smock-cam" /></div>
       <div className="smock-body">
-        {/* iOS status bar */}
+        {/* browser chrome */}
         <div className="smock-status">
-          <span className="smock-time">9:41</span>
-          <span className="smock-stat-r">
-            <span className="smock-signal" />
-            <span className="smock-wifi" />
-            <span className="smock-batt" />
-          </span>
+          <span className="smock-time">{url}</span>
         </div>
 
-        {/* STEP 1 — Sign up (mobile) */}
+        {/* STEP 1 — Sign up (desktop, mirrors /signup) */}
         {step === 0 && (
-          <div className="smk-screen">
-            <div className="smk-appbrand"><span className="smk-pip" />Counsellors of India</div>
-            <div className="smk-card">
+          <div className="smk-screen smk-auth">
+            <div className="smk-auth-head">
+              <div className="smk-appbrand"><span className="smk-pip" />Counsellors of India</div>
+              <div className="smk-auth-title">Create your free account</div>
+            </div>
+            <div className="smk-card smk-auth-card">
               <div className="smk-avatar"><span className="smk-usr" /></div>
               <div className="smk-uplab">Upload profile photo</div>
-              <div className="smk-h">Create your free account</div>
               <div className="smk-field"><span className="smk-flabel">Full Name</span>
                 <div className="smk-row-name">
                   <div className="smk-select">Dr. <i className="smk-chev" /></div>
@@ -5933,68 +6073,105 @@ function StepMock({ step }: { step: number }) {
                 </div>
               </div>
               <div className="smk-field"><span className="smk-flabel">Your profile URL</span>
-                <div className="smk-input smk-pre"><span className="smk-prefix">counsellorsofindia.com/</span></div>
-                <div className="smk-input smk-ph">yourname</div>
-                <span className="smk-hint">Only lowercase letters, numbers, and hyphens</span>
+                <div className="smk-url-row">
+                  <span className="smk-prefix">counsellorsofindia.com/</span>
+                  <span className="smk-url-input">priya-sharma</span>
+                </div>
               </div>
-              {/* <div className="smk-field"><span className="smk-flabel">Email Address</span><div className="smk-input smk-ph">priya@example.com</div></div> */}
-              {/* <div className="smk-field"><span className="smk-flabel">Password</span><div className="smk-input smk-ph">Minimum 6 characters</div></div> */}
+              <div className="smk-field"><span className="smk-flabel">Email Address</span><div className="smk-input smk-ph">priya@example.com</div></div>
+              <div className="smk-field"><span className="smk-flabel">Password</span><div className="smk-input smk-ph">Minimum 6 characters</div></div>
               <div className="smk-cta">Create free account</div>
             </div>
-            {/* <div className="smk-foot">Already have an account? <em>Sign in</em> <span className="smk-foot-av">N</span></div> */}
           </div>
         )}
 
-        {/* STEP 2 — Build your profile (mobile) */}
+        {/* STEP 2 — Build your profile (desktop: sidebar + form) */}
         {step === 1 && (
-          <div className="smk-screen">
-            <div className="smk-appbrand"><span className="smk-pip" />Counsellors of India</div>
-            <div className="smk-card">
-              <div className="smk-h">Build your profile</div>
-              <div className="smk-prog"><span style={{ ['--p' as string]: '66%' }} /></div>
-              <div className="smk-field"><span className="smk-flabel">Professional Title</span><div className="smk-input">Clinical Psychologist</div></div>
-              <div className="smk-field"><span className="smk-flabel">City</span><div className="smk-input">Mumbai</div></div>
-              <div className="smk-field"><span className="smk-flabel">About your approach</span><div className="smk-area">CBT · Trauma-informed · A warm, collaborative space for anxiety & burnout…</div></div>
-              <div className="smk-field"><span className="smk-flabel">Specialties</span>
-                <div className="smk-chips"><span>Anxiety</span><span>Couples</span><span>Grief</span><span className="add">+ Add</span></div>
+          <div className="smk-app">
+            <aside className="smk-side">
+              <div className="smk-appbrand sm"><span className="smk-pip" />Counsellors</div>
+              <nav className="smk-nav">
+                <span>Overview</span>
+                <span className="on">Profile</span>
+                <span>Appearance</span>
+                <span>Appointments</span>
+                <span>Payments</span>
+              </nav>
+            </aside>
+            <div className="smk-main">
+              <div className="smk-mainhead">
+                <div className="smk-h2">Build your profile</div>
+                <div className="smk-prog"><span style={{ ['--p' as string]: '66%' }} /></div>
               </div>
-              <div className="smk-field"><span className="smk-flabel">Fee per session</span><div className="smk-input">₹1,500</div></div>
-              <div className="smk-cta">Save &amp; continue</div>
+              <div className="smk-grid2">
+                <div className="smk-field"><span className="smk-flabel">Professional Title</span><div className="smk-input">Clinical Psychologist</div></div>
+                <div className="smk-field"><span className="smk-flabel">City</span><div className="smk-input">Mumbai</div></div>
+              </div>
+              <div className="smk-field"><span className="smk-flabel">About your approach</span><div className="smk-area">CBT · Trauma-informed · A warm, collaborative space for anxiety &amp; burnout, helping clients move toward steadier, fuller lives.</div></div>
+              <div className="smk-grid2">
+                <div className="smk-field"><span className="smk-flabel">Specialties</span>
+                  <div className="smk-chips"><span>Anxiety</span><span>Couples</span><span>Grief</span><span className="add">+ Add</span></div>
+                </div>
+                <div className="smk-field"><span className="smk-flabel">Fee per session</span><div className="smk-input">₹1,500</div></div>
+              </div>
+              <div className="smk-cta smk-cta-inline">Save &amp; continue</div>
             </div>
           </div>
         )}
 
-        {/* STEP 3 — Dashboard + share link (mobile) */}
+        {/* STEP 3 — Dashboard + share link (desktop) */}
         {step === 2 && (
-          <div className="smk-screen">
-            <div className="smk-topbar"><span className="smk-burger" /><span className="smk-appbrand sm"><span className="smk-pip" />Counsellors of India</span></div>
-            <div className="smk-pad">
+          <div className="smk-app">
+            <aside className="smk-side">
+              <div className="smk-appbrand sm"><span className="smk-pip" />Counsellors</div>
+              <nav className="smk-nav">
+                <span className="on">Overview</span>
+                <span>Profile</span>
+                <span>Appearance</span>
+                <span>Appointments</span>
+                <span>Payments</span>
+              </nav>
+            </aside>
+            <div className="smk-main">
               <div className="smk-h2">Welcome back, Priya 👋</div>
               <div className="smk-share">
                 <span className="smk-globe" />
                 <span className="smk-link">counsellorsofindia.com/priya-sharma</span>
-                <span className="smk-copy">Copy</span>
+                <span className="smk-copy">Copy link</span>
               </div>
-              <div className="smk-stats">
+              <div className="smk-stats smk-stats-3">
                 <div className="smk-stat"><b>128</b><span>Profile views</span><i className="smk-up">▲ 12%</i></div>
                 <div className="smk-stat"><b>14</b><span>Bookings</span><i className="smk-up">▲ 5%</i></div>
+                <div className="smk-stat smk-stat-rate"><b>4.9</b><span>★★★★★ · 32 reviews</span></div>
               </div>
-              <div className="smk-stat smk-stat-rate wide"><b>4.9</b><span>★★★★★ · 32 reviews</span></div>
-              <div className="smk-chart"><span /><span /><span /><span /><span /><span /><span /></div>
+              <div className="smk-chart-wrap">
+                <span className="smk-flabel">Bookings · last 7 days</span>
+                <div className="smk-chart"><span /><span /><span /><span /><span /><span /><span /></div>
+              </div>
             </div>
           </div>
         )}
 
-        {/* STEP 4 — Appointments (mobile) */}
+        {/* STEP 4 — Appointments (desktop) */}
         {step === 3 && (
-          <div className="smk-screen">
-            <div className="smk-topbar"><span className="smk-burger" /><span className="smk-appbrand sm"><span className="smk-pip" />Counsellors of India</span></div>
-            <div className="smk-pad">
+          <div className="smk-app">
+            <aside className="smk-side">
+              <div className="smk-appbrand sm"><span className="smk-pip" />Counsellors</div>
+              <nav className="smk-nav">
+                <span>Overview</span>
+                <span>Profile</span>
+                <span>Appearance</span>
+                <span className="on">Appointments</span>
+                <span>Payments</span>
+              </nav>
+            </aside>
+            <div className="smk-main">
               <div className="smk-appttop"><div className="smk-h2">Appointments</div><span className="smk-pill-today">Today · 3</span></div>
               {[
-                { i: 'AM', n: 'Aarav Mehta', t: 'Today · 4:00 PM', g: 'a', s: 'ok' },
-                { i: 'SK', n: 'Sara Khan', t: 'Tomorrow · 11:30 AM', g: 'b', s: 'wait' },
-                { i: 'RV', n: 'Rohan Verma', t: 'Fri · 6:00 PM', g: 'c', s: 'ok' },
+                { i: 'AM', n: 'Aarav Mehta', t: 'Today · 4:00 PM · Anxiety', g: 'a', s: 'ok' },
+                { i: 'SK', n: 'Sara Khan', t: 'Tomorrow · 11:30 AM · Couples', g: 'b', s: 'wait' },
+                { i: 'RV', n: 'Rohan Verma', t: 'Fri · 6:00 PM · Grief', g: 'c', s: 'ok' },
+                { i: 'IN', n: 'Isha Nair', t: 'Fri · 7:30 PM · Burnout', g: 'b', s: 'ok' },
               ].map((a) => (
                 <div key={a.n} className="smk-appt">
                   <span className={`smk-ini g-${a.g}`}>{a.i}</span>
@@ -6592,6 +6769,19 @@ export default function Home() {
   const [scrolled,setScrolled]=useState(false)
   const [menuOpen, setMenuOpen] = useState(false);
 
+  // lock body scroll + allow Esc to close while the mobile sidebar is open
+  useEffect(()=>{
+    if(!menuOpen) return
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    const onKey = (e: KeyboardEvent) => { if(e.key === 'Escape') setMenuOpen(false) }
+    document.addEventListener('keydown', onKey)
+    return ()=>{
+      document.body.style.overflow = prev
+      document.removeEventListener('keydown', onKey)
+    }
+  },[menuOpen])
+
   useEffect(()=>{
     let ticking = false
     const fn = () => {
@@ -6731,13 +6921,25 @@ export default function Home() {
     <span></span>
   </button>
 
+</nav>
+
+{/* Overlay + sidebar live OUTSIDE <nav>: the nav pill has transform +
+    backdrop-filter, which would make these position:fixed elements resolve
+    against the pill instead of the viewport. As siblings of <nav> they pin
+    to the viewport correctly. */}
 <>
   <div
     className={`mobile-overlay ${menuOpen ? "show" : ""}`}
     onClick={() => setMenuOpen(false)}
   />
 
-  <aside className={`mobile-sidebar ${menuOpen ? "show" : ""}`}>
+  <aside
+    className={`mobile-sidebar ${menuOpen ? "show" : ""}`}
+    onClick={(e) => {
+      // close the sidebar whenever a link inside it is tapped
+      if ((e.target as HTMLElement).closest("a")) setMenuOpen(false);
+    }}
+  >
 
     <div className="sidebar-glow"></div>
 
@@ -6817,18 +7019,6 @@ export default function Home() {
   </aside>
 </>
 
-</nav>
-
-
-      {menuOpen && (
-  <div className="mobile-menu">
-    <a href="#hero">Home</a>
-    <a href="#how">How it works</a>
-    <a href="#therapists">Therapists</a>
-    <a href="#templates">Templates</a>
-    <a href="#pricing">Pricing</a>
-  </div>
-)}
 
       {/* ── HERO: editorial value-prop (templates live in their own section) ── */}
       <section className="hero-bn" id="hero">
