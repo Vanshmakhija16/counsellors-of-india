@@ -39,7 +39,7 @@ jobs:
           mkdir -p deploy
 
           # Standalone server
-          cp -r .next/standalone/* deploy/
+          cp -r .next/standalone/. deploy/
 
           # Required Next.js runtime files
           mkdir -p deploy/.next
@@ -55,8 +55,9 @@ jobs:
 
       - name: Verify deployment package
         run: |
-          echo "DEPLOY CONTENTS:"
-          find deploy -type f | sort | head -100
+          echo "Checking deploy folder"
+          ls -la deploy
+          ls -la deploy/.next
 
       - name: Upload deployment artifact
         uses: actions/upload-artifact@v4
