@@ -20,7 +20,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
 
       - name: Set environment variables
         run: |
@@ -34,36 +34,61 @@ jobs:
       - name: Build Next.js app
         run: npm run build
 
+      - name: Verify build output
+        run: |
+          echo "=== .next contents ==="
+          ls -la .next
+          echo ""
+          echo "=== standalone ==="
+          ls -la .next/standalone
+          echo ""
+          echo "=== BUILD_ID ==="
+          cat .next/BUILD_ID
+
       - name: Prepare standalone deployment package
         run: |
           mkdir -p deploy
 
-          # Standalone server
+          echo "Copying standalone server..."
           cp -r .next/standalone/. deploy/
 
-          # Required Next.js runtime files
+          echo "Creating deploy/.next..."
           mkdir -p deploy/.next
+
+          echo "Copying static files..."
           cp -r .next/static deploy/.next/
+
+          echo "Copying server files..."
           cp -r .next/server deploy/.next/
+
+          echo "Copying BUILD_ID..."
           cp .next/BUILD_ID deploy/.next/
 
-          # Public assets
+          echo "Copying public folder..."
           cp -r public deploy/
 
-          # Package.json
+          echo "Copying package.json..."
           cp package.json deploy/
 
       - name: Verify deployment package
         run: |
-          echo "Checking deploy folder"
+          echo "=== DEPLOY ROOT ==="
           ls -la deploy
+
+          echo ""
+          echo "=== DEPLOY .NEXT ==="
           ls -la deploy/.next
+
+          echo ""
+          echo "=== DEPLOY BUILD_ID ==="
+          cat deploy/.next/BUILD_ID
 
       - name: Upload deployment artifact
         uses: actions/upload-artifact@v4
         with:
           name: node-app
           path: deploy
+          include-hidden-files: true
 
   deploy:
     runs-on: ubuntu-latest
@@ -74,6 +99,23 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: node-app
+
+      - name: Verify downloaded artifact
+        run: |
+          echo "=== ROOT FILES ==="
+          ls -la
+
+          echo ""
+          echo "=== .NEXT ==="
+          ls -la .next || true
+
+          echo ""
+          echo "=== .NEXT SERVER ==="
+          ls -la .next/server || true
+
+          echo ""
+          echo "=== BUILD_ID ==="
+          cat .next/BUILD_ID || true
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
