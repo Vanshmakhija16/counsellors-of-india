@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       scheduled_at,
       duration_mins,
       // ── Service fields sent by ClassicTemplate4 Booking.tsx ──
-      service_name,   // e.g. "Couples Therapy"
+      service_name,   // e.g. "Couple Therapy"
       service_price,  // e.g. 2000  (number | null)
     } = body;
 

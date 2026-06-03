@@ -2,7 +2,7 @@
 
 :root {
   --background: #fafaf9;
-  --foreground: #1c1c1e;
+  --foreground: #ffffff;
 }
 
 @theme inline {
@@ -591,5 +591,6 @@ body {
 html, body {
   max-width: 100%;
   /* clip (not hidden) avoids breaking position:sticky descendants */
-  overflow-x: clip;
+  overflow-x: hidden;   /* safe for x-axis only */
+  overflow-y: visible;  /* explicitly keep y unclipped */
 }

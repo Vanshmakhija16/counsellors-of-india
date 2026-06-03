@@ -430,4 +430,16 @@ body { margin: 0; font-family: var(--sans); background: var(--sand); }
 .ct-footer__contact { display: flex; flex-direction: column; gap: 14px; }
 .ct-footer__contact-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #6f655c; margin: 0; }
 .ct-footer__bottom { position: relative; z-index: 10; max-width: 1200px; margin: 28px auto 0; display: flex; justify-content: space-between; font-size: 12px; color: #7c736b; flex-wrap: wrap; gap: 10px; }
+
+
+
+
+
+
+
+
+
+
+
+
 `

@@ -42,7 +42,7 @@ const photoSrc =
   therapist?.image?.trim()
     ? therapist.image
     : '/profiledemo.png'
-      console.log('photoSrc:', photoSrc)
+      // console.log('photoSrc:', photoSrc)
   const initials = therapist.initials ?? displayName
     .split(' ')
     .map((w: string) => w[0])

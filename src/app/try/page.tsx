@@ -124,29 +124,15 @@ function TryDemo() {
             backdropFilter: 'blur(12px)',
           }}
         >
-          <span className="w-[14px] h-[14px] flex flex-col justify-center gap-[3.5px] relative shrink-0">
-            <span className="block h-[1.5px] rounded-full transition-all duration-300 origin-center w-full"
-              style={{
-                background: sidebarOpen ? theme : 'rgba(255,255,255,0.65)',
-                transform: sidebarOpen ? 'translateY(5px) rotate(45deg)' : 'none',
-              }} />
-            <span className="block h-[1.5px] rounded-full transition-all duration-200 w-[75%]"
-              style={{
-                background: sidebarOpen ? theme : 'rgba(255,255,255,0.4)',
-                opacity: sidebarOpen ? 0 : 1,
-                transform: sidebarOpen ? 'scaleX(0)' : 'none',
-              }} />
-            <span className="block h-[1.5px] rounded-full transition-all duration-300 origin-center"
-              style={{
-                background: sidebarOpen ? theme : 'rgba(255,255,255,0.65)',
-                transform: sidebarOpen ? 'translateY(-5px) rotate(-45deg)' : 'none',
-                width: sidebarOpen ? '100%' : '88%',
-              }} />
+          <span className="w-[14px] h-[14px] flex items-center justify-center relative shrink-0">
+            {sidebarOpen
+              ? <X size={14} style={{ color: theme }} />
+              : <Pencil size={13} style={{ color: 'rgba(255,255,255,0.65)' }} />}
           </span>
-          {/* <span className="text-[12px] font-medium tracking-tight transition-colors duration-200"
-            style={{ color: sidebarOpen ? theme : 'rgba(255,255,255,0.5)' }}>
-            {sidebarOpen ? 'Close' : 'Menu'}
-          </span> */}
+          <span className="text-[12px] font-medium tracking-tight transition-colors duration-200 whitespace-nowrap"
+            style={{ color: sidebarOpen ? theme : 'rgba(255,255,255,0.6)' }}>
+            {sidebarOpen ? 'Close' : 'Edit details'}
+          </span>
         </span>
       </button>
 
@@ -227,7 +213,7 @@ function TryDemo() {
               </span> */}
 
               {/* Title — takes all remaining width */}
-              <div className="flex-1 ml-14 mt-2  min-w-0 pt-[1px]">
+              <div className="flex-1 ml-22 mt-2  min-w-0 pt-[1px]">
                 <p className="text-white/90 text-[13.5px] font-semibold tracking-tight leading-none">
                   Live Preview
                 </p>

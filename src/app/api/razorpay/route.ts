@@ -107,8 +107,8 @@ async function handlePlanUpgrade(req: NextRequest) {
     if (!therapist_id || !plan) {
       return NextResponse.json({ error: 'Missing therapist_id or plan' }, { status: 400 })
     }
-    if (!['growth', 'pro'].includes(plan)) {
-      return NextResponse.json({ error: 'Invalid plan. Must be growth or pro.' }, { status: 400 })
+    if (!['starter', 'pro'].includes(plan)) {
+      return NextResponse.json({ error: 'Invalid plan. Must be starter or pro.' }, { status: 400 })
     }
 
     // ── 2. Verify HMAC-SHA256 signature ───────────────────────────────

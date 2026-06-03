@@ -444,7 +444,7 @@ function FamilyPane({
             key: 'family_mental_health' as const,
             label: 'Marital / relationship status & children',
             placeholder:
-              'Status — Single · Married · Separated · Divorced · Widowed · Live-in · Other.\nIf married — arranged / love marriage (optional, but useful for couples presenting with conflict).\nChildren — number and ages if relevant.',
+              'Status — Single · Married · Separated · Divorced · Widowed · Live-in · Other.\nIf married — arranged / love marriage (optional, but useful for couple presenting with conflict).\nChildren — number and ages if relevant.',
           },
           {
             key: 'childhood' as const,

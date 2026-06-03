@@ -1,17 +1,31 @@
-'use client'
+﻿'use client'
 
 import { useState, useEffect, useRef, useMemo, lazy, Suspense } from 'react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import FaqRevealEffect from "@/components/landing/FaqRevealEffect";
+import FooterReveal from '@/components/landing/FooterReveal'
+import { loadDemo, saveDemo, emptyDemo, type DemoProfile } from '@/lib/demoSession'
 
-
+const headlines = [
+  <>
+    Build your own website <span className="text-[#ff9933]"> in minutes. </span> 
+  </>,
+  <>
+    Grow your counselling <span className="text-[#ff9933]"> practice online.</span> 
+  </>,
+  <>
+    Get clients & bookings<span className="text-[#ff9933]"> seamlessly.  </span> <span className="text-[#ff9933]"> </span>  
+  </>,
+];
 /* ─────────────────────────────────────────────────────────────────
-   COUNSELLORS OF INDIA  ·  Premium homepage
+   COUNSELLORS OF INDIA  —  Premium homepage
    Selling points (in order of focus):
    1. Find a therapist (directory + rotating profiles)
    2. List your practice (5 templates, beautiful by default)
 ───────────────────────────────────────────────────────────────── */
 const CSS = `
-@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;1,9..144,300;1,9..144,400&family=Inter:wght@300;400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
 
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
@@ -20,21 +34,59 @@ const CSS = `
   --bg2:#F4F1EA;
   --bg3:#ECE8DE;
   --paper:#ffffff;
-  --ink:#13140F;
-  --ink2:#3a3a30;
-  --ink3:#76766B;
-  --ink4:#A8A89E;
-  --gold:#B8862C;
-  --gold2:#D9B062;
-  --gold-bg:rgba(184,134,44,0.07);
-  --gold-line:rgba(184,134,44,0.22);
-  --border:rgba(19,20,15,0.09);
-  --border2:rgba(19,20,15,0.05);
-  --serif:'Instrument Serif',Georgia,serif;
-  --sans:'Inter',system-ui,sans-serif;
+  /* ── SECTION SURFACE SCALE ──────────────────────────────────────
+     A deliberate 3-step warm-light scale so every section boundary is a
+     clear, consistent tonal step (instead of 5 near-random off-whites).
+     Sections alternate s1 / s2; the footer uses the dark anchor. */
+  /* Warm saffron-tinted surface scale (near-white, brand undertone). Keeps
+     text crisp while the page reads warm; saffron lives in the accents. */
+  --surf-1:#FFFCF8;   /* warm white   — Hero, Templates, How-it-works, FAQ */
+  --surf-2:#FDF5EC;   /* saffron cream— Therapists, Try Demo, Pricing      */
+  --surf-dark:#14110C;/* warm anchor  — Footer only                        */
+  /* Text colours tuned for clean contrast on the saffron-tint surfaces */
+  --ink:#1F1A14;      /* warm near-black — headings/primary text  */
+  --ink2:#46403A;     /* secondary text                          */
+  --ink3:#7A7166;     /* muted text / captions                   */
+  --ink4:#A89F94;     /* faint / hints                           */
+  /* Saffron is the brand accent (replaces the old gold accent role) */
+  --gold:#E07A12;     /* deep saffron — small accents / borders   */
+  --gold2:#FF9933;    /* saffron     — primary accent             */
+  --gold-bg:rgba(255,153,51,0.07);
+  --gold-line:rgba(255,153,51,0.24);
+  --border:rgba(31,26,20,0.09);
+  --border2:rgba(31,26,20,0.05);
+  /* ── ONE premium type system ──────────────────────────────────────
+     Fraunces (high-contrast optical serif) for all display/headings,
+     Inter for all body. Both are already loaded via next/font + @import,
+     so there is no extra request and no font flash. */
+  /* ── TYPE SYSTEM ──────────────────────────────────────────────────
+     --display / --serif both map to Plus Jakarta Sans so existing
+     var(--serif) heading call-sites pick up the new display font without
+     editing every site. --sans = Inter for body. */
+  --display:'Plus Jakarta Sans','Inter',system-ui,sans-serif;
+  --serif:'Plus Jakarta Sans','Inter',system-ui,sans-serif;
+  --sans:'Inter',system-ui,-apple-system,sans-serif;
+
+  /* ── SPACING SCALE (strict 8-based rhythm) ────────────────────────
+     Use these everywhere instead of ad-hoc rem values so the page has a
+     consistent vertical rhythm. */
+  --s-1:8px;  --s-2:16px; --s-3:24px; --s-4:32px;
+  --s-5:48px; --s-6:64px; --s-7:96px; --s-8:128px; --s-9:160px;
+  /* fluid section padding built on the scale (premium breathing room) */
+  --section-y:clamp(var(--s-6), 11vw, var(--s-9));   /* 64 → 160 */
+  --section-x:clamp(var(--s-3), 6vw, var(--s-7));    /* 24 → 96  */
+
+  /* ── ELEVATION & RADIUS ───────────────────────────────────────────
+     Soft, layered shadows + large radii (Linear/Stripe surface feel). */
+  --r-sm:12px; --r-md:18px; --r-lg:24px; --r-xl:32px; --r-2xl:40px;
+  --shadow-sm:0 1px 2px rgba(31,26,20,.04), 0 4px 12px -6px rgba(31,26,20,.08);
+  --shadow-md:0 2px 4px rgba(31,26,20,.04), 0 12px 28px -12px rgba(31,26,20,.12);
+  --shadow-lg:0 4px 8px rgba(31,26,20,.05), 0 28px 56px -20px rgba(31,26,20,.16);
+  --shadow-ring:0 0 0 1px rgba(31,26,20,.06);
+
   --nav:68px;
   --max:1180px;
-  --px:clamp(1.5rem,6vw,5rem);
+  --px:var(--section-x);
   --gap:clamp(5rem,10vh,9rem);
 }
 
@@ -49,7 +101,7 @@ body,.pg{font-family:var(--sans);background:var(--bg);color:var(--ink);-webkit-f
   position:fixed;
   top:14px;left:50%;transform:translateX(-50%);
   width:calc(100% - 32px);max-width:1180px;
-  height:60px;padding:0 10px 0 22px;
+  height:68px;padding:0 10px 0 22px;
   display:flex;align-items:center;justify-content:space-between;gap:1rem;
   z-index:1000;
   border-radius:999px;
@@ -66,18 +118,18 @@ body,.pg{font-family:var(--sans);background:var(--bg);color:var(--ink);-webkit-f
   box-shadow:0 1px 0 rgba(255,255,255,.8) inset,0 14px 36px -10px rgba(63,90,74,.14);
 }
 .logo{
-  font-family:var(--serif);font-size:15px;font-weight:400;
-  color:rgba(255,255,255,.92);text-decoration:none;letter-spacing:-.012em;
+  font-family:var(--inter) ;font-size:16px;font-weight:900;
+  color:rgba(255,255,255,.95);text-decoration:none;letter-spacing:-.02em;
   display:flex;align-items:center;gap:10px;flex-shrink:0;
   transition:color .35s ease;
 }
 .nav.scrolled .logo{color:var(--ink)}
 .logo-pip{
   width:8px;height:8px;border-radius:50%;
-  background:var(--gold);flex-shrink:0;
-  box-shadow:0 0 0 3px rgba(184,134,44,.18);
+  background:var(--wn-saffron,#FF9933);flex-shrink:0;
+  box-shadow:0 0 0 3px rgba(255,153,51,.2);
 }
-.logo-img{height:28px;width:auto;display:block;object-fit:contain;flex-shrink:0}
+.logo-img{height:38px;width:auto;display:block;object-fit:contain;flex-shrink:0}
 .nav-mid{
   display:flex;align-items:center;gap:28px;
   position:absolute;left:50%;transform:translateX(-50%);
@@ -112,13 +164,12 @@ body,.pg{font-family:var(--sans);background:var(--bg);color:var(--ink);-webkit-f
 }
 .nav.scrolled .btn-line:hover{background:rgba(31,28,24,.05);color:var(--ink);border-color:rgba(31,28,24,.22)}
 .btn-dark{
-  background:var(--gold);color:#fff;border-color:transparent;
-  box-shadow:0 1px 0 rgba(255,255,255,.18) inset,0 6px 18px -4px rgba(184,134,44,.5);
+  background:var(--wn-saffron,#FF9933);color:#fff;border-color:transparent;
+  box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 8px 20px -6px rgba(255,153,51,.55);
 }
-.btn-dark:hover{background:#9c701f;transform:translateY(-1px);box-shadow:0 6px 22px rgba(184,134,44,.4)}
-.btn-gold{background:var(--gold);color:#fff}
-.
-btn-gold:hover{background:#9c701f;transform:translateY(-1px);box-shadow:0 6px 22px rgba(184,134,44,.35)}
+.btn-dark:hover{background:var(--wn-saffron-deep,#E07A12);transform:translateY(-1px);box-shadow:0 10px 26px -6px rgba(255,153,51,.5)}
+.btn-gold{background:var(--wn-saffron,#FF9933);color:#fff}
+.btn-gold:hover{background:var(--wn-saffron-deep,#E07A12);transform:translateY(-1px);box-shadow:0 10px 26px -6px rgba(255,153,51,.45)}
 .btn-line{background:transparent;color:var(--ink2);border:1px solid var(--border)}
 .btn-line:hover{border-color:var(--ink);color:var(--ink);background:rgba(19,20,15,.03)}
 
@@ -1208,8 +1259,8 @@ btn-gold:hover{background:#9c701f;transform:translateY(-1px);box-shadow:0 6px 22
 ═══════════════════════════════════════════════════════════════ */
 
 .final{
-  padding:calc(var(--gap) * 1.2) var(--px);
-  background:var(--ink);
+  padding:calc(var(--section-y) * 1.05) var(--section-x);
+  background:var(--surf-dark);
   position:relative;
   overflow:hidden;
 }
@@ -1223,12 +1274,12 @@ btn-gold:hover{background:#9c701f;transform:translateY(-1px);box-shadow:0 6px 22
   width:800px;
   height:800px;
   border-radius:50%;
-  background:radial-gradient(circle,rgba(184,134,44,.06) 0%,transparent 60%);
+  background:radial-gradient(circle,rgba(255,153,51,.10) 0%,transparent 60%);
   pointer-events:none;
 }
 
 .final-inner{
-  max-width:900px;
+  max-width:820px;
   margin:0 auto;
 
   display:flex;
@@ -1241,68 +1292,72 @@ btn-gold:hover{background:#9c701f;transform:translateY(-1px);box-shadow:0 6px 22
 }
 
 .final-h{
-  font-family:var(--serif);
-  font-size:clamp(38px,8vw,68px);
-  font-weight:400;
+  font-family:var(--display);
+  font-size:clamp(34px,6vw,60px);
+  font-weight:800;
 
-  line-height:1.05;
+  line-height:1.06;
   letter-spacing:-.03em;
   color:#fff;
-  margin-bottom:1.4rem;
+  margin-bottom:var(--s-3);
 }
 
 .final-h i{
-  font-style:italic;
-  color:var(--gold2);
+  font-style:normal;
+  color:var(--wn-saffron,#FF9933);
 }
 
 .final-p{
-  font-size:15px;
-  font-weight:300;
-  line-height:1.75;
-  color:rgba(255,255,255,.45);
-  margin-bottom:2.6rem;
-  // max-width:42ch;
+  font-family:var(--sans);
+  font-size:16px;
+  font-weight:400;
+  line-height:1.65;
+  color:rgba(255,255,255,.6);
+  margin-bottom:var(--s-5);
+  max-width:48ch;
 }
 
 .final-ctas{
   display:flex;
   justify-content:center;
-  gap:10px;
+  gap:var(--s-2);
   flex-wrap:wrap;
 }
 
 .final-btn{
-  padding:13px 28px;
-  border-radius:7px;
-  background:#fff;
-  color:var(--ink);
-  font-size:13.5px;
-  font-weight:500;
+  padding:15px 30px;
+  border-radius:var(--r-sm);
+  background:var(--wn-saffron,#FF9933);
+  color:#fff;
+  font-family:var(--sans);
+  font-size:14.5px;
+  font-weight:600;
   text-decoration:none;
-  transition:opacity .2s,transform .2s;
+  transition:background .25s,transform .25s,box-shadow .25s;
   letter-spacing:-.005em;
   display:inline-flex;
   align-items:center;
   gap:8px;
+  box-shadow:0 14px 34px -12px rgba(255,153,51,.6);
 }
 
 .final-btn:hover{
-  opacity:.92;
-  transform:translateY(-1px);
+  background:var(--wn-saffron-deep,#E07A12);
+  transform:translateY(-2px);
 }
 
 .final-btn-g{
-  padding:13px 28px;
-  border-radius:7px;
+  padding:15px 30px;
+  border-radius:var(--r-sm);
   background:transparent;
-  color:rgba(255,255,255,.55);
-  font-size:13.5px;
-  font-weight:400;
+  color:rgba(255,255,255,.7);
+  font-family:var(--sans);
+  font-size:14.5px;
+  font-weight:600;
   text-decoration:none;
-  border:1px solid rgba(255,255,255,.16);
+  border:1px solid rgba(255,255,255,.2);
   cursor:pointer;
-  transition:border-color .2s,color .2s;
+  transition:border-color .2s,color .2s,background .2s;
   letter-spacing:-.005em;
 }
 
@@ -1351,15 +1406,16 @@ btn-gold:hover{background:#9c701f;transform:translateY(-1px);box-shadow:0 6px 22
    Palette: warm off-white, sage accents, soft gradients, no harsh borders
 ═══════════════════════════════════════════════════════════════ */
 :root{
-  --wn-bg: #F6F3EE;
-  --wn-bg-2: #EEEAE2;
-  --wn-paper: #FBF9F4;
-  --wn-text: #1F1C18;
-  --wn-text-2: #3D3A33;
-  --wn-muted: #6E685F;
-  --wn-muted-2: #9A9387;
-  --wn-line: rgba(31,28,24,.07);
-  --wn-line-2: rgba(31,28,24,.04);
+  /* Warm saffron-tint surfaces (aligned to the --surf scale; no more beige) */
+  --wn-bg: #FFFCF8;
+  --wn-bg-2: #FDF5EC;
+  --wn-paper: #FFFFFF;
+  --wn-text: #1F1A14;
+  --wn-text-2: #46403A;
+  --wn-muted: #7A7166;
+  --wn-muted-2: #A89F94;
+  --wn-line: rgba(31,26,20,.07);
+  --wn-line-2: rgba(31,26,20,.04);
   --wn-sage: #FF9933;
   --wn-sage-deep: #C66A0F;
   --wn-sage-soft: #FFD9B0;
@@ -1375,45 +1431,58 @@ btn-gold:hover{background:#9c701f;transform:translateY(-1px);box-shadow:0 6px 22
    A centred capsule that hovers below the top edge. Frosted blur,
    soft transparency, rounded fully, premium spacing. It deepens a
    touch on scroll. GPU-only transitions. */
-.nav{
+.nav {
   position: fixed;
   top: 16px;
   left: 50%;
   transform: translateX(-50%);
-  width: calc(100% - 28px);
-  max-width: 1140px;
-  height: 60px;
-  padding: 0 12px 0 22px;
+
+  width: min(1180px, calc(100% - 32px));
+  height: 68px;
+  padding: 0 20px;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1.25rem;
+
   z-index: 1000;
+
   border-radius: 999px;
-  background: rgba(251, 249, 244, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.55);
+
+  /* HERO STATE */
+  background: transparent;
+  border: 1px solid transparent;
+
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+
+  box-shadow: none;
+
+  transition:
+    background .35s ease,
+    border-color .35s ease,
+    box-shadow .35s ease,
+    backdrop-filter .35s ease;
+}
+
+/* AFTER HERO */
+.nav.scrolled {
+  background: rgba(251, 249, 244, 0.72);
+
+  border: 1px solid rgba(255,255,255,.65);
+
   backdrop-filter: blur(22px) saturate(180%);
   -webkit-backdrop-filter: blur(22px) saturate(180%);
+
   box-shadow:
     0 1px 0 rgba(255,255,255,.7) inset,
-    0 12px 40px -16px rgba(31,28,24,.30),
-    0 2px 10px -6px rgba(31,28,24,.12);
-  transition: background .4s ease, border-color .4s ease, box-shadow .4s ease,
-              backdrop-filter .4s ease, top .35s ease;
-}
-.nav.scrolled{
-  top: 10px;
-  background: rgba(251, 249, 244, 0.78);
-  border-color: rgba(255,255,255,.7);
-  box-shadow:
-    0 1px 0 rgba(255,255,255,.85) inset,
-    0 14px 44px -16px rgba(31,28,24,.34),
-    0 2px 12px -6px rgba(31,28,24,.14);
+    0 12px 40px -16px rgba(31,28,24,.20);
 }
 
 /* nav children — dark editorial palette on the frosted pill */
 .nav .logo{color:var(--ink);font-family:var(--serif);font-size:16px;letter-spacing:-.012em;display:flex;align-items:center;gap:10px;text-decoration:none;flex-shrink:0}
-.nav .logo-img{height:30px;width:auto;display:block;object-fit:contain;flex-shrink:0;opacity:.95}
+.nav .logo-img{height:98px;width:auto;display:block;object-fit:contain;flex-shrink:0;opacity:.95}
 .nav .nav-mid{position:static;left:auto;transform:none;display:flex;align-items:center;gap:32px;margin:0 auto}
 .nav .nav-a{font-size:13.5px;font-weight:400;color:var(--ink3);text-decoration:none;background:none;border:none;cursor:pointer;letter-spacing:-.003em;position:relative;transition:color .2s;padding:4px 0}
 .nav .nav-a::after{content:'';position:absolute;left:0;right:0;bottom:-2px;height:1px;background:var(--gold);transform:scaleX(0);transform-origin:center;transition:transform .28s cubic-bezier(.22,.87,.36,1)}
@@ -1434,7 +1503,7 @@ btn-gold:hover{background:#9c701f;transform:translateY(-1px);box-shadow:0 6px 22
   gap: 9px;
   text-decoration: none;
   color: var(--wn-text);
-  font-family: 'Fraunces','Instrument Serif',serif;
+  font-family: var(--display);
   font-size: 17px;
   font-weight: 400;
   letter-spacing: -.015em;
@@ -1449,7 +1518,7 @@ btn-gold:hover{background:#9c701f;transform:translateY(-1px);box-shadow:0 6px 22
 }
 /* logo mark sized to fit inside the pill */
 .logo-img{
-  height: 30px;
+  height: 38px;
   width: auto;
   display: block;
   object-fit: contain;
@@ -1545,8 +1614,8 @@ btn-gold:hover{background:#9c701f;transform:translateY(-1px);box-shadow:0 6px 22
   }
 
   .logo-img{
-    width: 34px;
-    height: 34px;
+    width: 39px;
+    height: 54px;
   }
 
   /* hamburger-only on mobile: hide the desktop links + CTAs entirely */
@@ -1923,7 +1992,7 @@ padding:
   margin: 0 auto;
   text-align: center;
   color: var(--wn-text);
-  font-family: 'Fraunces', 'Instrument Serif', Georgia, serif;
+  font-family: var(--display);
   font-weight: 400;
   font-size: clamp(36px, 5vw, 60px);
   line-height: 1.1;
@@ -2190,7 +2259,7 @@ padding:
   min-width: 0;
 }
 .hero-card-name{
-  font-family: 'Fraunces', 'Instrument Serif', serif;
+  font-family: var(--display);
   font-weight: 400;
   font-size: 16.5px;
   color: var(--wn-text);
@@ -2273,7 +2342,7 @@ padding:
 }
 .hero-card-price{ display: flex; align-items: baseline; gap: 4px; }
 .hero-card-price-n{
-  font-family: 'Fraunces', serif;
+  font-family: var(--display);
   font-weight: 400;
   font-style: italic;
   font-size: 20px;
@@ -2407,7 +2476,7 @@ padding:
 .hero-v2-text .hero-stamp{ margin-bottom:1.4rem; }
 .hero-v2-h{
   margin:0;
-  font-family:'Fraunces','Instrument Serif',Georgia,serif;
+  font-family: var(--display);
   font-weight:400;
   font-size:clamp(38px,5vw,64px);
   line-height:1.04;
@@ -2516,7 +2585,7 @@ padding:
   margin-top:1rem; padding:0 4px;
 }
 .hero-v2-caption-name{
-  font-family:'Fraunces',serif; font-style:italic;
+  font-family: var(--display); font-style:italic;
   font-size:14px; color:var(--wn-muted);
 }
 .hero-v2-dots{ display:flex; align-items:center; gap:7px; }
@@ -2565,13 +2634,13 @@ padding:
 ═══════════════════════════════════════════════════════════════ */
 .hero-bn{
   position:relative;
-  min-height:92svh;
+  min-height:auto;
   display:flex;align-items:center;
-  padding:calc(72px + clamp(2rem,6vh,4rem)) clamp(1.25rem,5vw,3.25rem) clamp(3rem,7vh,5rem);
+  padding:calc(var(--nav) + var(--s-3)) var(--section-x) var(--s-3);
   background:
     radial-gradient(ellipse 60% 50% at 82% 18%, rgba(255,153,51,.08) 0%, transparent 62%),
     radial-gradient(ellipse 50% 55% at 8% 88%, rgba(255,153,51,.045) 0%, transparent 60%),
-    var(--bg);
+    var(--surf-1);
   overflow:hidden;
 }
 /* faint editorial baseline grid — barely there */
@@ -2584,45 +2653,72 @@ padding:
   mask-image:linear-gradient(180deg,transparent,#000 22%,#000 78%,transparent);
 }
 
+/* ── single centered hero: rotating headline + quote + CTAs ── */
 .hero-bn-inner{
   position:relative;z-index:2;
-  width:100%;max-width:980px;margin:0 auto;
+  width:100%;max-width:920px;margin:0 auto;
   display:flex;flex-direction:column;align-items:center;text-align:center;
 }
 
-.hero-bn-eyebrow{
-  display:inline-flex;align-items:center;gap:10px;
-  font-size:11px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
-  color:var(--wn-saffron,#FF9933);margin-bottom:1.6rem;
-  animation:fadeUp .8s cubic-bezier(.22,.87,.36,1) .05s both;
+.hero-bn-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--sans);font-size:13px;font-weight:500;letter-spacing:-.005em;
+  color:var(--ink2);
+  padding:7px 14px 7px 12px;border-radius:999px;
+  background:rgba(255,153,51,.08);border:1px solid rgba(255,153,51,.22);
+  margin-bottom:var(--s-4);
+  animation:fadeUp .7s cubic-bezier(.22,.87,.36,1) .05s both;
 }
-.hero-bn-eyebrow::before,.hero-bn-eyebrow::after{content:'';width:22px;height:1px;background:var(--wn-saffron,#FF9933)}
+.hero-bn-badge-dot{
+  width:7px;height:7px;border-radius:50%;background:var(--wn-saffron,#FF9933);
+  box-shadow:0 0 0 3px rgba(255,153,51,.18);
+}
 
 .hero-bn-h{
-  font-family:'Fraunces','Instrument Serif',Georgia,serif;
-  font-size:clamp(46px,6.6vw,98px);
-  font-weight:350;line-height:1;letter-spacing:-.03em;
-  color:var(--ink);max-width:18ch;margin:0 auto;
-  animation:fadeUp .9s cubic-bezier(.22,.87,.36,1) .12s both;
+  font-family:var(--display);
+  font-size:clamp(40px,6vw,80px);
+  font-weight:800;line-height:1.04;letter-spacing:-.03em;
+  color:var(--ink);max-width:16ch;margin:0 auto;
+  min-height:1.04em;            /* hold height so rotation does not jump */
 }
-.hero-bn-h i{font-style:italic;font-weight:300;color:var(--wn-saffron,#FF9933);position:relative}
-.hero-bn-h i::after{
-  content:'';position:absolute;left:2%;right:2%;bottom:.02em;height:3px;
-  background:linear-gradient(90deg,transparent,var(--wn-saffron,#FF9933) 18%,var(--wn-saffron,#FF9933) 82%,transparent);
-  opacity:.35;
-}
+/* the saffron emphasis words inside the rotating headlines
+   (target by attribute substring → no CSS escaping needed in this JS string) */
+.hero-bn-h [class*="ff9933"]{ color:var(--wn-saffron,#FF9933); }
 
 .hero-bn-sub{
-  font-size:clamp(15px,1.25vw,18px);
-  font-weight:300;line-height:1.72;
-  color:var(--ink3);max-width:48ch;margin:1.8rem auto 0;
-  animation:fadeUp .9s cubic-bezier(.22,.87,.36,1) .24s both;
+  font-family:var(--sans);
+  font-size:clamp(16px,1.3vw,19px);
+  font-weight:400;line-height:1.6;
+  color:var(--ink3);max-width:52ch;margin:var(--s-3) auto 0;
+  min-height:1.6em;
+}
+
+/* one shared rotate-in animation for both the headline and the quote.
+   The span is remounted each cycle (React key), replaying the animation. */
+.hero-rotate{
+  display:inline-block;
+  animation:heroRotateIn .7s cubic-bezier(.22,.87,.36,1) both;
+}
+.hero-rotate-sub{ animation-delay:.08s; }
+@keyframes heroRotateIn{
+  from{ opacity:0; transform:translateY(14px); filter:blur(4px); }
+  to  { opacity:1; transform:translateY(0);    filter:blur(0);   }
 }
 
 .hero-bn-ctas{
-  display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;margin-top:2.8rem;
-  animation:fadeUp .9s cubic-bezier(.22,.87,.36,1) .36s both;
+  display:flex;align-items:center;justify-content:center;gap:var(--s-2);flex-wrap:wrap;
+  margin-top:var(--s-5);
+  animation:fadeUp .8s cubic-bezier(.22,.87,.36,1) .28s both;
 }
+
+.hero-bn-trust{
+  display:flex;align-items:center;justify-content:center;gap:var(--s-2);flex-wrap:wrap;
+  margin-top:var(--s-5);
+  font-family:var(--sans);font-size:13.5px;color:var(--ink3);
+  animation:fadeUp .8s cubic-bezier(.22,.87,.36,1) .36s both;
+}
+.hero-bn-trust-item strong{ color:var(--ink);font-weight:700; }
+.hero-bn-trust-sep{ width:4px;height:4px;border-radius:50%;background:var(--ink4); }
 .hero-bn-cta-p{
   display:inline-flex;align-items:center;gap:10px;
   height:56px;padding:0 32px;border-radius:999px;
@@ -2645,12 +2741,15 @@ padding:
 .hero-bn-cta-g:hover{color:var(--ink);border-color:var(--wn-saffron,#FF9933)}
 .hero-bn-cta-g svg{color:var(--wn-saffron,#FF9933)}
 
+/* ── Hero responsive ── */
 @media(max-width:760px){
-  .hero-bn{min-height:auto;padding-top:calc(64px + 3rem)}
-  .hero-bn-ctas{gap:16px}
+  .hero-bn{ min-height:auto; padding-top:calc(var(--nav) + var(--s-5)); }
+  .hero-bn-ctas{ gap:var(--s-2); }
+  .hero-bn-cta-p{ width:100%; justify-content:center; }
+  .hero-bn-trust{ font-size:12.5px; }
 }
 @media(prefers-reduced-motion:reduce){
-  .hero-bn-eyebrow,.hero-bn-h,.hero-bn-sub,.hero-bn-ctas{animation:none}
+  .hero-bn-badge,.hero-bn-h,.hero-bn-sub,.hero-bn-ctas,.hero-bn-trust,.hero-rotate{ animation:none; }
 }
 
 
@@ -2663,11 +2762,10 @@ padding:
 ═══════════════════════════════════════════════════════════════ */
 .td-section{
   position: relative;
-  padding: clamp(5rem, 9vw, 8rem) clamp(1.5rem, 5vw, 3rem);
-  background:
-    radial-gradient(ellipse 70% 60% at 50% 0%, rgba(255,217,176,.28) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 50% at 90% 90%, rgba(212,196,170,.16) 0%, transparent 70%),
-    linear-gradient(180deg, #F2EEE7 0%, #F6F3EE 100%);
+  /* horizontal padding matches .tshow-head / .texp-head so the
+     "Meet our Practioners" heading lines up with the other sections */
+  padding: var(--section-y) clamp(1.5rem, 5vw, 3rem);
+  /* background owned by the section-ladder rule (var(--surf-2)) */
   overflow: hidden;
 }
 .td-bg-aura{
@@ -2704,42 +2802,41 @@ padding:
 .td-eyebrow{
   display: inline-flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
   font-family: var(--sans);
-  font-size: 12px;
-  font-weight: 500;
-  letter-spacing: .14em;
-  text-transform: uppercase;
-  color: var(--wn-sage-deep);
-  margin-bottom: 1.2rem;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -.005em;
+  color: var(--wn-saffron-deep,#E07A12);
+  padding: 6px 13px;
+  border-radius: 999px;
+  background: rgba(255,153,51,.08);
+  border: 1px solid rgba(255,153,51,.2);
+  margin-bottom: var(--s-3);
 }
-.td-eyebrow-line{ width: 20px; height: 1px; background: var(--wn-saffron); }
+.td-eyebrow-line{ display:none; }
 .td-h{
   margin: 0;
-  font-family: 'Fraunces', 'Instrument Serif', Georgia, serif;
-  font-weight: 400;
-  font-size: clamp(34px, 4.4vw, 56px);
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(30px, 4vw, 52px);
   line-height: 1.08;
-  letter-spacing: -.025em;
-  color: var(--wn-text);
-  font-optical-sizing: auto;
-  font-variation-settings: 'SOFT' 50;
+  letter-spacing: -.03em;
+  color: var(--ink);
 }
 .td-h em{
-  font-style: italic;
-  color: var(--wn-sage-deep);
-  // color: var(--wn-sage-deep);
-  font-weight: 400;
-  font-variation-settings: 'SOFT' 100, 'WONK' 1;
+  font-style: normal;
+  color: var(--wn-saffron,#FF9933);
+  font-weight: 800;
 }
 .td-sub{
-  margin: 1.2rem 0 0;
+  margin: var(--s-3) 0 0;
   max-width: 52ch;
   font-family: var(--sans);
-  font-size: 15.5px;
-  font-weight: 300;
-  line-height: 1.7;
-  color: var(--wn-muted);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.65;
+  color: var(--ink3);
   letter-spacing: -.003em;
 }
 
@@ -2760,7 +2857,7 @@ padding:
 }
 .td-stat{ display: flex; flex-direction: column; gap: 2px; }
 .td-stat-n{
-  font-family: 'Fraunces', serif;
+  font-family: var(--display);
   font-weight: 400;
   font-size: 30px;
   line-height: 1;
@@ -2929,7 +3026,7 @@ padding:
 }
 .td-card-av img{ width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
 .td-card-av span{
-  font-family: 'Fraunces', serif;
+  font-family: var(--display);
   font-style: italic;
   font-size: 18px;
   color: rgba(31,28,24,.55);
@@ -2952,7 +3049,7 @@ padding:
 }
 .td-card-id{ flex: 1; min-width: 0; padding-top: 2px; }
 .td-card-name{
-  font-family: 'Fraunces', 'Instrument Serif', serif;
+  font-family: var(--display);
   font-weight: 400;
   font-size: 18px;
   color: var(--wn-text);
@@ -3041,7 +3138,7 @@ padding:
 }
 .td-card-fee{ display: inline-flex; align-items: baseline; gap: 3px; }
 .td-card-fee-n{
-  font-family: 'Fraunces', serif;
+  font-family: var(--display);
   font-style: italic;
   font-weight: 400;
   font-size: 18px;
@@ -3114,7 +3211,7 @@ padding:
   margin-bottom: 4px;
 }
 .td-empty-t{
-  font-family: 'Fraunces', serif;
+  font-family: var(--display);
   font-weight: 400;
   font-size: 22px;
   color: var(--wn-text);
@@ -3217,7 +3314,7 @@ padding:
 }
 .how-h{
   margin: 0;
-  font-family: 'Fraunces', 'Instrument Serif', Georgia, serif;
+  font-family: var(--serif);
   font-weight: 400;
   font-size: clamp(34px, 4.4vw, 56px);
   line-height: 1.08;
@@ -3228,7 +3325,7 @@ padding:
 }
 .how-h em{
   font-style: italic;
-  color: var(--wn-sage-deep);
+  color: #ff9933 ;
   font-variation-settings: 'SOFT' 100, 'WONK' 1;
 }
 .how-sub{
@@ -3302,7 +3399,7 @@ padding:
   box-shadow: 0 0 0 6px rgba(246,243,238,.9);
 }
 .how-step-num-i{
-  font-family: 'Fraunces', serif;
+  font-family: var(--display);
   font-style: italic;
   font-weight: 400;
   font-size: 22px;
@@ -3312,7 +3409,7 @@ padding:
 }
 .how-step-t{
   margin: 0 0 .6rem;
-  font-family: 'Fraunces', serif;
+  font-family: var(--display);
   font-weight: 400;
   font-size: 18px;
   color: var(--wn-text);
@@ -3335,11 +3432,8 @@ padding:
 ═══════════════════════════════════════════════════════════════ */
 .price-section{
   position: relative;
-  padding: clamp(5rem, 9vw, 8rem) clamp(1.5rem, 5vw, 3rem);
-  background:
-    radial-gradient(ellipse 60% 55% at 50% 0%, rgba(200,212,203,.24) 0%, transparent 60%),
-    radial-gradient(ellipse 50% 50% at 50% 100%, rgba(212,196,170,.16) 0%, transparent 70%),
-    linear-gradient(180deg, #F2EEE7 0%, #F6F3EE 100%);
+  padding: var(--section-y) var(--section-x);
+  /* background owned by the section-ladder rule (var(--surf-2)) */
   overflow: hidden;
 }
 .price-bg-aura{
@@ -3361,43 +3455,56 @@ padding:
   margin: 0 auto;
 }
 .price-head{
-  text-align: left;
-  max-width: 640px;
-  margin: 0 0 3.5rem;
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto var(--s-6);
 }
 .price-h{
   margin: 0;
-  font-family: 'Fraunces', 'Instrument Serif', Georgia, serif;
-  font-weight: 400;
-  font-size: clamp(34px, 4.4vw, 56px);
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(30px, 4vw, 52px);
   line-height: 1.08;
-  letter-spacing: -.025em;
-  color: var(--wn-text);
-  font-variation-settings: 'SOFT' 50;
+  letter-spacing: -.03em;
+  color: var(--ink);
 }
 .price-h em{
-  font-style: italic;
-  color: var(--wn-sage-deep);
-  font-variation-settings: 'SOFT' 100, 'WONK' 1;
+  font-style: normal;
+  color: var(--wn-saffron,#FF9933);
+  font-weight: 800;
 }
 .price-sub{
-  margin: 1.2rem 0 0;
+  margin: var(--s-3) auto 0;
   max-width: 52ch;
   font-family: var(--sans);
-  font-size: 15.5px;
-  font-weight: 300;
-  line-height: 1.7;
-  color: var(--wn-muted);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.65;
+  color: var(--ink3);
   letter-spacing: -.003em;
 }
 
 .price-grid{
+  /* Auto-adjusts to the number of plans (2 or 3): each card keeps a fixed
+     width and the whole set is centred, so it never left-aligns or stretches. */
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 18px;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 420px);
+  justify-content: center;
+  gap: 48px;
   align-items: stretch;
+  max-width: 100%;
+  margin: 0 auto;
 }
-@media (max-width: 880px){ .price-grid{ grid-template-columns: 1fr; max-width: 460px; margin: 0 auto; } }
+@media (max-width: 880px){
+  .price-grid{
+    grid-auto-flow: row;
+    grid-auto-columns: auto;
+    grid-template-columns: minmax(0, 460px);
+    max-width: 460px;
+    margin: 0 auto;
+  }
+}
 
 .price-card{
   position: relative;
@@ -3477,7 +3584,7 @@ padding:
   border-bottom: 1px solid rgba(31,28,24,.06);
 }
 .price-card-price-n{
-  font-family: 'Fraunces', serif;
+  font-family: var(--display);
   font-weight: 400;
   font-size: 46px;
   color: var(--wn-text);
@@ -3577,15 +3684,24 @@ padding:
 ═══════════════════════════════════════════════════════════════ */
 .faq-section{
   position: relative;
-  padding: clamp(5rem, 9vw, 8rem) clamp(1.5rem, 5vw, 3rem);
+  /* no padding on the section: the curtain must span the COMPLETE width
+     edge-to-edge. Horizontal gutters live on .faq-wrap (the content column);
+     vertical padding lives on .faq-curtain. */
+  padding: 0;
   background:
     radial-gradient(ellipse 50% 50% at 50% 100%, rgba(200,212,203,.16) 0%, transparent 60%),
     linear-gradient(180deg, #F6F3EE 0%, #F2EEE7 100%);
-  overflow: clip;
+  /* NOTE: must stay visible -- the .faq-wordmark-reveal child is revealed on
+     scroll and any clip/hidden here would hide it. Containment for the FAQ
+     cards is handled per-card (.faq-item has its own overflow hidden). */
+  overflow: visible;
 }
 .faq-wrap{
   max-width: 1180px;
   margin: 0 auto;
+  /* horizontal gutters (moved off .faq-section so the curtain can be
+     full-bleed); box-sizing keeps the 1180px cap correct */
+  padding: 0 clamp(1.5rem, 5vw, 3rem);
 }
 .faq-head{
   max-width: 640px;
@@ -3594,27 +3710,26 @@ padding:
 }
 .faq-h{
   margin: 0;
-  font-family: 'Fraunces', 'Instrument Serif', Georgia, serif;
-  font-weight: 400;
-  font-size: clamp(34px, 4.4vw, 52px);
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: clamp(30px, 4vw, 50px);
   line-height: 1.08;
-  letter-spacing: -.025em;
-  color: var(--wn-text);
-  font-variation-settings: 'SOFT' 50;
+  letter-spacing: -.03em;
+  color: var(--ink);
 }
 .faq-h em{
-  font-style: italic;
-  color: var(--wn-sage-deep);
-  font-variation-settings: 'SOFT' 100, 'WONK' 1;
+  font-style: normal;
+  color: var(--wn-saffron,#FF9933);
+  font-weight: 800;
 }
 .faq-sub{
-  margin: 1.2rem 0 0;
-  max-width: 42ch;
+  margin: var(--s-3) 0 0;
+  max-width: 44ch;
   font-family: var(--sans);
-  font-size: 15px;
-  font-weight: 300;
-  line-height: 1.7;
-  color: var(--wn-muted);
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.65;
+  color: var(--ink3);
   letter-spacing: -.003em;
 }
 .faq-sub a{
@@ -3630,21 +3745,17 @@ padding:
 
 .faq-item{
   position: relative;
-  border-radius: 18px;
-  background: rgba(255,255,255,.55);
-  border: 1px solid rgba(31,28,24,.05);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  transition: background .3s ease, border-color .3s ease, box-shadow .3s ease;
+  border-radius: var(--r-md);
+  background: #fff;
+  border: 1px solid var(--border2);
+  transition: border-color .3s ease, box-shadow .3s ease;
   overflow: hidden;
 }
-.faq-item:hover{ border-color: rgba(31,28,24,.09); }
+.faq-item:hover{ border-color: var(--border); box-shadow: var(--shadow-sm); }
 .faq-item.open{
-  background: rgba(255,255,255,.85);
-  border-color: rgba(90,120,100,.2);
-  box-shadow:
-    0 1px 0 rgba(255,255,255,.7) inset,
-    0 14px 36px -18px rgba(63,90,74,.18);
+  background: #fff;
+  border-color: rgba(255,153,51,.3);
+  box-shadow: var(--shadow-md);
 }
 
 .faq-q{
@@ -3658,22 +3769,22 @@ padding:
   border: none;
   cursor: pointer;
   text-align: left;
-  font-family: 'Fraunces', 'Instrument Serif', serif;
-  font-weight: 400;
-  font-size: 17px;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 16.5px;
   letter-spacing: -.015em;
   line-height: 1.35;
-  color: var(--wn-text);
+  color: var(--ink);
   transition: color .25s ease;
 }
-.faq-q:hover{ color: var(--wn-sage-deep); }
+.faq-q:hover{ color: var(--wn-saffron-deep,#E07A12); }
 .faq-q-text{ flex: 1; }
 .faq-q-icon{
   width: 30px;
   height: 30px;
   border-radius: 50%;
-  background: rgba(90,120,100,.08);
-  color: var(--wn-sage-deep);
+  background: rgba(255,153,51,.1);
+  color: var(--wn-saffron-deep,#E07A12);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3682,7 +3793,7 @@ padding:
 }
 .faq-item.open .faq-q-icon{
   transform: rotate(180deg);
-  background: var(--wn-sage);
+  background: var(--wn-saffron,#FF9933);
   color: #fff;
 }
 
@@ -3703,6 +3814,105 @@ padding:
 }
 .faq-item.open .faq-a-wrap > .faq-a{
   padding: 0 24px 22px;
+}
+
+/* ═══════════════════════════════════════════════════════
+   CINEMATIC CURTAIN REVEAL  (FAQ slides off a pinned wordmark)
+
+   Effect: the HangingWordmark does NOT move. It is pinned to the bottom of
+   the viewport (position:sticky) and sits BEHIND the FAQ content. The FAQ
+   content is an opaque "curtain" with a higher z-index that scrolls up and
+   off, uncovering the stationary wordmark like a curtain being drawn away.
+   Scroll back down and the curtain slides over it again, hiding it fully.
+
+   How the layering works:
+   - .faq-section is the positioning context and must be overflow visible
+     so the sticky child can pin (handled in the .faq-section rule below).
+   - .faq-curtain  : the FAQ content. Opaque background + z-index:2. It owns
+     normal document height, so it is what scrolls past.
+   - .faq-wordmark-reveal : position:sticky; bottom:0; z-index:1. It pins at
+     the bottom of the viewport while the curtain scrolls off above it.
+
+   No JS, no opacity/transform reveal — the uncovering is purely the curtain
+   scrolling away, so the wordmark itself never moves and there is no flash.
+═══════════════════════════════════════════════════════ */
+
+/* The FAQ content is the opaque curtain that covers the fixed wordmark.
+   Flat opaque fill, no rounded corners, no shadow, no top gradient -> no
+   sharp shapes / hard edges bleeding through. */
+.faq-curtain{
+  position: relative;
+  z-index: 2;
+  /* full-bleed opaque layer: spans the COMPLETE width so nothing of the
+     wordmark bleeds through the side gutters of the centred content column. */
+  width: 100%;
+  background: var(--surf-1); /* matches the FAQ section -> seamless, no shapes */
+  /* carry the section's own vertical padding here so the opaque area covers
+     edge-to-edge top and bottom */
+  padding-top: clamp(5rem, 9vw, 8rem);
+  /* room at the bottom so the curtain has travel to clear the 40vh wordmark */
+  padding-bottom: 42vh;
+}
+/* zero-height marker at the very bottom of the curtain; JS measures it to know
+   when the wordmark strip is uncovered. Takes no layout space. */
+.faq-curtain-end{
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+/* The wordmark layer: position:fixed so it CANNOT move, ever. It is pinned to
+   the bottom of the viewport, 1/4 of the viewport tall, sitting behind the
+   curtain. It is only shown while the FAQ section is in view (the
+   faq-pinned class is toggled on the section by a small IntersectionObserver).
+   When hidden it is fully transparent and non-interactive. */
+.faq-wordmark-reveal{
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 40vh;            /* strip height, at the bottom */
+  z-index: 0;             /* behind the curtain (z-index:2) */
+  background: var(--surf-1); /* solid base -> no flash, matches FAQ surface */
+  pointer-events: none;
+  /* HARD-CUT hide: no transition. A fade would make the wordmark appear to
+     "move"/peek in and out as you cross the threshold while scrolling up.
+     visibility:hidden guarantees it is genuinely gone, not a faint layer. */
+  opacity: 0;
+  visibility: hidden;
+}
+/* shown ONLY at the very end of the FAQ, when the curtain has fully cleared
+   the strip (class set by the strict check in FaqRevealEffect). Hard cut. */
+.faq-section.faq-pinned .faq-wordmark-reveal{
+  opacity: 1;
+  visibility: visible;
+}
+/* the inner hangmark fills the 40vh pinned strip exactly, centred, no scroll */
+.faq-wordmark-reveal .hangmark{
+  /* the wordmark content keys off --reveal for its fade-in. In this pinned
+     strip the strip itself is shown/hidden via opacity, so the content must
+     always be fully drawn -> force --reveal to 1. */
+  --reveal: 1;
+  height: 40vh;
+  min-height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  overflow: hidden;
+}
+/* Compact the decorations away so just the swaying wordmark fits in 40vh:
+   the eyebrow, rod, threads, rule and the big concentric ring are hidden. */
+.faq-wordmark-reveal .hangmark::before,
+.faq-wordmark-reveal .hangmark-eyebrow,
+.faq-wordmark-reveal .hangmark-rod,
+.faq-wordmark-reveal .hangmark-thread,
+.faq-wordmark-reveal .hangmark-rule{
+  display: none;
+}
+.faq-wordmark-reveal .hangmark-hang{
+  padding-top: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -3794,12 +4004,38 @@ padding:
    Pure CSS: negative top margin + own background + radius + z-index ladder. */
 
    
-.td-section, .tmpl-section, .how-section, .price-section, .faq-section{
+/* ── SECTION SEPARATION: soft rounded-top "stacked layers" ──────────
+   Each content section lifts slightly over the previous one with a rounded
+   top edge + a soft shadow above. Combined with the alternating surf-1/surf-2
+   tones, every boundary clearly reads as "a new section is arriving" on
+   scroll — the premium Apple/Stripe/Linear layered feel, all in the light
+   palette. The negative margin is small so it overlaps, not collides. */
+.td-section, .tmpl-section, .how-section, .price-section, .faq-section, .texp, .tshow{
   position:relative;
-  /* sections sit flush in normal flow — no negative-margin overlap.
-     (the old "stacked layers" lift was removed because its rounded-top +
-     shadow cues were disabled, leaving sections colliding into each other) */
-  margin-top:0;
+  margin-top: -28px;                                  /* gentle overlap */
+  // border-top-left-radius: 28px;
+  // border-top-right-radius: 28px;
+  box-shadow: 0 -18px 40px -26px rgba(19,20,15,.18);  /* soft lift above */
+}
+/* first content section after the hero sits flush (no lift onto the hero) */
+.hero-bn + .td-section,
+.hero-bn + .tshow{
+  margin-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  box-shadow: none;
+}
+
+/* PERF: skip rendering + animating off-screen sections entirely. The browser
+   does not paint, lay out, or run infinite animations inside a section while
+   it is far outside the viewport -> big scroll-FPS win, zero visual change.
+   Applied ONLY to plain-flow sections (NOT the GSAP-pinned .tshow / .tmpl
+   nor the .faq-section which hosts the fixed wordmark) so containment never
+   fights those positioned effects. contain-intrinsic-size reserves height so
+   the scrollbar does not jump as sections virtualise in/out. */
+.td-section, .how-section, .price-section{
+  content-visibility: auto;
+  contain-intrinsic-size: auto 900px;
 }
 /* Each section gets its own surface color so the rise is visible against neighbours.
    Colors stay inside the existing palette (--bg / --bg2 / --bg3 / --paper / --ink). */
@@ -3826,21 +4062,24 @@ padding:
 /* the banner hero is self-contained — the first content section sits flush
    below it (no negative-margin overlap onto the caption bar) */
 .hero-bn + .td-section{ margin-top:0; }
-.td-section   { background: #FBFAF7; z-index:2; opacity:1; transform:none; } /* ivory paper */
-.tmpl-section { background: #F2EDE2; z-index:3; opacity:1; transform:none; } /* warm parchment */
-.how-section  { background: #13140F; color:#F4F0E7; z-index:4; opacity:1; transform:none; } /* DARK REST STOP */
-.price-section{ background: #FBFAF7; z-index:5; opacity:1; transform:none; } /* ivory paper */
-.faq-section  { background: #F2EDE2; z-index:6; opacity:1; transform:none; } /* warm parchment */
-
-/* Dark inversion for the "How it works" section — text + card colors swap so the
-   existing component reads correctly on the dark surface without redesigning it. */
-.how-section{
-  --ink:#F4F0E7; --ink2:#D6D1C3; --ink3:#9B978A; --ink4:#6E6B61;
-  --border:rgba(244,240,231,.12); --border2:rgba(244,240,231,.06);
-  --paper:#1A1B16; --bg:#13140F; --bg2:#1A1B16; --bg3:#21221C;
+/* ── Unified surface rhythm: alternate surf-1 / surf-2 down the page so each
+   boundary is a clear, consistent tonal step. All light (one warm family). */
+.td-section   { background: var(--surf-2); z-index:2; opacity:1; transform:none; } /* therapists */
+.tmpl-section { background: var(--surf-1); z-index:3; opacity:1; transform:none; } /* templates  */
+.how-section  { background: var(--surf-1); z-index:4; opacity:1; transform:none; } /* how it works */
+.price-section{ background: var(--surf-2); z-index:5; opacity:1; transform:none; } /* pricing    */
+.faq-section{
+  background: var(--surf-1);
+  z-index: 6;
+  position: relative;
+  overflow: visible;
 }
-.how-section .how-card{ background: rgba(244,240,231,.04); border-color: rgba(244,240,231,.10); }
-.how-section .how-card:hover{ background: rgba(244,240,231,.07); border-color: rgba(244,240,231,.18); }
+
+/* How-it-works is now LIGHT (was a dark inversion). It uses the default light
+   tokens like every other section — the dark override is removed so the
+   timeline + heading read correctly on the warm surface. */
+.how-section .how-card{ background: rgba(19,20,15,.025); border-color: var(--border); }
+.how-section .how-card:hover{ background: rgba(19,20,15,.05); border-color: rgba(19,20,15,.12); }
 
 /* Match dark "final" footer to the ladder so it caps the stack cleanly */
 .final{
@@ -3854,7 +4093,8 @@ padding:
 @media (max-width: 720px){
   .td-section, .tmpl-section, .how-section, .price-section, .faq-section, .final{
     margin-top:0;
-    border-top-left-radius:36px;border-top-right-radius:36px;
+    // border-top-left-radius:36px;
+    // border-top-right-radius:36px;
   }
 }
 
@@ -3867,7 +4107,7 @@ padding:
 .how-v2 .how-wrap{ max-width: var(--max); margin: 0 auto; padding: clamp(4rem, 8vw, 7rem) var(--px); }
 .how-v2 .how-head{ max-width: 720px; margin: 0 0 clamp(3rem, 6vw, 5rem); }
 .how-v2 .how-h{
-  font-family: 'Fraunces', 'Instrument Serif', Georgia, serif;
+  font-family: var(--display);
   font-size: clamp(2.4rem, 5vw, 4.2rem);
   line-height: 1.02;
   letter-spacing: -.028em;
@@ -3885,6 +4125,178 @@ padding:
   color: var(--ink3);
   /* FIX 4: removed the max-width: 56ch cap that was starving the column on wide screens */
   margin: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   HOW IT WORKS — connected ZIG-ZAG timeline (premium redesign)
+   Centred gold spine that "draws" on scroll (--fill 0→1, set by JS).
+   Steps alternate left / right of the spine; nodes ignite and step
+   cards rise + slide in from their side as the fill passes them.
+   Lives on the dark .how-section surface (light --ink text, gold accent).
+═══════════════════════════════════════════════════════════════ */
+.how-v2 .how-tl{
+  --gap: clamp(2.4rem, 5vw, 4rem);   /* vertical gap between steps */
+  --node: clamp(50px, 5vw, 64px);    /* node diameter */
+  /* brand theme accent = saffron (the page's primary colour, 73 uses) */
+  --tl-accent: #FF9933;
+  --tl-accent-deep: #E07A12;
+  position: relative;
+  max-width: 1000px;
+  margin: clamp(1.5rem, 4vw, 3rem) auto 0;
+}
+
+/* the spine: a faint centred rail with a saffron fill that grows with scroll */
+.how-v2 .how-tl-spine{
+  position: absolute;
+  top: calc(var(--node) / 2);
+  bottom: calc(var(--node) / 2);
+  left: 50%;
+  width: 2px;
+  transform: translateX(-50%);
+  background: rgba(19,20,15,.10);   /* faint dark rail on the light surface */
+  border-radius: 2px;
+  overflow: hidden;
+}
+.how-v2 .how-tl-spine-fill{
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: calc(var(--fill) * 100%);
+  background: linear-gradient(180deg, var(--tl-accent) 0%, var(--tl-accent-deep) 100%);
+  box-shadow: 0 0 16px rgba(255,153,51,.55);
+  transition: height .15s linear;
+}
+
+.how-v2 .how-tl-list{
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap);
+}
+
+/* each step is a 3-column grid: [ left zone | centred node | right zone ] */
+.how-v2 .how-tl-step{
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr var(--node) 1fr;
+  align-items: center;
+  column-gap: clamp(1.2rem, 2.6vw, 2.4rem);
+  /* lit threshold from the scroll fill (0 → 1 as the line reaches this step) */
+  --lit: clamp(0, (var(--fill) - var(--at)) * 1000, 1);
+  --slide: calc(34px * (1 - var(--lit)));   /* slide-in distance from the side */
+}
+
+/* the node sits in the centre column, on the spine */
+.how-v2 .how-tl-node{
+  grid-column: 2;
+  position: relative;
+  z-index: 1;
+  width: var(--node);
+  height: var(--node);
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: #FFFFFF;                              /* white node on light surface */
+  border: 1px solid rgba(19,20,15,.10);
+  color: var(--ink3);
+  transition: border-color .5s ease, color .5s ease, box-shadow .5s ease;
+  border-color: color-mix(in srgb, var(--tl-accent) calc(var(--lit, 0) * 80%), rgba(19,20,15,.10));
+  color: color-mix(in srgb, var(--tl-accent) calc(var(--lit, 0) * 100%), var(--ink3));
+  box-shadow:
+    0 6px 16px -8px rgba(19,20,15,.18),
+    0 0 calc(var(--lit, 0) * 22px) rgba(255,153,51,calc(var(--lit,0) * .35));
+}
+.how-v2 .how-tl-node-icon{ width: 46%; height: 46%; display: block; }
+.how-v2 .how-tl-node-icon svg{ width: 100%; height: 100%; }
+
+/* the body card — warm tinted surface so the layout never reads empty */
+.how-v2 .how-tl-body{
+  min-width: 0;
+  padding: clamp(1.1rem, 2vw, 1.6rem) clamp(1.3rem, 2.4vw, 2rem);
+  border-radius: 18px;
+  background: linear-gradient(180deg, rgba(255,153,51,.06), rgba(255,255,255,.6));
+  border: 1px solid rgba(19,20,15,.07);
+  box-shadow: 0 18px 40px -30px rgba(19,20,15,.28);
+  opacity: calc(.35 + .65 * var(--lit));
+  transition: opacity .55s ease, transform .55s cubic-bezier(.22,.87,.36,1), border-color .5s ease;
+}
+.how-v2 .how-tl-step:nth-child(odd) .how-tl-body{
+  grid-column: 1;
+  text-align: right;
+  transform: translateX(calc(-1 * var(--slide)));   /* slides in from the left */
+}
+.how-v2 .how-tl-step:nth-child(even) .how-tl-body{
+  grid-column: 3;
+  text-align: left;
+  transform: translateX(var(--slide));              /* slides in from the right */
+}
+/* a soft connector tab from the card toward the node */
+.how-v2 .how-tl-body::after{
+  content: '';
+  position: absolute;
+  top: 50%;
+  width: clamp(1rem, 2.4vw, 2.2rem);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255,153,51,calc(.2 + var(--lit,0) * .5)));
+  transform: translateY(-50%);
+}
+.how-v2 .how-tl-step:nth-child(odd) .how-tl-body::after{ right: calc(-1 * clamp(1rem,2.4vw,2.4rem)); background: linear-gradient(270deg, transparent, rgba(255,153,51,calc(.2 + var(--lit,0) * .5))); }
+.how-v2 .how-tl-step:nth-child(even) .how-tl-body::after{ left: calc(-1 * clamp(1rem,2.4vw,2.4rem)); }
+
+.how-v2 .how-tl-num{
+  display: block;
+  font-family: var(--display);
+  font-size: clamp(.85rem, 1vw, 1rem);
+  letter-spacing: .08em;
+  color: var(--tl-accent);
+  opacity: .9;
+  margin-bottom: .35rem;
+}
+.how-v2 .how-tl-t{
+  font-family: var(--display);
+  font-size: clamp(1.35rem, 2.4vw, 2.1rem);
+  line-height: 1.1;
+  letter-spacing: -.02em;
+  font-weight: 350;
+  font-optical-sizing: auto;
+  font-variation-settings: "opsz" 100, "SOFT" 40;
+  color: var(--ink);
+  margin: 0 0 .6rem;
+}
+.how-v2 .how-tl-d{
+  font-family: var(--sans);
+  font-size: clamp(.92rem, 1.05vw, 1.02rem);
+  line-height: 1.6;
+  color: var(--ink3);
+  margin: 0;
+}
+
+/* ── Mobile: collapse the zig-zag to a single left-aligned column ── */
+@media (max-width: 720px){
+  .how-v2 .how-tl-spine{ left: calc(var(--node) / 2); }
+  .how-v2 .how-tl-step{
+    grid-template-columns: var(--node) 1fr;
+    column-gap: clamp(1rem, 4vw, 1.6rem);
+    align-items: start;
+  }
+  .how-v2 .how-tl-node{ grid-column: 1; }
+  .how-v2 .how-tl-step:nth-child(odd) .how-tl-body,
+  .how-v2 .how-tl-step:nth-child(even) .how-tl-body{
+    grid-column: 2;
+    text-align: left;
+    transform: translateX(var(--slide));
+  }
+  .how-v2 .how-tl-step:nth-child(odd) .how-tl-body::after,
+  .how-v2 .how-tl-step:nth-child(even) .how-tl-body::after{
+    left: calc(-1 * clamp(1rem,4vw,1.6rem)); right: auto;
+    background: linear-gradient(90deg, transparent, rgba(255,153,51,calc(.2 + var(--lit,0) * .5)));
+  }
+}
+
+@media (prefers-reduced-motion: reduce){
+  .how-v2 .how-tl-body{ opacity: 1; transform: none !important; transition: none; }
+  .how-v2 .how-tl-spine-fill{ transition: none; }
 }
 
 .how-v2 .how-rows{ display: flex; flex-direction: column; gap: clamp(4.5rem, 9vw, 8rem); }
@@ -3918,7 +4330,7 @@ padding:
 }
 
 .how-v2 .how-row-t{
-  font-family: 'Fraunces', 'Instrument Serif', Georgia, serif;
+  font-family: var(--display);
   font-size: clamp(2rem, 3.6vw, 3rem);
   line-height: 1.05;
   letter-spacing: -.022em;
@@ -3962,17 +4374,22 @@ padding:
 /* FIX 3: .smock no longer uses height: 97% (which collapses inside an absolute parent).
    Instead it fills the card via explicit sizing from its aspect-ratio + width. */
 .how-v2 .how-row-card .smock{
-  width: 96%;              /* laptop fills the card width */
+  width: 100%;             /* the floating screen fills the column */
   height: auto;            /* let aspect-ratio drive the height */
-  /* float animation lives here so the shadow lifts with the screen */
+  /* gentle float so the soft shadow lifts with the screen */
   animation: howFloat 7s ease-in-out infinite;
-  /* drop shadow that softens at float peak (handled by translateY in the keyframe) */
-  filter: drop-shadow(0 28px 36px rgba(0,0,0,.38)) drop-shadow(0 6px 12px rgba(0,0,0,.22));
+  /* soft, diffuse premium shadow — warm-tinted, layered, not a hard smudge */
+  filter:
+    drop-shadow(0 2px 4px rgba(31,28,24,.06))
+    drop-shadow(0 18px 32px rgba(31,28,24,.14))
+    drop-shadow(0 40px 60px rgba(31,28,24,.10));
   transition: filter .4s;
 }
-/* slightly lighten the shadow at the top of the float to sell the lift */
 .how-v2 .how-row-card .smock:hover{
-  filter: drop-shadow(0 38px 48px rgba(0,0,0,.28)) drop-shadow(0 8px 16px rgba(0,0,0,.16));
+  filter:
+    drop-shadow(0 2px 4px rgba(31,28,24,.05))
+    drop-shadow(0 24px 40px rgba(31,28,24,.12))
+    drop-shadow(0 52px 72px rgba(31,28,24,.08));
 }
 
 /* hide the decorative offset backdrop layer (kept in DOM for legacy, hidden in CSS) */
@@ -3996,107 +4413,40 @@ padding:
   50%      { transform: translateY(-12px);   }   /* slightly more lift than before (-10px) */
 }
 
-/* ── How-it-works step mockups (laptop / desktop app screens) ────────
-   The frame is now a browser window on a laptop, not a phone. We keep
-   container-type:inline-size so every cqw-based .smk-* style keeps scaling. */
+/* ── How-it-works step mockups (floating app screens, no device) ─────
+   No laptop / browser chrome — the real app UI floats in a clean rounded
+   card with a soft drop shadow. container-type:inline-size is kept so the
+   existing .smk-* screen content scales unchanged. */
 .smock{
   --c-ink:#1F1C18; --c-mut:#9a9183; --c-line:#ece6db; --c-paper:#fff;
   --c-saf:#FF9933; --c-saf2:#E07A12; --c-soft:#FBF3E6;
   position: relative;
-  /* landscape laptop screen */
   aspect-ratio: 16 / 10;
   width: 100%;
-  display: flex; flex-direction: column; overflow: visible;
-  /* slim aluminium laptop lid framing the screen */
-  border-radius: clamp(10px,1.4cqw,16px);
-  background:
-    linear-gradient(135deg,#d7d2c8 0%,#a8a298 30%,#cdc7bc 55%,#9e988e 80%,#c3bdb2 100%);
-  padding: clamp(4px,1.1cqw,9px);
-  box-shadow:
-    inset 0 0 0 1px rgba(255,255,255,.4),
-    inset 0 0 0 2px rgba(0,0,0,.28);
-  /* NOTE: outer drop-shadow lives on .how-row-card .smock so it floats with the screen */
+  display: flex; flex-direction: column;
+  overflow: hidden;                 /* clip the screen to the card radius */
+  border-radius: clamp(12px,1.8cqw,22px);
+  background: var(--c-paper);
+  /* hairline edge so the card reads against the warm page, no device chrome */
+  box-shadow: inset 0 0 0 1px rgba(31,28,24,.06);
   container-type: inline-size;
   font-family: var(--sans); color: var(--c-ink);
   font-size: clamp(7px,2.05cqw,15px);
 }
 
-/* the dark inner bezel that hugs the screen */
+/* the screen surface fills the card */
 .smock-body{
   position:relative; flex:1; min-height:0; overflow:hidden;
-  border-radius:clamp(7px,1cqw,11px);
+  border-radius:inherit;
   background:linear-gradient(180deg,#FBF6EE 0%,#F6EDDF 100%);
-  box-shadow:inset 0 0 0 clamp(2px,.7cqw,4px) #0c0b0e;
   display:flex; flex-direction:column;
 }
-/* screen glass reflection */
-.smock-body::after{
-  content:''; position:absolute; inset:0; pointer-events:none; z-index:6;
-  background:linear-gradient(118deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,0) 26%);
-  border-radius:inherit;
-}
-/* laptop base / hinge lip below the lid */
-.smock::after{
-  content:''; position:absolute; left:50%; bottom:clamp(-7px,-1.1cqw,-11px);
-  transform:translateX(-50%);
-  width:118%; height:clamp(5px,.9cqw,9px);
-  border-radius:0 0 14px 14px;
-  background:linear-gradient(180deg,#c3bdb2 0%,#9a948a 55%,#7c766c 100%);
-  box-shadow:0 4px 10px -4px rgba(0,0,0,.4);
-  z-index:-1;
-}
-/* the notch in the hinge lip (trackpad/opening cue) */
-.smock::before{
-  content:''; position:absolute; left:50%; bottom:clamp(-7px,-1.1cqw,-11px);
-  transform:translateX(-50%);
-  width:14%; height:clamp(5px,.9cqw,9px);
-  border-radius:0 0 8px 8px;
-  background:#8d877d;
-  z-index:-1;
-}
-
-/* browser chrome bar — repurposes the old .smock-status node */
-.smock-status{
-  position:relative; z-index:7; flex-shrink:0;
-  display:flex; align-items:center; gap:.7em;
-  padding:clamp(5px,1.3cqw,10px) clamp(8px,1.8cqw,14px);
-  background:linear-gradient(180deg,#F4EEE4 0%,#EFE7DA 100%);
-  border-bottom:1px solid rgba(0,0,0,.06);
-}
-/* traffic-light dots */
-.smock-status::before{
-  content:''; flex-shrink:0;
-  width:.55em; height:.55em; border-radius:50%;
-  background:#E8A6A0;
-  box-shadow:
-    1em 0 0 #EFCD8E,
-    2em 0 0 #A7CBB1;
-}
-/* address pill grows to fill the bar */
-.smock-time{
-  flex:1; min-width:0;
-  margin-left:2.4em;
-  display:flex; align-items:center; gap:.4em;
-  background:#fff;
-  border:1px solid rgba(0,0,0,.07);
-  border-radius:999px;
-  padding:.32em .8em;
-  font-size:.74em; font-weight:500; letter-spacing:.01em;
-  color:#8a7f72;
-  white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  box-shadow:0 1px 2px rgba(0,0,0,.03) inset;
-}
-.smock-time::before{
-  content:''; flex-shrink:0;
-  width:.62em; height:.62em; border-radius:50%;
-  border:1.5px solid var(--c-saf);
-}
-/* the old status icons collapse — not needed on a browser bar */
-.smock-stat-r,.smock-signal,.smock-wifi,.smock-batt{ display:none; }
+/* the browser chrome bar is removed — collapse its node entirely */
+.smock-status{ display:none; }
 
 /* a scrollable app screen *//* ═══════════════════════════════════════════════════════════════
    SMK SCREEN SYSTEM — refined edition
-   Warm paper aesthetic · deep curves · layered depth
+   Warm paper aesthetic — deep curves — layered depth
    ═══════════════════════════════════════════════════════════════ */
 
 /* ── Scrollable app screen ─────────────────────────────────────── */
@@ -4161,39 +4511,44 @@ padding:
   letter-spacing: -.01em;
 }
 .smk-h2 {
-  font-family: var(--serif);
-  font-size: 1.18em;
-  line-height: 1.1;
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 1.34em;
+  line-height: 1.08;
   color: var(--c-ink);
-  letter-spacing: -.01em;
+  letter-spacing: -.015em;
 }
 
 /* ── Avatar uploader ───────────────────────────────────────────── */
 .smk-avatar {
-  width: clamp(32px, 14cqw, 54px);
-  height: clamp(32px, 14cqw, 54px);
+  width: clamp(32px, 10cqw, 44px);
+  height: clamp(32px, 10cqw, 44px);
   border-radius: 50%;
   background: radial-gradient(circle at 38% 32%, #fff 0%, #FDF0DC 60%, #FAE4C0 100%);
-  border: 1.5px solid #F3D9B0;
+  border: 2px solid #fff;                       /* clean white frame— */
   align-self: center;
   display: flex;
   align-items: center;
   justify-content: center;
+  /* —with a soft orange ring around it */
   box-shadow:
-    0 0 0 3px rgba(255,153,51,.08),
-    0 4px 12px -6px rgba(255,120,0,.3);
+    0 0 0 2px rgba(255,153,51,.45),
+    0 6px 16px -8px rgba(255,120,0,.35);
   position: relative;
 }
-/* camera badge */
+/* camera/edit badge bottom-right */
 .smk-avatar::after {
   content: '';
   position: absolute;
-  bottom: -2px; right: -2px;
-  width: 34%; height: 34%;
+  bottom: -3%; right: -3%;
+  width: 38%; height: 38%;
   border-radius: 50%;
-  background: var(--c-saf);
-  border: 1.5px solid #fff;
-  box-shadow: 0 1px 3px rgba(200,100,0,.3);
+  background:
+    /* tiny camera lens dot */
+    radial-gradient(circle at 50% 54%, #fff 0 18%, transparent 19%),
+    var(--c-saf);
+  border: 2px solid #fff;
+  box-shadow: 0 2px 5px rgba(200,100,0,.35);
 }
 .smk-usr {
   width: 40%; height: 40%;
@@ -4225,26 +4580,27 @@ padding:
 
 .smk-flabel {
   display: block;
-  font-size: .75em;
-  color: #8a7f72;
-  margin-bottom: 2px;
+  font-size: .7em;
+  color: #9a8f80;
+  margin-bottom: 4px;
   font-weight: 600;
-  letter-spacing: .02em;
+  letter-spacing: .11em;          /* wider, refined tracking */
   text-transform: uppercase;
 }
 
 .smk-input {
   display: flex;
   align-items: center;
-  border: 1px solid #e8e0d4;
-  border-radius: 10px;                        /* rounder than before (was 8px) */
-  padding: .52em .68em;
+  border: 1px solid #ECE0CF;                  /* warm tan border so it doesn't float */
+  border-radius: 12px;                        /* softer, more premium */
+  padding: .58em .78em;
   font-size: .88em;
   color: var(--c-ink);
   background: #fff;
   box-shadow:
-    0 1px 0 rgba(255,255,255,.8) inset,
-    0 1px 3px rgba(0,0,0,.04);
+    0 1px 0 rgba(255,255,255,.9) inset,
+    0 1px 2px rgba(180,140,90,.08),
+    0 2px 6px -2px rgba(120,90,50,.08);       /* gentle tactile lift */
   transition: border-color .15s, box-shadow .15s;
 }
 .smk-input:focus-within {
@@ -4480,20 +4836,21 @@ padding:
 /* ── Stat cards ────────────────────────────────────────────────── */
 .smk-stats { display: grid; grid-template-columns: 1fr 1fr; gap: .5em; }
 .smk-stat {
-  border: 1px solid #ede7dc;
+  border: 1px solid #ECE0CF;
   border-radius: 14px;
-  padding: .58em .65em;
+  padding: .7em .75em;
   display: flex;
   flex-direction: column;
-  gap: 1px;
+  gap: 2px;
   background: linear-gradient(160deg, #fff 0%, #fdfaf5 100%);
   box-shadow:
     0 1px 0 rgba(255,255,255,.9) inset,
-    0 2px 6px -4px rgba(31,28,24,.1);
+    0 2px 6px -3px rgba(120,90,50,.12);
 }
 .smk-stat b {
-  font-family: var(--serif);
-  font-size: 1.45em;
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 1.5em;
   color: var(--c-ink);
   line-height: 1;
 }
@@ -4528,10 +4885,11 @@ padding:
 /* ── Appointment list ──────────────────────────────────────────── */
 .smk-appttop {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
-  margin-bottom: .05em;
+  margin-bottom: .15em;
 }
+.smk-appttop .smk-pill-today{ margin-top: .3em; }
 .smk-pill-today {
   background: linear-gradient(135deg, #FDF4E7, #FBE8CB);
   color: #8a6314;
@@ -4542,17 +4900,19 @@ padding:
   font-weight: 700;
   box-shadow: 0 1px 3px rgba(200,140,50,.1);
 }
+/* appointments screen — its own tighter rhythm so all rows fit cleanly */
+.smk-main:has(.smk-appt){ gap:.5em; }
 .smk-appt {
   display: flex;
   align-items: center;
-  gap: .55em;
-  border: 1px solid #ede7dc;
-  border-radius: 14px;                        /* rounder than before (was 11px) */
-  padding: .55em .65em;
+  gap: .6em;
+  border: 1px solid #ECE0CF;                   /* match the warm input border */
+  border-radius: 14px;
+  padding: .58em .7em;
   background: linear-gradient(160deg, #fff 0%, #fdfaf5 100%);
   box-shadow:
     0 1px 0 rgba(255,255,255,.9) inset,
-    0 2px 8px -6px rgba(31,28,24,.2);
+    0 2px 6px -3px rgba(120,90,50,.14);
 }
 .smk-ini {
   width: clamp(20px, 8.5cqw, 32px);
@@ -4593,32 +4953,33 @@ padding:
    DESKTOP LAYOUTS for the laptop mock screens
    ═══════════════════════════════════════════════════════════════ */
 
-/* ── Step 1 · auth screen (centred card on a warm canvas) ──────── */
-.smk-auth{
-  align-items: center;
-  justify-content: flex-start;
-  gap: .9em;
-  padding: clamp(10px,3cqw,26px) clamp(10px,3cqw,26px) clamp(8px,2cqw,18px);
-  background:
-    radial-gradient(ellipse 55% 45% at 85% 6%, rgba(255,153,51,.08) 0%, transparent 60%),
-    radial-gradient(ellipse 55% 50% at 8% 96%, rgba(255,217,176,.22) 0%, transparent 65%),
-    linear-gradient(180deg,#F8F4EE 0%,#F2ECE2 100%);
-  overflow-y: auto;
+/* ── Step 1 — the REAL /signup page embedded live, scaled to fit ──
+   The iframe renders at a desktop viewport and is scaled down so the whole
+   page fits the card. --smk-z is the zoom (0.4 = page shown at 40%), so the
+   iframe is sized at 1/0.4 = 250% and scaled back. Pure CSS, responsive. */
+.smk-live{
+  --smk-z: .5;
+  position: relative;
+  flex: 1; min-height: 0;
+  overflow: hidden;
+  background: linear-gradient(180deg,#F8F4EE 0%,#F2ECE2 100%);
 }
-.smk-auth-head{ text-align: center; display:flex; flex-direction:column; align-items:center; gap:.3em; }
-.smk-auth-head .smk-appbrand{ border:0; padding:0; font-size:1.15em; }
-.smk-auth-title{
-  font-family: var(--serif);
-  font-size: 1em;
-  color: #3D3A33;
-  letter-spacing: -.01em;
+.smk-live-frame{
+  position: absolute; top: 0; left: 0;
+  width: calc(100% / var(--smk-z));
+  height: calc(100% / var(--smk-z));
+  border: 0;
+  transform: scale(var(--smk-z));
+  transform-origin: top left;
+  background: transparent;
+  pointer-events: none;            /* belt-and-braces: never interactive */
 }
-.smk-auth-card{ width: min(66%, 23em); gap: .42em; padding: clamp(9px,2.6cqw,15px); }
-.smk-auth-card .smk-avatar{ width: clamp(28px,11cqw,44px); height: clamp(28px,11cqw,44px); margin-bottom: -.1em; }
-.smk-auth-card .smk-uplab{ font-size: .68em; }
-.smk-auth-card .smk-field{ gap: 2px; }
+/* transparent shield over the frame so clicks/scroll pass to the page */
+.smk-live-shield{ position: absolute; inset: 0; z-index: 2; }
+/* zoom in a touch on small cards so text stays legible */
+@container (max-width: 360px){ .smk-live{ --smk-z: .6; } }
 
-/* ── Steps 2–4 · app shell (sidebar + main) ───────────────────── */
+/* ── Steps 2–4 — app shell (sidebar + main) ───────────────────── */
 .smk-app{
   flex: 1; min-height: 0;
   display: grid;
@@ -4627,35 +4988,106 @@ padding:
   background: linear-gradient(180deg,#FBF8F2 0%,#F6F0E6 100%);
 }
 .smk-side{
-  display: flex; flex-direction: column; gap: .9em;
-  padding: clamp(8px,2.2cqw,16px) clamp(7px,1.8cqw,13px);
+  display: flex; flex-direction: column; gap: 1.1em;
+  padding: clamp(10px,2.6cqw,20px) clamp(8px,2cqw,15px);
   background: linear-gradient(180deg,#FFFFFF 0%,#FCF8F1 100%);
   border-right: 1px solid rgba(236,230,219,.9);
 }
-.smk-side .smk-appbrand{ border:0; padding:0; justify-content:flex-start; font-size:.92em; }
-.smk-nav{ display:flex; flex-direction:column; gap:.18em; }
+.smk-side .smk-appbrand{ border:0; padding:0 .2em .9em; justify-content:flex-start; font-size:.92em; border-bottom:1px solid rgba(236,230,219,.9); }
+.smk-nav{ display:flex; flex-direction:column; gap:.5em; }
 .smk-nav span{
-  font-size: .8em; font-weight: 500;
-  color: #8a7f72;
-  padding: .5em .7em;
-  border-radius: 9px;
+  position: relative;
+  display: flex; align-items: center;
+  font-size: .8em; font-weight: 400;
+  color: #9a8f80;
+  padding: .42em .8em;
+  border-radius: 8px;
+  letter-spacing: .005em;
+  transition: color .15s;
 }
+/* active item — soft tint + orange left-border accent line (no dot) */
 .smk-nav span.on{
-  background: linear-gradient(135deg, rgba(255,153,51,.14), rgba(255,153,51,.06));
-  color: #b46410; font-weight: 700;
-  box-shadow: inset 0 0 0 1px rgba(255,153,51,.18);
+  background: linear-gradient(90deg, rgba(255,153,51,.10), rgba(255,153,51,0));
+  color: #b46410; font-weight: 600;
+}
+.smk-nav span.on::before{
+  content: ''; position: absolute;
+  left: 0; top: 50%; transform: translateY(-50%);
+  width: 2.5px; height: 1.05em; border-radius: 999px;
+  background: var(--c-saf);
 }
 .smk-main{
+  position: relative;
   min-width: 0; min-height: 0; overflow: hidden;
-  display: flex; flex-direction: column; gap: .6em;
-  padding: clamp(9px,2.6cqw,20px) clamp(10px,2.8cqw,22px);
+  display: flex; flex-direction: column; gap: .8em;
+  padding: clamp(12px,3cqw,24px) clamp(13px,3.2cqw,26px);
 }
-.smk-mainhead{ display:flex; flex-direction:column; gap:.4em; }
+/* faint ambient warmth in the corner so the pane isn't flat */
+.smk-main::before{
+  content: ''; position: absolute; z-index: 0;
+  width: 60%; aspect-ratio: 1; border-radius: 50%;
+  top: -28%; right: -16%;
+  background: radial-gradient(circle, rgba(255,153,51,.08) 0%, transparent 68%);
+  pointer-events: none;
+}
+.smk-main > *{ position: relative; z-index: 1; }
+.smk-mainhead{ display:flex; align-items:flex-start; justify-content:space-between; gap:.6em; }
 .smk-grid2{ display:grid; grid-template-columns:1fr 1fr; gap:.5em; }
 .smk-cta-inline{ align-self:flex-start; padding:.62em 1.4em; }
 .smk-stats-3{ grid-template-columns: repeat(3, 1fr); }
 .smk-chart-wrap{ display:flex; flex-direction:column; gap:.35em; margin-top:.1em; }
 .smk-chart-wrap .smk-chart{ border-top:0; height:3.4em; }
+
+/* ── Build-your-profile screen polish ─────────────────────────── */
+/* this screen is content-dense — keep a consistent, slightly tighter rhythm */
+.smk-app:has(.smk-idrow) .smk-main{ gap:.55em; }
+.smk-app:has(.smk-idrow) .smk-area{ min-height:2.2em; }
+.smk-eyebrow{
+  font-size:.62em; font-weight:500; letter-spacing:.2em; text-transform:uppercase;
+  color:#b6a690; margin-bottom:.5em; display:block;
+}
+/* 3-step indicator — uniform circles, active is an orange pill */
+.smk-steps{ display:flex; align-items:center; gap:.45em; padding-top:.4em; flex-shrink:0; }
+.smk-steps i{ width:.5em; height:.5em; border-radius:50%; background:#E3DAC8; }
+.smk-steps i.done{ background:rgba(255,153,51,.45); }
+.smk-steps i.on{
+  width:1.5em; border-radius:999px;
+  background:var(--c-saf);
+  box-shadow:0 1px 4px rgba(255,120,0,.35);
+}
+
+/* identity row — avatar beside the first fields */
+.smk-idrow{ display:flex; align-items:flex-end; gap:.7em; }
+.smk-idrow-fields{ flex:1; min-width:0; }
+.smk-avatar.lg{
+  width:clamp(34px,11cqw,52px); height:clamp(34px,11cqw,52px);
+  align-self:flex-end; flex-shrink:0; margin-bottom:.05em;
+}
+
+.smk-count{ font-style:normal; font-weight:600; color:var(--c-saf2); text-transform:none; letter-spacing:0; margin-left:.4em; }
+
+/* selected specialty pills read as active toggles */
+.smk-chips span.sel{
+  background:linear-gradient(135deg,#FFF3E1,#FCE4C0);
+  border-color:var(--c-saf);
+  color:#a85e0c;
+  box-shadow:0 1px 4px rgba(255,140,30,.18);
+}
+
+/* money input with a soft currency chip */
+.smk-input-money{ gap:.45em; }
+.smk-input-money i{
+  font-style:normal; font-weight:700; color:#a89a86;
+  background:#f4f0ea; border-radius:6px; padding:.05em .42em; font-size:.85em;
+}
+
+/* footer with Back + primary action */
+.smk-footer{ display:flex; align-items:center; justify-content:space-between; gap:.6em; margin-top:.25em; }
+.smk-btn-ghost{
+  font-size:.86em; font-weight:600; color:#8a7f72;
+  padding:.6em 1.1em; border-radius:12px;
+  border:1px solid #e8e0d4; background:#fff;
+}
 
 /* ── Responsive ────────────────────────────────────────────────── */
 @media (max-width: 860px) {
@@ -4674,204 +5106,475 @@ padding:
 
 
 
-
 /* ═══════════════════════════════════════════════════════════════
-   TEMPLATES — scroll-driven horizontal showroom (warm, premium)
+   TEMPLATES — Tosea-style premium gallery
 ═══════════════════════════════════════════════════════════════ */
-.tshow{
-  position:relative;
-  background:linear-gradient(180deg,var(--wn-bg,#F6F3EE) 0%,#F1ECE3 100%);
+.tshow {
+  position: relative;
+  z-index: 3;
+  background: var(--surf-1, #FFFCF8);
+  padding: clamp(1.5rem, 3vw, 2.5rem) 0 clamp(3rem, 6vw, 5rem);
+  overflow: hidden;
 }
-.tshow-pin{
-  position:relative;
-  height:100vh;min-height:600px;
-  display:flex;flex-direction:column;
-  overflow:hidden;
-}
-/* ambient brand glow — warm, soft, calming */
-.tshow-glow{
-  position:absolute;inset:0;pointer-events:none;z-index:0;
+
+/* ambient glow */
+.tshow-glow {
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
   background:
-    radial-gradient(ellipse 50% 40% at 18% 22%, rgba(255,153,51,.10) 0%, transparent 60%),
-    radial-gradient(ellipse 45% 45% at 85% 78%, rgba(255,217,176,.22) 0%, transparent 65%),
-    radial-gradient(ellipse 60% 50% at 50% 120%, rgba(31,28,24,.04) 0%, transparent 60%);
+    radial-gradient(ellipse 55% 45% at 15% 20%, rgba(255,153,51,.08) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 50% at 88% 80%, rgba(255,217,176,.18) 0%, transparent 65%);
 }
 
-/* heading */
-.tshow-head{
-  position:relative;z-index:2;
-  text-align:center;max-width:720px;
-  margin:0 auto;padding:clamp(2.2rem,5vh,3.6rem) clamp(1.5rem,5vw,3rem) clamp(1.5rem,3vh,2.4rem);
-  flex-shrink:0;
-}
-.tshow-eyebrow{
-  display:inline-flex;align-items:center;gap:10px;
-  font-size:11px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
-  color:var(--wn-saffron,#FF9933);margin-bottom:1.1rem;
-}
-.tshow-eyebrow::before,.tshow-eyebrow::after{content:'';width:20px;height:1px;background:var(--wn-saffron,#FF9933)}
-.tshow-h{
-  margin:0; margin-bottom:2rem; font-family:'Fraunces','Instrument Serif',Georgia,serif;
-  font-size:clamp(2rem,4.4vw,3.4rem);font-weight:350;line-height:1.05;
-  letter-spacing:-.028em;color:var(--wn-text,#1F1C18);
-}
-.tshow-h em{font-style:italic;font-weight:300;color:var(--wn-saffron,#FF9933)}
-.tshow-sub{
-  font-size:15px;font-weight:300;line-height:1.7;color:var(--wn-muted,#6E685F);
-  max-width:50ch;margin:1rem auto 0;
+/* ── section header ── */
+.tshow-head {
+  position: relative; z-index: 2;
+  text-align: left;
+  max-width: 1180px;
+  margin: 0 auto clamp(1rem, 2vh, 1.6rem);
+  padding: 0 clamp(1.5rem, 5vw, 3rem);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
 }
 
-/* stage holds the horizontal track, vertically centred in remaining space */
-.tshow-stage{
-  position:relative;z-index:2;flex:1 1 auto;
-  display:flex;align-items:flex-start;
-  padding-top:clamp(1rem,4vh,3rem);
-  perspective:1600px;
-  overflow:hidden;
+.tshow-head-left {}
+
+.tshow-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--wn-saffron, #FF9933);
+  background: rgba(255,153,51,.08);
+  border: 1px solid rgba(255,153,51,.2);
+  padding: 5px 13px; border-radius: 999px;
+  margin-bottom: 1rem;
 }
-.tshow-track{
-  display:flex;align-items:flex-start;gap:clamp(1rem,2vw,1.8rem);
-  padding:0 calc(50vw - clamp(110px,10vw,155px));
-  transform-style:preserve-3d;
-  will-change:transform;
+.tshow-eyebrow::before, .tshow-eyebrow::after { content: none; }
+
+.tshow-h {
+  margin: 0 0 2rem 0 ;
+  // margin-bottom:4;
+  font-family: var(--display);
+  font-size: clamp(2rem, 4vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1.06;
+  letter-spacing: -.03em;
+  color: var(--ink);
+}
+.tshow-h em { font-style: normal; color: var(--wn-saffron, #FF9933); }
+
+.tshow-sub {
+  font-family: var(--sans);
+  font-size: 15px; font-weight: 300; line-height: 1.7;
+  color: var(--ink3);
+  max-width: 46ch;
+  margin: .9rem 0 0;
 }
 
-/* CARD — realistic browser mockup, premium framing */
-.tshow-card{
-  flex:0 0 auto;
-  width:clamp(220px,20vw,310px);
-  border-radius:14px;overflow:hidden;
-  background:var(--wn-paper,#FBF9F4);
-  border:1px solid var(--wn-line,rgba(31,28,24,.07));
+.tshow-head-right {
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.tshow-nav-btn {
+  width: 40px; height: 40px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--paper);
+  border: 1px solid var(--border);
+  cursor: pointer; color: var(--ink2);
+  transition: all .25s ease;
+  flex-shrink: 0;
+}
+.tshow-nav-btn:hover {
+  background: var(--ink); color: #fff;
+  border-color: var(--ink);
+  transform: scale(1.06);
+}
+.tshow-nav-btn:disabled { opacity: .3; pointer-events: none; }
+
+/* ── gallery track (horizontal scroll) ── */
+.tshow-stage {
+  position: relative; z-index: 2;
+  overflow: hidden;
+  /* match the header's centered container so the first card's left edge
+     lines up with the headline text */
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.tshow-track {
+  display: flex;
+  height: 100%;
+  align-items: stretch;
+  gap: clamp(1rem, 2vw, 1.5rem);
+  padding: 0;
+  /* no overflow-x here — controlled by JS translateX */
+  transition: transform .55s cubic-bezier(.4, 0, .2, 1);
+  will-change: transform;
+  width: max-content;
+}
+
+.tshow-card {
+  flex: 0 0 auto;
+  width: clamp(380px, 42vw, 560px);
+  min-height: 480px;
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--paper);
+  border: 1px solid rgba(31,28,24,.07);
   box-shadow:
     0 2px 0 rgba(255,255,255,.7) inset,
-    0 36px 80px -28px rgba(31,28,24,.28),
-    0 14px 36px -22px rgba(31,28,24,.16);
-  transform-style:preserve-3d;
-  will-change:transform,opacity;
-  transition:box-shadow .45s ease;
+    0 8px 24px -12px rgba(31,28,24,.14),
+    0 2px 8px -4px rgba(31,28,24,.06);
+  cursor: pointer;
+  position: relative;
+  opacity: 0.82;
+  transform: scale(.97);
+  transition:
+    transform .42s cubic-bezier(.22,.87,.36,1),
+    opacity .42s ease,
+    box-shadow .42s ease,
+    border-color .3s ease;
 }
-.tshow-card.is-active{
-  z-index:5;position:relative;
+
+.tshow-card.is-active {
+  opacity: 1;
+  transform: scale(1);
+  border-color: rgba(255,153,51,.30);
   box-shadow:
     0 2px 0 rgba(255,255,255,.7) inset,
-    0 48px 100px -26px rgba(31,28,24,.34),
-    0 18px 44px -20px rgba(255,153,51,.18);
-}
-.tshow-card-chrome{
-  display:flex;align-items:center;gap:6px;
-  padding:8px 12px;background:#F1ECE3;
-  border-bottom:1px solid var(--wn-line,rgba(31,28,24,.07));
-}
-.tshow-card-dot{width:7px;height:7px;border-radius:50%;background:rgba(31,28,24,.14)}
-.tshow-card-dot:nth-child(1){background:#E8A6A0}
-.tshow-card-dot:nth-child(2){background:#EFCD8E}
-.tshow-card-dot:nth-child(3){background:#A7CBB1}
-.tshow-card-url{
-  flex:1;text-align:center;font-size:9.5px;color:var(--wn-muted-2,#9A9387);
-  background:rgba(255,255,255,.7);border:1px solid var(--wn-line,rgba(31,28,24,.07));
-  border-radius:6px;padding:5px 12px;max-width:300px;margin:0 auto;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em;
-}
-.tshow-card-screen{
-  position:relative;width:100%;aspect-ratio:16/11;overflow:hidden;background:var(--wn-bg-2,#EEEAE2);
-}
-.tshow-card-mock{
-  position:absolute;top:0;left:0;width:1080px;height:740px;
-  transform-origin:top left;pointer-events:none;
-}
-/* hover reveal — preview / use */
-.tshow-card-label{
-  position:absolute;top:12px;left:14px;z-index:1;
-  display:flex;align-items:baseline;gap:8px;
-}
-.tshow-card-label-num{font-family:var(--sans);font-size:10px;font-weight:600;letter-spacing:.1em;color:var(--wn-saffron,#FF9933)}
-.tshow-card-label-name{font-family:'Fraunces','Instrument Serif',serif;font-size:14px;color:#fff;letter-spacing:-.01em}
-.tshow-card-hover{
-  position:absolute;inset:0;z-index:3;
-  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:9px;padding:16px 14px;
-  background:linear-gradient(to top,rgba(31,28,24,.78) 0%,rgba(31,28,24,.32) 34%,transparent 62%);
-  opacity:0;transition:opacity .4s ease;
-  pointer-events:none;          /* hidden overlay never blocks clicks */
-}
-/* the centred card always shows its actions; others reveal on hover */
-.tshow-card.is-active .tshow-card-hover,
-.tshow-card:hover .tshow-card-hover{opacity:1}
-/* only the visible overlay (and only its buttons) are interactive */
-.tshow-card.is-active .tshow-card-hover .tshow-btn,
-.tshow-card:hover .tshow-card-hover .tshow-btn{pointer-events:auto}
-.tshow-btn{
-  display:inline-flex;align-items:center;gap:8px;
-  height:36px;padding:0 15px;border-radius:999px;
-  font-family:var(--sans);font-size:11.5px;font-weight:500;letter-spacing:-.005em;
-  text-decoration:none;cursor:pointer;border:1px solid transparent;
-  transition:transform .25s,background .25s,border-color .25s,color .25s;
-}
-.tshow-btn svg{flex-shrink:0}
-.tshow-btn-ghost{
-  background:rgba(255,255,255,.16);color:#fff;border-color:rgba(255,255,255,.32);
-  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
-}
-.tshow-btn-ghost:hover{background:rgba(255,255,255,.28);transform:translateY(-2px)}
-.tshow-btn-solid{
-  background:var(--wn-saffron,#FF9933);color:#fff;
-  box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 10px 26px -8px rgba(255,153,51,.6);
-}
-.tshow-btn-solid:hover{background:var(--wn-saffron-deep,#E07A12);transform:translateY(-2px)}
-.tshow-btn-solid svg{transition:transform .25s}
-.tshow-btn-solid:hover svg{transform:translateX(3px)}
-/* footer */
-.tshow-card-foot{
-  display:flex;align-items:center;justify-content:space-between;gap:.6rem;
-  padding:11px 14px;background:var(--wn-paper,#FBF9F4);
-  border-top:1px solid var(--wn-line,rgba(31,28,24,.07));
-}
-.tshow-card-meta{display:flex;align-items:center;gap:9px;min-width:0}
-.tshow-card-num{
-  font-family:var(--sans);font-size:12px;font-weight:600;letter-spacing:.08em;
-  color:var(--accent,var(--wn-saffron));flex-shrink:0;
-}
-.tshow-card-name{
-  font-family:'Fraunces','Instrument Serif',serif;font-size:14px;font-weight:400;
-  color:var(--wn-text,#1F1C18);letter-spacing:-.014em;line-height:1.2;
-}
-.tshow-card-desc{font-size:10.5px;color:var(--wn-muted,#6E685F);margin-top:1px}
-.tshow-card-open{
-  width:30px;height:30px;border-radius:50%;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;
-  background:transparent;border:1px solid var(--wn-line,rgba(31,28,24,.1));
-  color:var(--wn-muted,#6E685F);cursor:pointer;
-  transition:all .25s;
-}
-.tshow-card-open:hover{background:var(--wn-saffron,#FF9933);border-color:var(--wn-saffron,#FF9933);color:#fff;transform:translateY(-2px)}
-
-/* progress dots */
-.tshow-progress{
-  position:relative;z-index:2;flex-shrink:0;
-  display:flex;align-items:center;justify-content:center;gap:9px;
-  padding:0 0 clamp(2rem,5vh,3.5rem);
-}
-.tshow-progress-dot{
-  width:8px;height:8px;border-radius:50%;
-  background:rgba(31,28,24,.16);transition:all .4s cubic-bezier(.22,.87,.36,1);
-}
-.tshow-progress-dot.on{width:26px;border-radius:4px;background:var(--wn-saffron,#FF9933)}
-
-/* ── fallback / mobile: native horizontal scroll-snap row ── */
-@media(max-width:860px){
-  .tshow-pin{height:auto;min-height:0;padding-bottom:1rem}
-  .tshow-stage{overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;perspective:none}
-  .tshow-track{transform:none !important;gap:1.2rem;padding:1.5rem clamp(1.25rem,6vw,2rem)}
-  .tshow-card{width:84vw;scroll-snap-align:center;transform:none !important;opacity:1 !important}
-  .tshow-card-hover{opacity:1;background:linear-gradient(to top,rgba(31,28,24,.5),transparent 55%);align-items:flex-end;padding-bottom:18px}
-}
-@media(prefers-reduced-motion:reduce){
-  .tshow-pin{height:auto;min-height:0}
-  .tshow-stage{overflow-x:auto}
-  .tshow-track{transform:none !important;flex-wrap:nowrap}
-  .tshow-card{transform:none !important;opacity:1 !important}
+    0 36px 70px -24px rgba(31,28,24,.30),
+    0 12px 30px -12px rgba(255,153,51,.14);
+  z-index: 2;
 }
 
+.tshow-card:hover {
+  opacity: 1;
+  border-color: rgba(255,153,51,.35);
+}
+
+.tshow-card.is-active:hover {
+  transform: scale(1.01) translateY(-3px);
+}
+
+.tshow-card-screen {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 11;
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
+  background: var(--bg2);
+}
+
+.tshow-card-screen-inner {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  width: 1080px;
+  height: 742px;
+  transform-origin: top center;
+  pointer-events: none;
+  transition: transform .55s cubic-bezier(.22,.87,.36,1);
+}
+
+.tshow-card:hover .tshow-card-screen-inner {
+  transform-origin: top center;
+}
+
+/* live badge top-left */
+.tshow-card-live-badge {
+  position: absolute; top: 12px; left: 12px; z-index: 4;
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255,255,255,.88);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(31,28,24,.06);
+  border-radius: 999px;
+  padding: 4px 10px 4px 8px;
+  font-family: var(--sans); font-size: 10px; font-weight: 600;
+  color: var(--ink2); letter-spacing: .03em;
+  box-shadow: 0 2px 10px rgba(31,28,24,.08);
+}
+.tshow-card-live-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #3EA76A;
+  box-shadow: 0 0 0 3px rgba(62,167,106,.18);
+  animation: pulseDot 2.2s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+/* category badge top-right */
+.tshow-card-badge {
+  position: absolute; top: 12px; right: 12px; z-index: 4;
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-family: var(--sans); font-size: 10px; font-weight: 600;
+  letter-spacing: .04em;
+  backdrop-filter: blur(10px);
+  border: 1px solid transparent;
+}
+.tshow-card-badge.badge-therapist {
+  background: rgba(255,153,51,.14); color: #b46010;
+  border-color: rgba(255,153,51,.28);
+}
+.tshow-card-badge.badge-psychologist {
+  background: rgba(90,120,100,.12); color: #2d5a40;
+  border-color: rgba(90,120,100,.24);
+}
+.tshow-card-badge.badge-relationship {
+  background: rgba(180,107,80,.10); color: #8b3e22;
+  border-color: rgba(180,107,80,.22);
+}
+.tshow-card-badge.badge-career {
+  background: rgba(60,90,160,.08); color: #1e3a7a;
+  border-color: rgba(60,90,160,.2);
+}
+.tshow-card-badge.badge-premium {
+  background: rgba(212,175,55,.12); color: #7a5a00;
+  border-color: rgba(212,175,55,.28);
+}
+
+/* hover overlay — dark gradient with CTA */
+.tshow-card-hover {
+  position: absolute; inset: 0; z-index: 3;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: flex-end;
+  gap: 9px; padding: 20px 16px;
+  background: linear-gradient(
+    to top,
+    rgba(15,12,8,.82) 0%,
+    rgba(15,12,8,.4) 30%,
+    transparent 60%
+  );
+  opacity: 0;
+  transition: opacity .35s ease;
+  pointer-events: none;
+}
+.tshow-card:hover .tshow-card-hover { opacity: 1; }
+.tshow-card:hover .tshow-card-hover .tshow-btn { pointer-events: auto; }
+/* the hero (active) card always shows its CTAs so users can act immediately */
+.tshow-card.is-active .tshow-card-hover { opacity: 1; }
+.tshow-card.is-active .tshow-card-hover .tshow-btn { pointer-events: auto; }
+
+.tshow-btn {
+  display: inline-flex; align-items: center; gap: 7px;
+  height: 38px; padding: 0 18px; border-radius: 999px;
+  font-family: var(--sans); font-size: 12px; font-weight: 600;
+  letter-spacing: -.003em; text-decoration: none; cursor: pointer;
+  border: 1px solid transparent;
+  transition: transform .25s, background .25s, box-shadow .25s;
+}
+.tshow-btn svg { flex-shrink: 0; }
+.tshow-btn-ghost {
+  background: rgba(255,255,255,.14); color: #fff;
+  border-color: rgba(255,255,255,.28);
+  backdrop-filter: blur(10px);
+}
+.tshow-btn-ghost:hover { background: rgba(255,255,255,.24); transform: translateY(-1px); }
+.tshow-btn-solid {
+  background: var(--wn-saffron, #FF9933); color: #fff;
+  box-shadow: 0 1px 0 rgba(255,255,255,.25) inset, 0 8px 22px -6px rgba(255,153,51,.55);
+}
+.tshow-btn-solid:hover {
+  background: var(--wn-saffron-deep, #E07A12);
+  transform: translateY(-1px);
+}
+.tshow-btn-solid svg { transition: transform .25s; }
+.tshow-btn-solid:hover svg { transform: translateX(3px); }
+
+/* ── minimal footer — 10-15% of card ── */
+.tshow-card-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: .75rem;
+  padding: 12px 14px 13px;
+  background: var(--paper);
+  border-top: 1px solid rgba(31,28,24,.06);
+}
+.tshow-card-meta { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.tshow-card-num {
+  font-family: var(--sans); font-size: 10px; font-weight: 700;
+  letter-spacing: .1em; color: var(--wn-saffron); flex-shrink: 0;
+}
+.tshow-card-name {
+  font-family: var(--display); font-size: 13.5px; font-weight: 400;
+  color: var(--ink); letter-spacing: -.012em; line-height: 1.2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tshow-card-desc {
+  font-size: 10px; color: var(--ink4); margin-top: 1px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.tshow-card-open {
+  width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid rgba(31,28,24,.1);
+  color: var(--ink3); cursor: pointer;
+  transition: all .25s ease;
+}
+.tshow-card-open:hover {
+  background: var(--wn-saffron, #FF9933);
+  border-color: var(--wn-saffron, #FF9933);
+  color: #fff; transform: translateY(-1px);
+}
+
+/* ── progress dots ── */
+.tshow-progress {
+  position: relative; z-index: 2;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 2rem;
+}
+.tshow-progress-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: rgba(31,28,24,.14);
+  border: none; padding: 0; cursor: pointer;
+  transition: all .38s cubic-bezier(.22,.87,.36,1);
+}
+.tshow-progress-dot.on {
+  width: 24px; border-radius: 4px;
+  background: var(--wn-saffron, #FF9933);
+}
+
+/* ── two equal columns: templates (left) + details form (right) ── */
+.tshow-split {
+  position: relative; z-index: 2;
+  max-width: 1180px;
+  
+  margin: 0 auto;
+  padding: 0 clamp(1.5rem, 5vw, 3rem);
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(380px, 0.65fr);
+  gap: 2rem;
+  align-items: start;
+  gap: clamp(1.5rem, 3vw, 2.5rem);
+  // align-items: stretch;             /* equal height */
+}
+.tshow-split-left {
+  min-width: 0;
+    // border: 1px solid var(--border, rgba(31,26,20,.45));
+  border-radius: 38px;
+  display: flex; flex-direction: column;
+}
+/* the gallery fills the column height so cards match the form's height */
+.tshow-split-left .tshow-stage { max-width: none; margin: 0; flex: 1; }
+.tshow-form {
+  display: flex; flex-direction: column; gap: 10px;
+  background: var(--paper, #fff);
+  border: 1px solid var(--border, rgba(31,26,20,.09));
+  border-radius: 18px;
+  padding: clamp(1rem, 1.6vw, 1.4rem);
+  box-shadow: 0 18px 44px -24px rgba(31,28,24,.22), 0 2px 8px -4px rgba(31,28,24,.06);
+}
+.tshow-form-head { display: flex; flex-direction: column; gap: 2px; margin-bottom: 0; }
+.tshow-form-eyebrow {
+  font-size: 10.5px; font-weight: 700; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--wn-saffron, #FF9933);
+}
+.tshow-form-h {
+  margin: 0; font-family: var(--display); font-size: 19px; font-weight: 800;
+  letter-spacing: -.02em; color: var(--ink);
+}
+.tshow-form-note { margin: 0; font-size: 12.5px; line-height: 1.5; color: var(--ink3); }
+/* avatar row: thumbnail + label/actions */
+.tshow-photo-row { display: flex; align-items: center; gap: 12px; }
+.tshow-form-photo {
+  flex: 0 0 auto;
+  width: 56px; height: 56px; border-radius: 50%;
+  cursor: pointer; padding: 0;
+  border: 1.5px dashed var(--border, rgba(31,26,20,.22));
+  background: rgba(255,153,51,.05);
+  color: var(--ink3);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  transition: border-color .2s, background .2s;
+}
+.tshow-form-photo:hover { border-color: rgba(255,153,51,.5); background: rgba(255,153,51,.1); color: var(--wn-saffron, #FF9933); }
+.tshow-form-photo.has-img { border-style: solid; border-color: rgba(255,153,51,.4); background: none; }
+.tshow-form-photo-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tshow-form-photo-ph { display: flex; align-items: center; justify-content: center; }
+.tshow-photo-meta { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+.tshow-photo-label { font-size: 11px; font-weight: 600; color: var(--ink2); }
+.tshow-photo-actions { display: flex; align-items: center; gap: 8px; }
+.tshow-photo-btn {
+  font-family: var(--sans); font-size: 11.5px; font-weight: 600; cursor: pointer;
+  padding: 5px 12px; border-radius: 8px;
+  border: 1px solid var(--border, rgba(31,26,20,.14));
+  background: var(--surf-1, #FFFCF8); color: var(--ink);
+  transition: border-color .18s, background .18s, color .18s;
+}
+.tshow-photo-btn:hover { border-color: rgba(255,153,51,.45); color: var(--wn-saffron-deep, #E07A12); }
+.tshow-photo-btn.ghost { background: none; color: var(--ink3); border-color: transparent; }
+.tshow-photo-btn.ghost:hover { color: #c0392b; }
+.tshow-field { display: flex; flex-direction: column; gap: 3px; }
+.tshow-field-l { font-size: 11px; font-weight: 600; color: var(--ink2); }
+.tshow-field-l i { color: var(--wn-saffron, #FF9933); font-style: normal; margin-left: 2px; }
+.tshow-input {
+  font-family: var(--sans); font-size: 13px; color: var(--ink);
+  padding: 11px 11px; border-radius: 14px;
+  border: 1px solid var(--border, rgba(31,26,20,.12));
+  background: var(--surf-1, #FFFCF8);
+  transition: border-color .18s, box-shadow .18s;
+  width: 100%;
+}
+.tshow-input:focus {
+  outline: none; border-color: var(--wn-saffron, #FF9933);
+  box-shadow: 0 0 0 3px rgba(255,153,51,.14);
+}
+.tshow-textarea { resize: vertical; line-height: 1.55; }
+.tshow-form-cta {
+  margin-top: 2px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  height: 40px; border-radius: 50px; border: none; cursor: pointer;
+  font-family: var(--sans); font-size: 13.5px; font-weight: 700; color: #fff;
+  background: var(--wn-saffron, #FF9933);
+  box-shadow: 0 8px 22px -6px rgba(255,153,51,.55);
+  transition: transform .2s, background .2s, opacity .2s;
+}
+.tshow-form-cta:hover:not(:disabled) { background: var(--wn-saffron-deep, #E07A12); transform: translateY(-1px); }
+.tshow-form-cta:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+.tshow-form-hint { margin: -4px 0 0; font-size: 11px; color: var(--ink3); text-align: center; }
+
+/* ── "Preparing your website" first-time overlay ── */
+.coi-prep {
+  position: fixed; inset: 0; z-index: 99999;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(12,10,8,.72);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  animation: coiPrepFade .25s ease both;
+}
+.coi-prep-card {
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+  padding: 36px 44px; border-radius: 20px;
+  background: var(--paper, #fff);
+  box-shadow: 0 30px 80px -20px rgba(0,0,0,.5);
+  text-align: center;
+}
+.coi-prep-spin {
+  width: 38px; height: 38px; border-radius: 50%;
+  border: 3px solid rgba(255,153,51,.18);
+  border-top-color: var(--wn-saffron, #FF9933);
+  animation: coiPrepSpin .8s linear infinite;
+}
+.coi-prep-t { font-family: var(--display); font-size: 17px; font-weight: 800; color: var(--ink); letter-spacing: -.01em; }
+.coi-prep-sub { font-size: 12.5px; color: var(--ink3); }
+@keyframes coiPrepSpin { to { transform: rotate(360deg); } }
+@keyframes coiPrepFade { from { opacity: 0; } to { opacity: 1; } }
+@media (max-width: 980px) {
+  .tshow-split { grid-template-columns: 1fr; }
+  /* stacked: give the gallery a fixed height since the form no longer sets it */
+  .tshow-split-left .tshow-stage { flex: none; height: 62vh; min-height: 420px; }
+}
+
+/* ── mobile: native horizontal scroll-snap ── */
+@media (max-width: 860px) {
+  .tshow-stage { overflow-x: auto; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; }
+  .tshow-track { transform: none !important; gap: 1.2rem; padding: 1rem clamp(1.25rem, 6vw, 2rem) 2rem; }
+  .tshow-card { width: 82vw; scroll-snap-align: center; transform: none !important; }
+  .tshow-card:hover { transform: none !important; }
+  .tshow-card-hover { opacity: 1; background: linear-gradient(to top, rgba(15,12,8,.6), transparent 50%); }
+  .tshow-head { flex-direction: column; align-items: flex-start; gap: 1.2rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .tshow-card { transition: none; }
+  .tshow-track { transition: none; }
+}
 
 
 /* ═══════════════════════════════════════════════════════════════
@@ -4879,86 +5582,90 @@ padding:
 ═══════════════════════════════════════════════════════════════ */
 .texp{
   position:relative;
-  padding:clamp(3.5rem,7vw,6rem) 0 clamp(2rem,4vw,3.5rem);
-  background:linear-gradient(180deg,#F1ECE3 0%,var(--wn-bg,#F6F3EE) 100%);
-  // overflow:hidden;
+  z-index:4;
+  padding:var(--section-y) 0;
+  background: var(--surf-2, #FDF5EC);   /* opaque surface so it covers the hero behind it */
 }
 .texp-glow{
   position:absolute;inset:0;pointer-events:none;z-index:0;
   background:
-    radial-gradient(ellipse 45% 40% at 80% 12%, rgba(255,153,51,.10) 0%, transparent 62%),
-    radial-gradient(ellipse 50% 45% at 12% 90%, rgba(255,217,176,.20) 0%, transparent 65%);
+    radial-gradient(ellipse 45% 40% at 80% 12%, rgba(255,153,51,.08) 0%, transparent 62%),
+    radial-gradient(ellipse 50% 45% at 12% 90%, rgba(255,217,176,.14) 0%, transparent 65%);
 }
 .texp-head{
-  position:relative;z-index:2;text-align:center;max-width:720px;
-  margin:0 auto;padding:0 clamp(1.5rem,5vw,3rem);
+  position:relative;z-index:2;text-align:left;max-width:1180px;
+  margin:0 auto clamp(1.4rem, 3vh, 2.4rem);
+  padding:0 clamp(1.5rem, 5vw, 3rem);
 }
 .texp-eyebrow{
-  display:inline-flex;align-items:center;gap:10px;
-  font-size:11px;font-weight:500;letter-spacing:.2em;text-transform:uppercase;
-  color:var(--wn-saffron,#FF9933);margin-bottom:1.1rem;
+  display:inline-flex;align-items:center;gap:8px;
+  font-family:var(--sans);font-size:13px;font-weight:600;letter-spacing:-.005em;
+  color:var(--wn-saffron-deep,#E07A12);
+  padding:6px 13px;border-radius:999px;
+  background:rgba(255,153,51,.08);border:1px solid rgba(255,153,51,.2);
+  margin-bottom:var(--s-3);
 }
-.texp-eyebrow::before,.texp-eyebrow::after{content:'';width:20px;height:1px;background:var(--wn-saffron,#FF9933)}
+.texp-eyebrow::before,.texp-eyebrow::after{ content:none; }
 .texp-h{
-  margin:0;font-family:'Fraunces','Instrument Serif',Georgia,serif;
-  font-size:clamp(2rem,4.4vw,3.4rem);font-weight:350;line-height:1.05;
-  letter-spacing:-.028em;color:var(--wn-text,#1F1C18);
+  margin:0;font-family:var(--display);
+  font-size:clamp(30px,4vw,52px);font-weight:800;line-height:1.08;
+  letter-spacing:-.03em;color:var(--ink);
 }
-.texp-h em{font-style:italic;font-weight:300;color:var(--wn-saffron,#FF9933)}
+.texp-h em{font-style:normal;color:var(--wn-saffron,#FF9933)}
 .texp-sub{
-  font-size:15px;font-weight:300;line-height:1.7;color:var(--wn-muted,#6E685F);
-  max-width:54ch;margin:1rem auto 0;
+  font-family:var(--sans);
+  font-size:clamp(15px,1.1vw,17px);font-weight:400;line-height:1.6;color:var(--ink3);
+  max-width:56ch;margin:var(--s-3) auto 0;
 }
 
 /* template switch tabs */
 .texp-tabs{
   position:relative;z-index:2;
-  display:flex;align-items:center;justify-content:center;gap:8px;flex-wrap:wrap;
-  margin:2rem auto 1.6rem;padding:0 clamp(1rem,4vw,2rem);max-width:980px;
+  display:flex;align-items:center;justify-content:center;gap:var(--s-1);flex-wrap:wrap;
+  margin:var(--s-5) auto var(--s-4);padding:0 var(--section-x);max-width:1000px;
 }
 .texp-tab{
   display:inline-flex;align-items:center;gap:8px;
-  padding:9px 16px;border-radius:999px;
-  font-family:var(--sans);font-size:12.5px;font-weight:500;letter-spacing:-.003em;
-  color:var(--wn-muted,#6E685F);
-  background:var(--wn-paper,#FBF9F4);border:1px solid var(--wn-line,rgba(31,28,24,.08));
+  padding:10px 18px;border-radius:999px;
+  font-family:var(--sans);font-size:13px;font-weight:600;letter-spacing:-.005em;
+  color:var(--ink3);
+  background:#fff;border:1px solid var(--border);
   cursor:pointer;transition:all .25s cubic-bezier(.22,.87,.36,1);white-space:nowrap;
 }
-.texp-tab:hover{border-color:rgba(255,153,51,.4);color:var(--wn-text,#1F1C18)}
+.texp-tab:hover{border-color:rgba(255,153,51,.45);color:var(--ink);transform:translateY(-1px)}
 .texp-tab.on{
-  background:var(--ink,#13140F);color:#fff;border-color:var(--ink,#13140F);
-  box-shadow:0 8px 22px -8px rgba(19,20,15,.4);
+  background:var(--wn-saffron,#FF9933);color:#fff;border-color:var(--wn-saffron,#FF9933);
+  box-shadow:0 10px 24px -10px rgba(255,153,51,.6);
 }
-.texp-tab-n{font-size:10px;font-weight:600;letter-spacing:.06em;opacity:.55}
-.texp-tab.on .texp-tab-n{color:var(--wn-saffron,#FF9933);opacity:1}
+.texp-tab-n{font-size:10px;font-weight:700;letter-spacing:.04em;opacity:.55}
+.texp-tab.on .texp-tab-n{color:#fff;opacity:.9}
 
-/* the 80vw × 80vh experience stage */
+/* the experience stage */
 .texp-stage{
   position:relative;z-index:2;
-  width:80vw;max-width:1320px;margin:0 auto;
+  width:min(92vw,1240px);margin:0 auto;
 }
 .texp-window{
-  border-radius:18px;overflow:hidden;
-  background:var(--wn-paper,#FBF9F4);
-  border:1px solid var(--wn-line,rgba(31,28,24,.08));
-  box-shadow:
-    0 2px 0 rgba(255,255,255,.7) inset,
-    0 48px 110px -34px rgba(31,28,24,.42),
-    0 18px 48px -28px rgba(31,28,24,.22);
+  width:min(1100px,100%);
+  margin:0 auto;
+  border-radius:var(--r-xl);overflow:hidden;
+  background:#fff;
+  border:1px solid var(--border);
+  box-shadow:var(--shadow-lg);
 }
 .texp-chrome{
   display:flex;align-items:center;gap:8px;
-  padding:11px 16px;background:#F1ECE3;
-  border-bottom:1px solid var(--wn-line,rgba(31,28,24,.08));
+  padding:13px 18px;background:#FBFAF8;
+  border-bottom:1px solid var(--border2);
 }
 .texp-chrome-dot{width:11px;height:11px;border-radius:50%;background:rgba(31,28,24,.14)}
-.texp-chrome-dot:nth-child(1){background:#E8A6A0}
-.texp-chrome-dot:nth-child(2){background:#EFCD8E}
-.texp-chrome-dot:nth-child(3){background:#A7CBB1}
+.texp-chrome-dot:nth-child(1){background:#FF9F8A}
+.texp-chrome-dot:nth-child(2){background:#FFD27A}
+.texp-chrome-dot:nth-child(3){background:#9BD8A0}
 .texp-chrome-url{
-  flex:1;text-align:center;font-size:12px;color:var(--wn-muted-2,#9A9387);
-  background:rgba(255,255,255,.7);border:1px solid var(--wn-line,rgba(31,28,24,.07));
-  border-radius:6px;padding:5px 14px;max-width:340px;margin:0 auto;
+  flex:1;text-align:center;font-family:var(--sans);font-size:12px;color:var(--ink4);
+  background:#fff;border:1px solid var(--border2);
+  border-radius:8px;padding:6px 14px;max-width:360px;margin:0 auto;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.01em;
 }
 .texp-chrome-live{
@@ -4967,27 +5674,50 @@ padding:
   color:#2d7a4f;
 }
 .texp-chrome-live-dot{width:6px;height:6px;border-radius:50%;background:#3aa76d;box-shadow:0 0 0 3px rgba(58,167,109,.18);animation:pulseDot 2.2s ease-in-out infinite}
+/* device toggle (mobile / tablet / desktop) in the chrome bar */
+.texp-devices{display:inline-flex;gap:4px;flex-shrink:0}
+.texp-device-btn{
+  width:28px;height:24px;display:inline-flex;align-items:center;justify-content:center;
+  border:1px solid var(--border2);border-radius:7px;background:#fff;
+  font-size:13px;line-height:1;color:var(--ink4);cursor:pointer;
+  transition:all .18s;
+}
+.texp-device-btn:hover{color:var(--ink3);border-color:var(--border)}
+.texp-device-btn.on{
+  background:var(--wn-saffron,#FF9933);border-color:var(--wn-saffron,#FF9933);color:#fff;
+}
 @media(max-width:640px){.texp-chrome-url,.texp-chrome-live{display:none}}
 
-/* frame is 80vh tall */
+/* frame */
 .texp-frame-wrap{
-  position:relative;width:100%;height:80vh;min-height:520px;
-  background:var(--wn-bg-2,#EEEAE2);
+  /* fit the whole window (chrome bar + frame) inside one screen with padding:
+     100vh − top/bottom section padding − chrome bar height */
+  position:relative;width:100%;
+  /* center the simulated device horizontally */
+  display:flex;justify-content:center;align-items:stretch;
+  height:calc(100svh - 2 * var(--section-y) - 56px);
+  max-height:760px;min-height:420px;
+  background:var(--surf-1);
+  overflow:hidden;
+}
+/* holds the device-sized iframe and never lets it exceed the wrap width */
+.texp-frame-scaler{
+  height:100%;max-width:100%;display:flex;
 }
 .texp-frame{
-  width:100%;height:100%;border:0;display:block;background:#fff;
+  height:100%;border:0;display:block;background:#fff;max-width:100%;
 }
 .texp-loading{
   position:absolute;inset:0;z-index:2;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
-  background:var(--wn-bg,#F6F3EE);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:var(--s-2);
+  background:var(--surf-1);
 }
 .texp-spin{
   width:26px;height:26px;border-radius:50%;
-  border:2px solid rgba(31,28,24,.12);border-top-color:var(--wn-saffron,#FF9933);
+  border:2px solid rgba(31,26,20,.12);border-top-color:var(--wn-saffron,#FF9933);
   animation:spin .7s linear infinite;
 }
-.texp-loading-t{font-size:12px;color:var(--wn-muted,#6E685F);letter-spacing:.02em}
+.texp-loading-t{font-family:var(--sans);font-size:13px;color:var(--ink3);letter-spacing:.01em}
 
 /* footer under the window */
 .texp-foot{
@@ -4995,7 +5725,7 @@ padding:
   margin-top:1.1rem;
 }
 .texp-foot-name{
-  font-family:'Fraunces','Instrument Serif',serif;font-size:16px;color:var(--wn-text,#1F1C18);letter-spacing:-.01em;
+  font-family: var(--display);font-size:16px;color:var(--wn-text,#1F1C18);letter-spacing:-.01em;
 }
 .texp-foot-name span{font-family:var(--sans);font-size:12.5px;font-weight:300;color:var(--wn-muted-2,#9A9387)}
 .texp-foot-cta{
@@ -5015,7 +5745,7 @@ padding:
 }
 @media(max-width:640px){
   .texp-stage{width:92vw}
-  .texp-frame-wrap{height:70vh;min-height:440px}
+  .texp-frame-wrap{height:calc(100svh - 2 * var(--section-y) - 52px);min-height:360px}
 }
 
 
@@ -5057,7 +5787,7 @@ padding:
 }
 .bigmark-word{
   margin:0;
-  font-family:'times new roman ','Instrument Serif',Georgia,serif;
+  font-family:var(--serif);
   font-weight:400;line-height:.92;letter-spacing:-.01em;
   font-size:clamp(3rem,9vw,11rem);
   color:#ff9933;
@@ -5086,7 +5816,7 @@ padding:
   z-index:8;
   background:
     radial-gradient(110% 80% at 50% 32%, rgba(255,153,51,calc(.07 + .05 * var(--reveal))) 0%, transparent 60%),
-    linear-gradient(180deg, #FBF8F2 0%, #F4EEE3 100%);
+    linear-gradient(180deg, var(--surf-1) 0%, var(--surf-2) 100%);
   overflow:hidden;
   min-height:min(78vh,600px);
   display:flex;align-items:center;justify-content:center;
@@ -5161,7 +5891,7 @@ padding:
 .hangmark-thread.r{right:22%}
 .hangmark-word{
   margin:0;
-  font-family:'times new roman','Instrument Serif',Georgia,serif;
+  font-family:var(--serif);
   font-weight:400;line-height:.95;letter-spacing:-.012em;
   /* sized so the full wordmark fits within the section padding on every width.
      ~6.4vw keeps "Counsellors of India" (≈20 chars) inside the viewport with
@@ -5219,8 +5949,8 @@ padding:
   position: fixed;
   inset: 0;
   background: rgba(2,6,23,0);
-  backdrop-filter: blur(0px);
-  visibility: hidden;
+  // backdrop-filter: blur(0px);
+  // visibility: hidden;
   transition: 0.4s ease;
   z-index: 998;
 }
@@ -5228,7 +5958,7 @@ padding:
 .mobile-overlay.show{
   visibility: visible;
   background: rgba(2,6,23,0.55);
-  backdrop-filter: blur(8px);
+  // backdrop-filter: blur(8px);
 }
 
 /* SIDEBAR */
@@ -5719,19 +6449,592 @@ padding:
 }
 
 
+
+
+  .hero-quote-wrap {
+  height: 40px;
+  overflow: hidden;
+  margin-top: 1rem;
+  position: relative;
+}
+
+.hero-quote {
+  font-size: 1rem;
+  color: #5f5f5f;
+  font-weight: 500;
+  animation: fadeSlide 0.6s ease;
+}
+
+@keyframes fadeSlide {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+.hero-heading-animate{
+  display:inline-block;
+  animation: heroFade .7s ease;
+}
+
+@keyframes heroFade{
+  from{
+    opacity:0;
+    transform: translateY(20px);
+  }
+  to{
+    opacity:1;
+    transform: translateY(0);
+  }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+.tshow-iframe-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding: 0 clamp(1.5rem, 5vw, 3rem);
+  margin-bottom: 1rem;
+}
+.tshow-iframe-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink3);
+  background: var(--paper);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .22s cubic-bezier(.22,.87,.36,1);
+}
+.tshow-iframe-tab:hover {
+  border-color: rgba(255,153,51,.45);
+  color: var(--ink);
+  transform: translateY(-1px);
+}
+.tshow-iframe-tab.on {
+  background: var(--wn-saffron, #FF9933);
+  color: #fff;
+
+  border-color: var(--wn-saffron, #FF9933);
+  box-shadow: 0 8px 20px -8px rgba(255,153,51,.55);
+}
+.tshow-iframe-tab-n {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .05em;
+  opacity: .55;
+}
+.tshow-iframe-tab.on .tshow-iframe-tab-n { opacity: .9; }
+.tshow-iframe-browser {
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid rgba(31,28,24,.08);
+
+  box-shadow:
+    0 2px 0 rgba(255,255,255,.7) inset,
+    0 20px 60px -20px rgba(31,28,24,.22),
+    0 6px 20px -8px rgba(31,28,24,.1);
+
+  margin: 0;
+  width: 100%;
+  height: auto;
+  max-height:70vh;
+}
+.tshow-iframe-chrome {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 16px;
+  background: #F2EDE6;
+  border-bottom: 1px solid rgba(31,28,24,.07);
+}
+.tshow-iframe-dots {
+  display: flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.tshow-iframe-dots span { width: 10px; height: 10px; border-radius: 50%; }
+.tshow-iframe-dots span:nth-child(1) { background: #FF5F57; }
+.tshow-iframe-dots span:nth-child(2) { background: #FFBD2E; }
+.tshow-iframe-dots span:nth-child(3) { background: #28C840; }
+.tshow-iframe-url {
+  flex: 1;
+  text-align: center;
+  font-family: var(--sans);
+  font-size: 11.5px;
+  color: var(--ink4);
+  background: rgba(255,255,255,.7);
+  border: 1px solid rgba(31,28,24,.07);
+  border-radius: 6px;
+  padding: 5px 14px;
+  max-width: 340px;
+  margin: 0 auto;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: -.01em;
+}
+.tshow-iframe-live {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--sans);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: .04em;
+  color: #2d7a4f;
+  flex-shrink: 0;
+}
+.tshow-iframe-wrap {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  background: var(--surf-1);
+}
+.tshow-iframe-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: var(--surf-1);
+}
+.tshow-iframe-spin {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  border: 2px solid rgba(31,26,20,.1);
+  border-top-color: var(--wn-saffron, #FF9933);
+  animation: spin .7s linear infinite;
+}
+.tshow-iframe-loading-t {
+  font-family: var(--sans);
+  font-size: 13px;
+  color: var(--ink3);
+  letter-spacing: .01em;
+}
+
+
+
+/* ========================================
+   OVERLAY
+======================================== */
+
+.mobile-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(255, 153, 51, 0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.35s ease;
+  z-index: 999;
+}
+
+.mobile-overlay.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ========================================
+   SIDEBAR
+======================================== */
+
+.mobile-sidebar {
+  position: fixed;
+  top: 0;
+  right: 0;
+
+  width: min(88vw, 380px);
+  height: 100vh;
+
+  background: #ffffff;
+
+  display: flex;
+  flex-direction: column;
+
+  padding: 28px;
+
+  transform: translateX(100%);
+  transition: transform 0.4s cubic-bezier(.22,1,.36,1);
+
+  z-index: 1000;
+
+  overflow-y: auto;
+
+  border-left: 1px solid rgba(255, 153, 51, 0.15);
+
+  box-shadow:
+    -20px 0 60px rgba(255, 153, 51, 0.12);
+}
+
+.mobile-sidebar.show {
+  transform: translateX(0);
+}
+
+/* ========================================
+   ORANGE GLOW
+======================================== */
+
+.sidebar-glow {
+  position: absolute;
+  top: -100px;
+  right: -100px;
+
+  width: 240px;
+  height: 240px;
+
+  border-radius: 50%;
+
+  background: rgba(255, 153, 51, 0.15);
+
+  filter: blur(80px);
+
+  pointer-events: none;
+}
+
+/* ========================================
+   TOP AREA
+======================================== */
+
+.sidebar-top {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 42px;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sidebar-brand img {
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+}
+
+.sidebar-brand h3 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #111;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.sidebar-brand p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: #666;
+}
+
+/* ========================================
+   NAVIGATION
+======================================== */
+
+.sidebar-links {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebar-links a {
+  position: relative;
+
+  display: flex;
+  align-items: center;
+  gap: 14px;
+
+  text-decoration: none;
+
+  color: #111;
+
+  font-size: 1rem;
+  font-weight: 600;
+
+  padding: 16px 18px;
+
+  border-radius: 18px;
+
+  transition: all 0.25s ease;
+}
+
+.sidebar-links a span {
+  color: #ff9933;
+  font-size: 0.8rem;
+  font-weight: 700;
+  min-width: 24px;
+}
+
+.sidebar-links a:hover {
+  background: rgba(255, 153, 51, 0.08);
+  transform: translateX(6px);
+}
+
+.sidebar-links a::after {
+  content: "";
+  position: absolute;
+  right: 18px;
+
+  width: 6px;
+  height: 6px;
+
+  border-radius: 50%;
+
+  background: #ff9933;
+
+  opacity: 0;
+
+  transition: all 0.25s ease;
+}
+
+.sidebar-links a:hover::after {
+  opacity: 1;
+}
+
+/* ========================================
+   CTA CARD
+======================================== */
+
+.sidebar-card {
+  margin-top: 32px;
+
+  padding: 24px;
+
+  border-radius: 24px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,153,51,0.08),
+      rgba(255,153,51,0.02)
+    );
+
+  border: 1px solid rgba(255,153,51,0.18);
+}
+
+.sidebar-card p {
+  color: #222;
+
+  font-size: 0.95rem;
+  line-height: 1.6;
+
+  margin-bottom: 18px;
+
+  font-weight: 500;
+}
+
+/* ========================================
+   PRIMARY BUTTON
+======================================== */
+
+.sidebar-card .btn {
+  width: 100%;
+
+  height: 52px;
+
+  border-radius: 16px;
+
+  background: #ff9933;
+  color: white;
+
+  font-weight: 700;
+  font-size: 0.95rem;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  text-decoration: none;
+
+  transition: all 0.3s ease;
+
+  box-shadow:
+    0 10px 30px rgba(255,153,51,0.3);
+}
+
+.sidebar-card .btn:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 16px 35px rgba(255,153,51,0.35);
+}
+
+/* ========================================
+   FOOTER
+======================================== */
+
+.sidebar-footer {
+  margin-top: auto;
+
+  padding-top: 28px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 14px;
+}
+
+.footer-link {
+  color: white;
+  background-color:#ff9933;
+  padding: 16px;
+  border-radius:10px;
+  text-decoration: none;
+
+  font-size: 0.92rem;
+  font-weight: 600;
+
+  transition: all 0.25s ease;
+}
+
+.footer-link:hover {
+  color: #ff9933;
+  background-color : white;
+}
+
+.footer-dot {
+  width: 5px;
+  height: 5px;
+
+  border-radius: 50%;
+
+  background: #ff9933;
+}
+
+/* ========================================
+   SCROLLBAR
+======================================== */
+
+.mobile-sidebar::-webkit-scrollbar {
+  width: 5px;
+}
+
+.mobile-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(255,153,51,0.35);
+  border-radius: 999px;
+}
+
+/* ========================================
+   MOBILE
+======================================== */
+
+@media (max-width: 480px) {
+  .mobile-sidebar {
+    width: 92vw;
+    padding: 24px;
+  }
+
+  .sidebar-links a {
+    padding: 15px 16px;
+  }
+}
+
+
+.sidebar-close {
+  width: 44px;
+  height: 44px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  cursor: pointer;
+
+  border-radius: 14px;
+
+  background: rgba(255, 153, 51, 0.08);
+
+  color: #ff9933;
+
+  font-size: 1.25rem;
+  font-weight: 600;
+
+  transition: all 0.25s ease;
+}
+
+.sidebar-close:hover {
+  background: #ff9933;
+  color: #fff;
+
+  transform: rotate(90deg);
+}
+
+
+
+/* Each device width makes the iframe a real browser window of that size, so
+   the template's own @media breakpoints fire correctly inside the frame.
+   max-width:100% keeps the wide frames from overflowing on small screens. */
+
+/* Desktop */
+.texp-frame.desktop{
+  width:1280px;
+  max-width:100%;
+}
+
+/* Tablet */
+.texp-frame.tablet{
+  width:768px;
+  max-width:100%;
+}
+
+/* Mobile */
+.texp-frame.mobile{
+  width:390px;
+  max-width:100%;
+}
+  
 `
 
 /* ─────────────────────────────────────────────────────────────────
    TEMPLATE MINI THUMBNAILS
 ───────────────────────────────────────────────────────────────── */
 const TMPLS = [
-  { id:'t1', name:'Warm & Simple',  desc:'Ivory, soft terracotta', bg:'#F0EBE2', accent:'#b46b50', img:'/t1.png' },
-  { id:'t2', name:'Dark & Bold',    desc:'Gold on deep black',     bg:'#0B0D0E', accent:'#c9a35a', img:'/t2.png' },
-  { id:'t3', name:'Sage & Clean',   desc:'Green tones, minimal',   bg:'#F4F8F5', accent:'#3D7A6A', img:'/t3.png' },
-  { id:'t4', name:'Premium Black',  desc:'Luxury editorial',       bg:'#080808', accent:'#D4AF37' },
-  { id:'t5', name:'Calm & Natural', desc:'Warm greens, parchment', bg:'#F7F4EF', accent:'#2D4A32' },
+  { id:'t1', name:'Warm & Simple',  desc:'Therapist · Ivory & Terracotta',  bg:'#F0EBE2', accent:'#b46b50', badge:'Therapist',            badgeClass:'badge-therapist',    img:'/t1.png', url:'/preview/classic1' },
+  { id:'t2', name:'Dark & Bold',    desc:'Psychologist · Gold on Black',     bg:'#0B0D0E', accent:'#c9a35a', badge:'Psychologist',         badgeClass:'badge-psychologist', img:'/t2.png', url:'/preview/classic2' },
+  { id:'t3', name:'Sage & Clean',   desc:'Counsellor · Green Minimal',       bg:'#F4F8F5', accent:'#3D7A6A', badge:'Relationship Counsellor', badgeClass:'badge-relationship', img:'/t3.png', url:'/preview/classic3' },
+  { id:'t4', name:'Premium Black',  desc:'Trauma Specialist · Luxury Edit.', bg:'#080808', accent:'#D4AF37', badge:'Premium',              badgeClass:'badge-premium',      img:'/t4.png', url:'/preview/classic4' },
+  { id:'t5', name:'Calm & Natural', desc:'Career Coach · Warm Greens',       bg:'#F7F4EF', accent:'#2D4A32', badge:'Career Coach',         badgeClass:'badge-career',       img:'/t5.png', url:'/preview/classic5' },
 ]
-
 
 /* Full-page sized template renders (1280×720 logical, scaled down) */
 const MINIS: Record<string,React.ReactNode> = {
@@ -5865,9 +7168,30 @@ const AVP=[
 const FILTERS = ['All','Anxiety','Depression','Trauma','Relationships','Burnout','Career','Online','In-person']
 
 const PLANS_DATA = [
-  { id:'starter', name:'Starter', price:'₹1,200',    period:'/month', hi:false, badge:null,           feats:['All 5 profile templates','Public profile page','Shareable booking link','Unlimited bookings','Email confirmations','Online payment links'], cta:'Choose Starter', g:true  },
-  { id:'growth',  name:'Growth',  price:'₹2,500',    period:'/month', hi:true,  badge:'Most popular', feats:['Everything in Starter','Client notes & history','Availability management','Session records','Priority email support'], cta:'Choose Growth', g:false },
-  { id:'clinic',  name:'Clinic',  price:'₹1,00,000', period:'/month', hi:false, badge:'Enterprise',   feats:['Everything in Growth','Multiple therapist accounts','Export notes PDF','Custom domain','Advanced analytics','Dedicated support'], cta:'Choose Clinic', g:true },
+  { id:'starter', name:'Starter', price:'₹1499',    period:'/ year', hi:true, badge:null,           feats:['Proffesional therapist website','Custom domain' ,'Online Appointment Booking','Payment Collection ','Email confirmations','Client Dashboard', 'Shareable profile link', 'Up to 10 bookings per month'], cta:'Get Started', g:true  },
+{ 
+  id:'pro',
+  name:'PRO',
+  price:'₹2499',
+  period:'/ year',
+  hi:true,
+  // badge:'Most popular',
+  feats:[
+    'Professional therapist website',
+    'Custom domain',
+    'Online appointment booking',
+    'Payment collection',
+    'Client dashboard',
+    'Email confirmations',
+    'Shareable profile link',
+    'Unlimited bookings',
+    'Featured Therapist Badge',
+    'Higher Visibility in Directory',
+    'Priority Support'
+  ],
+  cta:'Grow Your Practice',
+  g:false
+},  // { id:'clinic',  name:'Clinic',  price:'₹1,00,000', period:'/month', hi:false, badge:'Enterprise',   feats:['Everything in Growth','Multiple therapist accounts','Export notes PDF','Custom domain','Advanced analytics','Dedicated support'], cta:'Choose Clinic', g:true },
 ]
 
 const TESTIS = [
@@ -5995,6 +7319,14 @@ function HeroTemplatePeek() {
 ───────────────────────────────────────────────────────────────── */
 const TMPL_ACCENTS = ['#b46b50','#c9a35a','#3D7A6A','#D4AF37','#2D4A32']
 
+/* Order for the scrolling showcase (section 3): t3 (Sage & Clean) is the
+   default centred card on load, so it leads. The rest keep their original
+   order after it. (Other components still use the original TMPLS order.) */
+const SHOWCASE_TMPLS = [
+  ...TMPLS.filter(t => t.id === 't3'),
+  ...TMPLS.filter(t => t.id !== 't3'),
+]
+
 /* Live "experience the template" section — embeds the real template site in
    an iframe (80vh × 80vw) so visitors feel exactly what they'll get after
    payment. Defaults to template 4 (Premium Black). */
@@ -6026,10 +7358,10 @@ function BigWordmark() {
   return (
     <section ref={ref} className="bigmark" aria-label="Counsellors of India">
       <div className="bigmark-inner">
-        {/* <span className="bigmark-eyebrow">Built in India · for India</span> */}
+        {/* <span className="bigmark-eyebrow">Built in India — for India</span> */}
         <h2 className="bigmark-word">Counsellors of India</h2>
       </div>
-      {/* <p className="bigmark-copy">© {new Date().getFullYear()} Counsellors of India · A calm home for every practice.</p> */}
+      {/* <p className="bigmark-copy">© {new Date().getFullYear()} Counsellors of India — A calm home for every practice.</p> */}
     </section>
   )
 }
@@ -6039,49 +7371,148 @@ function BigWordmark() {
    each is a little browser window showing the real screen the step refers to:
    1) sign-up page  2) build-your-profile form  3) dashboard + shareable link
    4) appointments list. They scale to fill the card. */
-function StepMock({ step }: { step: number }) {
-  // The browser URL shown in the chrome bar, per step.
-  const url = [
-    'counsellorsofindia.com/signup',
-    'counsellorsofindia.com/dashboard/profile',
-    'counsellorsofindia.com/dashboard',
-    'counsellorsofindia.com/dashboard/appointments',
-  ][step] ?? 'counsellorsofindia.com'
+/* ─── HOW IT WORKS — connected vertical timeline ───────────────────
+   A single elegant spine with 4 numbered nodes. The connector "draws"
+   (fills with gold) as the section scrolls through the viewport, and each
+   step rises in as its node passes the mid-line. Calm, editorial, premium.
+   Refined line icons replace the old app mockups. */
+const HOW_STEPS = [
+  {
+    n: '01',
+    t: 'Create your account',
+    d: 'Sign up with your name and email. Takes under a minute and gets you instant access to your therapist dashboard.',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="12" cy="8" r="3.4" />
+        <path d="M5 20c0-3.6 3.1-5.6 7-5.6s7 2 7 5.6" />
+      </svg>
+    ),
+  },
+  {
+    n: '02',
+    t: 'Build your profile',
+    d: 'Add credentials, approach, availability, and a photo. Choose a premium template that matches your practice tone.',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="4" y="3.5" width="16" height="17" rx="2.5" />
+        <path d="M8 8h8M8 12h8M8 16h5" />
+      </svg>
+    ),
+  },
+  {
+    n: '03',
+    t: 'Share your link',
+    d: 'Send your personal page link via WhatsApp, email, or Instagram. Clients book sessions directly through your profile.',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <circle cx="6.5" cy="12" r="2.6" />
+        <circle cx="17.5" cy="6" r="2.6" />
+        <circle cx="17.5" cy="18" r="2.6" />
+        <path d="M8.8 10.8 15.2 7.2M8.8 13.2l6.4 3.6" />
+      </svg>
+    ),
+  },
+  {
+    n: '04',
+    t: 'Manage bookings',
+    d: 'Accept appointments, track clients, and write secure session notes, all from one calm, focused dashboard.',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <rect x="3.5" y="5" width="17" height="15" rx="2.5" />
+        <path d="M3.5 9.5h17M8 3.5v3M16 3.5v3" />
+        <path d="m9.2 14.4 2 2 3.6-3.8" />
+      </svg>
+    ),
+  },
+]
 
+function HowTimeline() {
+  const ref = useRef<HTMLDivElement | null>(null)
+
+  // Scroll-driven fill: --fill goes 0 → 1 as the timeline crosses the viewport
+  // centre, drawing the gold connector. Nodes flip to .is-on once the fill
+  // reaches them (pure CSS, driven off --fill). rAF-throttled, passive.
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      el.style.setProperty('--fill', '1')
+      return
+    }
+    let raf = 0
+const onScroll = () => {
+  if (raf) return
+  raf = requestAnimationFrame(() => {
+    raf = 0
+    const r = el.getBoundingClientRect()
+    const vh = window.innerHeight
+    // Start when top enters at 80vh, end when bottom is at 40vh from top
+    const start = vh * 0.8
+    const end   = vh * 0.4
+    const total = r.height + (start - end)          // total travel distance
+    const traveled = start - r.top                  // how far we've scrolled
+    const p = traveled / Math.max(1, total)
+    el.style.setProperty('--fill', String(Math.min(1, Math.max(0, p))))
+  })
+}
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll, { passive: true })
+    onScroll()
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (raf) cancelAnimationFrame(raf)
+    }
+  }, [])
+
+  return (
+    <div ref={ref} className="how-tl" style={{ ['--fill' as string]: 0 }}>
+      <div className="how-tl-spine" aria-hidden="true">
+        <span className="how-tl-spine-fill" />
+      </div>
+      <ol className="how-tl-list">
+        {HOW_STEPS.map((s, i) => (
+          <li
+            key={s.n}
+            className="how-tl-step"
+style={{
+  ['--i' as string]: i,
+  ['--at' as string]: Math.min(0.92, i / (HOW_STEPS.length - 1))
+}}          >
+            <div className="how-tl-node" aria-hidden="true">
+              <span className="how-tl-node-icon">{s.icon}</span>
+            </div>
+            <div className="how-tl-body">
+              <span className="how-tl-num">{s.n}</span>
+              <h3 className="how-tl-t">{s.t}</h3>
+              <p className="how-tl-d">{s.d}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
+  )
+}
+
+function StepMock({ step }: { step: number }) {
   return (
     <div className="smock">
       <div className="smock-body">
-        {/* browser chrome */}
-        <div className="smock-status">
-          <span className="smock-time">{url}</span>
-        </div>
 
-        {/* STEP 1 — Sign up (desktop, mirrors /signup) */}
+        {/* STEP 1 — the REAL sign-up page, embedded live + scaled to fit */}
         {step === 0 && (
-          <div className="smk-screen smk-auth">
-            <div className="smk-auth-head">
-              <div className="smk-appbrand"><span className="smk-pip" />Counsellors of India</div>
-              <div className="smk-auth-title">Create your free account</div>
-            </div>
-            <div className="smk-card smk-auth-card">
-              <div className="smk-avatar"><span className="smk-usr" /></div>
-              <div className="smk-uplab">Upload profile photo</div>
-              <div className="smk-field"><span className="smk-flabel">Full Name</span>
-                <div className="smk-row-name">
-                  <div className="smk-select">Dr. <i className="smk-chev" /></div>
-                  <div className="smk-input">Priya Sharma</div>
-                </div>
-              </div>
-              <div className="smk-field"><span className="smk-flabel">Your profile URL</span>
-                <div className="smk-url-row">
-                  <span className="smk-prefix">counsellorsofindia.com/</span>
-                  <span className="smk-url-input">priya-sharma</span>
-                </div>
-              </div>
-              <div className="smk-field"><span className="smk-flabel">Email Address</span><div className="smk-input smk-ph">priya@example.com</div></div>
-              <div className="smk-field"><span className="smk-flabel">Password</span><div className="smk-input smk-ph">Minimum 6 characters</div></div>
-              <div className="smk-cta">Create free account</div>
-            </div>
+          <div className="smk-live">
+            <iframe
+              className="smk-live-frame"
+              src="/signup-preview"
+              title="Sign-up page"
+              loading="lazy"
+              scrolling="no"
+              tabIndex={-1}
+              aria-hidden="true"
+            />
+            {/* transparent shield so the page reads as a static visual, not interactive */}
+            <div className="smk-live-shield" aria-hidden="true" />
           </div>
         )}
 
@@ -6100,21 +7531,49 @@ function StepMock({ step }: { step: number }) {
             </aside>
             <div className="smk-main">
               <div className="smk-mainhead">
-                <div className="smk-h2">Build your profile</div>
-                <div className="smk-prog"><span style={{ ['--p' as string]: '66%' }} /></div>
-              </div>
-              <div className="smk-grid2">
-                <div className="smk-field"><span className="smk-flabel">Professional Title</span><div className="smk-input">Clinical Psychologist</div></div>
-                <div className="smk-field"><span className="smk-flabel">City</span><div className="smk-input">Mumbai</div></div>
-              </div>
-              <div className="smk-field"><span className="smk-flabel">About your approach</span><div className="smk-area">CBT · Trauma-informed · A warm, collaborative space for anxiety &amp; burnout, helping clients move toward steadier, fuller lives.</div></div>
-              <div className="smk-grid2">
-                <div className="smk-field"><span className="smk-flabel">Specialties</span>
-                  <div className="smk-chips"><span>Anxiety</span><span>Couples</span><span>Grief</span><span className="add">+ Add</span></div>
+                <div>
+                  <div className="smk-eyebrow">Step 1 of 3 · Your profile</div>
+                  <div className="smk-h2">Build your profile</div>
                 </div>
-                <div className="smk-field"><span className="smk-flabel">Fee per session</span><div className="smk-input">₹1,500</div></div>
+                <div className="smk-steps" aria-hidden="true">
+                  <i className="done" /><i className="on" /><i />
+                </div>
               </div>
-              <div className="smk-cta smk-cta-inline">Save &amp; continue</div>
+
+              {/* identity row — avatar in context */}
+              <div className="smk-idrow">
+                <div className="smk-avatar lg"><span className="smk-usr" /></div>
+                <div className="smk-grid2 smk-idrow-fields">
+                  <div className="smk-field"><span className="smk-flabel">Full name</span><div className="smk-input">Dr. Priya Sharma</div></div>
+                  <div className="smk-field"><span className="smk-flabel">City</span><div className="smk-input">Mumbai</div></div>
+                </div>
+              </div>
+
+              <div className="smk-field"><span className="smk-flabel">Professional title</span><div className="smk-input">Clinical Psychologist · RCI Licensed</div></div>
+
+              <div className="smk-field"><span className="smk-flabel">About your approach</span><div className="smk-area">A warm, collaborative space for anxiety &amp; burnout. CBT and trauma-informed care, helping clients move toward steadier, fuller lives.</div></div>
+
+              <div className="smk-field">
+                <span className="smk-flabel">Specialties <em className="smk-count">3 selected</em></span>
+                <div className="smk-chips">
+                  <span className="sel">? Anxiety</span>
+                  <span className="sel">? Couples</span>
+                  <span className="sel">? Grief</span>
+                  <span>Trauma</span>
+                  <span>Burnout</span>
+                  <span>Depression</span>
+                </div>
+              </div>
+
+              <div className="smk-grid2">
+                <div className="smk-field"><span className="smk-flabel">Session fee</span><div className="smk-input smk-input-money"><i>₹</i>1,500</div></div>
+                <div className="smk-field"><span className="smk-flabel">Years of experience</span><div className="smk-input">8 years</div></div>
+              </div>
+
+              <div className="smk-footer">
+                <div className="smk-btn-ghost">Back</div>
+                <div className="smk-cta smk-cta-inline">Save &amp; continue →</div>
+              </div>
             </div>
           </div>
         )}
@@ -6133,7 +7592,15 @@ function StepMock({ step }: { step: number }) {
               </nav>
             </aside>
             <div className="smk-main">
-              <div className="smk-h2">Welcome back, Priya 👋</div>
+              <div className="smk-mainhead">
+                <div>
+                  <div className="smk-eyebrow">Step 3 of 3 · Dashboard</div>
+                  <div className="smk-h2">Welcome back, Priya 👋</div>
+                </div>
+                <div className="smk-steps" aria-hidden="true">
+                  <i className="done" /><i className="done" /><i className="on" />
+                </div>
+              </div>
               <div className="smk-share">
                 <span className="smk-globe" />
                 <span className="smk-link">counsellorsofindia.com/priya-sharma</span>
@@ -6166,12 +7633,18 @@ function StepMock({ step }: { step: number }) {
               </nav>
             </aside>
             <div className="smk-main">
-              <div className="smk-appttop"><div className="smk-h2">Appointments</div><span className="smk-pill-today">Today · 3</span></div>
+              <div className="smk-appttop">
+                <div>
+                  <div className="smk-eyebrow">Your practice · Schedule</div>
+                  <div className="smk-h2">Appointments</div>
+                </div>
+                <span className="smk-pill-today">Today · 3</span>
+              </div>
               {[
-                { i: 'AM', n: 'Aarav Mehta', t: 'Today · 4:00 PM · Anxiety', g: 'a', s: 'ok' },
-                { i: 'SK', n: 'Sara Khan', t: 'Tomorrow · 11:30 AM · Couples', g: 'b', s: 'wait' },
-                { i: 'RV', n: 'Rohan Verma', t: 'Fri · 6:00 PM · Grief', g: 'c', s: 'ok' },
-                { i: 'IN', n: 'Isha Nair', t: 'Fri · 7:30 PM · Burnout', g: 'b', s: 'ok' },
+                { i: 'AM', n: 'Aarav Mehta', t: 'Today — 4:00 PM ✓ Anxiety', g: 'a', s: 'ok' },
+                { i: 'SK', n: 'Sara Khan', t: 'Tomorrow — 11:30 AM — Couples', g: 'b', s: 'wait' },
+                { i: 'RV', n: 'Rohan Verma', t: 'Fri — 6:00 PM — Grief', g: 'c', s: 'ok' },
+                { i: 'IN', n: 'Isha Nair', t: 'Fri — 7:30 PM — Burnout', g: 'b', s: 'ok' },
               ].map((a) => (
                 <div key={a.n} className="smk-appt">
                   <span className={`smk-ini g-${a.g}`}>{a.i}</span>
@@ -6191,27 +7664,11 @@ function HangingWordmark() {
   const text = 'Counsellors of India'
   const ref = useRef<HTMLElement | null>(null)
 
-  // Reveal as the section scrolls up into view (after the FAQ is above it):
-  // --reveal goes 0 → 1, opening the shutter from the bottom. No layout
-  // changes, no negative margins → never traps the scroll.
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    let raf = 0
-    const onScroll = () => {
-      if (raf) return
-      raf = requestAnimationFrame(() => {
-        raf = 0
-        const r = el.getBoundingClientRect()
-        const vh = window.innerHeight
-        const p = Math.min(1, Math.max(0, (vh - r.top) / (vh * 0.9)))
-        el.style.setProperty('--reveal', String(p))
-      })
-    }
-    window.addEventListener('scroll', onScroll, { passive: true })
-    onScroll()
-    return () => { window.removeEventListener('scroll', onScroll); if (raf) cancelAnimationFrame(raf) }
-  }, [])
+  // No scroll-driven --reveal here: the wordmark lives in a fixed 25vh strip
+  // that is shown/hidden via the curtain (.faq-wordmark-reveal opacity). The
+  // content's --reveal is forced to 1 in CSS so it is always fully drawn while
+  // visible. Writing --reveal inline from JS would override that CSS and make
+  // the text fade with scroll again, so it is intentionally removed.
 
   return (
     <section ref={ref} className="hangmark" aria-label="Counsellors of India">
@@ -6246,9 +7703,18 @@ function LiveTemplateExperience() {
     { id: 't4', n: 4, name: 'Premium Black',  desc: 'Luxury editorial' },
     { id: 't5', n: 5, name: 'Calm & Natural', desc: 'Warm greens, parchment' },
   ]
-  const [active, setActive] = useState(3) // default → template 4
+  const [active, setActive] = useState(2) // default → template 3 (Sage & Clean)
   const [loading, setLoading] = useState(true)
   const cur = EXP[active]
+
+
+  // User explicitly chooses which device to preview (not driven by the real
+  // browser width). The iframe itself is sized to the device width below, so
+  // each template's own @media breakpoints fire correctly inside the frame.
+  const [device, setDevice] = useState<'mobile' | 'tablet' | 'desktop'>('desktop')
+
+const previewUrl = `/preview/classic${cur.n}`
+
 
   // Fallback: clear the loading overlay even if the iframe onLoad is missed
   // (lazy frames / dev hydration can swallow the event).
@@ -6256,22 +7722,25 @@ function LiveTemplateExperience() {
     setLoading(true)
     const t = setTimeout(() => setLoading(false), 1500)
     return () => clearTimeout(t)
-  }, [active])
+  }, [active, device])
+
+  const frameClass =
+  device === 'mobile'
+    ? 'texp-frame mobile'
+    : device === 'tablet'
+    ? 'texp-frame tablet'
+    : 'texp-frame desktop'
 
   return (
     <section id="experience" className="texp">
-      <div className="texp-glow" aria-hidden="true" />
+
+      
+      {/* <div className="texp-glow" aria-hidden="true" /> */}
       <div className="texp-head">
-        <div className="texp-eyebrow">Try Demo</div>
-        <h2 className="texp-h">Experience with your details<br/>
-        {/* <em>before you commit.</em> */}
-        </h2>
-        <p className="texp-sub">
-          Click on the button Demo then on three dots on the left top corner of website, edit details & see how will your personalized website looks like.
-        </p>
+        <h2 className="texp-h">Explore templates,<em>your way</em></h2>
       </div>
 
-      <div className="texp-tabs" role="tablist" aria-label="Choose a template to experience">
+            <div className="texp-tabs" role="tablist" aria-label="Choose a template to experience">
         {EXP.map((t, i) => (
           <button
             key={t.id}
@@ -6292,6 +7761,21 @@ function LiveTemplateExperience() {
           <div className="texp-chrome">
             <span className="texp-chrome-dot" /><span className="texp-chrome-dot" /><span className="texp-chrome-dot" />
             <span className="texp-chrome-url">counsellorsofindia.com/your-name</span>
+            {/* <div className="texp-devices" role="group" aria-label="Preview device">
+              {(['mobile', 'tablet', 'desktop'] as const).map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  className={`texp-device-btn ${device === d ? 'on' : ''}`}
+                  aria-pressed={device === d}
+                  aria-label={`Preview ${d}`}
+                  title={d.charAt(0).toUpperCase() + d.slice(1)}
+                  onClick={() => { if (d !== device) { setLoading(true); setDevice(d) } }}
+                >
+                  {d === 'mobile' ? '▯' : d === 'tablet' ? '▭' : '▢'}
+                </button>
+              ))}
+            </div> */}
             <span className="texp-chrome-live"><span className="texp-chrome-live-dot" />Live demo</span>
           </div>
           <div className="texp-frame-wrap">
@@ -6301,200 +7785,609 @@ function LiveTemplateExperience() {
                 <span className="texp-loading-t">Loading {cur.name}…</span>
               </div>
             )}
-            <iframe
-              key={cur.id}
-              className="texp-frame"
-              src={`/preview/classic${cur.n}`}
-              title={`${cur.name} live preview`}
-              onLoad={() => setLoading(false)}
-            />
+            <div className="texp-frame-scaler">
+              <iframe
+                key={`${cur.id}-${device}`}
+                className={frameClass}
+                src={previewUrl}
+                title={`${cur.name} live preview`}
+                onLoad={() => setLoading(false)}
+              />
+            </div>
           </div>
         </div>
-        <div className="texp-foot">
-          <span className="texp-foot-name">{cur.name}<span> · {cur.desc}</span></span>
-          <Link href={`/try?t=${cur.id}`} className="texp-foot-cta">
-            Try Demo
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-          </Link>
-        </div>
+
       </div>
+
+
     </section>
   )
 }
 
 
+// maps the showcase card ids (t1..t5) to the demoSession template ids
+const TPARAM_TO_TEMPLATE_ID: Record<string, DemoProfile['template_id']> = {
+  t1: 'classic', t2: 'classic2', t3: 'classic3', t4: 'classic4', t5: 'classic5',
+}
+
+// function TemplateShowcase({ onPreview }: { onPreview: (t: typeof TMPLS[0]) => void }) {
+//   const [active, setActive] = useState(0)
+//   const trackRef = useRef<HTMLDivElement>(null)
+//   const stageRef = useRef<HTMLDivElement>(null)
+//   const innerRefs = useRef<(HTMLDivElement | null)[]>([])
+//   const [scales, setScales] = useState<number[]>(TMPLS.map(() => 1))
+
+//   // Scale each 1080×675 mock to fill its card's 16:10 preview area
+//   useEffect(() => {
+//     function measure() {
+//       setScales(innerRefs.current.map(el => {
+//         const parent = el?.parentElement
+//         if (!parent) return 1
+//         const rect = parent.getBoundingClientRect()
+//         const w = rect.width
+//         return w > 0 ? w / 1080 : 1
+//       }))
+//     }
+//     measure()
+//     const ro = new ResizeObserver(measure)
+//     innerRefs.current.forEach(el => { if (el?.parentElement) ro.observe(el.parentElement) })
+//     window.addEventListener('resize', measure)
+//     return () => { ro.disconnect(); window.removeEventListener('resize', measure) }
+//   }, [])
+
+//   // Compute translateX so the active card is centered in the stage
+//   const [offset, setOffset] = useState(0)
+//   useEffect(() => {
+//     const stage = stageRef.current
+//     const track = trackRef.current
+//     if (!stage || !track) return
+//     const cards = track.querySelectorAll<HTMLElement>('.tshow-card')
+//     const card = cards[active]
+//     if (!card) return
+//     const stageW = stage.getBoundingClientRect().width
+//     const cardLeft = card.offsetLeft
+//     const cardW = card.offsetWidth
+//     const paddingLeft = parseFloat(getComputedStyle(track).paddingLeft) || 0
+//     // center the active card
+//     const target = cardLeft - (stageW / 2 - cardW / 2) - paddingLeft
+//     setOffset(Math.max(0, target))
+//   }, [active])
+
+//   const prev = () => setActive(a => Math.max(0, a - 1))
+//   const next = () => setActive(a => Math.min(TMPLS.length - 1, a + 1))
+
+//   // ── free hand-drag (mouse / touch) ───────────────────────────────
+//   const [drag, setDrag] = useState(0)          // live finger/cursor delta
+//   const [dragging, setDragging] = useState(false)
+//   const startX = useRef(0)
+//   const moved = useRef(0)
+
+//   const onPointerDown = (e: React.PointerEvent) => {
+//     startX.current = e.clientX
+//     moved.current = 0
+//     setDragging(true)
+//     ;(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId)
+//   }
+//   const onPointerMove = (e: React.PointerEvent) => {
+//     if (!dragging) return
+//     const dx = e.clientX - startX.current
+//     moved.current = dx
+//     setDrag(dx)
+//   }
+//   const endDrag = () => {
+//     if (!dragging) return
+//     setDragging(false)
+//     const dx = moved.current
+//     setDrag(0)
+//     // snap to nearest card based on how far the user dragged
+//     const card = trackRef.current?.querySelector<HTMLElement>('.tshow-card')
+//     const step = card ? card.offsetWidth + (parseFloat(getComputedStyle(trackRef.current!).gap) || 0) : 320
+//     const jump = Math.round(-dx / step)
+//     if (jump !== 0) setActive(a => Math.min(TMPLS.length - 1, Math.max(0, a + jump)))
+//   }
+
+//   // ── mouse-wheel: horizontal scroll steps through templates ───────
+//   const wheelLock = useRef(false)
+//   const onWheel = (e: React.WheelEvent) => {
+//     const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
+//     if (Math.abs(d) < 8 || wheelLock.current) return
+//     wheelLock.current = true
+//     if (d > 0) next(); else prev()
+//     setTimeout(() => { wheelLock.current = false }, 320)
+//   }
+
+//   return (
+//     <section id="templates" className="tshow sec-rise rv">
+//       <div className="tshow-glow" aria-hidden="true" />
+
+//       {/* ── header (outside / above the two columns) ── */}
+//       <div className="tshow-head">
+//         <div className="tshow-head-left">
+//           <div className="tshow-eyebrow">Profile Templates</div>
+//           <h2 className="tshow-h">Try<em> Demo</em></h2>
+//           <p className="tshow-sub">
+//             Every template is a complete, live therapist website. Browse like you're exploring real practices.
+//           </p>
+//         </div>
+//         <div className="tshow-head-right">
+//           <button className="tshow-nav-btn" onClick={prev} disabled={active === 0} aria-label="Previous">
+//             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+//               <polyline points="15 18 9 12 15 6"/>
+//             </svg>
+//           </button>
+//           <button className="tshow-nav-btn" onClick={next} disabled={active === TMPLS.length - 1} aria-label="Next">
+//             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+//               <polyline points="9 18 15 12 9 6"/>
+//             </svg>
+//           </button>
+//         </div>
+//       </div>
+
+//       {/* ── two equal columns: templates (left) + details form (right) ── */}
+//       <div className="tshow-split">
+//       <div className="tshow-split-left">
+
+//       {/* ── gallery ── */}
+//       <div
+//         ref={stageRef}
+//         className="tshow-stage"
+//         onPointerDown={onPointerDown}
+//         onPointerMove={onPointerMove}
+//         onPointerUp={endDrag}
+//         onPointerCancel={endDrag}
+//         onWheel={onWheel}
+//         style={{ cursor: dragging ? 'grabbing' : 'grab', touchAction: 'pan-y' }}
+//       >
+//         <div
+//           ref={trackRef}
+//           className="tshow-track"
+//           style={{
+//             transform: `translateX(${-offset + drag}px)`,
+//             transition: dragging ? 'none' : undefined,
+//           }}
+//         >
+//           {TMPLS.map((t, i) => {
+//             const sc = scales[i] ?? 1
+//             return (
+//               <article
+//                 key={t.id}
+//                 className={`tshow-card ${active === i ? 'is-active' : ''}`}
+//                 onClick={() => {
+//                   // ignore clicks that were actually drags
+//                   if (Math.abs(moved.current) > 6) return
+//                   if (active !== i) { setActive(i); return }
+//                   onPreview(t)
+//                 }}
+//                 tabIndex={0}
+//                 onKeyDown={e => { if (e.key === 'Enter') { if (active === i) onPreview(t); else setActive(i) } }}
+//                 aria-label={`${t.name} template`}
+//               >
+//                 {/* ── preview (fills the card; height matches the form) ── */}
+//                 <div className="tshow-card-screen">
+
+//                   {/* live dot badge */}
+//                   <div className="tshow-card-live-badge">
+//                     <span className="tshow-card-live-dot" />
+//                     Live preview
+//                   </div>
+
+//                   {/* category badge */}
+//                   {/* <span className={`tshow-card-badge ${t.badgeClass}`}>
+//                     {t.badge}
+//                   </span> */}
+
+//                   {/* the actual template render, scaled down */}
+//                   <div
+//                     ref={el => { innerRefs.current[i] = el }}
+//                     className="tshow-card-screen-inner"
+//                     style={{ transform: `scale(${sc})`, transformOrigin: 'top left' }}
+//                   >
+//                     {MINIS[t.id]}
+//                   </div>
+
+//                   {/* hover overlay with CTAs */}
+//                   <div className="tshow-card-hover">
+//                     {/* <button
+//                       type="button"
+//                       className="tshow-btn tshow-btn-ghost"
+//                       onClick={e => { e.stopPropagation(); onPreview(t) }}
+//                     >
+//                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+//                         <circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>
+//                       </svg>
+//                       Preview
+//                     </button> */}
+//                     <a
+//                       href={`/try?t=${t.id}`}
+//                       className="tshow-btn tshow-btn-solid"
+//                       onClick={e => e.stopPropagation()}
+//                     >
+//                       Enter details
+//                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+//                         <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+//                       </svg>
+//                     </a>
+//                   </div>
+//                 </div>
+
+//                 {/* ── minimal footer ── */}
+//                 {/* <div className="tshow-card-foot">
+//                   <div className="tshow-card-meta">
+//                     <span className="tshow-card-num">{String(i + 1).padStart(2, '0')}</span>
+//                     <div>
+//                       <div className="tshow-card-name">{t.name}</div>
+//                       <div className="tshow-card-desc">{t.desc}</div>
+//                     </div>
+//                   </div>
+//                   <button
+//                     type="button"
+//                     className="tshow-card-open"
+//                     onClick={e => { e.stopPropagation(); onPreview(t) }}
+//                     aria-label={`Open ${t.name} live preview`}
+//                   >
+//                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+//                       <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+//                     </svg>
+//                   </button>
+//                 </div> */}
+//               </article>
+//             )
+//           })}
+//         </div>
+//       </div>
+
+//       {/* ── dots ── */}
+//       <div className="tshow-progress" aria-label="Template navigation">
+//         {TMPLS.map((t, i) => (
+//           <button
+//             key={t.id}
+//             className={`tshow-progress-dot ${active === i ? 'on' : ''}`}
+//             onClick={() => setActive(i)}
+//             aria-label={`Go to ${t.name}`}
+//           />
+//         ))}
+//       </div>
+//       </div>{/* /tshow-split-left */}
+
+//       {/* ── right column: minimal details form ── */}
+//       <DemoForm
+//         templateId={TPARAM_TO_TEMPLATE_ID[TMPLS[active].id]}
+//         previewHref={`/try?t=${TMPLS[active].id}`}
+//         activeName={TMPLS[active].name}
+//       />
+//       </div>{/* /tshow-split */}
+//     </section>
+//   )
+// }
+
 function TemplateShowcase({ onPreview }: { onPreview: (t: typeof TMPLS[0]) => void }) {
-  // Scroll-driven horizontal showroom. The section pins while the user scrolls;
-  // a horizontal track of template cards glides across with depth — the centred
-  // card is brought forward (scale up, flat), neighbours recede (scale down,
-  // slight rotateY, dimmed). Driven by GSAP ScrollTrigger, synced with the
-  // page's existing Lenis smooth scroll. Falls back to a plain scroll-snap row
-  // when JS/motion is unavailable.
-  const sectionRef = useRef<HTMLDivElement | null>(null)
-  const pinRef = useRef<HTMLDivElement | null>(null)
-  const trackRef = useRef<HTMLDivElement | null>(null)
-  const cardRefs = useRef<(HTMLElement | null)[]>([])
-  // logical preview canvas scaling (1080×675 → measured card width)
-  const innerRefs = useRef<(HTMLDivElement | null)[]>([])
-  const [boxes, setBoxes] = useState<{scale:number;height:number}[]>(TMPLS.map(() => ({scale:1,height:0})))
+
   const [active, setActive] = useState(0)
+const [loading, setLoading] = useState(true)
+const wrapperRef = useRef<HTMLDivElement>(null)
+const [scale, setScale] = useState(1)
+const [autoPlay, setAutoPlay] = useState(true)
+const IFRAME_W = 1280
+const IFRAME_H = 960
 
-  // scale each fixed 1080-wide mock to its card width
-  useEffect(() => {
-    const measure = () => {
-      setBoxes(innerRefs.current.map(el => {
-        const w = el?.parentElement?.getBoundingClientRect().width ?? 0
-        if (w <= 0) return { scale: 1, height: 0 }
-        const scale = w / 1080
-        return { scale, height: scale * 740 }   // a touch taller (no empty band)
-      }))
-    }
-    measure()
-    const ro = new ResizeObserver(measure)
-    innerRefs.current.forEach(el => { if (el?.parentElement) ro.observe(el.parentElement) })
-    window.addEventListener('resize', measure)
-    return () => { ro.disconnect(); window.removeEventListener('resize', measure) }
-  }, [])
+useEffect(() => {
+  if (!autoPlay) return
 
-  useEffect(() => {
-    if (typeof window === 'undefined') return
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
-    if (window.matchMedia('(max-width: 860px)').matches) return // mobile = native scroll row
+  const interval = setInterval(() => {
+    setActive((prev) => (prev + 1) % TMPLS.length)
+  }, 4000)
 
-    let cleanup: (() => void) | undefined
-    let cancelled = false
+  return () => clearInterval(interval)
+}, [autoPlay])
 
-    ;(async () => {
-      const gsapMod = await import('gsap')
-      const stMod = await import('gsap/ScrollTrigger')
-      if (cancelled) return
-      const gsap = gsapMod.default ?? gsapMod
-      const ScrollTrigger = stMod.ScrollTrigger ?? stMod.default
-      gsap.registerPlugin(ScrollTrigger)
+useEffect(() => {
+  function measure() {
+    if (!wrapperRef.current) return
+    const w = wrapperRef.current.getBoundingClientRect().width
+    if (w > 0) setScale(w / IFRAME_W)
+  }
+  measure()
+  const ro = new ResizeObserver(measure)
+  if (wrapperRef.current) ro.observe(wrapperRef.current)
+  window.addEventListener('resize', measure)
+  return () => { ro.disconnect(); window.removeEventListener('resize', measure) }
+}, [])
 
-      const pin = pinRef.current
-      const track = trackRef.current
-      const section = sectionRef.current
-      if (!pin || !track || !section) return
+useEffect(() => {
+  setLoading(true)
+  const t = setTimeout(() => setLoading(false), 2500)
+  return () => clearTimeout(t)
+}, [active])
 
-      const ctx = gsap.context(() => {
-        const cards = cardRefs.current.filter(Boolean) as HTMLElement[]
-        // total horizontal travel: bring last card to centre
-        const getTravel = () => Math.max(0, track.scrollWidth - pin.clientWidth)
-
-        const applyDepth = (progress: number) => {
-          const travel = getTravel()
-          const centre = pin.clientWidth / 2
-          // current track offset (px the track has moved left)
-          const offset = travel * progress
-          let nearest = 0, nearestDist = Infinity
-          cards.forEach((card, i) => {
-            const cardCentre = card.offsetLeft + card.offsetWidth / 2 - offset
-            // map horizontal distance-from-centre to an arc angle, total sweep 120° (±60°)
-            const norm = gsap.utils.clamp(-1, 1, (cardCentre - centre) / (pin.clientWidth * 0.62))
-            const ad = Math.abs(norm)
-            const angle = norm * 6                        // barely-there lean (~12° total sweep)
-            const rad = angle * Math.PI / 180
-            const radius = pin.clientHeight * 0.34         // arc radius (px) — soft bow
-            // place card on a circle whose top sits near the centred card
-            const yArc = radius * (1 - Math.cos(rad))      // dips down as it moves away
-            const scale = gsap.utils.clamp(0.78, 1.05, 1.05 - ad * 0.3)
-            const opacity = gsap.utils.clamp(0.4, 1, 1 - ad * 0.6)
-            gsap.set(card, {
-              rotate: angle,                               // in-plane tilt follows the arc tangent
-              y: yArc,
-              scale,
-              opacity,
-              transformOrigin: '50% 50%',
-            })
-            if (ad < nearestDist) { nearestDist = ad; nearest = i }
-          })
-          setActive(nearest)
-        }
-
-        const st = ScrollTrigger.create({
-          trigger: section,
-          start: 'top top',
-          end: () => '+=' + (getTravel() + window.innerHeight * 0.9),
-          pin: pin,
-          pinSpacing: true,
-          scrub: 1,
-          invalidateOnRefresh: true,
-          onUpdate: self => {
-            gsap.to(track, { x: -getTravel() * self.progress, duration: 0.25, ease: 'none', overwrite: true })
-            applyDepth(self.progress)
-          },
-        })
-        applyDepth(0)
-        ScrollTrigger.refresh()
-        cleanup = () => { st.kill() }
-      }, section)
-
-      cleanup = () => ctx.revert()
-    })()
-
-    return () => { cancelled = true; cleanup?.() }
-  }, [])
+const cur = TMPLS[active]
 
 
-  return (
-    <section id="templates" ref={sectionRef} className="tshow">
-      <div ref={pinRef} className="tshow-pin">
-        {/* ambient brand glow */}
-        <div className="tshow-glow" aria-hidden="true" />
 
-        <div className="tshow-head">
-          <div className="tshow-eyebrow">Profile templates</div>
-          <h2 className="tshow-h">Explore the <em>Templates</em>.</h2>
-          <p className="tshow-sub">
-            {/* Browse beautifully crafted templates built for therapists. Scroll to explore — switch anytime from your dashboard. */}
-          </p>
-        </div>
 
-        <div className="tshow-stage">
-          <div ref={trackRef} className="tshow-track">
-            {TMPLS.map((t, i) => (
-              <article
-                key={t.id}
-                ref={el => { cardRefs.current[i] = el }}
-                className={`tshow-card ${active === i ? 'is-active' : ''}`}
-                style={{ ['--accent' as string]: TMPL_ACCENTS[i] }}
-              >
-                <div className="tshow-card-screen" style={{ height: boxes[i]?.height ? `${boxes[i].height}px` : undefined }}>
-                  <div
-                    ref={el => { innerRefs.current[i] = el }}
-                    className="tshow-card-mock"
-                    style={{ transform: `scale(${boxes[i]?.scale ?? 1})` }}
-                  >
-                    {MINIS[t.id]}
-                  </div>
-                  <div className="tshow-card-hover">
-                    <div className="tshow-card-label">
-                      <span className="tshow-card-label-num">{String(i + 1).padStart(2, '0')}</span>
-                      <span className="tshow-card-label-name">{t.name}</span>
-                    </div>
-                    {/* <button type="button" className="tshow-btn tshow-btn-ghost" onClick={() => onPreview(t)}>
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/></svg>
-                      Preview template
-                    </button> */}
-                    <a href={`/try?t=${t.id}`} className="tshow-btn tshow-btn-solid">
-                     Buy this
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
-                    </a>
-                  </div>
-                </div>
-              </article>
-            ))}
+
+
+
+
+return (
+  <section id="templates" className="tshow sec-rise rv">
+    <div className="tshow-glow" aria-hidden="true" />
+
+    {/* header */}
+    <div className="tshow-head">
+      <div className="tshow-head-left">
+        {/* <div className="tshow-eyebrow">Profile Templates</div> */}
+        <h2 className="tshow-h ">Make your website,<em> Try Demo</em></h2>
+        {/* <p className="tshow-sub">
+          Every template is a complete, live therapist website. Browse like you&apos;re exploring real practices.
+        </p> */}
+      </div>
+      <div className="tshow-head-right">
+<button
+  className="tshow-nav-btn"
+  onClick={() => {
+    setAutoPlay(false)
+
+    setActive(prev =>
+      prev === 0
+        ? TMPLS.length - 1
+        : prev - 1
+    )
+  }}
+  aria-label="Previous"
+>
+
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+<button
+  className="tshow-nav-btn"
+  onClick={() => {
+    setAutoPlay(false)
+
+    setActive(prev =>
+      (prev + 1) % TMPLS.length
+    )
+  }}
+  aria-label="Next"
+>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+
+    {/* two columns */}
+    <div className="tshow-split">
+
+      {/* LEFT */}
+      <div className="tshow-split-left">
+
+        {/* tabs */}
+        {/* <div className="tshow-iframe-tabs">
+          {TMPLS.map((t, i) => (
+            <button
+              key={t.id}
+              type="button"
+              className={`tshow-iframe-tab ${active === i ? 'on' : ''}`}
+              onClick={() => { if (i !== active) setActive(i) }}
+            >
+              <span className="tshow-iframe-tab-n">{String(i + 1).padStart(2, '0')}</span>
+              {t.name}
+            </button>
+          ))}
+        </div> */}
+
+        {/* browser frame */}
+<div
+  className="tshow-iframe-browser"
+  onMouseEnter={() => setAutoPlay(false)}
+  onMouseLeave={() => setAutoPlay(true)}
+>
+            <div className="tshow-iframe-chrome">
+            <div className="tshow-iframe-dots"><span /><span /><span /></div>
+            <div className="tshow-iframe-url">counsellorsofindia.com/{cur.id}</div>
+            <div className="tshow-iframe-live"><span className="tshow-card-live-dot" />Live</div>
+          </div>
+
+          <div ref={wrapperRef} className="tshow-iframe-wrap" style={{ height: `${IFRAME_H * scale}px` }}>
+            {loading && (
+              <div className="tshow-iframe-loading">
+                <span className="tshow-iframe-spin" />
+                <span className="tshow-iframe-loading-t">Loading {cur.name}&hellip;</span>
+              </div>
+            )}
+            <iframe
+              key={cur.id}
+              src={cur.url}
+              title={`${cur.name} live preview`}
+              scrolling="no"
+              tabIndex={-1}
+              aria-hidden="true"
+              onLoad={() => setLoading(false)}
+              style={{
+                width: `${IFRAME_W}px`,
+                height: `${IFRAME_H}px`,
+                border: 'none',
+                display: 'block',
+                transform: `scale(${scale})`,
+                transformOrigin: 'top left',
+                pointerEvents: 'none',
+              }}
+            />
           </div>
         </div>
 
-        <div className="tshow-progress" aria-hidden="true">
+        {/* dots */}
+        {/* <div className="tshow-progress" aria-label="Template navigation">
           {TMPLS.map((t, i) => (
-            <span key={t.id} className={`tshow-progress-dot ${active === i ? 'on' : ''}`} />
+            <button key={t.id} className={`tshow-progress-dot ${active === i ? 'on' : ''}`} onClick={() => setActive(i)} aria-label={`Go to ${t.name}`} />
           ))}
+        </div> */}
+
+      </div>
+
+      {/* RIGHT */}
+      <DemoForm
+        templateId={TPARAM_TO_TEMPLATE_ID[cur.id]}
+        previewHref={`/try?t=${cur.id}`}
+        activeName={cur.name}
+      />
+
+    </div>
+  </section>
+)
+
+
+
+}
+
+/* ── Minimal "Try with my details" form. Persists to the shared demoSession
+   so the data follows the user across every template and into /try. ── */
+function DemoForm({ templateId, previewHref, activeName }:
+  { templateId: DemoProfile['template_id']; previewHref: string; activeName: string }) {
+  const router = useRouter()
+  // Start from emptyDemo() so the first client render matches the server
+  // (localStorage isn't available during SSR). We hydrate real values after
+  // mount, which avoids a hydration mismatch on input values and `disabled`.
+  const [form, setForm] = useState<DemoProfile>(() => emptyDemo())
+  const [mounted, setMounted] = useState(false)
+  const [preparing, setPreparing] = useState(false)
+  const fileRef = useRef<HTMLInputElement>(null)
+
+  // hydrate from storage on mount (loadDemo is SSR-safe but returns empty on server)
+  useEffect(() => { setForm(loadDemo()); setMounted(true) }, [])
+
+  function update(patch: Partial<DemoProfile>) {
+    setForm(f => ({ ...f, ...patch }))
+    saveDemo(patch)               // shared across templates immediately
+  }
+
+  function onPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const url = URL.createObjectURL(file)
+    update({ photo_url: url })
+  }
+
+  // Only "ready" after mount so SSR and first client render agree (disabled stays true).
+  const ready = mounted && !!(form.full_name && form.full_name.trim() && form.bio && form.bio.trim())
+
+  function seePreview() {
+    if (!ready) return
+    // ensure the chosen template is saved before navigating
+    saveDemo({ template_id: templateId })
+
+    // Show "Preparing your website…" — but only the FIRST time ever.
+    let seen = false
+    try { seen = localStorage.getItem('coi_prepared_v1') === '1' } catch {}
+    if (seen) { router.push(previewHref); return }
+
+    try { localStorage.setItem('coi_prepared_v1', '1') } catch {}
+    setPreparing(true)
+    setTimeout(() => router.push(previewHref), 2500)
+  }
+
+  return (
+    <>
+    <form className="tshow-form" onSubmit={e => { e.preventDefault(); seePreview() }}>
+      <div className="tshow-form-head">
+        <div className="tshow-form-eyebrow">Enter Your details</div>
+        {/* <h3 className="tshow-form-h">See it with your name on it</h3> */}
+        {/* <p className="tshow-form-note">Fill a few fields, then preview them live in any template.</p> */}
+      </div>
+
+      {/* photo */}
+      <div className="tshow-photo-row">
+        <button
+          type="button"
+          className={`tshow-form-photo ${form.photo_url ? 'has-img' : ''}`}
+          onClick={() => fileRef.current?.click()}
+          aria-label={form.photo_url ? 'Change profile image' : 'Add profile image'}
+        >
+          {form.photo_url
+            ? <img src={form.photo_url} alt="" className="tshow-form-photo-img" />
+            : (
+              <span className="tshow-form-photo-ph">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="9" cy="9" r="2"/><path d="m21 15-4.5-4.5L7 20"/>
+                </svg>
+              </span>
+            )}
+        </button>
+        <div className="tshow-photo-meta">
+          <span className="tshow-photo-label">Profile image</span>
+          <div className="tshow-photo-actions">
+            <button type="button" className="tshow-photo-btn" onClick={() => fileRef.current?.click()}>
+              {form.photo_url ? 'Change' : 'Upload'}
+            </button>
+            {form.photo_url && (
+              <button type="button" className="tshow-photo-btn ghost" onClick={() => update({ photo_url: undefined })}>
+                Remove
+              </button>
+            )}
+          </div>
         </div>
       </div>
-    </section>
+      <input ref={fileRef} type="file" accept="image/*" hidden onChange={onPhoto} />
+
+      <label className="tshow-field">
+        <span className="tshow-field-l">Name<i>*</i></span>
+        <input
+          className="tshow-input"
+          value={form.full_name ?? ''}
+          onChange={e => update({ full_name: e.target.value })}
+          placeholder="Dr. Priya Sharma"
+        />
+      </label>
+
+      <label className="tshow-field">
+        <span className="tshow-field-l">Title</span>
+        <input
+          className="tshow-input"
+          value={form.title ?? ''}
+          onChange={e => update({ title: e.target.value })}
+          placeholder="Clinical Psychologist"
+        />
+      </label>
+
+      {/* <label className="tshow-field">
+        <span className="tshow-field-l">City</span>
+        <input
+          className="tshow-input"
+          value={form.city ?? ''}
+          onChange={e => update({ city: e.target.value })}
+          placeholder="Mumbai"
+        />
+      </label> */}
+
+      <label className="tshow-field">
+        <span className="tshow-field-l">Bio<i>*</i></span>
+        <textarea
+          className="tshow-input tshow-textarea"
+          rows={2}
+          value={form.bio ?? ''}
+          onChange={e => update({ bio: e.target.value })}
+          placeholder="A calm, trusted space for healing — specialising in anxiety, relationships, and life transitions."
+        />
+      </label>
+
+      <button type="submit" className="tshow-form-cta" disabled={!ready}>
+        See preview in {activeName}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
+        </svg>
+      </button>
+      {!ready && <p className="tshow-form-hint">Name and bio are required.</p>}
+    </form>
+
+    {preparing && (
+      <div className="coi-prep" role="status" aria-live="polite">
+        <div className="coi-prep-card">
+          <span className="coi-prep-spin" aria-hidden="true" />
+          <div className="coi-prep-t">Preparing your website…</div>
+          <div className="coi-prep-sub">Building your live preview in {activeName}</div>
+        </div>
+      </div>
+    )}
+    </>
   )
 }
 
@@ -6721,7 +8614,7 @@ function PreviewModal({ t, onClose }:{ t:typeof TMPLS[0]; onClose:()=>void }) {
         </div>
         <div className="mright">
           <a href={url} target="_blank" rel="noopener noreferrer" className="mopen">Open full ↗</a>
-          <button className="mclose" onClick={onClose}>✕</button>
+          <button className="mclose" onClick={onClose}>?</button>
         </div>
       </div>
       <div className="mbody">
@@ -6762,13 +8655,27 @@ function FaqItem({ q, a, idx }: { q: string; a: string; idx: number }) {
   )
 }
 
+const quotes = [
+  "Make your counselling websites in minutes",
+  "Manage your clients on a dedicated dashbaord",
+  "Accept bookings & payments with ease.",
+];
+
 /* ─────────────────────────────────────────────────────────────────
    MAIN PAGE
 ───────────────────────────────────────────────────────────────── */
 export default function Home() {
   const [scrolled,setScrolled]=useState(false)
   const [menuOpen, setMenuOpen] = useState(false);
+  const [index, setIndex] = useState(0);
 
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIndex((prev) => (prev + 1) % quotes.length);
+    }, 2500);
+
+    return () => clearInterval(interval);
+  }, []);
   // lock body scroll + allow Esc to close while the mobile sidebar is open
   useEffect(()=>{
     if(!menuOpen) return
@@ -6890,7 +8797,7 @@ export default function Home() {
 
   <Link href="/" className="logo">
     <img src="/coi.png" alt="Counsellors of India" className="logo-img"/>
-    <span>Counsellors of India</span>
+    <span className=' ' >Counsellors of India</span>
   </Link>
 
   <div className="nav-mid">
@@ -6943,27 +8850,24 @@ export default function Home() {
 
     <div className="sidebar-glow"></div>
 
-    <div className="sidebar-top">
+ <div className="sidebar-top">
+  <div className="sidebar-brand">
+    <img src="/coi.png" alt="logo" />
 
-      <div className="sidebar-brand">
-        <img src="/coi.png" alt="logo" />
-
-        <div>
-          <h3>Counsellors</h3>
-          <p>of India</p>
-        </div>
-      </div>
-
-      {/* <button
-        className={`menu-btn close ${menuOpen ? "active" : ""}`}
-        onClick={() => setMenuOpen(false)}
-      >
-        <span></span>
-        <span></span>
-        <span></span>
-      </button> */}
-
+    <div>
+      <h3>Counsellors</h3>
+      <p>of India</p>
     </div>
+  </div>
+
+  <button
+    className="sidebar-close"
+    onClick={() => setMenuOpen(false)}
+    aria-label="Close Menu"
+  >
+    ✕
+  </button>
+</div>
 
     <div className="sidebar-links">
 
@@ -7021,39 +8925,60 @@ export default function Home() {
 
 
       {/* ── HERO: editorial value-prop (templates live in their own section) ── */}
-      <section className="hero-bn" id="hero">
-        <div className="hero-bn-inner">
-          <div className="hero-bn-eyebrow">For therapists across India</div>
-          <h1 className="hero-bn-h">
-           Make your counselling   <br/>
-           <em className='text-[#ff9933]' >websites</em>  in minutes.
-          </h1>
-          {/* <p className="hero-bn-sub">
-            Pick a template, make it yours, and share one link. Booking, payments
-            and session notes — all built in. You're live in minutes, no website needed.
-          </p> */}
-          <div className="hero-bn-ctas">
-            <Link href="/signup" className="hero-bn-cta-p">
-              List your practice
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-              </svg>
-            </Link>
-            <a href="#therapists" className="hero-bn-cta-g">
-              Browse therapists
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-              </svg>
-            </a>
-          </div>
+<section className="hero-bn" id="hero">
+      <div className="hero-bn-inner">
+        <div className="hero-bn-badge">
+          <span className="hero-bn-badge-dot" aria-hidden="true" />
+          Trusted by therapists across India
         </div>
-      </section>
+
+        <h1 className="hero-bn-h">
+          <span key={index} className="hero-rotate">
+            {headlines[index]}
+          </span>
+        </h1>
+
+        <p className="hero-bn-sub">
+          <span key={index} className="hero-rotate hero-rotate-sub">
+            {quotes[index]}
+          </span>
+        </p>
+
+        <div className="hero-bn-ctas">
+          <Link href="/signup" className="hero-bn-cta-p">
+            Create your website
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="5" y1="12" x2="19" y2="12" />
+              <polyline points="12 5 19 12 12 19" />
+            </svg>
+          </Link>
+          <a href="#templates" className="hero-bn-cta-g">
+            View templates
+          </a>
+        </div>
+
+        <div className="hero-bn-trust">
+          {/* <div className="hero-bn-trust-item"><strong>500+</strong> therapists onboarded</div>
+          <span className="hero-bn-trust-sep" aria-hidden="true" />
+          <div className="hero-bn-trust-item"><strong>Verified</strong> credentials</div>
+          <span className="hero-bn-trust-sep" aria-hidden="true" />
+          <div className="hero-bn-trust-item"><strong>10 min</strong> to go live</div> */}
+        </div>
+
+      </div>
+
+
+    </section>
 
             {/* ── TEMPLATES: sticky-stack showcase (cards overlap on scroll) ── */}
       <TemplateShowcase onPreview={setPreviewT}/>
 
-      {/* ── LIVE EXPERIENCE: full template in an iframe (80vh×80vw) ── */}
+      {/* live iframe experience now sits BELOW the showcase, not inside the hero */}
       <LiveTemplateExperience/>
+      
+      
+
+      {/* ── LIVE EXPERIENCE: full template in an iframe (80vh×80vw) ── */}
 
 
 
@@ -7110,9 +9035,9 @@ export default function Home() {
                 <div className="prac-panel-upcoming">
                   <div className="prac-panel-upcoming-label">Upcoming today</div>
                   {[
-                    {i:'R',n:'Rajan K.',t:'10:00 AM · 50 min',bg:'#EBEBEB',c:'#13140F',b:'Confirmed',bc:'#F4EFE2',bt:'#B8862C'},
-                    {i:'A',n:'Ananya S.',t:'12:30 PM · 50 min',bg:'#E8E8E8',c:'#13140F',b:'Pending',bc:'#F5F0E8',bt:'#8A6030'},
-                    {i:'M',n:'Meera T.',t:'3:00 PM · 50 min',bg:'#F0F0F0',c:'#3a3a30',b:'Confirmed',bc:'#F4EFE2',bt:'#B8862C'},
+                    {i:'R',n:'Rajan K.',t:'10:00 AM — 50 min',bg:'#EBEBEB',c:'#13140F',b:'Confirmed',bc:'#F4EFE2',bt:'#B8862C'},
+                    {i:'A',n:'Ananya S.',t:'12:30 PM — 50 min',bg:'#E8E8E8',c:'#13140F',b:'Pending',bc:'#F5F0E8',bt:'#8A6030'},
+                    {i:'M',n:'Meera T.',t:'3:00 PM — 50 min',bg:'#F0F0F0',c:'#3a3a30',b:'Confirmed',bc:'#F4EFE2',bt:'#B8862C'},
                   ].map(a=>(
                     <div key={a.n} className="prac-appt">
                       <div className="prac-appt-av" style={{background:a.bg,color:a.c}}>{a.i}</div>
@@ -7135,6 +9060,23 @@ export default function Home() {
       </section> */}
 
 
+      {/* ══════════════════════════════════════════════════════════════
+          HOW IT WORKS — editorial steps with sage thread
+      ══════════════════════════════════════════════════════════════ */}
+      <section id="how" className="how-section how-v2">
+        <div className="how-wrap">
+          <div className="how-head rv">
+            <h2 className="how-h">Live in <em>under 10 minutes.</em></h2>
+            <p className="how-sub">
+              Four calm steps from sign-up to your first client booking, no website builder, no code, no technical skills.
+            </p>
+          </div>
+
+          <HowTimeline />
+        </div>
+      </section>
+
+
 
             {/* ══════════════════════════════════════════════════════════════
           PROFILE STRIP — dedicated section showcasing live therapists
@@ -7145,10 +9087,10 @@ export default function Home() {
         <div className="td-wrap">
           <div className="td-head rv">
             <div className="td-head-left">
-              <div className="td-eyebrow">
-                {/* <span className="td-eyebrow-line"/> */}
-                {/* Find your therapist */}
-              </div>
+              {/* <div className="td-eyebrow">
+                <span className="td-eyebrow-line"/>
+                Find your therapist
+              </div> */}
               <h2 className="td-h">
                 Meet our <em> Practioners</em>
               </h2>
@@ -7177,7 +9119,7 @@ export default function Home() {
                 <line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
               <input
-                placeholder="Search by name, city, or specialty…"
+                placeholder="Search by name, city, or specialty—"
                 value={search}
                 onChange={e=>setSearch(e.target.value)}
                 aria-label="Search therapists"
@@ -7318,85 +9260,27 @@ export default function Home() {
         </div>
       </section>
 
-
-
-      {/* ══════════════════════════════════════════════════════════════
-          HOW IT WORKS — editorial steps with sage thread
-      ══════════════════════════════════════════════════════════════ */}
-      <section id="how" className="how-section how-v2">
-        <div className="how-wrap">
-          <div className="how-head rv">
-            <h2 className="how-h">Live in <em>under 10 minutes.</em></h2>
-            <p className="how-sub">
-              Four calm steps from sign-up to your first client booking, no website builder, no code, no technical skills.
-            </p>
-          </div>
-
-          <div className="how-rows">
-            {[
-              {n:'01',t:'Create your account',  d:'Sign up with your name and email. Takes under a minute and gets you instant access to your therapist dashboard.'},
-              {n:'02',t:'Build your profile',   d:'Add credentials, approach, availability, and a photo. Choose a premium template that matches your practice tone.'},
-              {n:'03',t:'Share your link',      d:'Send your personal page link via WhatsApp, email, or Instagram. Clients book sessions directly through your profile.'},
-              {n:'04',t:'Manage bookings',      d:'Accept appointments, track clients, and write secure session notes — all from one calm, focused dashboard.'},
-            ].map((s,i)=>(
-              <div key={s.n} className={`how-row rv ${i % 2 === 1 ? 'how-row-rev' : ''}`} style={{transitionDelay:`${0.04 + i*0.05}s`}}>
-                <div className="how-row-text">
-                  <div className="how-row-label">Step {s.n}</div>
-                  <h3 className="how-row-t">{s.t}</h3>
-                  <p className="how-row-d">{s.d}</p>
-                </div>
-                <div className="how-row-visual" aria-hidden="true">
-                  <div className="how-row-card">
-                    <StepMock step={i} />
-                  </div>
-                  <div className="how-row-card how-row-card-bg" aria-hidden="true"/>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ══════════════════════════════════════════════════════════════
-          TESTIMONIALS
-      ══════════════════════════════════════════════════════════════ */}
-      {/* <section className="section section-alt">
-        <div className="wrap">
-          <div className="rv" style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',flexWrap:'wrap',gap:'1.4rem'}}>
-            <div>
-              <div className="eyebrow">From practitioners</div>
-              <h2 className="h2">What therapists <i>say</i></h2>
-            </div>
-            <p className="lead" style={{maxWidth:'28ch',textAlign:'right',marginTop:0}}>
-              Trusted by 500+ therapists across India.
-            </p>
-          </div>
-          <div className="tgrid rv" style={{transitionDelay:'.06s'}}>
-            {TESTIS.map(t=>(
-              <div key={t.n} className="tcard">
-                <p className="tquote">{t.q}</p>
-                <div className="tattr">
-                  <div className="tav">{t.n.split(' ').map((w:string)=>w[0]).join('').slice(0,2)}</div>
-                  <div><div className="tname">{t.n}</div><div className="trole">{t.r}</div></div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section> */}
-
+      
       {/* ══════════════════════════════════════════════════════════════
           PRICING — frosted sage plans
       ══════════════════════════════════════════════════════════════ */}
       <section id="pricing" className="price-section">
+
+
+
         <div className="price-bg-aura" aria-hidden="true"/>
+        
         <div className="price-wrap">
           <div className="price-head rv">
             {/* <div className="td-eyebrow"> */}
               {/* <span className="td-eyebrow-line"/> */}
               {/* Pricing
+            
             </div> */}
-            <h2 className="price-h">Simple, <em>honest pricing.</em></h2>
+
+            
+
+            <h2 className="price-h">See our <em>plans</em></h2>
             {/* <p className="price-sub">Start free. Upgrade when your practice grows. No hidden fees, ever.</p> */}
           </div>
 
@@ -7404,12 +9288,12 @@ export default function Home() {
             {PLANS_DATA.map(p=>(
               <div key={p.id} className={`price-card ${p.hi?'price-card-hi':''}`}>
                 {p.hi && <div className="price-card-accent" aria-hidden="true"/>}
-                {p.badge && (
+                {/* {p.badge && (
                   <span className="price-card-badge">
                     <span className="price-card-badge-dot"/>
                     {p.badge}
                   </span>
-                )}
+                )} */}
                 <div className="price-card-name">{p.name}</div>
                 <div className="price-card-price">
                   <span className="price-card-price-n">{p.price}</span>
@@ -7439,21 +9323,60 @@ export default function Home() {
           </div>
 
           <p className="price-foot rv" style={{transitionDelay:'.14s'}}>
-            {/* All paid plans include a 14-day trial · Cancel anytime */}
+            {/* All paid plans include a 14-day trial — Cancel anytime */}
           </p>
         </div>
       </section>
 
+
+
+
+
+
+
+
+      {/* ══════════════════════════════════════════════════════════════
+          TESTIMONIALS
+      ══════════════════════════════════════════════════════════════ */}
+      {/* <section className="section section-alt">
+        <div className="wrap">
+          <div className="rv" style={{display:'flex',alignItems:'flex-end',justifyContent:'space-between',flexWrap:'wrap',gap:'1.4rem'}}>
+            <div>
+              <div className="eyebrow">From practitioners</div>
+              <h2 className="h2">What therapists <i>say</i></h2>
+            </div>
+            <p className="lead" style={{maxWidth:'28ch',textAlign:'right',marginTop:0}}>
+              Trusted by 500+ therapists across India.
+            </p>
+          </div>
+          <div className="tgrid rv" style={{transitionDelay:'.06s'}}>
+            {TESTIS.map(t=>(
+              <div key={t.n} className="tcard">
+                <p className="tquote">{t.q}</p>
+                <div className="tattr">
+                  <div className="tav">{t.n.split(' ').map((w:string)=>w[0]).join('').slice(0,2)}</div>
+                  <div><div className="tname">{t.n}</div><div className="trole">{t.r}</div></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section> */}
+
+
       {/* ══════════════════════════════════════════════════════════════
           FAQ — calm accordion
       ══════════════════════════════════════════════════════════════ */}
+
+      {/* <FaqRevealEffect /> */}
       <section id="faq" className="faq-section">
+        <div className="faq-curtain">
         <div className="faq-wrap">
           <div className="faq-head rv">
-            <div className="td-eyebrow">
-              {/* <span className="td-eyebrow-line"/> */}
-              {/* FAQ */}
-            </div>
+            {/* <div className="td-eyebrow">
+              <span className="td-eyebrow-line"/>
+              FAQ
+            </div> */}
             <h2 className="faq-h">Things people <em>often ask.</em></h2>
             <p className="faq-sub">
               {/* Quick answers about how Counsellors of India works for therapists and clients. Still curious? <a href="mailto:hello@counsellorsofindia.com">Write to us</a>. */}
@@ -7464,11 +9387,11 @@ export default function Home() {
             {[
               {
                 q: 'Who can list a practice on Counsellors of India?',
-                a: 'Any licensed counsellor, psychologist, or psychotherapist practising in India. We verify credentials before your profile goes live to keep the network trustworthy for clients.',
+                a: 'Any dedicated counsellor, psychologist, or psychotherapist practising in India. We verify credentials before your profile goes live to keep the network trustworthy for clients.',
               },
               {
                 q: 'How long does it take to set up my profile?',
-                a: 'Most therapists are live in under 10 minutes. You add your credentials, approach, availability, and a photo — we handle the rest, including your custom /your-name web address.',
+                a: 'Most therapists are live in under 10 minutes. You add your credentials, approach, availability, and a photo, we handle the rest, including your custom /your-name web address.',
               },
               {
                 q: 'How do clients book sessions with me?',
@@ -7476,21 +9399,29 @@ export default function Home() {
               },
               {
                 q: 'Is there a free plan?',
-                a: 'Yes — the Free plan includes a public profile, up to 10 bookings per month, and a shareable link. You can upgrade to Growth or Pro any time your practice needs more.',
+                a: 'No, there is not a Free plan but there is starter plan that includes a public profile, up to 10 bookings per month, and a shareable link. You can upgrade to Pro any time your practice needs more.',
               },
               {
                 q: 'How is client data protected?',
-                a: 'All client information, notes, and bookings are encrypted at rest and in transit. We follow Indian data protection guidelines and never share your client data with third parties.',
+                a: 'All client information, notes, and bookings are encrypted. We follow Indian data protection guidelines and never share your client data with third parties.',
               },
               {
                 q: 'Can I cancel or downgrade later?',
-                a: 'Anytime, from your dashboard. Paid plans include a 14-day trial — if it is not the right fit, you keep your free profile and nothing else changes.',
+                a: 'Yes. You can upgrade, downgrade, or cancel your plan at any time before your next billing cycle. Your current plan benefits will remain active until the end of your subscription period.',
               },
             ].map((item, i) => (
               <FaqItem key={i} q={item.q} a={item.a} idx={i}/>
             ))}
           </div>
         </div>
+        {/* sentinel marking the bottom edge of the full-width curtain. The
+            wordmark is only uncovered once this point scrolls up past the
+            strip band. Sits inside the curtain, outside the centred wrap. */}
+        <div className="faq-curtain-end" aria-hidden="true" />
+        </div>
+          <div className="faq-wordmark-reveal">
+    {/* <HangingWordmark /> */}
+  </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════════
@@ -7517,10 +9448,16 @@ export default function Home() {
       </footer> */}
 
       {/* ── HANGING WORDMARK: saffron text on white, swaying ── */}
-      <HangingWordmark/>
+      {/* <HangingWordmark/> */}
 
       {/* ── BIG WORDMARK: shutter reveal on scroll ── */}
       {/* <BigWordmark/> */}
+
+
+
+
+            <FooterReveal />
+
     </div>
   )
 }

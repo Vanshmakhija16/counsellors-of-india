@@ -27,11 +27,11 @@ const services: ServiceItem[] = [
   },
   {
     code: '03',
-    title: 'Couples & relational',
+    title: 'Couple & relational',
     kind: 'Two-people work',
     desc:
-      'Structured sessions for couples re-learning how to fight fairly, listen well, and choose each other again — even after rupture.',
-    forWhom: ['Couples', 'Conflict', 'Attachment', 'Repair'],
+      'Structured sessions for couple re-learning how to fight fairly, listen well, and choose each other again — even after rupture.',
+    forWhom: ['Couple', 'Conflict', 'Attachment', 'Repair'],
   },
   {
     code: '04',

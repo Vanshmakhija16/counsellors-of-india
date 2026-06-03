@@ -9,7 +9,7 @@ const DEFAULT_SERVICES = [
   { name: 'Individual Therapy',    desc: 'One-on-one sessions tailored entirely to your unique needs, challenges, and goals.',      tag: 'Core Service' },
   { name: 'Anxiety & Stress',      desc: 'Learn to recognise patterns, regulate responses, and build sustainable calm in your life.', tag: 'Speciality'    },
   { name: 'Depression Support',    desc: 'Compassionate, structured support to help you rediscover energy, purpose, and connection.', tag: 'Speciality'    },
-  { name: 'Relationship Therapy',  desc: 'Improving communication, resolving conflicts, and deepening intimacy in your relationships.', tag: 'Couples & Ind.' },
+  { name: 'Relationship Therapy',  desc: 'Improving communication, resolving conflicts, and deepening intimacy in your relationships.', tag: 'Couple & Ind.' },
   { name: 'Grief & Loss',          desc: 'A gentle, non-judgemental space to process loss and find a path forward at your own pace.', tag: 'Speciality'    },
   { name: 'Life Transitions',      desc: 'Career changes, relocation, identity shifts — navigating change with clarity and resilience.', tag: 'Coaching'     },
 ]

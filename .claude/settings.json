@@ -37,10 +37,26 @@
       "Bash(curl -s \"http://localhost:3000/\")",
       "Bash(node -e 'const s=require\\(\"fs\"\\).readFileSync\\(\"src/app/dashboard/appearance/page.tsx\",\"utf8\"\\);console.log\\(\"unlocked uses:\", \\(s.match\\(/\\\\bunlocked\\\\b/g\\)||[]\\).length\\);')",
       "Bash(curl -s -o /tmp/h.html -w \"HTTP %{http_code}\\\\n\" http://localhost:3000/)",
-      "Bash(node -e *)"
+      "Bash(node -e *)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\" http://localhost:3000/)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\" http://localhost:3000/signup)",
+      "Bash(curl -s -I http://localhost:3000/signup)",
+      "Bash(curl -s http://localhost:3000/signup)",
+      "Bash(curl -s -L -o /dev/null -w \"final URL: %{url_effective}\\\\nstatus: %{http_code}\\\\n\" http://localhost:3000/signup)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:3000/signup-preview)",
+      "Bash(curl -s http://localhost:3000/signup-preview)",
+      "Bash(grep -ioE \"error:[^<]{0,160}|Module not found[^<]{0,120}|Cannot[^<]{0,120}\")",
+      "Bash(grep -iA3 \"signup-preview\")",
+      "Bash(curl -s -o /dev/null -w \"preview HTTP %{http_code}\\\\n\" http://localhost:3000/signup-preview)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/signup-preview)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/)",
+      "PowerShell(Test-NetConnection -ComputerName ukelfqbwngyabmfyxddo.supabase.co -Port 443 -InformationLevel Detailed -WarningAction SilentlyContinue)",
+      "PowerShell($r = Test-NetConnection -ComputerName ukelfqbwngyabmfyxddo.supabase.co -Port 443 -WarningAction SilentlyContinue; if \\($r.TcpTestSucceeded\\) { \"443 OPEN - Supabase reachable now\" } else { \"443 STILL BLOCKED - VPN/firewall still in the way\" })",
+      "Bash(grep -ivE \"/\\\\*|\\\\*/|//\")"
     ],
     "additionalDirectories": [
-      "\\tmp"
+      "\\tmp",
+      "c:\\Users\\HP\\.claude\\projects\\c--Users-HP-Downloads-counsellors-of-india\\memory"
     ]
   }
 }

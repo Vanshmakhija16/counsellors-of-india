@@ -1,25 +1,20 @@
 import type { Metadata } from 'next'
-import { Cormorant_Garamond, DM_Sans, Fraunces } from 'next/font/google'
+import { Inter, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
 // import LiquidInkCursor from '@/components/ui/LiquidInkCursor'
 
-const cormorant = Cormorant_Garamond({
-  variable: '--font-cormorant',
+/* ONE premium type system (SaaS/product direction):
+   Plus Jakarta Sans for display/headings (700-800), Inter for body (400-500). */
+const jakarta = Plus_Jakarta_Sans({
+  variable: '--font-jakarta',
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700'],
+  weight: ['500', '600', '700', '800'],
 })
 
-const fraunces = Fraunces({
-  variable: '--font-fraunces',
+const inter = Inter({
+  variable: '--font-inter',
   subsets: ['latin'],
-  weight: ['300', '400', '500', '600'],
-  style: ['normal', 'italic'],
-})
-
-const dmSans = DM_Sans({
-  variable: '--font-dm-sans',
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
+  weight: ['300', '400', '500', '600', '700'],
 })
 
 export const metadata: Metadata = {
@@ -33,8 +28,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" className={`${cormorant.variable} ${fraunces.variable} ${dmSans.variable} h-full antialiased`} suppressHydrationWarning>
-      <body className="min-h-full flex flex-col bg-stone-50 font-[var(--font-dm-sans)]" suppressHydrationWarning>
+    <html lang="en" className={`${jakarta.variable} ${inter.variable}  antialiased`} suppressHydrationWarning>
+      <body className="min-h-full flex flex-col bg-stone-50 font-[var(--font-inter)]" suppressHydrationWarning>
         {/* <LiquidInkCursor /> */}
         {children}
       </body>

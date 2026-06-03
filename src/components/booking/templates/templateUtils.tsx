@@ -266,7 +266,7 @@ export const SAMPLE_THERAPIST: TherapistProfile = {
 export const DEFAULT_CT1_CONTENT: Required<CT1Content> = {
   services: [
     { code: 'S/01', name: 'Counselling Psychology', kind: 'Individual Therapy', desc: 'One-to-one psychotherapy for adults navigating anxiety, depression, self-worth, identity, burnout, and life transitions — grounded in CBT, ACT, and somatic work.', forWhom: ['Anxiety', 'Burnout', 'Self-Esteem', 'Life Transitions'] },
-    { code: 'S/02', name: 'Relationship Counselling', kind: 'Couples & Partners', desc: 'Structured sessions for couples and partners working through communication breakdowns, attachment patterns, conflict, intimacy, and rebuilding trust.', forWhom: ['Couples', 'Communication', 'Attachment', 'Trust'] },
+    { code: 'S/02', name: 'Relationship Counselling', kind: 'Couple & Partners', desc: 'Structured sessions for couple and partners working through communication breakdowns, attachment patterns, conflict, intimacy, and rebuilding trust.', forWhom: ['Couple', 'Communication', 'Attachment', 'Trust'] },
     { code: 'S/03', name: 'Trauma & EMDR', kind: 'Trauma-Informed Care', desc: 'Specialist trauma work using EMDR and somatic methods, at your pace — helping you process difficult experiences while restoring safety in your body.', forWhom: ['PTSD', 'EMDR', 'Somatic', 'Recovery'] },
     { code: 'S/04', name: 'Career & Identity', kind: 'Personal Direction', desc: 'Reflective psychotherapy for professionals questioning purpose, identity, or major career inflection points — clarity-focused and non-prescriptive.', forWhom: ['Direction', 'Meaning', 'Purpose', 'Mid-Career'] },
   ],
@@ -282,7 +282,7 @@ export const DEFAULT_CT2_CONTENT: Required<CT2Content> = {
   services: [
     { code: '01', name: 'Individual psychotherapy', kind: 'One-to-one · weekly', desc: 'Long-form work for adults navigating anxiety, depression, identity, and the residue of difficult early life — patient, reflective, and unhurried.', forWhom: ['Anxiety', 'Depression', 'Self-worth', 'Burnout'] },
     { code: '02', name: 'Trauma & EMDR', kind: 'Specialist · paced', desc: 'Trauma-informed work using EMDR and somatic methods. We move only at the speed your nervous system allows — never the other way around.', forWhom: ['PTSD', 'EMDR', 'Somatic work', 'Recovery'] },
-    { code: '03', name: 'Couples & relational', kind: 'Two-people work', desc: 'Structured sessions for couples re-learning how to fight fairly, listen well, and choose each other again — even after rupture.', forWhom: ['Couples', 'Conflict', 'Attachment', 'Repair'] },
+    { code: '03', name: 'Couple & relational', kind: 'Two-people work', desc: 'Structured sessions for couple re-learning how to fight fairly, listen well, and choose each other again — even after rupture.', forWhom: ['Couple', 'Conflict', 'Attachment', 'Repair'] },
     { code: '04', name: 'Career & meaning', kind: 'Reflective work', desc: 'Psychotherapy for professionals questioning purpose, identity, or the cost of their ambition. Clarity-focused, never prescriptive.', forWhom: ['Direction', 'Meaning', 'Mid-career', 'Transition'] },
   ],
   insights: [
@@ -304,7 +304,7 @@ export const DEFAULT_CT3_CONTENT: Required<CT3Content> = {
   services: [
     { code: '01', name: 'Individual psychotherapy', kind: 'One-to-one · weekly', desc: 'Long-form work for adults navigating anxiety, depression, identity, and the residue of difficult early life — patient, reflective, and unhurried.', forWhom: ['Anxiety', 'Depression', 'Self-worth', 'Burnout'] },
     { code: '02', name: 'Trauma & EMDR', kind: 'Specialist · paced', desc: 'Trauma-informed work using EMDR and somatic methods. We move only at the speed your nervous system allows — never the other way around.', forWhom: ['PTSD', 'EMDR', 'Somatic', 'Recovery'] },
-    { code: '03', name: 'Couples & relational', kind: 'Two-people work', desc: 'Structured sessions for couples re-learning how to fight fairly, listen well, and choose each other again — even after rupture.', forWhom: ['Couples', 'Conflict', 'Attachment', 'Repair'] },
+    { code: '03', name: 'Couple & relational', kind: 'Two-people work', desc: 'Structured sessions for couple re-learning how to fight fairly, listen well, and choose each other again — even after rupture.', forWhom: ['Couple', 'Conflict', 'Attachment', 'Repair'] },
     { code: '04', name: 'Career & meaning', kind: 'Reflective work', desc: 'Psychotherapy for professionals questioning purpose, identity, or the cost of their ambition. Clarity-focused, never prescriptive.', forWhom: ['Direction', 'Meaning', 'Mid-career', 'Transition'] },
   ],
   faq: [
@@ -330,7 +330,7 @@ export const DEFAULT_CT4_CONTENT = {
   ticker:   { items: ['Licensed Practitioner', 'Confidential Sessions', 'Evidence-Based Practice', 'Online & In-Person', 'RCI Accredited', 'Integrative Approach', 'First Session Diagnostic', 'Free Cancellation 48h'] },
   services: [
     { name: 'Individual Psychotherapy', desc: 'One-on-one sessions tailored to your unique history, needs, and goals. Evidence-based modalities in a confidential, non-judgmental space.', price: 1500 },
-    { name: 'Couples Therapy',          desc: 'Restoring connection, communication, and mutual understanding between partners — from conflict navigation to deeper intimacy.',              price: 2000 },
+    { name: 'Couple Therapy',          desc: 'Restoring connection, communication, and mutual understanding between partners — from conflict navigation to deeper intimacy.',              price: 2000 },
     { name: 'Anxiety & Stress',         desc: 'Cognitive, somatic, and mindfulness-based tools to break cycles of rumination, worry, and overwhelm.',                                   price: 1500 },
     { name: 'Grief & Loss',             desc: 'Compassionate support through bereavement, major life transitions, and the complex terrain of what it means to lose.',                   price: 1200 },
     { name: 'Identity & Self-Esteem',   desc: 'Deepening self-awareness and cultivating an authentic, grounded sense of self — free from self-criticism and comparison.',               price: 1200 },
@@ -352,7 +352,7 @@ export const DEFAULT_CT5_CONTENT: Required<CT5Content> = {
     { name: 'Individual Therapy',   desc: 'One-on-one sessions tailored entirely to your unique needs, challenges, and goals.', tag: 'Core Service' },
     { name: 'Anxiety & Stress',     desc: 'Learn to recognise patterns, regulate responses, and build sustainable calm in your life.', tag: 'Speciality' },
     { name: 'Depression Support',   desc: 'Compassionate, structured support to help you rediscover energy, purpose, and connection.', tag: 'Speciality' },
-    { name: 'Relationship Therapy', desc: 'Improving communication, resolving conflicts, and deepening intimacy in your relationships.', tag: 'Couples & Ind.' },
+    { name: 'Relationship Therapy', desc: 'Improving communication, resolving conflicts, and deepening intimacy in your relationships.', tag: 'Couple & Ind.' },
     { name: 'Grief & Loss',         desc: 'A gentle, non-judgemental space to process loss and find a path forward at your own pace.', tag: 'Speciality' },
     { name: 'Life Transitions',     desc: 'Career changes, relocation, identity shifts — navigating change with clarity and resilience.', tag: 'Coaching' },
   ],

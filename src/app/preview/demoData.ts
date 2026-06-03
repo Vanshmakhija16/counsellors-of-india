@@ -63,12 +63,12 @@ export const demoProfiles: Record<string, any> = {
     id: 'demo-classic3',
     name: 'Ananya Singh',
     credentials: 'MSc Clinical Psychology, RCI Registered',
-    bio: 'A practice rooted in compassion and evidence-based methods. I work with individuals and couples navigating anxiety, relationship difficulties, and trauma. Sessions are collaborative, warm, and tailored to your journey.',
+    bio: 'A practice rooted in compassion and evidence-based methods. I work with individuals and couple navigating anxiety, relationship difficulties, and trauma. Sessions are collaborative, warm, and tailored to your journey.',
     image: '',
     location: 'Delhi, NCR',
     experience: 7,
     fee: 1200,
-    specialties: ['Anxiety', 'Trauma & PTSD', 'Relationships', 'Couples Therapy', 'Depression', 'Mindfulness'],
+    specialties: ['Anxiety', 'Trauma & PTSD', 'Relationships', 'Couple Therapy', 'Depression', 'Mindfulness'],
     languages: ['English', 'Hindi'],
     sessionDuration: 50,
     sessionMode: 'both',
@@ -84,13 +84,13 @@ export const demoProfiles: Record<string, any> = {
       { degree: 'MSc Clinical Psychology', institution: 'Amity University, Delhi', year: '2017' },
       { degree: 'BSc Psychology', institution: 'Delhi University', year: '2015' },
     ],
-    certifications: ['RCI Registered Psychologist', 'Gottman Method Couples Therapy Level I', 'Trauma-Focused CBT'],
+    certifications: ['RCI Registered Psychologist', 'Gottman Method Couple Therapy Level I', 'Trauma-Focused CBT'],
     availability: null,
     profile_content: {
       classic3: {
         services: [
           { name: 'Individual Therapy', desc: 'One-to-one sessions for anxiety, depression, and personal growth.', price: 1200, kind: 'Individual', forWhom: ['Anxiety', 'Depression', 'Growth'] },
-          { name: 'Couples Counselling', desc: 'Structured sessions to improve communication and rebuild connection.', price: 1800, kind: 'Couples', forWhom: ['Communication', 'Conflict', 'Intimacy'] },
+          { name: 'Couple Counselling', desc: 'Structured sessions to improve communication and rebuild connection.', price: 1800, kind: 'Couple', forWhom: ['Communication', 'Conflict', 'Intimacy'] },
           { name: 'Trauma Processing', desc: 'Trauma-informed care using EMDR and somatic techniques.', price: 1400, kind: 'Trauma', forWhom: ['PTSD', 'EMDR', 'Recovery'] },
         ],
         faqs: [

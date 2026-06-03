@@ -182,7 +182,7 @@ export default function CT4ContentEditor({ value, onChange }: Props) {
                 <input
                   value={svc.name}
                   onChange={e => patch({ services: c.services.map((s, j) => j === i ? { ...s, name: e.target.value } : s) })}
-                  placeholder="e.g. Couples Therapy"
+                  placeholder="e.g. Couple Therapy"
                   className={inp}
                 />
               </Field>

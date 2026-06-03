@@ -23,9 +23,9 @@ interface ClassicTemplateProps {
 
 const servicesData: ServiceItem[] = [
   { code: 'S/01', title: 'Counselling Psychology', kind: 'Individual Therapy', desc: 'One-to-one psychotherapy for adults navigating anxiety, depression, self-worth, identity, burnout, and life transitions — grounded in CBT, ACT, and somatic work.', forWhom: ['Anxiety', 'Burnout', 'Self-Esteem', 'Life Transitions'] },
-  { code: 'S/02', title: 'Relationship Counselling', kind: 'Couples & Partners', desc: 'Structured sessions for couples and partners working through communication breakdowns, attachment patterns, conflict, intimacy, and rebuilding trust.', forWhom: ['Couples', 'Communication', 'Attachment', 'Trust'] },
+  { code: 'S/02', title: 'Relationship Counselling', kind: 'Couple & Partners', desc: 'Structured sessions for couple and partners working through communication breakdowns, attachment patterns, conflict, intimacy, and rebuilding trust.', forWhom: ['Couple', 'Communication', 'Attachment', 'Trust'] },
   { code: 'S/03', title: 'Trauma & EMDR', kind: 'Trauma-Informed Care', desc: 'Specialist trauma work using EMDR and somatic methods, at your pace — helping you process difficult experiences while restoring safety in your body.', forWhom: ['PTSD', 'EMDR', 'Somatic', 'Recovery'] },
-  { code: 'S/04', title: 'Career & Identity', kind: 'Personal Direction', desc: 'Reflective psychotherapy for professionals questioning purpose, identity, or major career inflection points — clarity-focused and non-prescriptive.', forWhom: ['Direction', 'Meaning', 'Purpose', 'Mid-Career'] },
+  { code: 'S/04', title: 'Career & Identity', kind: 'Personal Direction', desc: 'Reflective psychotherapy for individuals questioning purpose, identity, or major career inflection points, clarity-focused and non-prescriptive.', forWhom: ['Direction', 'Meaning', 'Purpose', 'Mid-Career'] },
 ]
 
 const carouselSlides = [
