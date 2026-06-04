@@ -44,7 +44,10 @@ export default function ClassicTemplate3({ therapist, bookedTimes = [], hiddenSe
       const tr = target.getBoundingClientRect()
       scrollParent.scrollBy({ top: tr.top - pr.top - 20, behavior: 'smooth' })
     } else {
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      // Scroll only THIS document's own window — never asks a parent (e.g. the
+      // live-preview iframe's host page) to scroll the iframe into view.
+      const y = target.getBoundingClientRect().top + window.scrollY - 20
+      window.scrollTo({ top: y, behavior: 'smooth' })
     }
   }
 

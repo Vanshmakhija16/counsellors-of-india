@@ -3,6 +3,7 @@
 import type { RefObject } from 'react'
 import { useEffect, useRef } from 'react'
 import type { TherapistProfile } from '../templateUtils'
+import { resolveImage } from '../templateUtils'
 
 interface HeroProps {
   therapist: TherapistProfile
@@ -134,22 +135,14 @@ export default function Hero({ therapist, loaded, heroRef }: HeroProps) {
       {/* ── RIGHT: Visual panel ── */}
       <div className="ct5-hero-right">
 
-        {therapist.image ? (
-          <>
-            <img
-              src={therapist.image}
-              alt={name}
-              className="ct5-hero-photo"
-            />
-            <div className="ct5-hero-photo-overlay" />
-          </>
-        ) : (
-          <div className="ct5-hero-no-photo">
-            <span className="ct5-hero-monogram-bg">
-              {(name.split(' ').filter(p => !/^(dr|mr|ms|mrs|prof)\.?$/i.test(p))[0] ?? 'T')[0]}
-            </span>
-          </div>
-        )}
+        <>
+          <img
+            src={resolveImage(therapist.image)}
+            alt={name}
+            className="ct5-hero-photo"
+          />
+          <div className="ct5-hero-photo-overlay" />
+        </>
 
         {/* Floating stat cards — desktop only */}
         <div className="ct5-hero-stat-strip">

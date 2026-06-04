@@ -8,14 +8,14 @@ import Button from '@/components/ui/Button'
 import { Check, Lock, Zap, ArrowRight, ShieldCheck, Crown, X } from 'lucide-react'
 import { useRazorpay } from '@/lib/useRazorpay'
 
-const PLAN_PRICE: Record<string, number> = { starter: 1499, pro: 2499 }
+const PLAN_PRICE: Record<string, number> = { starter: 1, pro: 2499 }
 const PLAN_RANK:  Record<string, number> = { starter: 1,    pro: 2   }
 
 const plans = [
   {
     id: 'starter',
     name: 'Starter',
-    price: '₹1499',
+    price: '₹0.9',
     period: '/ year',
     tagline: 'Professional website for independent therapists',
     highlight: false,
@@ -128,14 +128,20 @@ const highest =
     setSelecting(planId)
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
+      // Resolve the current user robustly. Right after signup the session can
+      // take a moment to hydrate, so fall back to getSession() and the userId
+      // already loaded into state before concluding the user is logged out.
+      let user = (await supabase.auth.getUser()).data.user
+      if (!user) user = (await supabase.auth.getSession()).data.session?.user ?? null
 
-      // Not logged in → go to login
-      if (!user) {
+      // Not logged in → go to login (preserving the chosen plan so we resume)
+      if (!user && !userId) {
         const returnUrl = `/pricing?plan=${planId}&redirect=${encodeURIComponent(redirectAfter)}`
         router.push(`/login?redirect=${encodeURIComponent(returnUrl)}`)
         return
       }
+      const uid = user?.id ?? userId!
+      const uemail = user?.email ?? userEmail
 
       // Already on this plan → just navigate
       if (planId === currentPlan) {
@@ -155,7 +161,7 @@ const highest =
         const { error } = await supabase
           .from('therapists')
           .update({ plan: planId })
-          .eq('id', user.id)
+          .eq('id', uid)
         if (error) throw error
         setCurrentPlan(planId)
         setSuccessMsg(`✓ ${planId.charAt(0).toUpperCase() + planId.slice(1)} plan re-activated — no charge.`)
@@ -167,14 +173,14 @@ const highest =
       await openRazorpay({
         amount:      PLAN_PRICE[planId],
         description: `Counsellors of India — ${planId.charAt(0).toUpperCase() + planId.slice(1)} Plan (Monthly)`,
-        receipt:     `plan_${planId}_${user.id}`.slice(0, 40),
-        prefill:     { email: user.email ?? '' },
+        receipt:     `plan_${planId}_${uid}`.slice(0, 40),
+        prefill:     { email: uemail ?? '' },
 
         onSuccess: async (payload) => {
           const res = await fetch('/api/razorpay?action=plan-upgrade', {
             method:  'POST',
             headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ ...payload, therapist_id: user.id, plan: planId }),
+            body:    JSON.stringify({ ...payload, therapist_id: uid, plan: planId }),
           })
           const data = await res.json()
           if (!res.ok || !data.success) {
@@ -278,7 +284,7 @@ const highest =
             {successMsg}
           </div>
         )}
-        {currentPlan && currentPlan !== 'free' && !successMsg && (
+        {/* {currentPlan && currentPlan !== 'free' && !successMsg && (
           <div className="mb-6 rounded-xl border border-[#F3D9B0] bg-[#FBF3E6] px-5 py-3.5 text-sm text-[#7a5a1e] text-center flex items-center justify-center gap-2">
             <Crown size={15} className="text-[#FF9933]" />
             You're on the <strong className="capitalize">{currentPlan}</strong> plan.
@@ -288,7 +294,7 @@ const highest =
               </button>
             )}
           </div>
-        )}
+        )} */}
 
         {/* Re-activation info banner — shown when user downgraded but paid before */}
         {/* {currentPlan === 'free' && PLAN_RANK[highestPlan] > 0 && !successMsg && (

@@ -451,6 +451,7 @@ export const ct3Styles = `
   .ct3-chip.selected { background: var(--sage); color: #fff; border-color: var(--sage); }
   .ct3-chip:disabled { opacity: 0.3; cursor: not-allowed; text-decoration: line-through; }
   .ct3-booking-card { background: var(--bg-card); border-radius: 20px; border: 1px solid var(--rule-strong); border-top: 4px solid var(--sage); padding: 2.5rem 2.8rem; box-shadow: 0 8px 40px rgba(28,43,38,0.08); }
+  .ct3-form-grid { grid-template-columns: 1fr 1fr; }
   .ct3-input { width: 100%; background: var(--bg-alt); border-radius: 10px; border: 1px solid var(--rule-strong); color: var(--ink); padding: 13px 16px; margin-top: 10px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 400; outline: none; transition: border-color 0.25s ease, background 0.25s ease; }
   .ct3-input::placeholder { color: var(--ink-4); }
   .ct3-input:focus { border-color: var(--sage); background: #fff; box-shadow: 0 0 0 3px var(--sage-pale); }
@@ -833,5 +834,112 @@ export const ct3Styles = `
   .ct3-hero-content {
     max-width: 100%;
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   FULL RESPONSIVE PASS — every device width (z-flip → ultrawide)
+   Added without altering the existing desktop design or animations.
+═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Universal safety: nothing may cause a horizontal scrollbar ── */
+.ct3-root, .ct3-root * { box-sizing: border-box; }
+.ct3-root img, .ct3-root svg { max-width: 100%; }
+
+/* ── Ultra-wide screens: cap the content so it doesn't stretch thin ── */
+@media (min-width: 1600px) {
+  .ct3-container { max-width: 1360px; }
+}
+
+/* ════════════════ TABLET & SMALL LAPTOP (≤ 900px) ════════════════ */
+@media (max-width: 900px) {
+  .ct3-hero-glow { width: 320px; height: 320px; }
+  .ct3-hero-photo { height: min(56vh, 460px); }
+  .ct3-meta-card { min-width: 0; flex: 1 1 auto; }
+}
+
+/* ════════════════ PHONES (≤ 560px) ════════════════ */
+@media (max-width: 560px) {
+  .ct3-root { --nav-h: 60px; }
+
+  /* Section rhythm tightens so content isn't lost in whitespace */
+  .ct3-section {
+    padding: clamp(2.75rem, 9vh, 4rem) clamp(1.1rem, 5vw, 1.6rem);
+  }
+
+  /* Folio / section headers stack instead of justify-between squeeze */
+  .ct3-folio-header,
+  .ct3-svc-header {
+    flex-direction: column; align-items: flex-start; gap: 0.5rem;
+    padding-bottom: 1.25rem; margin-bottom: 1.75rem;
+  }
+  .ct3-svc-header-sub { text-align: left; max-width: 100%; }
+  .ct3-folio-title { font-size: clamp(30px, 9vw, 40px); }
+
+  /* Hero */
+  .ct3-hero { padding: 1rem 1.1rem 2.5rem; gap: 1.5rem; }
+  .ct3-hero-photo { height: min(64vw, 420px); }
+  .ct3-hero-glow { width: 240px; height: 240px; filter: blur(22px); }
+  .ct3-hero-title { font-size: clamp(2.4rem, 11vw, 3.4rem); line-height: 0.96; }
+  .ct3-hero-subtitle { font-size: 0.95rem; line-height: 1.7; }
+  .ct3-hero-meta { gap: 0.6rem; }
+  .ct3-meta-card { padding: 0.8rem 0.9rem; min-width: 0; flex: 1 1 30%; }
+  .ct3-meta-number { font-size: 1.3rem; }
+  .ct3-meta-label { font-size: 9px; letter-spacing: 0.12em; }
+  .ct3-floating-card { bottom: 12px; left: 12px; padding: 9px 12px; gap: 9px; }
+  .ct3-floating-label, .ct3-floating-text { font-size: 11px; }
+
+  /* About */
+  .ct3-about-grid { gap: 2.25rem; }
+  .ct3-drop-cap { font-size: clamp(58px, 18vw, 80px); }
+  .ct3-spec-card { padding: 1.5rem 1.4rem; }
+
+  /* Services showcase panel (the dark sticky card on wider screens) */
+  .ct3-svc-showcase { position: static; }
+  .ct3-svc-showcase-inner { padding: 2rem 1.6rem 1.8rem; min-height: 0; }
+  .ct3-svc-sc-footer { flex-direction: column; align-items: stretch; gap: 1rem; }
+  .ct3-svc-sc-btn { width: 100%; }
+
+  /* Insights */
+  .ct3-insight-card { padding: 1.5rem 1.4rem 1.3rem; }
+
+  /* FAQ — pull the answer indent back so text has room */
+  .ct3-faq-trigger { gap: 1rem; padding: 1.15rem 0; }
+  .ct3-faq-q-wrap { gap: 0.75rem; }
+  .ct3-faq-num { width: 20px; }
+  .ct3-faq-icon { width: 30px; height: 30px; font-size: 16px; }
+  .ct3-faq-ans { padding: 0 0 1.3rem 1.6rem; font-size: 14px; }
+
+  /* Booking */
+  .ct3-booking-grid { gap: 2rem; }
+  .ct3-booking-card { padding: 1.6rem 1.4rem; }
+  .ct3-booking-details { padding: 1.5rem 1.4rem; }
+  /* Contact form: single column so inputs never crowd */
+  .ct3-form-grid { grid-template-columns: 1fr; }
+
+  /* Footer */
+  .ct3-footer { padding: clamp(2.5rem,7vh,3.5rem) clamp(1.1rem,5vw,1.6rem) 2rem; }
+  .ct3-footer-name { font-size: clamp(34px, 12vw, 52px); }
+  .ct3-footer-grid { gap: 1.75rem; padding-top: 2rem; }
+  .ct3-footer-bottom { flex-direction: column; align-items: flex-start; gap: 0.6rem; }
+}
+
+/* ════════════════ ULTRA-NARROW — Z-Flip / small Androids (≤ 360px) ════════════════ */
+@media (max-width: 360px) {
+  .ct3-section { padding: 2.25rem 0.9rem; }
+  .ct3-hero-title { font-size: 2.1rem; }
+  .ct3-hero-meta { flex-direction: column; }
+  .ct3-meta-card { width: 100%; flex: 1 1 100%; }
+  .ct3-folio-title { font-size: 27px; }
+  .ct3-nav-inner { padding: 0 0.9rem; gap: 0.75rem; }
+  .ct3-nav-label-sub { display: none; }
+  .ct3-spec-row { flex-wrap: wrap; gap: 2px; }
+  .ct3-spec-val { max-width: 100%; text-align: left; }
+  .ct3-chip { font-size: 9px; padding: 8px 12px; }
+}
+
+/* ════════════════ LANDSCAPE PHONES — short viewports ════════════════ */
+@media (max-height: 480px) and (orientation: landscape) {
+  .ct3-hero { min-height: auto; padding-top: calc(var(--nav-h) + 1rem); }
+  .ct3-hero-photo { height: 70vh; }
 }
   `

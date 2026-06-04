@@ -262,7 +262,7 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
                   }}>
                     <span className="ct3-eyebrow" style={{ display: 'block', marginBottom: '0.9rem' }}>Your details</span>
                     <div style={{ height: 1, background: 'var(--rule)', marginBottom: '0.5rem' }} />
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 1.5rem' }}>
+                    <div className="ct3-form-grid" style={{ display: 'grid', gap: '0 1.5rem' }}>
                       <div style={{ gridColumn: '1 / -1' }}>
                         <input className="ct3-input" placeholder="Full name"
                           value={clientName} onChange={e => setClientName(e.target.value)} />

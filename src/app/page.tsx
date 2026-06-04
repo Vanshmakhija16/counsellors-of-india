@@ -118,7 +118,7 @@ body,.pg{font-family:var(--sans);background:var(--bg);color:var(--ink);-webkit-f
   box-shadow:0 1px 0 rgba(255,255,255,.8) inset,0 14px 36px -10px rgba(63,90,74,.14);
 }
 .logo{
-  font-family:var(--inter) ;font-size:16px;font-weight:900;
+font-family: "Times New Roman", Times, serif;font-size:16px;font-weight:900;
   color:rgba(255,255,255,.95);text-decoration:none;letter-spacing:-.02em;
   display:flex;align-items:center;gap:10px;flex-shrink:0;
   transition:color .35s ease;
@@ -5646,9 +5646,11 @@ padding:
   width:min(92vw,1240px);margin:0 auto;
 }
 .texp-window{
-  width:min(1100px,100%);
+  width:min(1100px,75%);
+  // height:82vh;
   margin:0 auto;
-  border-radius:var(--r-xl);overflow:hidden;
+  border-radius:var(--r-sm);
+  overflow:hidden;
   background:#fff;
   border:1px solid var(--border);
   box-shadow:var(--shadow-lg);
@@ -5699,6 +5701,8 @@ padding:
   max-height:760px;min-height:420px;
   background:var(--surf-1);
   overflow:hidden;
+  overscroll-behavior: contain;
+
 }
 /* holds the device-sized iframe and never lets it exceed the wrap width */
 .texp-frame-scaler{
@@ -7168,7 +7172,7 @@ const AVP=[
 const FILTERS = ['All','Anxiety','Depression','Trauma','Relationships','Burnout','Career','Online','In-person']
 
 const PLANS_DATA = [
-  { id:'starter', name:'Starter', price:'₹1499',    period:'/ year', hi:true, badge:null,           feats:['Proffesional therapist website','Custom domain' ,'Online Appointment Booking','Payment Collection ','Email confirmations','Client Dashboard', 'Shareable profile link', 'Up to 10 bookings per month'], cta:'Get Started', g:true  },
+  { id:'starter', name:'Starter', price:'₹0.9',    period:'/ year', hi:true, badge:null,           feats:['professional therapist website','Custom domain' ,'Online Appointment Booking','Payment Collection ','Email confirmations','Client Dashboard', 'Shareable profile link', 'Up to 10 bookings per month'], cta:'Get Started', g:true  },
 { 
   id:'pro',
   name:'PRO',
@@ -7595,7 +7599,7 @@ function StepMock({ step }: { step: number }) {
               <div className="smk-mainhead">
                 <div>
                   <div className="smk-eyebrow">Step 3 of 3 · Dashboard</div>
-                  <div className="smk-h2">Welcome back, Priya 👋</div>
+                  <div className="smk-h2">Welcome back, Priya </div>
                 </div>
                 <div className="smk-steps" aria-hidden="true">
                   <i className="done" /><i className="done" /><i className="on" />
@@ -8802,9 +8806,10 @@ export default function Home() {
 
   <div className="nav-mid">
     <a href="#hero" className="nav-a">Home</a>
+    <a href="#templates" className="nav-a">Demo</a>
+    <a href="#experience" className="nav-a">Templates</a>
     <a href="#how" className="nav-a">How it works</a>
     <a href="#therapists" className="nav-a">Therapists</a>
-    <a href="#templates" className="nav-a">Templates</a>
     <a href="#pricing" className="nav-a">Pricing</a>
   </div>
 
@@ -8876,6 +8881,11 @@ export default function Home() {
         Home
       </a>
 
+     <a href="#templates">
+        <span>02</span>
+        Templates
+      </a>
+
       <a href="#how">
         <span>02</span>
         How it works
@@ -8886,10 +8896,7 @@ export default function Home() {
         Therapists
       </a>
 
-      <a href="#templates">
-        <span>04</span>
-        Templates
-      </a>
+
 
       <a href="#pricing">
         <span>05</span>
@@ -8946,14 +8953,14 @@ export default function Home() {
 
         <div className="hero-bn-ctas">
           <Link href="/signup" className="hero-bn-cta-p">
-            Create your website
+            Get Started
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="5" y1="12" x2="19" y2="12" />
               <polyline points="12 5 19 12 12 19" />
             </svg>
           </Link>
           <a href="#templates" className="hero-bn-cta-g">
-            View templates
+            Try Demo first
           </a>
         </div>
 

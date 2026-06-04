@@ -1505,11 +1505,10 @@ export default function StaticProfile({ therapist }: Props) {
             </div>
 
             <div className="ed-about-img-wrap reveal reveal-d1">
-              {therapist.image && therapist.image.trim() !== '' ? (
-                <img src={therapist.image} alt={therapist.name} />
-              ) : (
-                <div className="ed-about-img-fb">{initials}</div>
-              )}
+              <img
+                src={therapist.image && therapist.image.trim() !== '' ? therapist.image : '/profiledemo.png'}
+                alt={therapist.name}
+              />
               <div className="ed-about-img-cap">{therapist.name}</div>
             </div>
 

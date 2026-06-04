@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from 'react'
 import type { TherapistProfile } from '../templateUtils'
 import { resolveCT3Content } from '../templateUtils'
-import { Fullscreen } from 'lucide-react'
 
 interface FAQProps {
   therapist: TherapistProfile
@@ -45,7 +44,7 @@ export default function FAQ({ therapist }: FAQProps) {
           </div>
         </div>
 
-        <div style={{ maxWidth: Fullscreen }}>
+        <div style={{ maxWidth: '100%' }}>
           {faqs.map((item, i) => {
             const isOpen = open === i
             return (

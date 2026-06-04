@@ -30,7 +30,12 @@ export default function ClassicTemplate5({ therapist, bookedTimes = [], hiddenSe
   }, [])
 
   function scrollTo(id: string) {
-    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' })
+    const target = document.getElementById(id)
+    if (!target) return
+    // Scroll only THIS document's own window — never asks a parent (e.g. the
+    // live-preview iframe's host page) to scroll the iframe into view.
+    const y = target.getBoundingClientRect().top + window.scrollY - 20
+    window.scrollTo({ top: y, behavior: 'smooth' })
   }
 
   return (

@@ -27,11 +27,6 @@ const ACCENT_BORDERS = [
   'rgba(123,111,172,0.4)',
 ]
 
-// ─── Card geometry ────────────────────────────────────────────────────────
-const CARD_W_ACTIVE = 320   // active card width
-const CARD_W_SIDE   = 272   // side card width
-const CARD_GAP      = 20
-
 export default function Services({ therapist, onBookService }: ServicesProps) {
   const sectionRef = useRef<HTMLElement | null>(null)
 
@@ -45,6 +40,24 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
   const [dragOffset, setDragOffset] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [visible, setVisible]       = useState(false)
+
+  // ── Responsive viewport tracking (shrinks card geometry on small screens
+  //    while keeping the exact same layout + animation) ───────────────────
+  const [vw, setVw] = useState(1024)
+  useEffect(() => {
+    const update = () => setVw(window.innerWidth)
+    update()
+    window.addEventListener('resize', update)
+    return () => window.removeEventListener('resize', update)
+  }, [])
+  const isMobile = vw <= 560
+  const isTablet = vw > 560 && vw <= 900
+
+  // ─── Card geometry (responsive) ───────────────────────────────────────────
+  // Mobile: one full-width card. Desktop/tablet: 3-card peek stack.
+  const CARD_W_ACTIVE = isTablet ? 280 : 320   // active card width (desktop/tablet)
+  const CARD_W_SIDE   = isTablet ? 240 : 272   // side card width
+  const CARD_GAP      = isTablet ? 16  : 20
 
   const total = services.length
 
@@ -107,12 +120,15 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
     setDragStart(null); setDragOffset(0); setIsDragging(false)
   }
 
-  // ── Always show exactly 3 cards: [prev, active, next] ─────────────────
-  const cardIndices = [
-    (activeIdx - 1 + total) % total,   // pos 0 — left
-    activeIdx,                          // pos 1 — center (active)
-    (activeIdx + 1) % total,            // pos 2 — right
-  ]
+  // ── Cards shown in the track ──────────────────────────────────────────
+  // Mobile: one card at a time, full-width. Desktop/tablet: 3-card peek stack.
+  const cardIndices = isMobile
+    ? [activeIdx]
+    : [
+        (activeIdx - 1 + total) % total,   // pos 0 — left
+        activeIdx,                          // pos 1 — center (active)
+        (activeIdx + 1) % total,            // pos 2 — right
+      ]
 
   const active = services[activeIdx]
 
@@ -156,7 +172,7 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
 
-            {/* ◀ Prev */}
+            {/* ◀ Prev — desktop/tablet only; on mobile arrows sit in the dots row */}
             <button
               onClick={() => navigate(-1)}
               aria-label="Previous service"
@@ -167,7 +183,7 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
                 border:        '1.5px solid var(--rule-strong)',
                 background:    'var(--bg-card)',
                 color:         'var(--ink)',
-                display:       'flex', alignItems: 'center', justifyContent: 'center',
+                display:       isMobile ? 'none' : 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor:        'pointer',
                 transition:    'all 0.22s ease',
                 boxShadow:     '0 2px 12px rgba(28,43,38,0.07)',
@@ -189,7 +205,8 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
                 overflow:   'hidden',
                 position:   'relative',
                 // top padding gives room for the center card to float up
-                padding:    '80px 0 8px',
+                // (mobile is a flat single card, so minimal padding)
+                padding:    isMobile ? '8px 0' : '80px 0 8px',
                 cursor:     isDragging ? 'grabbing' : 'grab',
                 userSelect: 'none',
               }}
@@ -201,11 +218,13 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
               onMouseUp={onMouseUp}
               onMouseLeave={onMouseUp}
             >
-              {/* Soft edge fades */}
-              <div style={{
-                position:      'absolute', inset: 0, zIndex: 10, pointerEvents: 'none',
-                background:    'linear-gradient(to right, var(--bg-base) 0%, transparent 6%, transparent 94%, var(--bg-base) 100%)',
-              }} />
+              {/* Soft edge fades — desktop peek only (mobile is single card) */}
+              {!isMobile && (
+                <div style={{
+                  position:      'absolute', inset: 0, zIndex: 10, pointerEvents: 'none',
+                  background:    'linear-gradient(to right, var(--bg-base) 0%, transparent 6%, transparent 94%, var(--bg-base) 100%)',
+                }} />
+              )}
 
               {/* Cards row */}
               <div style={{
@@ -217,18 +236,21 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
                 transition:     isDragging ? 'none' : 'transform 0.42s cubic-bezier(0.25,0.46,0.45,0.94)',
               }}>
                 {cardIndices.map((svcIdx, pos) => {
-                  const isActive = pos === 1          // center slot is always active
+                  // Mobile shows one card (always active); desktop centers pos 1.
+                  const isActive = isMobile ? true : pos === 1
                   const svc      = services[svcIdx]
                   const cardAccent       = ACCENTS[svcIdx % ACCENTS.length]
                   const cardAccentBorder = ACCENT_BORDERS[svcIdx % ACCENT_BORDERS.length]
 
-                  // Per-slot visual params
-                  const translateY = isActive ? -36 : 0
-                  const scale      = isActive ? 1.04 : 0.93
+                  // Per-slot visual params.
+                  // Mobile: flat, full-width single card (no float/scale).
+                  const translateY = isMobile ? 0 : (isActive ? -36 : 0)
+                  const scale      = isMobile ? 1 : (isActive ? 1.04 : 0.93)
                   const opacity    = isActive ? 1    : 0.75
                   const zIdx       = isActive ? 20   : 5
-                  const cardW      = isActive ? CARD_W_ACTIVE : CARD_W_SIDE
-                  const minH       = isActive ? 340  : 290
+                  const cardW      = isMobile ? '100%' : (isActive ? CARD_W_ACTIVE : CARD_W_SIDE)
+                  // Mobile: height grows to content so text never clips.
+                  const minH: number | string = isMobile ? 'auto' : (isActive ? 340 : 290)
 
                   return (
                     <div
@@ -236,7 +258,8 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
                       onClick={() => !isDragging && !isActive && goTo(svcIdx)}
                       style={{
                         width:         cardW,
-                        flexShrink:    0,
+                        flexShrink:    isMobile ? 1 : 0,
+                        flexGrow:      isMobile ? 1 : 0,
                         minHeight:     minH,
                         transform:     `translateY(${translateY}px) scale(${scale})`,
                         opacity,
@@ -250,7 +273,9 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
                         boxShadow:     isActive
                           ? `0 24px 56px rgba(28,43,38,0.2), 0 6px 24px rgba(28,43,38,0.1), 0 0 0 1px ${cardAccentBorder}`
                           : '0 3px 14px rgba(28,43,38,0.06)',
-                        padding:       isActive ? '1.8rem 1.8rem' : '1.5rem 1.5rem',
+                        padding:       isActive
+                          ? (isMobile ? '1.1rem 1.3rem' : '1.8rem 1.8rem')
+                          : (isMobile ? '1rem 1.1rem' : '1.5rem 1.5rem'),
                         display:       'flex',
                         flexDirection: 'column',
                         overflow:      'hidden',
@@ -259,7 +284,7 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
                       {/* Icon + kind badge */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: '0.9rem' }}>
                         <span style={{
-                          fontSize:   isActive ? 20 : 16,
+                          fontSize:   isActive ? (isMobile ? 17 : 20) : (isMobile ? 14 : 16),
                           color:      isActive ? 'var(--sage)' : 'var(--ink-4)',
                           lineHeight: 1,
                           transition: 'all 0.42s ease',
@@ -285,12 +310,12 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
                       {/* Title */}
                       <h3 style={{
                         fontFamily:    "'Playfair Display', serif",
-                        fontSize:      isActive ? 22 : 18,
+                        fontSize:      isActive ? (isMobile ? 18 : 22) : (isMobile ? 15 : 18),
                         fontWeight:    500,
                         fontStyle:     'italic',
                         color:         'var(--ink)',
                         lineHeight:    1.2,
-                        margin:        '0 0 0.75rem',
+                        margin:        isMobile ? '0 0 0.5rem' : '0 0 0.75rem',
                         letterSpacing: '-0.02em',
                         transition:    'font-size 0.42s ease',
                       }}>
@@ -308,7 +333,7 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
                       {/* Description — 3 lines on side, more on active */}
                       <p style={{
                         fontFamily:       "'Plus Jakarta Sans', sans-serif",
-                        fontSize:         isActive ? 13.5 : 12.5,
+                        fontSize:         isActive ? (isMobile ? 12.5 : 13.5) : (isMobile ? 11.5 : 12.5),
                         lineHeight:       1.72,
                         fontWeight:       400,
                         color:            isActive ? 'var(--ink-2)' : 'var(--ink-3)',
@@ -316,7 +341,7 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
                         margin:           0,
                         transition:       'all 0.42s ease',
                         display:          '-webkit-box',
-                        WebkitLineClamp:  isActive ? 4 : 3,
+                        WebkitLineClamp:  isMobile ? 2 : (isActive ? 4 : 3),
                         WebkitBoxOrient:  'vertical',
                         overflow:         'hidden',
                       } as React.CSSProperties}>
@@ -352,6 +377,7 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
                         alignItems:     'center',
                         justifyContent: 'space-between',
                         gap:            10,
+                        flexWrap:       'wrap',
                       }}>
                         {svc?.price != null ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
@@ -360,7 +386,7 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
                             </span>
                             <span style={{
                               fontFamily: "'Playfair Display', serif",
-                              fontSize:   isActive ? 20 : 16,
+                              fontSize:   isActive ? (isMobile ? 17 : 20) : (isMobile ? 14 : 16),
                               fontWeight: 500,
                               color:      isActive ? 'var(--sage)' : 'var(--ink-3)',
                               transition: 'all 0.42s ease',
@@ -381,9 +407,9 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
                               color:        '#fff',
                               border:       'none',
                               borderRadius: 10,
-                              padding:      '9px 17px',
+                              padding:      isMobile ? '8px 13px' : '9px 17px',
                               fontFamily:   "'Plus Jakarta Sans', sans-serif",
-                              fontSize:     12.5,
+                              fontSize:     isMobile ? 11.5 : 12.5,
                               fontWeight:   600,
                               cursor:       'pointer',
                               whiteSpace:   'nowrap',
@@ -440,7 +466,7 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
                 border:        '1.5px solid var(--rule-strong)',
                 background:    'var(--bg-card)',
                 color:         'var(--ink)',
-                display:       'flex', alignItems: 'center', justifyContent: 'center',
+                display:       isMobile ? 'none' : 'flex', alignItems: 'center', justifyContent: 'center',
                 cursor:        'pointer',
                 transition:    'all 0.22s ease',
                 boxShadow:     '0 2px 12px rgba(28,43,38,0.07)',
@@ -455,27 +481,8 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
             </button>
           </div>
 
-          {/* Dot indicators + counter */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 20, marginTop: '1.4rem' }}>
-            <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-              {services.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => goTo(i)}
-                  aria-label={`Service ${i + 1}`}
-                  style={{
-                    width:      i === activeIdx ? 20 : 6,
-                    height:     6,
-                    borderRadius: 3,
-                    background: i === activeIdx ? 'var(--sage)' : 'rgba(28,43,38,0.16)',
-                    border:     'none',
-                    cursor:     'pointer',
-                    padding:    0,
-                    transition: 'all 0.35s cubic-bezier(0.25,0.46,0.45,0.94)',
-                  }}
-                />
-              ))}
-            </div>
+          {/* Counter (+ arrows on mobile) */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: isMobile ? 12 : 20, marginTop: '1.4rem' }}>
             <span style={{
               fontFamily:    "'JetBrains Mono', monospace",
               fontSize:      9,
@@ -485,6 +492,38 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
             }}>
               {String(activeIdx + 1)} / {String(total)}
             </span>
+
+            {/* Mobile-only arrows, placed to the right of the counter */}
+            {isMobile && (
+              <div style={{ display: 'flex', gap: 8, marginLeft: 4 }}>
+                {([-1, 1] as const).map(dir => (
+                  <button
+                    key={dir}
+                    onClick={() => navigate(dir)}
+                    aria-label={dir === -1 ? 'Previous service' : 'Next service'}
+                    style={{
+                      flexShrink:   0,
+                      width:        34, height: 34,
+                      borderRadius: '50%',
+                      border:       '1.5px solid var(--rule-strong)',
+                      background:   'var(--bg-card)',
+                      color:        'var(--ink)',
+                      display:      'flex', alignItems: 'center', justifyContent: 'center',
+                      cursor:       'pointer',
+                      transition:   'all 0.22s ease',
+                      boxShadow:    '0 2px 12px rgba(28,43,38,0.07)',
+                    }}
+                  >
+                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                      <path
+                        d={dir === -1 ? 'M10 4L6 8l4 4' : 'M6 4l4 4-4 4'}
+                        stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"
+                      />
+                    </svg>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

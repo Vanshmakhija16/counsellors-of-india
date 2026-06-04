@@ -2,7 +2,7 @@
 
 import type { RefObject } from 'react'
 import type { TherapistProfile } from '../templateUtils'
-import { getAvailableDays } from '../templateUtils'
+import { getAvailableDays, resolveImage } from '../templateUtils'
 
 interface HeroProps {
   therapist: TherapistProfile
@@ -166,21 +166,12 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
                   borderRadius: '9999px',
                 }}
               >
-                {therapist.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={therapist.image}
-                    alt={therapist.name}
-                    className="h-full w-full object-cover object-center"
-                  />
-                ) : (
-                  <div
-                    className="flex h-full w-full items-center justify-center text-[180px] text-[#1a1a18]/20"
-                    style={{ fontFamily: 'var(--font-fraunces), serif' }}
-                  >
-                    {(therapist.name?.[0] ?? '?').toUpperCase()}
-                  </div>
-                )}
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={resolveImage(therapist.image)}
+                  alt={therapist.name}
+                  className="h-full w-full object-cover object-center"
+                />
               </div>
             </div>
           </div>

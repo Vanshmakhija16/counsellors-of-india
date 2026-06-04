@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type RefObject } from 'react'
 import type { TherapistProfile } from '../templateUtils'
+import { resolveImage } from '../templateUtils'
 import { ArrowDownRight, MapPin } from 'lucide-react'
 
 interface HeroProps {
@@ -211,7 +212,7 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
 
 
             {/* Portrait — smaller, framed */}
-            {therapist.image && (
+            {(
               <div
                 className="relative overflow-hidden"
                 style={{
@@ -223,7 +224,7 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={therapist.image}
+                  src={resolveImage(therapist.image)}
                   alt={fullName}
                   className="w-full h-full object-cover"
                   style={{ filter: 'grayscale(0.2) contrast(1.06)' }}

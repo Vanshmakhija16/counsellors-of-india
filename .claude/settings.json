@@ -52,7 +52,8 @@
       "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/)",
       "PowerShell(Test-NetConnection -ComputerName ukelfqbwngyabmfyxddo.supabase.co -Port 443 -InformationLevel Detailed -WarningAction SilentlyContinue)",
       "PowerShell($r = Test-NetConnection -ComputerName ukelfqbwngyabmfyxddo.supabase.co -Port 443 -WarningAction SilentlyContinue; if \\($r.TcpTestSucceeded\\) { \"443 OPEN - Supabase reachable now\" } else { \"443 STILL BLOCKED - VPN/firewall still in the way\" })",
-      "Bash(grep -ivE \"/\\\\*|\\\\*/|//\")"
+      "Bash(grep -ivE \"/\\\\*|\\\\*/|//\")",
+      "Bash(npx next *)"
     ],
     "additionalDirectories": [
       "\\tmp",

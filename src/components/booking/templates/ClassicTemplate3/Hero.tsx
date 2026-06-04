@@ -204,6 +204,7 @@
 
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import type { TherapistProfile } from '../templateUtils'
+import { resolveImage } from '../templateUtils'
 
 interface HeroProps {
   therapist: TherapistProfile
@@ -250,7 +251,7 @@ export default function Hero({
 
   const firstName = getFirstName(therapist.name ?? '')
 
-  const photo = therapist.image?.trim() || ''
+  const photo = resolveImage(therapist.image)
 
   const initials =
     (therapist.name ?? '')
@@ -320,7 +321,7 @@ export default function Hero({
               <span>{initials}</span>
             </div>
           )}
-
+{/* 
           <div className="ct3-floating-card">
             <div className="ct3-floating-dot" />
 
@@ -333,7 +334,7 @@ export default function Hero({
                 Online • In-person
               </p>
             </div>
-          </div>
+          </div> */}
         </div>
       </div>
 

@@ -158,6 +158,14 @@ const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'
 
 const MIN_ADVANCE_HOURS = 4   // slots within this many hours from now are hidden
 
+// Fallback profile photo used by every template when a therapist has no image.
+export const DEFAULT_PROFILE_IMAGE = '/profiledemo.png'
+
+/** Returns the therapist's image, or the shared demo image if none is set. */
+export function resolveImage(image?: string | null): string {
+  return image && image.trim() !== '' ? image : DEFAULT_PROFILE_IMAGE
+}
+
 export function generateSlotsFromRanges(ranges: TimeRange[], durationMin: number): string[] {
   const slots: string[] = []
   for (const range of ranges) {
@@ -291,7 +299,7 @@ export const DEFAULT_CT2_CONTENT: Required<CT2Content> = {
     { number: '003', category: 'On relationships', title: 'Why repair matters more than rupture', excerpt: "Conflict isn't the threat to intimacy that we think it is. Unrepaired conflict is. A short piece on returning to each other.", readingTime: '5 min read', date: 'Mar 2026' },
   ],
   faq: [
-    { q: 'Do you offer a first consultation?', a: 'Yes — a 20-minute introductory call, complimentary, so we can both feel out whether we are the right fit. There is no obligation to continue after that conversation.' },
+    { q: 'Do you offer a first consultation?', a: 'Yes, a 20 minute introductory call, complimentary, so we can both feel out whether we are the right fit. There is no obligation to continue after that conversation.' },
     { q: 'Online or in-person sessions?', a: 'Both are available. Most clients work online for the practical flexibility it offers; some prefer the containment of an in-person room. We will choose what suits the work.' },
     { q: 'How long do people usually stay in therapy?', a: 'It varies. Some clients come for a focused 8–12 sessions around a specific theme. Others stay for longer, deeper work that unfolds over months or years. We will revisit this together every few months.' },
     { q: 'What are your fees, and do you offer concessions?', a: 'Standard fees are listed on the booking page. A limited number of reduced-fee slots are reserved each year for clients in genuine financial difficulty — please ask if relevant.' },

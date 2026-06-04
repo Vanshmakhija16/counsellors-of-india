@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { TherapistProfile } from '../templateUtils'
+import { resolveImage } from '../templateUtils'
 
 interface AboutProps { therapist: TherapistProfile }
 
@@ -38,11 +39,7 @@ export default function About({ therapist }: AboutProps) {
   // Photo card details
   const displayName = therapist.name ?? 'Your Name'
   
-const photoSrc =
-  therapist?.image?.trim()
-    ? therapist.image
-    : '/profiledemo.png'
-      // console.log('photoSrc:', photoSrc)
+const photoSrc = resolveImage(therapist?.image)
   const initials = therapist.initials ?? displayName
     .split(' ')
     .map((w: string) => w[0])

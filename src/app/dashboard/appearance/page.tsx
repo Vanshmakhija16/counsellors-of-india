@@ -185,7 +185,7 @@ export default function AppearancePage() {
                 <button onClick={() => router.push('/pricing?redirect=/dashboard/appearance')}
                   className="mt-1.5 w-full py-1.5 rounded-lg text-white text-[11px] font-bold transition hover:opacity-90"
                   style={{ background: color.primary }}>
-                  Upgrade — ₹1499/y →
+                  Upgrade — ₹0.9/y →
                 </button>
               )}
             </div>
