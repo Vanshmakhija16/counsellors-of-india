@@ -287,8 +287,8 @@ const QUOTE_ANIM_CSS = `
     width: 6px;
     height: 6px;
     border-radius: 50%;
-    background: rgba(212, 175, 55, 0.25);
-    border: 1px solid rgba(212, 175, 55, 0.35);
+    background: rgba(123, 110, 139, 0.4);
+    border: 1px solid #7B6E8B ;
     padding: 0;
     cursor: pointer;
     transition:

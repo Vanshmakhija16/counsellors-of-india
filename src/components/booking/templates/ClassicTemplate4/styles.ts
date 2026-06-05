@@ -26,6 +26,18 @@ export const ct4Styles = `
 
     --nav-h:       72px;
     --radius-sm:   2px;
+    --radius:      8px;    /* subtle radius for cards */
+    --radius-btn:  6px;    /* subtle radius for buttons */
+
+    /* #5 — one easing + duration system for all interaction */
+    --ease:        cubic-bezier(0.4, 0, 0.2, 1);
+    --dur:         0.3s;
+
+    /* #4 — elevation: soft layered shadows + a top inner-light that reads
+       as polished stone/glass on dark surfaces */
+    --shadow-1:    0 1px 2px rgba(0,0,0,0.4), 0 8px 24px -12px rgba(0,0,0,0.6);
+    --shadow-2:    0 2px 4px rgba(0,0,0,0.4), 0 24px 60px -28px rgba(0,0,0,0.7);
+    --edge-light:  inset 0 1px 0 rgba(255,255,255,0.045);
 
     background:  var(--void);
     color:       var(--platinum);
@@ -34,7 +46,58 @@ export const ct4Styles = `
     min-height:  100vh;
     overflow-x:  hidden;
     -webkit-font-smoothing: antialiased;
+    transition: background 0.5s ease, color 0.5s ease;
   }
+
+  /* ═══════════════════════════════════════
+     LIGHT THEME — "AMETHYST & PEARL"
+     Premium light counterpart to Obsidian Noir: soft lilac-pearl surfaces, a
+     dusty mauve / amethyst accent with a warm brass secondary, and deep
+     plum-ink text. Calm, dignified, introspective — purple reads as luxury +
+     emotional safety, on-brief for therapy. Only the token VALUES change;
+     every component reads the same var() names, so the accent (--gold) now
+     resolves to mauve everywhere. */
+  .ct4-root[data-theme='light'] {
+    /* Warm greige page — the warm neutral makes the cool mauve read rich,
+       not washed-out (warm/cool tension = the "expensive" look). */
+    --void:        #ECE7E1;   /* warm greige page */
+    --obsidian:    #E6E0D8;
+    --charcoal:    #E0D9D0;
+    --surface:     #F6F2EC;   /* cream raised card */
+    --surface-2:   #FBF8F3;
+    --border:      rgba(40,32,28,0.10);
+    --border-gold: rgba(107,91,126,0.34);   /* mauve-tinted hairline */
+
+    /* Accent (named --gold for legacy reasons) is now MAUVE / AMETHYST */
+    --gold:        #5A4A6E;   /* deep mauve — crisp for text/links */
+    --gold-light:  #6B5B7E;   /* the chosen dusty mauve — fills / hover */
+    --gold-muted:  rgba(107,91,126,0.55);
+    --gold-glow:   rgba(107,91,126,0.12);
+
+    /* Warm brass kept available as a quiet secondary */
+    --brass:       #B08A4F;
+
+    --platinum:    #241C2B;   /* deep plum-ink primary text */
+    --silver:      #756B66;   /* warm muted gray secondary */
+    --ghost:       rgba(36,28,43,0.5);
+
+    /* #4 — softer, longer, mauve-tinted shadows for the light surface */
+    --shadow-1:    0 1px 2px rgba(40,32,28,0.06), 0 10px 30px -14px rgba(60,48,70,0.22);
+    --shadow-2:    0 2px 6px rgba(40,32,28,0.07), 0 30px 70px -30px rgba(60,48,70,0.28);
+    --edge-light:  inset 0 1px 0 rgba(255,255,255,0.6);
+
+    background: var(--void);
+    color: var(--platinum);
+  }
+  /* Nav glass adapts to the greige surface */
+  .ct4-root[data-theme='light'] .ct4-nav { background: rgba(236,231,225,0.74); }
+  .ct4-root[data-theme='light'] .ct4-nav[data-scrolled='true'] {
+    background: rgba(236,231,225,0.96);
+    box-shadow: 0 1px 40px rgba(40,32,28,0.09), 0 0 0 0.5px rgba(107,91,126,0.16);
+  }
+  .ct4-root[data-theme='light'] .ct4-drawer { background: rgba(240,235,229,0.98); }
+  /* Marble overlay is meant for dark surfaces — mute it on light */
+  .ct4-root[data-theme='light'] .ct4-marble::before { opacity: 0; }
 
   /* ── Marble texture overlay on key sections ── */
   .ct4-marble::before {
@@ -77,8 +140,8 @@ export const ct4Styles = `
   }
   .ct4-nav-inner {
     max-width: 1400px; margin: 0 auto;
-    height: 100%; padding: 0 5.7rem;
-    display: flex; align-items: center; justify-content: space-between; gap: 2rem;
+    height: 100%; padding: 0 clamp(1.25rem, 4vw, 5.7rem);
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
   }
 
   /* Logo mark */
@@ -137,13 +200,38 @@ export const ct4Styles = `
     background: transparent; color: var(--gold);
     font-family: 'DM Mono', monospace;
     font-size: 9px; letter-spacing: 0.3em; text-transform: uppercase;
-    cursor: pointer; transition: all 0.3s ease;
+    border-radius: var(--radius-btn);
+    cursor: pointer; transition: all var(--dur) var(--ease);
   }
   @media (min-width: 560px) { .ct4-nav-cta { display: inline-flex; } }
   .ct4-nav-cta:hover {
     background: var(--gold); color: var(--void);
     box-shadow: 0 0 24px rgba(212,175,55,0.35);
   }
+
+  /* Right-actions cluster — sits hard-right (brand sits hard-left) */
+  .ct4-nav-actions { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+
+  /* Theme toggle */
+  .ct4-theme-toggle {
+    display: flex; align-items: center; justify-content: center;
+    width: 38px; height: 38px; flex-shrink: 0;
+    border: 1px solid var(--border-gold);
+    border-radius: 50%;
+    background: transparent;
+    color: var(--gold);
+    cursor: pointer;
+    transition: color 0.3s ease, border-color 0.3s ease, background 0.3s ease, transform 0.2s ease;
+  }
+  .ct4-theme-toggle:hover {
+    color: var(--gold-light);
+    border-color: var(--gold);
+    background: var(--gold-glow);
+    transform: translateY(-1px);
+  }
+  .ct4-theme-toggle:active { transform: scale(0.94); }
+  .ct4-theme-toggle svg { transition: transform 0.4s cubic-bezier(0.7,0,0.2,1); }
+  .ct4-theme-toggle:hover svg { transform: rotate(35deg); }
 
   /* Hamburger */
   .ct4-hamburger {
@@ -207,10 +295,12 @@ export const ct4Styles = `
   .ct4-sans  { font-family: 'DM Sans', system-ui, sans-serif; }
   .ct4-mono  { font-family: 'DM Mono', ui-monospace, monospace; }
 
+  /* #1 — eyebrow is a "whisper" accent: muted gold, not full strength,
+     so the loud accent is reserved for CTAs and the one italic emphasis. */
   .ct4-eyebrow {
     font-family: 'DM Mono', monospace;
     font-size: 10px; letter-spacing: 0.35em;
-    text-transform: uppercase; color: var(--gold);
+    text-transform: uppercase; color: var(--gold-muted);
   }
   .ct4-rule         { height: 0.5px; background: var(--border); }
   .ct4-rule-gold    { height: 0.5px; background: var(--gold-muted); }
@@ -481,6 +571,10 @@ export const ct4Styles = `
     border: 0.5px solid var(--border-gold);
     padding: 2rem 2.2rem;
     position: relative;
+    border-radius: var(--radius);
+    max-height:81vh;
+    overflow: hidden;
+    box-shadow: var(--shadow-1), var(--edge-light);
   }
   .ct4-spec-card::before {
     content: ''; position: absolute;
@@ -513,21 +607,23 @@ export const ct4Styles = `
     gap: 1px;
     background: var(--border);
     border: 0.5px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
   }
   @media (max-width: 768px) { .ct4-services-grid { grid-template-columns: 1fr; } }
   .ct4-service-card {
     background: var(--charcoal);
     padding: 2.5rem 2rem;
     position: relative; overflow: hidden;
-    transition: background 0.35s ease;
+    transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
   }
   .ct4-service-card::before {
     content: ''; position: absolute;
     inset: 0; opacity: 0;
     background: radial-gradient(ellipse at top left, var(--gold-glow) 0%, transparent 70%);
-    transition: opacity 0.4s ease;
+    transition: opacity 0.4s var(--ease);
   }
-  .ct4-service-card:hover { background: var(--surface); }
+  .ct4-service-card:hover { background: var(--surface); box-shadow: var(--shadow-2), var(--edge-light); transform: translateY(-2px); z-index: 1; }
   .ct4-service-card:hover::before { opacity: 1; }
   .ct4-service-number {
     font-family: 'Playfair Display', serif;
@@ -658,7 +754,8 @@ export const ct4Styles = `
     background: transparent; color: var(--silver);
     font-family: 'DM Mono', monospace;
     font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase;
-    cursor: pointer; transition: all 0.2s ease;
+    border-radius: var(--radius-btn);
+    cursor: pointer; transition: all var(--dur) var(--ease);
   }
   .ct4-day-chip:hover:not(.selected) { border-color: var(--gold-muted); color: var(--gold-muted); }
   .ct4-day-chip.selected {
@@ -673,7 +770,8 @@ export const ct4Styles = `
     background: transparent; color: var(--silver);
     font-family: 'DM Mono', monospace;
     font-size: 9.5px; letter-spacing: 0.12em;
-    cursor: pointer; transition: all 0.2s ease;
+    border-radius: var(--radius-btn);
+    cursor: pointer; transition: all var(--dur) var(--ease);
   }
   .ct4-time-chip:hover:not(.selected):not(:disabled) { border-color: var(--gold-muted); color: var(--gold-muted); }
   .ct4-time-chip.selected {
@@ -694,10 +792,15 @@ export const ct4Styles = `
 
   /* Booking card */
   .ct4-booking-card {
-    background: var(--charcoal);
+    // background: var(--charcoal);
+    background: var(--surface);
+
     border: 0.5px solid var(--border-gold);
     padding: 2.5rem 2.5rem;
     position: relative;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow-1), var(--edge-light);
   }
   .ct4-booking-card::before {
     content: ''; position: absolute;
@@ -759,12 +862,14 @@ export const ct4Styles = `
     font-family: 'DM Mono', monospace;
     font-size: 9.5px; letter-spacing: 0.28em; text-transform: uppercase;
     border: none; cursor: pointer;
-    transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+    border-radius: var(--radius-btn);
+    box-shadow: var(--shadow-1);
+    transition: background var(--dur) var(--ease), box-shadow var(--dur) var(--ease), transform var(--dur) var(--ease);
   }
   .ct4-btn-primary:hover {
     background: var(--gold-light);
-    box-shadow: 0 0 32px rgba(212,175,55,0.4);
-    transform: translateY(-1px);
+    box-shadow: 0 0 32px var(--gold-glow), var(--shadow-2);
+    transform: translateY(-2px);
   }
   .ct4-btn-ghost {
     display: inline-flex; align-items: center; gap: 10px;
@@ -772,7 +877,8 @@ export const ct4Styles = `
     font-family: 'DM Mono', monospace;
     font-size: 9.5px; letter-spacing: 0.28em; text-transform: uppercase;
     border: 0.5px solid var(--gold-muted); cursor: pointer;
-    transition: all 0.3s ease;
+    border-radius: var(--radius-btn);
+    transition: all var(--dur) var(--ease);
   }
   .ct4-btn-ghost:hover {
     background: var(--gold-glow); border-color: var(--gold);
@@ -808,4 +914,24 @@ export const ct4Styles = `
     to   { transform: scaleX(1); }
   }
   .ct4-draw { transform-origin: left; animation: ct4-draw 1.6s cubic-bezier(0.7, 0, 0.2, 1) 0.5s both; }
+
+  /* ═══════════════════════════════════════
+     #5 — INTERACTION POLISH: focus + reduced motion
+  ═══════════════════════════════════════ */
+  /* Keyboard focus rings in the accent colour — accessible AND considered.
+     (Mouse clicks don't show it; only keyboard nav does.) */
+  .ct4-root :focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--void), 0 0 0 4px var(--gold-muted);
+    border-radius: 2px;
+  }
+  /* Respect users who prefer less motion — kill transitions/animations. */
+  @media (prefers-reduced-motion: reduce) {
+    .ct4-root *, .ct4-root *::before, .ct4-root *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 `

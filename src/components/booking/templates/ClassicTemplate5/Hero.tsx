@@ -20,7 +20,7 @@ export default function Hero({ therapist, loaded, heroRef }: HeroProps) {
   }, [heroRef])
 
   const name    = therapist.name ?? ''
-  const cred    = therapist.credentials || 'Licensed Psychologist'
+  const cred    = therapist.credentials || 'Clinical Psychologist'
   const city    = therapist.city || 'India'
   const bio     = therapist.bio || 'Helping individuals navigate life complexities with compassion, evidence-based care, and a deeply human approach.'
   const exp     = therapist.experience ?? 8
@@ -48,12 +48,12 @@ export default function Hero({ therapist, loaded, heroRef }: HeroProps) {
           className={loaded ? 'ct5-anim-slide-r' : ''}
           style={{ ...delay(0.05), marginBottom: '1.8rem' }}
         >
-          <div className="ct5-hero-tag">
+          {/* <div className="ct5-hero-tag">
             <span className="ct5-hero-tag-dot" />
             <span className="ct5-hero-tag-text">
               Licensed Therapist &nbsp;·&nbsp; {city}
             </span>
-          </div>
+          </div> */}
         </div>
 
         {/* Name — editorial split */}
@@ -79,10 +79,10 @@ export default function Hero({ therapist, loaded, heroRef }: HeroProps) {
         </p>
 
         {/* Divider */}
-        <div
+        {/* <div
           className={`ct5-hero-divider ${loaded ? 'ct5-anim-fade-in' : ''}`}
           style={delay(0.35)}
-        />
+        /> */}
 
         {/* Bio */}
         <p
@@ -141,11 +141,11 @@ export default function Hero({ therapist, loaded, heroRef }: HeroProps) {
             alt={name}
             className="ct5-hero-photo"
           />
-          <div className="ct5-hero-photo-overlay" />
+          {/* <div className="ct5-hero-photo-overlay" /> */}
         </>
 
         {/* Floating stat cards — desktop only */}
-        <div className="ct5-hero-stat-strip">
+        {/* <div className="ct5-hero-stat-strip">
           {[
             { num: `${exp}+`,    lbl: 'Years in Practice'  },
             { num: `${reviews}+`, lbl: 'Sessions Completed' },
@@ -156,7 +156,7 @@ export default function Hero({ therapist, loaded, heroRef }: HeroProps) {
               <span className="ct5-hero-stat-lbl">{s.lbl}</span>
             </div>
           ))}
-        </div>
+        </div> */}
       </div>
     </section>
   )

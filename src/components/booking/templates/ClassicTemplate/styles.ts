@@ -94,7 +94,10 @@ body { margin: 0; font-family: var(--sans); background: var(--sand); }
 }
 .ct-nav__links { display: flex; align-items: center; gap: 36px; justify-self: start; }
 .ct-nav__logo { font-family: var(--serif); font-size: 20px; color: var(--bark); letter-spacing: -.02em; justify-self: center; }
-.ct-nav__right { display: flex; justify-content: flex-end; }
+.ct-nav__right { display: flex; align-items: center; justify-content: flex-end; gap: 14px; }
+.ct-nav__burger { display: none; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: 50%; border: 1px solid rgba(26,26,24,.18); background: rgba(255,253,248,.55); color: var(--bark); cursor: pointer; backdrop-filter: blur(6px); transition: background .25s, border-color .25s, transform .2s; }
+.ct-nav__burger:hover { background: rgba(255,253,248,.9); transform: translateY(-1px); }
+.ct-nav__burger:active { transform: scale(.95); }
 .ct-nav__link {
   font-family: var(--sans); font-size: 12px; letter-spacing: .18em; text-transform: uppercase;
   color: var(--bark-mid); background: none; border: none; cursor: pointer; padding: 4px 0; position: relative; transition: color .25s;
@@ -111,6 +114,67 @@ body { margin: 0; font-family: var(--sans); background: var(--sand); }
 .ct-nav__cta::before { content: ""; position: absolute; left: 0; bottom: 0; width: 100%; height: 0%; background: black; transition: height .35s ease; z-index: -1; }
 .ct-nav__cta:hover::before { height: 100%; }
 .ct-nav__cta:hover { color: white; transform: translateY(-1px); }
+
+/* MOBILE SIDEBAR */
+.ct-sidebar-scrim {
+  position: fixed; inset: 0; z-index: 110;
+  background: rgba(26,26,24,.5); backdrop-filter: blur(3px);
+  opacity: 0; visibility: hidden; transition: opacity .35s ease, visibility .35s ease;
+}
+.ct-sidebar-scrim--open { opacity: 1; visibility: visible; }
+.ct-sidebar {
+  position: fixed; top: 0; right: 0; z-index: 120;
+  height: 100%; height: 100dvh;
+  width: min(86vw, 340px);
+  display: flex; flex-direction: column;
+  background: linear-gradient(180deg, #f7f1e7 0%, #efe7d6 100%);
+  border-left: 1px solid rgba(181,156,132,.4);
+  box-shadow: -30px 0 60px -30px rgba(80,60,40,.45);
+  transform: translateX(100%);
+  transition: transform .42s var(--ease-out);
+  padding: max(20px, env(safe-area-inset-top)) 0 max(24px, env(safe-area-inset-bottom));
+  -webkit-overflow-scrolling: touch;
+}
+.ct-sidebar--open { transform: translateX(0); }
+.ct-sidebar__head { display: flex; align-items: center; justify-content: space-between; padding: 8px 24px 24px; border-bottom: 1px solid rgba(181,156,132,.3); }
+.ct-sidebar__close { display: flex; align-items: center; justify-content: center; width: 42px; height: 42px; border-radius: 50%; border: 1px solid rgba(26,26,24,.18); background: rgba(255,253,248,.6); color: var(--bark); cursor: pointer; transition: background .25s, transform .2s; }
+.ct-sidebar__close:hover { background: rgba(255,253,248,1); }
+.ct-sidebar__close:active { transform: scale(.95); }
+.ct-sidebar__links { flex: 1; display: flex; flex-direction: column; padding: 18px 12px; overflow-y: auto; }
+.ct-sidebar__link {
+  display: flex; align-items: center;
+  font-family: var(--serif); font-size: 26px; letter-spacing: -.01em; color: var(--bark);
+  background: none; border: none; cursor: pointer; text-align: left;
+  padding: 16px 20px; border-radius: 14px;
+  opacity: 0; transform: translateX(16px);
+  transition: opacity .4s var(--ease-out), transform .4s var(--ease-out), background .2s ease;
+}
+.ct-sidebar--open .ct-sidebar__link { opacity: 1; transform: translateX(0); }
+.ct-sidebar__link:hover, .ct-sidebar__link:active { background: rgba(181,107,80,.1); }
+.ct-sidebar__foot { padding: 20px 24px 4px; border-top: 1px solid rgba(181,156,132,.3); }
+.ct-sidebar__cta {
+  width: 100%; display: flex; align-items: center; justify-content: center;
+  font-family: var(--sans); font-size: 12px; letter-spacing: .24em; text-transform: uppercase;
+  color: #f5efe8; background: var(--bark); border: 1px solid var(--bark); border-radius: 100px;
+  padding: 16px 22px; cursor: pointer; transition: background .3s ease, transform .2s ease;
+}
+.ct-sidebar__cta:hover { background: var(--brand); }
+.ct-sidebar__cta:active { transform: scale(.98); }
+
+/* Below 900px: hide desktop links + CTA, show the hamburger → sidebar.
+   Switch nav to a flex row so brand sits hard-left and the burger
+   sits hard-right (flush to the screen edge). */
+@media (max-width: 900px) {
+  .ct-nav { height: 72px; display: flex; align-items: center; justify-content: space-between; }
+  .ct-nav__links { display: none; }
+  .ct-nav__cta { display: none; }
+  .ct-nav__right { flex: 0 0 auto; gap: 0; }
+  .ct-nav__burger { display: flex; }
+}
+@media (min-width: 901px) {
+  /* Desktop never shows the sidebar layer, even if state leaks. */
+  .ct-sidebar, .ct-sidebar-scrim { display: none; }
+}
 
 /* HERO */
 .ct-hero {
@@ -329,22 +393,22 @@ body { margin: 0; font-family: var(--sans); background: var(--sand); }
 .ct-svc-card__cta:hover svg { transform: translateX(4px); }
 
 /* CAROUSEL */
-.ct-carousel-section { background: var(--sand); padding: 80px 8px; }
+.ct-carousel-section { background: var(--sand); padding: 64px 8px; }
 .ct-carousel-section__inner { margin: 0 auto; }
-.ct-carousel-section__label { margin-bottom: 32px; }
+.ct-carousel-section__label { margin-bottom: 28px; }
 .ct-carousel-wrap { display: flex; align-items: center; gap: 16px; }
-.ct-carousel-arrow { flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid #c9b99f; background: white; color: var(--bark-mid); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background .25s, color .25s, border-color .25s, transform .2s; z-index: 10; }
+.ct-carousel-arrow { flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; border: 1.5px solid #c9b99f; background: white; color: var(--bark-mid); display: flex; align-items: center; justify-content: center; cursor: pointer; transition: background .25s, color .25s, border-color .25s, transform .2s; z-index: 10; }
 .ct-carousel-arrow:hover { background: var(--brand); color: white; border-color: var(--brand); transform: scale(1.08); }
 .ct-carousel-viewport { flex: 1; min-width: 0; overflow: hidden; border-radius: 24px; }
-.ct-carousel-slide { min-height: 380px; border-radius: 20px; padding: 40px 48px; position: relative; overflow: hidden; transition: opacity .38s ease, transform .38s var(--ease-out); }
+.ct-carousel-slide { min-height: 300px; border-radius: 20px; padding: 34px 40px; position: relative; overflow: hidden; transition: opacity .38s ease, transform .38s var(--ease-out); }
 .ct-carousel-slide--idle { opacity: 1; transform: translateX(0); }
 .ct-carousel-slide--left { opacity: 0; transform: translateX(-40px); }
 .ct-carousel-slide--right { opacity: 0; transform: translateX(40px); }
-.ct-slide-tag { display: inline-flex; align-items: center; font-family: var(--sans); font-size: 10px; letter-spacing: .3em; text-transform: uppercase; border: 1px solid; border-radius: 100px; padding: 5px 14px; margin-bottom: 36px; }
+.ct-slide-tag { display: inline-flex; align-items: center; font-family: var(--sans); font-size: 10px; letter-spacing: .3em; text-transform: uppercase; border: 1px solid; border-radius: 100px; padding: 5px 14px; margin-bottom: 28px; }
 .ct-slide-ring { position: absolute; right: -80px; bottom: -80px; width: 280px; height: 280px; border-radius: 50%; border: 1.5px solid; pointer-events: none; }
 .ct-slide-quote { max-width: 640px; }
-.ct-slide-quote__mark { font-family: var(--serif); font-size: 100px; line-height: .7; display: block; margin-bottom: 4px; }
-.ct-slide-quote__text { font-family: var(--serif); font-size: clamp(1.5rem,2.4vw,2.2rem); line-height: 1.35; margin: 0 0 28px; font-style: italic; font-weight: 400; }
+.ct-slide-quote__mark { font-family: var(--serif); font-size: 84px; line-height: .7; display: block; margin-bottom: 4px; }
+.ct-slide-quote__text { font-family: var(--serif); font-size: clamp(1.35rem,2.2vw,2rem); line-height: 1.35; margin: 0 0 24px; font-style: italic; font-weight: 400; }
 .ct-slide-quote__attr { display: flex; flex-direction: column; gap: 4px; font-family: var(--sans); font-size: 14px; }
 .ct-slide-quote__sub { color: rgba(240,235,228,.5); font-size: 12px; letter-spacing: .1em; }
 .ct-slide-stats__headline { font-family: var(--serif); font-size: clamp(2rem,3vw,3rem); font-weight: 400; margin: 0 0 36px; }
@@ -371,6 +435,47 @@ body { margin: 0; font-family: var(--sans); background: var(--sand); }
 .ct-carousel-dots { display: flex; justify-content: center; gap: 10px; margin-top: 24px; }
 .ct-carousel-dot { width: 6px; height: 6px; border-radius: 50%; border: none; background: #c9b99f; cursor: pointer; transition: background .25s, transform .25s, width .25s; padding: 0; }
 .ct-carousel-dot--active { background: var(--brand); width: 20px; border-radius: 100px; }
+
+/* Carousel — tablet & down */
+@media (max-width: 768px) {
+  .ct-carousel-section { padding: 48px 14px; }
+  /* Full-width banner: side arrows leave the row and move to the
+     bottom-right, so the slide gets the whole width. */
+  .ct-carousel-wrap { position: relative; display: block; }
+  .ct-carousel-viewport { width: 100%; }
+  .ct-carousel-arrow {
+    position: absolute; bottom: -64px; width: 42px; height: 42px;
+    box-shadow: 0 6px 16px -6px rgba(80,60,40,.35); z-index: 12;
+  }
+  .ct-carousel-arrow--left  { right: 56px; }
+  .ct-carousel-arrow--right { right: 4px; }
+  /* Dots sit to the left so they don't collide with the arrows */
+  .ct-carousel-dots { justify-content: flex-start; margin-top: 20px; min-height: 42px; align-items: center; }
+  .ct-carousel-slide { min-height: 248px; padding: 28px 26px; border-radius: 16px; }
+  .ct-slide-tag { margin-bottom: 20px; }
+  /* Centre the quote slide ("Guiding Philosophy" etc.) on mobile.
+     The tag pill and the quote block are siblings inside the slide,
+     so we centre them via the slide's own flex/align context. */
+  .ct-carousel-slide:has(.ct-slide-quote) { display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; }
+  .ct-carousel-slide:has(.ct-slide-quote) .ct-slide-tag { align-self: center; }
+  .ct-slide-quote { max-width: 100%; }
+  .ct-slide-quote__attr { align-items: center; }
+  .ct-slide-quote__mark { font-size: 60px; }
+  .ct-slide-stats__grid { grid-template-columns: 1fr; gap: 16px; }
+  .ct-slide-stat-item__val { font-size: 34px; }
+  .ct-slide-process__steps { gap: 16px; }
+  .ct-slide-ring { width: 200px; height: 200px; right: -60px; bottom: -60px; }
+}
+/* Carousel — small phones */
+@media (max-width: 480px) {
+  .ct-carousel-arrow { width: 40px; height: 40px; bottom: -60px; }
+  .ct-carousel-arrow--left  { right: 50px; }
+  .ct-carousel-arrow--right { right: 2px; }
+  .ct-carousel-dots { min-height: 40px; }
+  .ct-carousel-slide { min-height: 220px; padding: 24px 20px; }
+  .ct-slide-quote__mark { font-size: 48px; }
+  .ct-slide-stats__headline, .ct-slide-process__headline, .ct-slide-specialties__headline { font-size: 1.6rem; }
+}
 
 /* BOOKING */
 .ct-booking { position: relative; overflow: hidden; background: var(--sand-mid); padding: 120px 48px; }
@@ -431,15 +536,65 @@ body { margin: 0; font-family: var(--sans); background: var(--sand); }
 .ct-footer__contact-item { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #6f655c; margin: 0; }
 .ct-footer__bottom { position: relative; z-index: 10; max-width: 1200px; margin: 28px auto 0; display: flex; justify-content: space-between; font-size: 12px; color: #7c736b; flex-wrap: wrap; gap: 10px; }
 
+/* ───────────────────────────────────────────────────────────
+   RESPONSIVE — tablet, mobile, foldables (Z Fold / Z Flip),
+   small phones. Sections are fluid; these tighten spacing and
+   collapse multi-column grids so nothing overflows or clips.
+   ─────────────────────────────────────────────────────────── */
 
+/* Tablet & below (≤900px) ── section padding + grids */
+@media (max-width: 900px) {
+  .ct-about { padding: 72px 28px 88px; }
+  .ct-about__big-quote { font-size: 84px; }
+  .ct-svc { padding: 96px 28px 110px; }
+  .ct-svc__head { grid-template-columns: 1fr; gap: 28px; padding-bottom: 48px; }
+  .ct-svc__arrow { display: none; }              /* swipe on touch; arrows are pointer-only */
+  .ct-svc__carousel::before, .ct-svc__carousel::after { width: 36px; }
+  .ct-booking { padding: 88px 28px; }
+}
 
+/* Phones (≤640px) ── single-column, tighter rhythm */
+@media (max-width: 640px) {
+  .ct-about { padding: 56px 20px 68px; }
+  .ct-about__big-quote { font-size: 64px; }
+  .ct-pillars { grid-template-columns: 1fr; gap: 22px; }
+  .ct-about__strip { flex-direction: column; align-items: flex-start; }
 
+  .ct-svc { padding: 72px 18px 84px; }
+  .ct-svc-card { flex: 0 0 84vw; max-width: 360px; padding: 26px 22px 24px; }
+  .ct-svc-card__meta { grid-template-columns: 1fr 1fr; gap: 14px; }
+  .ct-svc-card__title { font-size: 24px; }
 
+  /* NB: this template's Booking section is built with Tailwind utility
+     classes (not ct-booking__*), so its responsive tweaks live in
+     Booking.tsx, not here. */
 
+  .ct-footer { padding: 64px 20px 32px; }
+  .ct-footer__name { font-size: 34px; }
+  .ct-footer__bottom { flex-direction: column; align-items: flex-start; }
+}
 
+/* Small / narrow phones & foldable covers (≤380px, e.g. Z Flip closed, Z Fold front) */
+@media (max-width: 380px) {
+  .ct-nav { padding: 0 16px; }
+  .ct-about { padding: 48px 16px 60px; }
+  .ct-svc { padding: 60px 14px 72px; }
+  .ct-svc-card { flex: 0 0 88vw; padding: 22px 18px 20px; }
+  .ct-svc-card__meta { grid-template-columns: 1fr; gap: 12px; }
+  .ct-sidebar { width: 100vw; }                  /* full-width drawer on the narrowest screens */
+}
 
+/* Landscape phones / short viewports (Z Flip unfolded landscape, etc.) */
+@media (max-height: 480px) and (orientation: landscape) {
+  .ct-sidebar__link { font-size: 20px; padding: 11px 20px; }
+  .ct-sidebar__head { padding-bottom: 14px; }
+}
 
-
-
+/* Honour reduced-motion: disable the floating / spinning decoration */
+@media (prefers-reduced-motion: reduce) {
+  .ct-sidebar, .ct-sidebar__link, .ct-sidebar-scrim,
+  .ct-carousel-slide, .ct-hero__card, .ct-hero__accolade,
+  .ct-hero__seal svg, .ct-hero__ring { animation: none !important; transition-duration: .01ms !important; }
+}
 
 `

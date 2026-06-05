@@ -53,7 +53,9 @@
       "PowerShell(Test-NetConnection -ComputerName ukelfqbwngyabmfyxddo.supabase.co -Port 443 -InformationLevel Detailed -WarningAction SilentlyContinue)",
       "PowerShell($r = Test-NetConnection -ComputerName ukelfqbwngyabmfyxddo.supabase.co -Port 443 -WarningAction SilentlyContinue; if \\($r.TcpTestSucceeded\\) { \"443 OPEN - Supabase reachable now\" } else { \"443 STILL BLOCKED - VPN/firewall still in the way\" })",
       "Bash(grep -ivE \"/\\\\*|\\\\*/|//\")",
-      "Bash(npx next *)"
+      "Bash(npx next *)",
+      "Bash(xxd src/app/favicon.ico)",
+      "Bash(grep -n '^\\\\s*`$' src/components/booking/templates/ClassicTemplate4/styles.ts)"
     ],
     "additionalDirectories": [
       "\\tmp",

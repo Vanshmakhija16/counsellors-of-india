@@ -1,10 +1,14 @@
 // ClassicTemplate3 — Serene Light · Modern Wellness
 // Design: Fresh, breathable light theme with sage-teal accents, soft lavender highlights
-// Fonts: Playfair Display (editorial serif) + Plus Jakarta Sans (clean modern) + JetBrains Mono (data/labels)
+// Fonts: Fraunces (characterful display serif) + Hanken Grotesk (humanist body/UI) + JetBrains Mono (data/labels)
 // Palette: Soft white base, sage green primary, warm peach accent, slate text
 
 export const ct3Styles = `
-  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Plus+Jakarta+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@300;400;500&display=swap');
+  /* Premium type system:
+       • Fraunces        — characterful "old-style" display serif (headings) → rich, editorial, crafted
+       • Hanken Grotesk  — warm humanist grotesque (body/UI) → distinctly NOT Inter, friendly + modern
+       • JetBrains Mono  — technical mono (eyebrows, data labels, folios) */
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400;1,9..144,500&family=Hanken+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap');
 
   /* ═══════════════════════════════════════════════════════════
      DESIGN TOKENS — SERENE LIGHT
@@ -32,20 +36,26 @@ export const ct3Styles = `
     --nav-h: 72px;
     background:              var(--bg-base);
     color:                   var(--ink);
-    font-family:             'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    font-family:             'Hanken Grotesk', system-ui, -apple-system, sans-serif;
     font-weight:             400;
+    /* dvh = dynamic viewport height: stops the iOS/Android URL-bar jump.
+       100vh kept as a fallback for browsers without dvh support. */
     min-height:              100vh;
+    min-height:              100dvh;
     overflow-x:              hidden;
+    /* Shared horizontal gutter — every section/nav uses this so left & right
+       spacing is identical and consistent across all breakpoints. */
+    --gutter: clamp(1.5rem, 5vw, 4rem);
     -webkit-font-smoothing:  antialiased;
     -moz-osx-font-smoothing: grayscale;
     text-rendering:          optimizeLegibility;
   }
 
   /* ═══════════════════════════════════════════════════════════ TYPOGRAPHY */
-  .ct3-display { font-family: 'Playfair Display', Georgia, serif; font-weight: 500; letter-spacing: -0.02em; }
-  .ct3-display-italic { font-family: 'Playfair Display', Georgia, serif; font-style: italic; font-weight: 400; }
-  .ct3-serif { font-family: 'Playfair Display', Georgia, serif; }
-  .ct3-sans  { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+  .ct3-display { font-family: 'Fraunces', Georgia, serif; font-weight: 500; letter-spacing: -0.02em; }
+  .ct3-display-italic { font-family: 'Fraunces', Georgia, serif; font-style: italic; font-weight: 400; }
+  .ct3-serif { font-family: 'Fraunces', Georgia, serif; }
+  .ct3-sans  { font-family: 'Hanken Grotesk', system-ui, sans-serif; }
   .ct3-mono  { font-family: 'JetBrains Mono', 'Courier New', monospace; }
   .ct3-eyebrow {
     font-family: 'JetBrains Mono', monospace;
@@ -87,7 +97,9 @@ export const ct3Styles = `
     max-width: 100%;
     height: 100%;
     display: flex; align-items: center; justify-content: space-between;
-    padding: 0 clamp(1.5rem, 4vw, 3rem);
+    /* Match the section gutter, plus respect notch / rounded-corner safe areas */
+    padding-left: max(var(--gutter), env(safe-area-inset-left));
+    padding-right: max(var(--gutter), env(safe-area-inset-right));
     gap: 1.5rem;
     box-sizing: border-box;
   }
@@ -98,18 +110,18 @@ export const ct3Styles = `
   .ct3-nav-monogram {
     width: 40px; height: 40px; border-radius: 10px;
     background: var(--sage); display: flex; align-items: center; justify-content: center;
-    font-family: 'Playfair Display', serif; font-size: 17px; font-weight: 500; color: #fff;
+    font-family: 'Fraunces', serif; font-size: 17px; font-weight: 500; color: #fff;
     transition: background 0.3s ease, transform 0.2s ease;
     box-shadow: 0 4px 12px rgba(61,122,106,0.25);
   }
   .ct3-nav-monogram:hover { background: var(--sage-light); transform: scale(1.05); }
-  .ct3-nav-label { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
+  .ct3-nav-label { font-family: 'Hanken Grotesk', sans-serif; font-size: 13px; font-weight: 600; color: var(--ink); letter-spacing: -0.01em; }
   .ct3-nav-label-sub { display: block; font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.18em; color: var(--ink-3); text-transform: uppercase; margin-top: 1px; }
   .ct3-nav-links { display: none; align-items: center; gap: 4px; }
   @media (min-width: 820px) { .ct3-nav-links { display: flex; } }
   .ct3-nav-link {
     position: relative; background: none; border: none; cursor: pointer;
-    font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 500;
+    font-family: 'Hanken Grotesk', sans-serif; font-size: 13px; font-weight: 500;
     letter-spacing: -0.01em; color: var(--ink-3); padding: 8px 14px; border-radius: 8px;
     transition: color 0.2s ease, background 0.2s ease;
   }
@@ -117,13 +129,23 @@ export const ct3Styles = `
   .ct3-nav-link.active { color: var(--sage); background: var(--sage-pale); }
   .ct3-nav-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
   .ct3-nav-cta { display: none; align-items: center; gap: 8px; padding: 10px 22px !important; }
-  @media (min-width: 560px) { .ct3-nav-cta { display: inline-flex !important; } }
+  /* Reserve appears in the navbar only on desktop (≥820px); below that it
+     moves into the drawer so it never crowds the hamburger. */
+  @media (min-width: 820px) { .ct3-nav-cta { display: inline-flex !important; } }
+  /* Drawer Reserve — full-width, generous tap target */
+  .ct3-drawer-cta {
+    display: flex; align-items: center; justify-content: center;
+    width: 100%; min-height: 52px; margin-top: 1.25rem; border-radius: 14px;
+    font-family: 'Hanken Grotesk', sans-serif; font-size: 15px; font-weight: 600;
+  }
+  @media (min-width: 820px) { .ct3-drawer-cta { display: none; } }
   .ct3-hamburger {
-    display: flex; flex-direction: column; justify-content: center;
-    gap: 5px; width: 32px; height: 32px; background: var(--bg-alt);
-    border: none; cursor: pointer; padding: 6px; border-radius: 8px;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    gap: 5px; width: 44px; height: 44px; background: var(--bg-alt);
+    border: none; cursor: pointer; padding: 11px; border-radius: 12px;
     transition: background 0.2s ease;
   }
+  .ct3-ham-bar { width: 22px; }
   @media (min-width: 820px) { .ct3-hamburger { display: none; } }
   .ct3-hamburger:hover { background: var(--sage-pale); }
   .ct3-ham-bar { display: block; width: 100%; height: 1.5px; background: var(--ink); transition: transform 0.3s ease, opacity 0.3s ease; transform-origin: center; border-radius: 2px; }
@@ -142,63 +164,48 @@ export const ct3Styles = `
     display: flex; align-items: center; gap: 16px; width: 100%;
     background: none; border: none; border-bottom: 1px solid var(--rule);
     cursor: pointer; padding: 16px 0;
-    font-family: 'Plus Jakarta Sans', sans-serif; font-size: 20px; font-weight: 600;
+    font-family: 'Hanken Grotesk', sans-serif; font-size: 20px; font-weight: 600;
     color: var(--ink); text-align: left; transition: color 0.2s ease, padding-left 0.2s ease;
   }
   .ct3-drawer-link:hover, .ct3-drawer-link.active { color: var(--sage); padding-left: 10px; }
   .ct3-drawer-num { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.2em; color: var(--sage); }
 
-  /* ═══════════════════════════════════════════════════════════ HERO */
-  .ct3-hero { min-height: calc(100vh - var(--nav-h)); display: grid; grid-template-columns: 1fr 1fr; position: relative; overflow: hidden; background: var(--bg-base); }
-  @media (max-width: 820px) { .ct3-hero { grid-template-columns: 1fr; grid-template-rows: 55vw 1fr; } }
-  .ct3-hero-photo { position: relative; overflow: hidden; background: var(--bg-alt); }
-.ct3-hero-photo img {
-  position: absolute;
-  inset: 0;
-
-  width: 100%;
-  height: 100%;
-
-  object-fit: cover;
-  object-position: center top;
-
-  transform: scale(0.92);
-
-  transition:
-    transform 0.7s ease,
-    filter 0.4s ease;
-}  .ct3-hero-photo::after { content: ''; position: absolute; inset: 0; background: linear-gradient(to right, transparent 70%, var(--bg-base) 100%); pointer-events: none; }
-  @media (max-width: 820px) { .ct3-hero-photo::after { background: linear-gradient(to bottom, transparent 70%, var(--bg-base) 100%); } }
+  /* ═══════════════════════════════════════════════════════════ HERO
+     NOTE: the live hero layout is defined later (search ".ct3-hero {" near
+     the LEFT/RIGHT section). The earlier duplicate .ct3-hero rule + its
+     820px grid override were removed — they conflicted with the live one
+     and caused the layout to fight itself across breakpoints. */
   .ct3-hero-initials { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; }
-  .ct3-hero-initials-text { font-family: 'Playfair Display', serif; font-size: clamp(80px, 14vw, 160px); font-weight: 400; font-style: italic; color: var(--sage); opacity: 0.15; user-select: none; line-height: 1; }
+  .ct3-hero-initials-text { font-family: 'Fraunces', serif; font-size: clamp(80px, 14vw, 160px); font-weight: 400; font-style: italic; color: var(--sage); opacity: 0.15; user-select: none; line-height: 1; }
   .ct3-hero-badge { position: absolute; top: 2rem; right: 2rem; z-index: 3; background: var(--bg-card); border-radius: 14px; border: 1px solid var(--rule-strong); padding: 12px 18px; box-shadow: 0 8px 32px rgba(28,43,38,0.1); max-width: 210px; }
   @media (max-width: 820px) { .ct3-hero-badge { top: 1rem; right: 1rem; } }
   .ct3-hero-badge-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--sage); display: block; margin-bottom: 5px; }
-  .ct3-hero-badge-text { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 12px; color: var(--ink); line-height: 1.45; font-weight: 500; }
+  .ct3-hero-badge-text { font-family: 'Hanken Grotesk', sans-serif; font-size: 12px; color: var(--ink); line-height: 1.45; font-weight: 500; }
   .ct3-hero-text { position: relative; display: flex; flex-direction: column; justify-content: center; padding: clamp(2.5rem, 7vh, 5rem) clamp(2rem, 6vw, 5.5rem); background: var(--bg-base); }
   .ct3-hero-folio { position: absolute; top: clamp(1.2rem, 2.5vh, 1.8rem); left: clamp(2rem, 6vw, 5.5rem); font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--ink-4); }
-  .ct3-hero-name { font-family: 'Playfair Display', Georgia, serif; font-size: clamp(40px, 5.5vw, 72px); font-weight: 500; line-height: 1.06; letter-spacing: -0.025em; color: var(--ink); margin: 0; }
+  .ct3-hero-name { font-family: 'Fraunces', Georgia, serif; font-size: clamp(40px, 5.5vw, 72px); font-weight: 500; line-height: 1.06; letter-spacing: -0.025em; color: var(--ink); margin: 0; }
   .ct3-hero-name em { font-style: italic; color: var(--sage); }
-  .ct3-hero-cred { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(13px, 1.3vw, 16px); font-weight: 400; color: var(--ink-3); line-height: 1.5; margin: 0; }
+  .ct3-hero-cred { font-family: 'Hanken Grotesk', sans-serif; font-size: clamp(13px, 1.3vw, 16px); font-weight: 400; color: var(--ink-3); line-height: 1.5; margin: 0; }
   .ct3-hero-ornament { display: flex; align-items: center; gap: 12px; margin: clamp(1.4rem, 3vh, 2rem) 0; }
   .ct3-hero-orn-line { height: 1px; background: var(--sage-border); flex: 1; max-width: 56px; }
   .ct3-hero-orn-diamond { width: 6px; height: 6px; background: var(--sage); transform: rotate(45deg); flex-shrink: 0; }
-  .ct3-hero-tagline { font-family: 'Playfair Display', serif; font-size: clamp(17px, 1.85vw, 24px); font-weight: 400; line-height: 1.55; color: var(--ink); max-width: 44ch; margin: 0; }
-  .ct3-hero-bio { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(14px, 1.1vw, 15.5px); font-weight: 400; line-height: 1.8; color: var(--ink-2); max-width: 50ch; margin: 0; }
+  .ct3-hero-tagline { font-family: 'Fraunces', serif; font-size: clamp(17px, 1.85vw, 24px); font-weight: 400; line-height: 1.55; color: var(--ink); max-width: 44ch; margin: 0; }
+  .ct3-hero-bio { font-family: 'Hanken Grotesk', sans-serif; font-size: clamp(14px, 1.1vw, 15.5px); font-weight: 400; line-height: 1.8; color: var(--ink-2); max-width: 50ch; margin: 0; }
   .ct3-hero-stats { display: flex; gap: clamp(1.5rem, 4vw, 3rem); flex-wrap: wrap; padding-top: 1.5rem; border-top: 1px solid var(--rule); margin-top: clamp(1.4rem, 3vh, 2.2rem); }
-  .ct3-hero-stat-num { font-family: 'Playfair Display', serif; font-size: clamp(24px, 2.8vw, 34px); font-weight: 500; color: var(--sage); line-height: 1; display: block; }
+  .ct3-hero-stat-num { font-family: 'Fraunces', serif; font-size: clamp(24px, 2.8vw, 34px); font-weight: 500; color: var(--sage); line-height: 1; display: block; }
   .ct3-hero-stat-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); display: block; margin-top: 5px; }
 
   /* ═══════════════════════════════════════════════════════════ SECTION SHELL */
 .ct3-section {
   position: relative;
-  padding: clamp(4.5rem, 10vh, 8rem) clamp(1.5rem, 5vw, 4rem);
+  /* Symmetric left/right gutter via the shared token */
+  padding: clamp(4.5rem, 10vh, 8rem) var(--gutter);
 
   border-bottom: 1px solid var(--rule-strong);
 }  .ct3-container { max-width: 1240px; margin: 0 auto; }
   .ct3-folio-header { display: flex; align-items: flex-end; justify-content: space-between; padding-bottom: 2rem; margin-bottom: clamp(2.5rem, 5vh, 4rem); border-bottom: 1px solid var(--rule-strong); }
   .ct3-folio-pg { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.26em; text-transform: uppercase; color: var(--ink-4); }
-  .ct3-folio-title { font-family: 'monospace', Georgia, serif; font-size: clamp(36px, 1vw, 68px); font-weight: 500; line-height: 1.06; letter-spacing: -0.025em; color: var(--ink); margin: 0.5rem 0 0; }
+  .ct3-folio-title { font-family: 'Fraunces', Georgia, serif; font-size: clamp(36px, 5vw, 68px); font-weight: 500; line-height: 1.06; letter-spacing: -0.025em; color: var(--ink); margin: 0.5rem 0 0; }
   .ct3-folio-title em { font-style: italic; color: var(--sage); }
 
   /* ═══════════════════════════════════════════════════════════ TICKER */
@@ -213,14 +220,14 @@ export const ct3Styles = `
   .ct3-about { background: var(--bg-base); }
   .ct3-about-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 4rem 6rem; align-items: start; }
   @media (max-width: 900px) { .ct3-about-grid { grid-template-columns: 1fr; gap: 3rem; } }
-  .ct3-drop-cap { float: left; font-family: 'Playfair Display', serif; font-size: clamp(72px, 9vw, 100px); font-weight: 400; font-style: italic; line-height: 0.78; color: var(--sage); margin: 0.1em 0.15em 0 0; }
-  .ct3-about-body { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(15px, 1.3vw, 18px); line-height: 1.85; font-weight: 400; color: var(--ink-2); margin: 0; }
-  .ct3-about-body-2 { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(14px, 1.15vw, 16px); line-height: 1.85; font-weight: 400; color: var(--ink-3); margin: 1.5rem 0 0; }
+  .ct3-drop-cap { float: left; font-family: 'Fraunces', serif; font-size: clamp(72px, 9vw, 100px); font-weight: 400; font-style: italic; line-height: 0.78; color: var(--sage); margin: 0.1em 0.15em 0 0; }
+  .ct3-about-body { font-family: 'Hanken Grotesk', sans-serif; font-size: clamp(15px, 1.3vw, 18px); line-height: 1.85; font-weight: 400; color: var(--ink-2); margin: 0; }
+  .ct3-about-body-2 { font-family: 'Hanken Grotesk', sans-serif; font-size: clamp(14px, 1.15vw, 16px); line-height: 1.85; font-weight: 400; color: var(--ink-3); margin: 1.5rem 0 0; }
   .ct3-spec-card { background: var(--bg-card); border-radius: 18px; border: 1px solid var(--rule-strong); border-top: 4px solid var(--sage); padding: 2rem 2.2rem; box-shadow: 0 4px 32px rgba(28,43,38,0.07); }
   .ct3-spec-row { display: flex; justify-content: space-between; align-items: baseline; padding: 13px 0; border-bottom: 1px solid var(--rule); }
   .ct3-spec-row:last-child { border-bottom: none; }
   .ct3-spec-key { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-3); }
-  .ct3-spec-val { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; color: var(--ink); text-align: right; max-width: 60%; font-weight: 500; }
+  .ct3-spec-val { font-family: 'Hanken Grotesk', sans-serif; font-size: 14px; color: var(--ink); text-align: right; max-width: 60%; font-weight: 500; }
 
   /* ═══════════════════════════════════════════════════════════
      SERVICES — SHOWCASE + LIST LAYOUT
@@ -236,7 +243,7 @@ export const ct3Styles = `
     border-bottom: 1px solid var(--rule-strong);
   }
   .ct3-svc-header-sub {
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Hanken Grotesk', sans-serif;
     font-size: 14px; color: var(--ink-3); font-weight: 400;
     max-width: 28ch; line-height: 1.6; text-align: right; margin: 0;
   }
@@ -268,7 +275,7 @@ export const ct3Styles = `
 
   .ct3-svc-bg-numeral {
     position: absolute; right: -0.1em; bottom: -0.2em;
-    font-family: 'Playfair Display', serif;
+    font-family: 'Fraunces', serif;
     font-size: clamp(120px, 16vw, 200px);
     font-style: italic; font-weight: 500;
     color: rgba(255,255,255,0.04);
@@ -288,7 +295,7 @@ export const ct3Styles = `
   }
 
   .ct3-svc-sc-title {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Fraunces', serif;
     font-size: clamp(26px, 3vw, 38px); font-weight: 500; font-style: italic;
     color: #fff; line-height: 1.15; margin: 0 0 1.4rem; letter-spacing: -0.02em;
   }
@@ -296,7 +303,7 @@ export const ct3Styles = `
   .ct3-svc-sc-rule { height: 1px; background: rgba(255,255,255,0.1); margin-bottom: 1.4rem; }
 
   .ct3-svc-sc-desc {
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Hanken Grotesk', sans-serif;
     font-size: 14px; line-height: 1.8; font-weight: 400;
     color: rgba(248,250,249,0.65); flex: 1; margin: 0 0 1.4rem;
   }
@@ -319,14 +326,14 @@ export const ct3Styles = `
     color: rgba(248,250,249,0.35);
   }
   .ct3-svc-sc-price {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Fraunces', serif;
     font-size: 22px; font-weight: 500; color: var(--sage-light);
   }
   .ct3-svc-sc-btn {
     display: inline-flex; align-items: center; gap: 10px;
     flex: 1; justify-content: center;
     background: var(--sage); color: #fff;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Hanken Grotesk', sans-serif;
     font-size: 13px; font-weight: 600;
     border: none; cursor: pointer; border-radius: 12px;
     padding: 13px 22px;
@@ -379,12 +386,12 @@ export const ct3Styles = `
   }
   .ct3-svc-item.active .ct3-svc-item-kind { color: var(--sage); }
   .ct3-svc-item-name {
-    font-family: 'Playfair Display', serif;
+    font-family: 'Fraunces', serif;
     font-size: clamp(16px, 1.6vw, 20px); font-weight: 500;
     color: var(--ink); line-height: 1.2; transition: color 0.2s ease;
   }
   .ct3-svc-item-preview {
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Hanken Grotesk', sans-serif;
     font-size: 12.5px; color: var(--ink-3); font-weight: 400;
     line-height: 1.5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     max-width: 42ch; opacity: 0; max-height: 0;
@@ -394,7 +401,7 @@ export const ct3Styles = `
   .ct3-svc-item:hover .ct3-svc-item-preview { opacity: 1; max-height: 2em; }
   .ct3-svc-item-right { display: flex; align-items: center; gap: 0.8rem; flex-shrink: 0; }
   .ct3-svc-item-price {
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Hanken Grotesk', sans-serif;
     font-size: 13px; font-weight: 600; color: var(--sage); white-space: nowrap;
   }
   .ct3-svc-item-arrow { color: var(--ink-4); transition: color 0.2s ease, transform 0.2s ease; display: flex; align-items: center; }
@@ -417,8 +424,8 @@ export const ct3Styles = `
   .ct3-insight-num { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.22em; color: var(--sage); }
   .ct3-insight-category { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-3); background: var(--bg-alt); padding: 3px 8px; border-radius: 100px; }
   .ct3-insight-rule { height: 1px; background: var(--rule); margin-bottom: 1rem; }
-  .ct3-insight-title { font-family: 'Playfair Display', serif; font-size: clamp(18px, 2vw, 22px); font-weight: 500; line-height: 1.25; color: var(--ink); margin: 0 0 0.75rem; }
-  .ct3-insight-excerpt { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13.5px; line-height: 1.75; color: var(--ink-2); font-weight: 400; }
+  .ct3-insight-title { font-family: 'Fraunces', serif; font-size: clamp(18px, 2vw, 22px); font-weight: 500; line-height: 1.25; color: var(--ink); margin: 0 0 0.75rem; }
+  .ct3-insight-excerpt { font-family: 'Hanken Grotesk', sans-serif; font-size: 13.5px; line-height: 1.75; color: var(--ink-2); font-weight: 400; }
   .ct3-insight-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 1.4rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
   .ct3-insight-date { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-4); }
   .ct3-insight-arrow { color: var(--sage); transition: transform 0.25s ease; }
@@ -432,18 +439,18 @@ export const ct3Styles = `
   .ct3-faq-trigger:hover .ct3-faq-q { color: var(--sage); }
   .ct3-faq-q-wrap { display: flex; align-items: baseline; gap: 1.2rem; }
   .ct3-faq-num { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.22em; color: var(--ink-4); flex-shrink: 0; width: 28px; }
-  .ct3-faq-q { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(15px, 1.6vw, 19px); font-weight: 600; color: var(--ink); line-height: 1.3; transition: color 0.25s ease; }
-  .ct3-faq-icon { width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--rule-strong); display: flex; align-items: center; justify-content: center; color: var(--ink-3); flex-shrink: 0; transition: border-color 0.25s ease, background 0.25s ease, transform 0.3s ease; font-size: 18px; font-weight: 300; font-family: 'Plus Jakarta Sans', sans-serif; }
+  .ct3-faq-q { font-family: 'Hanken Grotesk', sans-serif; font-size: clamp(15px, 1.6vw, 19px); font-weight: 600; color: var(--ink); line-height: 1.3; transition: color 0.25s ease; }
+  .ct3-faq-icon { width: 35px; height: 35px; border-radius: 50%; border: 1px solid var(--rule-strong); display: flex; align-items: center; justify-content: center; color: var(--ink-3); flex-shrink: 0; transition: border-color 0.25s ease, background 0.25s ease, transform 0.3s ease; font-size: 18px; font-weight: 300; font-family: 'Hanken Grotesk', sans-serif; }
   .ct3-faq-icon.open { transform: rotate(45deg); border-color: var(--sage); color: var(--sage); background: var(--sage-pale); }
   .ct3-faq-body { max-height: 0; overflow: hidden; transition: max-height 0.45s cubic-bezier(0.7, 0, 0.2, 1), opacity 0.3s ease; opacity: 0; }
   .ct3-faq-body.open { max-height: 500px; opacity: 1; }
-  .ct3-faq-ans { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 15px; line-height: 1.8; color: var(--ink-2); font-weight: 400; padding: 0 0 1.6rem 3.2rem; max-width: 68ch; }
+  .ct3-faq-ans { font-family: 'Hanken Grotesk', sans-serif; font-size: 15px; line-height: 1.8; color: var(--ink-2); font-weight: 400; padding: 0 0 1.6rem 3.2rem; max-width: 68ch; }
 
   /* ═══════════════════════════════════════════════════════════ BOOKING */
   .ct3-booking { background: var(--bg-base); }
   .ct3-booking-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 4rem 5rem; align-items: start; }
   @media (max-width: 900px) { .ct3-booking-grid { grid-template-columns: 1fr; gap: 3rem; } }
-  .ct3-booking-intro { font-family: 'Plus Jakarta Sans', sans-serif; font-size: clamp(14px, 1.25vw, 16.5px); line-height: 1.8; color: var(--ink-2); font-weight: 400; max-width: 44ch; margin: 0 0 2rem; }
+  .ct3-booking-intro { font-family: 'Hanken Grotesk', sans-serif; font-size: clamp(14px, 1.25vw, 16.5px); line-height: 1.8; color: var(--ink-2); font-weight: 400; max-width: 44ch; margin: 0 0 2rem; }
   .ct3-booking-details { background: var(--bg-card); border-radius: 18px; border: 1px solid var(--rule-strong); border-top: 4px solid var(--sage); padding: 2rem 2.2rem; box-shadow: 0 4px 24px rgba(28,43,38,0.06); }
   .ct3-chips { display: flex; flex-wrap: wrap; gap: 8px; }
   .ct3-chip { padding: 9px 16px; border-radius: 100px; border: 1px solid var(--rule-strong); background: var(--bg-card); color: var(--ink-2); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.08em; cursor: pointer; transition: all 0.2s ease; }
@@ -452,20 +459,20 @@ export const ct3Styles = `
   .ct3-chip:disabled { opacity: 0.3; cursor: not-allowed; text-decoration: line-through; }
   .ct3-booking-card { background: var(--bg-card); border-radius: 20px; border: 1px solid var(--rule-strong); border-top: 4px solid var(--sage); padding: 2.5rem 2.8rem; box-shadow: 0 8px 40px rgba(28,43,38,0.08); }
   .ct3-form-grid { grid-template-columns: 1fr 1fr; }
-  .ct3-input { width: 100%; background: var(--bg-alt); border-radius: 10px; border: 1px solid var(--rule-strong); color: var(--ink); padding: 13px 16px; margin-top: 10px; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; font-weight: 400; outline: none; transition: border-color 0.25s ease, background 0.25s ease; }
+  .ct3-input { width: 100%; background: var(--bg-alt); border-radius: 10px; border: 1px solid var(--rule-strong); color: var(--ink); padding: 13px 16px; margin-top: 10px; font-family: 'Hanken Grotesk', sans-serif; font-size: 14px; font-weight: 400; outline: none; transition: border-color 0.25s ease, background 0.25s ease; }
   .ct3-input::placeholder { color: var(--ink-4); }
   .ct3-input:focus { border-color: var(--sage); background: #fff; box-shadow: 0 0 0 3px var(--sage-pale); }
   .ct3-booking-success { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 3.5rem 2rem; }
   .ct3-success-circle { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, var(--sage), var(--sage-light)); display: flex; align-items: center; justify-content: center; color: #fff; margin-bottom: 1.4rem; box-shadow: 0 0 0 10px var(--sage-pale); }
 
   /* ═══════════════════════════════════════════════════════════ FOOTER */
-  .ct3-footer { background: var(--ink); color: var(--bg-base); padding: clamp(3rem, 7vh, 5rem) clamp(1.5rem, 5vw, 4rem) clamp(1.5rem, 4vh, 2.5rem); }
-  .ct3-footer-name { font-family: 'Playfair Display', serif; font-size: clamp(40px, 4vw, 96px); font-style: italic;  line-height: 0.95; letter-spacing: -0.005em; color: #fff; margin: 0 0 clamp(1.5rem, 3vh, 2.5rem); opacity: 0.95; }
+  .ct3-footer { background: var(--ink); color: var(--bg-base); padding: clamp(3rem, 7vh, 5rem) var(--gutter) max(clamp(1.5rem, 4vh, 2.5rem), env(safe-area-inset-bottom)); }
+  .ct3-footer-name { font-family: 'Fraunces', serif; font-size: clamp(40px, 4vw, 96px); font-style: italic;  line-height: 0.95; letter-spacing: -0.005em; color: #fff; margin: 0 0 clamp(1.5rem, 3vh, 2.5rem); opacity: 0.95; }
   .ct3-footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 3rem 5rem; padding-top: 2.5rem; border-top: 1px solid rgba(255,255,255,0.1); }
   @media (max-width: 720px) { .ct3-footer-grid { grid-template-columns: 1fr; gap: 2rem; } }
   .ct3-footer-col-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.26em; text-transform: uppercase; color: var(--sage-light); margin-bottom: 1rem; display: block; }
-  .ct3-footer-col-text { font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; line-height: 1.75; color: rgba(248,250,249,0.6); font-weight: 400; }
-  .ct3-footer-link { display: block; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 14px; color: rgba(248,250,249,0.65); font-weight: 400; text-decoration: none; margin-bottom: 8px; transition: color 0.2s ease; }
+  .ct3-footer-col-text { font-family: 'Hanken Grotesk', sans-serif; font-size: 14px; line-height: 1.75; color: rgba(248,250,249,0.6); font-weight: 400; }
+  .ct3-footer-link { display: block; font-family: 'Hanken Grotesk', sans-serif; font-size: 14px; color: rgba(248,250,249,0.65); font-weight: 400; text-decoration: none; margin-bottom: 8px; transition: color 0.2s ease; }
   .ct3-footer-link:hover { color: var(--sage-light); }
   .ct3-footer-bottom { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; padding-top: 2rem; margin-top: 2.5rem; border-top: 1px solid rgba(255,255,255,0.08); }
   .ct3-footer-copy { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.22em; text-transform: uppercase; color: rgba(248,250,249,0.3); }
@@ -476,10 +483,10 @@ export const ct3Styles = `
   .ct3-gold-rule-bottom { border-bottom: 1px solid var(--sage-border); }
 
   /* ═══════════════════════════════════════════════════════════ BUTTONS */
-  .ct3-btn-primary { display: inline-flex; align-items: center; gap: 10px; padding: 13px 28px; background: var(--sage); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: -0.01em; border: none; cursor: pointer; border-radius: 12px; transition: background 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease; box-shadow: 0 4px 16px rgba(61,122,106,0.3); }
+  .ct3-btn-primary { display: inline-flex; align-items: center; gap: 10px; padding: 13px 28px; background: var(--sage); color: #fff; font-family: 'Hanken Grotesk', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: -0.01em; border: none; cursor: pointer; border-radius: 12px; transition: background 0.25s ease, transform 0.2s ease, box-shadow 0.25s ease; box-shadow: 0 4px 16px rgba(61,122,106,0.3); }
   .ct3-btn-primary:hover { background: var(--sage-light); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(61,122,106,0.35); }
   .ct3-btn-primary:disabled { opacity: 0.55; cursor: not-allowed; transform: none; box-shadow: none; }
-  .ct3-btn-ghost { display: inline-flex; align-items: center; gap: 10px; padding: 12px 26px; background: transparent; color: var(--ink); font-family: 'Plus Jakarta Sans', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: -0.01em; border: 1.5px solid var(--rule-strong); cursor: pointer; border-radius: 12px; transition: all 0.25s ease; }
+  .ct3-btn-ghost { display: inline-flex; align-items: center; gap: 10px; padding: 12px 26px; background: transparent; color: var(--ink); font-family: 'Hanken Grotesk', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: -0.01em; border: 1.5px solid var(--rule-strong); cursor: pointer; border-radius: 12px; transition: all 0.25s ease; }
   .ct3-btn-ghost:hover { background: var(--bg-alt); border-color: var(--ink); }
   .ct3-btn-full { width: 100%; justify-content: center; }
 
@@ -505,7 +512,9 @@ export const ct3Styles = `
 ========================================= */
 
 .ct3-hero {
-  min-height: calc(100vh - var(--nav-h));
+  /* dvh stops the iOS/Android URL-bar jump; svh fallback before it. */
+  min-height: calc(100svh - var(--nav-h));
+  min-height: calc(100dvh - var(--nav-h));
 
   display: grid;
   grid-template-columns: 0.95fr 1.05fr;
@@ -514,13 +523,25 @@ export const ct3Styles = `
 
   gap: clamp(2rem, 3vw, 4rem);
 
-  padding:
-    clamp(1.2rem, 2vw, 2rem)
-    clamp(1.5rem, 4vw, 5rem);
+  /* Symmetric gutter left & right via the shared token */
+  padding: clamp(1.2rem, 2vw, 2rem) var(--gutter);
 
   overflow: hidden;
 
   background: var(--bg-base);
+}
+
+/* Stack the hero on tablet & below — photo on top, copy beneath. */
+@media (max-width: 820px) {
+  .ct3-hero {
+    grid-template-columns: 1fr;
+    align-items: start;
+    min-height: 0;
+    padding-top: clamp(1.5rem, 4vh, 2.5rem);
+    padding-bottom: clamp(2.5rem, 7vh, 4rem);
+    gap: clamp(1.75rem, 5vh, 2.75rem);
+  }
+  .ct3-hero-content { max-width: 100%; }
 }
 
 /* =========================================
@@ -576,7 +597,7 @@ export const ct3Styles = `
 
   width: 100%;
 
-  height: min(62vh, 680px);
+  height: min(62dvh, 680px);
 
   overflow: hidden;
 
@@ -657,7 +678,7 @@ export const ct3Styles = `
 }
 
 .ct3-hero-title {
-  font-family: 'Playfair Display', serif;
+  font-family: 'Fraunces', serif;
 
   font-size: clamp(3.6rem, 5.5vw, 5.8rem);
 
@@ -730,7 +751,7 @@ export const ct3Styles = `
 
   font-size: 1.6rem;
 
-  font-family: 'Playfair Display', serif;
+  font-family: 'Fraunces', serif;
 
   color: var(--sage);
 
@@ -853,17 +874,22 @@ export const ct3Styles = `
 /* ════════════════ TABLET & SMALL LAPTOP (≤ 900px) ════════════════ */
 @media (max-width: 900px) {
   .ct3-hero-glow { width: 320px; height: 320px; }
-  .ct3-hero-photo { height: min(56vh, 460px); }
-  .ct3-meta-card { min-width: 0; flex: 1 1 auto; }
+  .ct3-hero-photo { height: min(56dvh, 460px); }
+  /* 3 cards in a tidy row, each ≥ 30% but allowed to wrap as one unit */
+  .ct3-meta-card { min-width: 0; flex: 1 1 calc(33.333% - 0.6rem); }
 }
 
 /* ════════════════ PHONES (≤ 560px) ════════════════ */
 @media (max-width: 560px) {
-  .ct3-root { --nav-h: 60px; }
+  .ct3-root {
+    --nav-h: 60px;
+    /* Tighter but still balanced gutter on phones — equal left & right */
+    --gutter: clamp(1.15rem, 5.5vw, 1.6rem);
+  }
 
   /* Section rhythm tightens so content isn't lost in whitespace */
   .ct3-section {
-    padding: clamp(2.75rem, 9vh, 4rem) clamp(1.1rem, 5vw, 1.6rem);
+    padding: clamp(2.75rem, 9vh, 4rem) var(--gutter);
   }
 
   /* Folio / section headers stack instead of justify-between squeeze */
@@ -876,13 +902,14 @@ export const ct3Styles = `
   .ct3-folio-title { font-size: clamp(30px, 9vw, 40px); }
 
   /* Hero */
-  .ct3-hero { padding: 1rem 1.1rem 2.5rem; gap: 1.5rem; }
-  .ct3-hero-photo { height: min(64vw, 420px); }
+  .ct3-hero { padding-left: var(--gutter); padding-right: var(--gutter); gap: 1.5rem; }
+  .ct3-hero-photo { height: min(70vw, 420px); }
   .ct3-hero-glow { width: 240px; height: 240px; filter: blur(22px); }
   .ct3-hero-title { font-size: clamp(2.4rem, 11vw, 3.4rem); line-height: 0.96; }
   .ct3-hero-subtitle { font-size: 0.95rem; line-height: 1.7; }
   .ct3-hero-meta { gap: 0.6rem; }
-  .ct3-meta-card { padding: 0.8rem 0.9rem; min-width: 0; flex: 1 1 30%; }
+  /* Clean 2-up wrap (3rd card drops to a centered 2nd row) — never overflows */
+  .ct3-meta-card { padding: 0.85rem 0.95rem; min-width: 0; flex: 1 1 calc(50% - 0.6rem); }
   .ct3-meta-number { font-size: 1.3rem; }
   .ct3-meta-label { font-size: 9px; letter-spacing: 0.12em; }
   .ct3-floating-card { bottom: 12px; left: 12px; padding: 9px 12px; gap: 9px; }
@@ -917,29 +944,51 @@ export const ct3Styles = `
   .ct3-form-grid { grid-template-columns: 1fr; }
 
   /* Footer */
-  .ct3-footer { padding: clamp(2.5rem,7vh,3.5rem) clamp(1.1rem,5vw,1.6rem) 2rem; }
+  .ct3-footer { padding: clamp(2.5rem,7vh,3.5rem) var(--gutter) max(2rem, env(safe-area-inset-bottom)); }
   .ct3-footer-name { font-size: clamp(34px, 12vw, 52px); }
   .ct3-footer-grid { gap: 1.75rem; padding-top: 2rem; }
   .ct3-footer-bottom { flex-direction: column; align-items: flex-start; gap: 0.6rem; }
 }
 
-/* ════════════════ ULTRA-NARROW — Z-Flip / small Androids (≤ 360px) ════════════════ */
+/* ════════════════ ULTRA-NARROW — Z-Flip cover / small Androids (≤ 360px) ════════════════ */
 @media (max-width: 360px) {
-  .ct3-section { padding: 2.25rem 0.9rem; }
-  .ct3-hero-title { font-size: 2.1rem; }
+  .ct3-root { --gutter: 0.95rem; }
+  .ct3-section { padding: 2.25rem var(--gutter); }
+  .ct3-hero-title { font-size: 2.1rem;   line-height: 1.2; }
+  /* Single-column meta on the very narrowest covers (Z-Flip ~280px) */
   .ct3-hero-meta { flex-direction: column; }
   .ct3-meta-card { width: 100%; flex: 1 1 100%; }
   .ct3-folio-title { font-size: 27px; }
-  .ct3-nav-inner { padding: 0 0.9rem; gap: 0.75rem; }
   .ct3-nav-label-sub { display: none; }
   .ct3-spec-row { flex-wrap: wrap; gap: 2px; }
   .ct3-spec-val { max-width: 100%; text-align: left; }
   .ct3-chip { font-size: 9px; padding: 8px 12px; }
 }
 
+/* ════════════════ FOLDABLES UNFOLDED — square-ish canvas (Z Fold inner ~768–884px) ════════════════
+   Width alone would treat this like a tablet; the near-1:1 aspect needs a
+   balanced, centred single column so the photo + copy don't feel stranded. */
+@media (min-width: 600px) and (max-width: 884px) and (max-aspect-ratio: 13/10) {
+  .ct3-hero {
+    grid-template-columns: 1fr;
+    justify-items: center;
+    text-align: center;
+    gap: clamp(2rem, 5vh, 3rem);
+  }
+  .ct3-hero-content { max-width: 60ch; }
+  .ct3-hero-meta { justify-content: center; }
+  .ct3-hero-photo-card { width: min(100%, 460px); }
+}
+
 /* ════════════════ LANDSCAPE PHONES — short viewports ════════════════ */
 @media (max-height: 480px) and (orientation: landscape) {
   .ct3-hero { min-height: auto; padding-top: calc(var(--nav-h) + 1rem); }
-  .ct3-hero-photo { height: 70vh; }
+  .ct3-hero-photo { height: 70dvh; }
+}
+
+/* ── Touch ergonomics: enforce comfortable tap targets on touch devices ── */
+@media (hover: none) and (pointer: coarse) {
+  .ct3-nav-link, .ct3-drawer-link, .ct3-btn-primary, .ct3-btn-secondary,
+  .ct3-nav-cta, .ct3-nav-brand { min-height: 44px; }
 }
   `

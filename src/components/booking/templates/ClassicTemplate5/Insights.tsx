@@ -45,7 +45,7 @@ export default function Insights({ therapist }: InsightsProps) {
               Stories of <em>transformation</em>
             </h2>
           </div>
-          <div style={{ textAlign: 'right' }}>
+          {/* <div style={{ textAlign: 'right' }}>
             <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 48, fontWeight: 300, color: 'var(--cream)', lineHeight: 1 }}>
               {rating}
             </div>
@@ -57,7 +57,7 @@ export default function Insights({ therapist }: InsightsProps) {
                 <span key={i} className="ct5-star">★</span>
               ))}
             </div>
-          </div>
+          </div> */}
         </div>
 
         {/* Review cards */}
@@ -79,7 +79,7 @@ export default function Insights({ therapist }: InsightsProps) {
         </div>
 
         {/* Trust badges */}
-        <div
+        {/* <div
           className="ct5-reveal"
           style={{
             transitionDelay: '0.25s',
@@ -114,7 +114,7 @@ export default function Insights({ therapist }: InsightsProps) {
               }}>{b.text}</span>
             </div>
           ))}
-        </div>
+        </div> */}
       </div>
     </section>
   )

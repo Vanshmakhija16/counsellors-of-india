@@ -29,12 +29,40 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
   const yearsBadge =
     (therapist.experience ?? 0) > 0 ? `EST. ${new Date().getFullYear() - (therapist.experience ?? 0)}` : null
 
+  // Split the name for a controlled two-line headline:
+  //   • a leading honorific ("Dr.") is peeled off and kept in the accent colour
+  //   • the remaining first name(s) sit on line 1, the surname on line 2 — both black
+  // A single-word name stays on one line.
+  const rawNameParts = (therapist.name ?? '').trim().split(/\s+/).filter(Boolean)
+  const hasHonorific = /^(dr|mr|mrs|ms|prof)\.?$/i.test(rawNameParts[0] ?? '')
+  const namePrefix = hasHonorific ? rawNameParts[0] : ''
+  const nameParts = hasHonorific ? rawNameParts.slice(1) : rawNameParts
+  const nameSurname = nameParts.length > 1 ? nameParts[nameParts.length - 1] : ''
+  const nameLead = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : nameParts[0] ?? ''
+
   // Smart italic split — italicize only the most personal half of the tagline
   // so the italic does rhetorical work instead of being the default.
   const tagline = therapist.tagline?.trim() ?? ''
   const splitPoint = tagline.indexOf(' to ') > 0 ? tagline.indexOf(' to ') + 1 : Math.floor(tagline.length * 0.55)
   const taglineHead = tagline.slice(0, splitPoint)
   const taglineTail = tagline.slice(splitPoint)
+
+  // Meta chips (fee · location · languages). Build as a list so the
+  // bullet separators only appear BETWEEN present items — never a
+  // stray leading dot, and never a literal "0" when fee is unset.
+  const metaItems: React.ReactNode[] = []
+  if (therapist.fee) {
+    metaItems.push(
+      <span key="fee">
+        <span className="font-semibold">₹{therapist.fee.toLocaleString('en-IN')}</span>
+        <span className="ml-1">/ {therapist.sessionDuration} min</span>
+      </span>
+    )
+  }
+  if (therapist.location) metaItems.push(<span key="loc">{therapist.location}</span>)
+  if (therapist.languages && therapist.languages.length > 0) {
+    metaItems.push(<span key="lang">{therapist.languages.join(', ')}</span>)
+  }
 
   return (
     <section
@@ -44,107 +72,112 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
         heroLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}
     >
-      <div className="relative z-10 mx-auto  pl-10 pr-7 max-w-[1180px]">
+      <div className="relative z-10 mx-auto px-8 max-w-[1180px]">
         <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20">
 
           {/* ─────────── LEFT — editorial copy ─────────── */}
-          <div className="order-2 lg:order-1">
+          {/* Text hierarchy (3 clear steps, theme accent untouched):
+               --ink   #1f1b16  loud   — the name
+               --warm  #4d433a  medium — tagline / primary numbers
+               --mute  #6f6555  quiet  — kicker, meta, supporting (AA 4.65:1 on ivory)
+             font-sans = DM Sans applied once via the wrapper. */}
+          <div
+            className="order-2 text-center sm:text-left lg:order-1"
+            style={{ fontFamily: 'var(--font-dm-sans), sans-serif' }}
+          >
 
-            {/* eyebrow — short bar, true bullet, generous tracking */}
-            <div className="flex items-center gap-3">
-              {/* <span className="h-[1.5px] w-6 bg-[#b46b50]" /> */}
-              <p
-                className="text-[10.5px] font-medium uppercase text-[#b46b50]"
-                style={{ letterSpacing: '0.34em', fontFamily: 'var(--font-dm-sans), sans-serif' }}
-              >
-                {therapist.credentials || 'Psychotherapy Practice'}
-                {yearsBadge && (
-                  <>
-                    <span className="mx-2 opacity-60">•</span>
-                    {yearsBadge}
-                  </>
-                )}
-              </p>
-            </div>
-
-            {/* HEADLINE — monumental, single voice (Fraunces) */}
+            {/* HEADLINE — monumental, single voice (Fraunces).
+               Controlled two-line break: lead name on line 1, surname on
+               line 2. The honorific ("Dr.") keeps the accent colour, the
+               name itself is black. clamp() prevents overflow on narrow phones. */}
             <h1
-              className="mt-10 text-[56px] leading-[0.96] tracking-[-0.025em] text-[#1a1a18] lg:text-[96px]"
-              style={{ fontFamily: 'var(--font-fraunces), serif', fontWeight: 300 }}
+              className="font-light leading-[0.92] tracking-[-0.04em] text-[#1f1b16]"
+              style={{
+                fontFamily: 'var(--font-fraunces), serif',
+                fontSize: 'clamp(34px, 12vw, 120px)',
+              }}
             >
-              {therapist.name}
+              <span className="block whitespace-nowrap">
+                {namePrefix && <span className="text-[#b46b50]">{namePrefix} </span>}
+                {nameLead}
+              </span>
+              {nameSurname && <span className="block whitespace-nowrap">{nameSurname}</span>}
             </h1>
+
+            {/* kicker — practice line + EST badge, below the name */}
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 sm:justify-start lg:mt-6">
+              <span className="text-[12px] font-semibold uppercase tracking-[0.26em] text-[#1f1b16]">
+                {therapist.credentials || 'Psychotherapy Practice'}
+              </span>
+              {yearsBadge && (
+                <>
+                  <span className="h-[3px] w-[3px] rounded-full bg-[#6f6555]" />
+                  <span className="text-[12px] font-medium uppercase tracking-[0.18em] text-[#6f6555]">
+                    {yearsBadge}
+                  </span>
+                </>
+              )}
+            </div>
 
             {/* TAGLINE — italic only on the second half (rhetorical italic) */}
             {tagline && (
               <p
-                className="mt-8 max-w-[460px] text-[18px] leading-[1.55] text-[#3a3128] lg:text-[20px]"
+                className="mx-auto mt-7 max-w-[480px] text-[clamp(19px,5vw,21px)] leading-[1.5] text-[#4d433a] sm:mx-0 lg:mt-8"
                 style={{ fontFamily: 'var(--font-fraunces), serif', fontWeight: 400 }}
               >
                 {taglineHead}
-                <em className="not-italic">
-                  <span style={{ fontStyle: 'italic' }} className="text-[#b46b50]">
-                    {taglineTail}
-                  </span>
-                </em>
+                <span style={{ fontStyle: 'italic' }} className="text-[#b46b50]">
+                  {taglineTail}
+                </span>
               </p>
             )}
 
-            {/* generous breathing room before action block */}
-            <div className="mt-16 flex flex-wrap items-center gap-x-6 gap-y-3 text-[13px] text-[#6b6056]">
-              {therapist.fee && (
-                <span>
-                  <span className="text-[#1a1a18]">₹{therapist.fee.toLocaleString('en-IN')}</span>
-                  <span className="ml-1">/ {therapist.sessionDuration} min</span>
+            {/* Next opening — quiet, sits just above the CTAs */}
+            {nextDay && nextDay.slots.length > 0 && (
+              <p className="mt-3 flex items-center justify-center whitespace-nowrap text-[11px] font-medium uppercase tracking-[0.2em] text-[#6f6555] sm:justify-start lg:mt-3.5">
+                <span className="relative mr-2.5 inline-flex h-1.5 w-1.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#b46b50] opacity-60" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#b46b50]" />
                 </span>
-              )}
-              {therapist.location && (
-                <>
-                  <span className="h-[3px] w-[3px] rounded-full bg-[#b46b50]" />
-                  <span>{therapist.location}</span>
-                </>
-              )}
-              {therapist.languages && therapist.languages.length > 0 && (
-                <>
-                  <span className="h-[3px] w-[3px] rounded-full bg-[#b46b50]" />
-                  <span>{therapist.languages.join(' · ')}</span>
-                </>
-              )}
-            </div>
+                Next opening ·{' '}
+                <span className="text-[15px] font-semibold normal-case tracking-normal text-[#b46b50]">
+                  {nextDay.label.toLowerCase() === 'today' ? 'Today' : nextDay.label}
+                  {' · '}
+                  {nextDay.slots[0]}
+                </span>
+              </p>
+            )}
+
+            {/* meta row — bullets render only between present items */}
+            {metaItems.length > 0 && (
+              <div className="mt-4 flex flex-wrap items-center justify-start gap-x-4 gap-y-2 text-left text-[15px] font-semibold text-[#b46b50] lg:mt-5">
+                {metaItems.map((item, i) => (
+                  <span key={i} className="flex items-center gap-x-4">
+                    {i > 0 && <span className="h-[3px] w-[3px] rounded-full bg-[#b46b50]" />}
+                    {item}
+                  </span>
+                ))}
+              </div>
+            )}
 
             {/* CTAs — mass + ghost, identical height, opposite weight, true ↗ arrow */}
-            <div className="mt-10 flex flex-wrap items-center gap-7">
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-7 gap-y-4 sm:justify-start lg:mt-7">
               <button
                 onClick={scrollToContact}
-                className="group flex h-[54px] items-center gap-3 rounded-full bg-[#1a1a18] px-8 text-[12px] font-medium text-[#efe7d6] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#000] hover:shadow-[0_16px_32px_-12px_rgba(26,26,24,0.45)]"
-                style={{ letterSpacing: '0.02em', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+                className="group flex h-[56px] items-center gap-3 rounded-full bg-[#1f1b16] px-9 text-[12.5px] font-semibold tracking-[0.03em] text-[#efe7d6] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#000] hover:shadow-[0_18px_36px_-12px_rgba(31,27,22,0.5)]"
               >
                 Begin the conversation
-                <span className="text-[14px] transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
+                <span className="text-[15px] transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">
                   ↗
                 </span>
               </button>
               <button
                 onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}
-                className="text-[12px] font-medium text-[#1a1a18] underline-offset-[6px] transition-colors duration-300 hover:text-[#b46b50] hover:underline"
-                style={{ letterSpacing: '0.02em', fontFamily: 'var(--font-dm-sans), sans-serif' }}
+                className="text-[12.5px] font-semibold tracking-[0.03em] text-[#4d433a] underline-offset-[6px] transition-colors duration-300 hover:text-[#b46b50] hover:underline"
               >
                 Read the philosophy
               </button>
             </div>
-
-            {/* Next opening — quiet, well below CTAs */}
-            {nextDay && nextDay.slots.length > 0 && (
-              <p className="mt-12 text-[11px] uppercase text-[#6b6056]" style={{ letterSpacing: '0.22em' }}>
-                <span className="relative mr-2 inline-flex h-1.5 w-1.5 translate-y-[1px]">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#b46b50] opacity-60" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#b46b50]" />
-                </span>
-                Next opening · {nextDay.label.toLowerCase() === 'today' ? 'Today' : nextDay.label}
-                {' · '}
-                {nextDay.slots[0]}
-              </p>
-            )}
           </div>
 
           {/* ─────────── RIGHT — arch portrait (alcove shape) ─────────── */}

@@ -62,7 +62,7 @@ export default function About({ therapist }: AboutProps) {
               </p>
             </div>
 
-            <div className="ct5-values ct5-reveal" style={{ transitionDelay: '0.2s' }}>
+            {/* <div className="ct5-values ct5-reveal" style={{ transitionDelay: '0.2s' }}>
               {VALUES.map((v, i) => (
                 <div key={i} className="ct5-value-row">
                   <div className="ct5-value-icon">{v.icon}</div>
@@ -72,7 +72,7 @@ export default function About({ therapist }: AboutProps) {
                   </div>
                 </div>
               ))}
-            </div>
+            </div> */}
           </div>
 
           {/* RIGHT — Credentials */}

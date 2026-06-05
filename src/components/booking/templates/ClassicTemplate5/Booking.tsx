@@ -146,7 +146,7 @@ export default function Booking({ therapist, bookedTimes = [] }: BookingProps) {
               </div>
             </div>
 
-            <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {/* <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[
                 { icon: '🔒', text: 'Fully confidential always' },
                 { icon: '📋', text: 'Evidence-based, personalised care' },
@@ -156,7 +156,7 @@ export default function Booking({ therapist, bookedTimes = [] }: BookingProps) {
                   <span style={{ fontSize: 16 }}>{t.icon}</span>{t.text}
                 </div>
               ))}
-            </div>
+            </div> */}
           </div>
 
           {/* RIGHT — Booking flow card */}
@@ -176,7 +176,8 @@ export default function Booking({ therapist, bookedTimes = [] }: BookingProps) {
                   <strong style={{ color: 'var(--forest)' }}>{clientEmail}</strong>. I look forward to meeting you.
                 </p>
               </div>
-            ) : (
+            ) : !selectedSlot ? (
+              /* ── PICKER VIEW — day + time. Swaps out once a slot is chosen ── */
               <>
                 {/* Step 1 */}
                 <div style={{ marginBottom: '1.8rem' }}>
@@ -197,7 +198,7 @@ export default function Booking({ therapist, bookedTimes = [] }: BookingProps) {
                 </div>
 
                 {/* Step 2 */}
-                <div style={{ marginBottom: '1.8rem' }}>
+                <div>
                   <span className="ct5-booking-step-label">Step 2 — Choose a Time</span>
                   <div className="ct5-booking-step-divider" />
                   {slotsForDay.length === 0 ? (
@@ -213,59 +214,77 @@ export default function Booking({ therapist, bookedTimes = [] }: BookingProps) {
                     </div>
                   )}
                 </div>
-
-                {/* Step 3 */}
-                {selectedSlot && (
-                  <div style={{ borderTop: '1px solid var(--border)', paddingTop: '1.8rem', animation: 'ct5-fade-up 0.5s ease both' }}>
-                    <span className="ct5-booking-step-label">Step 3 — Your Details</span>
-                    <div className="ct5-booking-step-divider" />
-
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                      <div className="ct5-input-group">
-                        <label className="ct5-input-label">Full Name</label>
-                        <input className="ct5-input" placeholder="Your name" value={clientName} onChange={e => setClientName(e.target.value)} />
-                      </div>
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-                        <div className="ct5-input-group">
-                          <label className="ct5-input-label">Email</label>
-                          <input className="ct5-input" placeholder="you@email.com" type="email" value={clientEmail} onChange={e => setClientEmail(e.target.value)} />
-                        </div>
-                        <div className="ct5-input-group">
-                          <label className="ct5-input-label">Phone</label>
-                          <input className="ct5-input" placeholder="+91 00000 00000" value={clientPhone} onChange={e => setClientPhone(e.target.value)} />
-                        </div>
-                      </div>
-                    </div>
-
-                    {bookingError && (
-                      <p style={{ color: '#b85050', fontSize: 11, fontWeight: 500, letterSpacing: '0.06em', marginTop: '1rem' }}>⚠ {bookingError}</p>
-                    )}
-
-                    {therapist.fee && therapist.fee > 0 && (
-                      <p style={{ fontSize: 12, color: 'var(--warm-gray)', marginTop: '1rem', lineHeight: 1.5 }}>
-                        You will be charged{' '}
-                        <strong style={{ color: 'var(--forest)' }}>₹{therapist.fee.toLocaleString()}</strong>
-                        {' '}via Razorpay before your booking is confirmed.
-                      </p>
-                    )}
-
-                    <button
-                      className="ct5-btn-primary ct5-btn-full"
-                      style={{ marginTop: '1.5rem' }}
-                      onClick={handleConfirm}
-                      disabled={bookingLoading}
-                    >
-                      {bookingLoading ? (
-                        <><Loader2 size={13} className="animate-spin" /> Processing…</>
-                      ) : therapist.fee && therapist.fee > 0 ? (
-                        <>Pay ₹{therapist.fee.toLocaleString()} & Confirm &nbsp;→</>
-                      ) : (
-                        <>Confirm Session &nbsp;→</>
-                      )}
-                    </button>
-                  </div>
-                )}
               </>
+            ) : (
+              /* ── DETAILS VIEW — swapped in after a slot is picked ── */
+              <div style={{ animation: 'ct5-fade-up 0.5s ease both' }}>
+                {/* Back to change date/time */}
+                <button
+                  type="button"
+                  className="ct5-booking-back"
+                  onClick={() => { setSelectedSlot(null); setSelectedSlotIso(null); setClientName(''); setClientEmail(''); setClientPhone(''); setBookingError('') }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--warm-gray)', fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', padding: 0, marginBottom: '1.2rem' }}
+                >
+                  ← Change date or time
+                </button>
+
+                {/* Selected session summary */}
+                <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, paddingBottom: '1.2rem', marginBottom: '1.6rem', borderBottom: '1px solid var(--border)' }}>
+                  <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, color: 'var(--forest)' }}>
+                    {day?.label} {day?.date} {day?.month?.toUpperCase()}
+                  </span>
+                  <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 13, fontWeight: 600, color: 'var(--charcoal)' }}>
+                    {selectedSlot} · {therapist.sessionDuration ?? 50} min
+                  </span>
+                </div>
+
+                <span className="ct5-booking-step-label">Your Details</span>
+                <div className="ct5-booking-step-divider" />
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div className="ct5-input-group">
+                    <label className="ct5-input-label">Full Name</label>
+                    <input className="ct5-input" placeholder="Your name" value={clientName} onChange={e => setClientName(e.target.value)} />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                    <div className="ct5-input-group">
+                      <label className="ct5-input-label">Email</label>
+                      <input className="ct5-input" placeholder="you@email.com" type="email" value={clientEmail} onChange={e => setClientEmail(e.target.value)} />
+                    </div>
+                    <div className="ct5-input-group">
+                      <label className="ct5-input-label">Phone</label>
+                      <input className="ct5-input" placeholder="+91 00000 00000" value={clientPhone} onChange={e => setClientPhone(e.target.value)} />
+                    </div>
+                  </div>
+                </div>
+
+                {bookingError && (
+                  <p style={{ color: '#b85050', fontSize: 11, fontWeight: 500, letterSpacing: '0.06em', marginTop: '1rem' }}>⚠ {bookingError}</p>
+                )}
+
+                {therapist.fee && therapist.fee > 0 && (
+                  <p style={{ fontSize: 12, color: 'var(--warm-gray)', marginTop: '1rem', lineHeight: 1.5 }}>
+                    You will be charged{' '}
+                    <strong style={{ color: 'var(--forest)' }}>₹{therapist.fee.toLocaleString()}</strong>
+                    {' '}via Razorpay before your booking is confirmed.
+                  </p>
+                )}
+
+                <button
+                  className="ct5-btn-primary ct5-btn-full"
+                  style={{ marginTop: '1.5rem' }}
+                  onClick={handleConfirm}
+                  disabled={bookingLoading}
+                >
+                  {bookingLoading ? (
+                    <><Loader2 size={13} className="animate-spin" /> Processing…</>
+                  ) : therapist.fee && therapist.fee > 0 ? (
+                    <>Pay ₹{therapist.fee.toLocaleString()} & Confirm &nbsp;→</>
+                  ) : (
+                    <>Confirm Session &nbsp;→</>
+                  )}
+                </button>
+              </div>
             )}
           </div>
         </div>

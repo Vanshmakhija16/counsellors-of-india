@@ -309,7 +309,7 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
 
                       {/* Title */}
                       <h3 style={{
-                        fontFamily:    "'Playfair Display', serif",
+                        fontFamily:    "'Fraunces', serif",
                         fontSize:      isActive ? (isMobile ? 18 : 22) : (isMobile ? 15 : 18),
                         fontWeight:    500,
                         fontStyle:     'italic',
@@ -332,7 +332,7 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
 
                       {/* Description — 3 lines on side, more on active */}
                       <p style={{
-                        fontFamily:       "'Plus Jakarta Sans', sans-serif",
+                        fontFamily:       "'Hanken Grotesk', sans-serif",
                         fontSize:         isActive ? (isMobile ? 12.5 : 13.5) : (isMobile ? 11.5 : 12.5),
                         lineHeight:       1.72,
                         fontWeight:       400,
@@ -385,7 +385,7 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
                               Per session
                             </span>
                             <span style={{
-                              fontFamily: "'Playfair Display', serif",
+                              fontFamily: "'Fraunces', serif",
                               fontSize:   isActive ? (isMobile ? 17 : 20) : (isMobile ? 14 : 16),
                               fontWeight: 500,
                               color:      isActive ? 'var(--sage)' : 'var(--ink-3)',
@@ -408,7 +408,7 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
                               border:       'none',
                               borderRadius: 10,
                               padding:      isMobile ? '8px 13px' : '9px 17px',
-                              fontFamily:   "'Plus Jakarta Sans', sans-serif",
+                              fontFamily:   "'Hanken Grotesk', sans-serif",
                               fontSize:     isMobile ? 11.5 : 12.5,
                               fontWeight:   600,
                               cursor:       'pointer',

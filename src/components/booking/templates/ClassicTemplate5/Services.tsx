@@ -40,7 +40,7 @@ export default function Services({ therapist }: ServicesProps) {
           <div>
             <div className="ct5-label">Specialties</div>
             <h2 className="ct5-section-title">
-              How I can <em>help you</em>
+              Services <em>for you</em>
             </h2>
           </div>
           <p className="ct5-section-body" style={{ maxWidth: '36ch', margin: 0 }}>

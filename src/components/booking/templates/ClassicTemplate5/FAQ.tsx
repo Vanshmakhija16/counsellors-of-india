@@ -55,8 +55,7 @@ export default function FAQ() {
           <div className="ct5-faq-sticky ct5-reveal">
             <div className="ct5-label">FAQ</div>
             <h2 className="ct5-section-title">
-              Common<br />
-              <em>questions</em>
+              Common<em> questions</em>
             </h2>
             <p className="ct5-section-body" style={{ marginTop: '1.5rem' }}>
               Have something else in mind? Feel free to reach out directly — I'm happy to help.

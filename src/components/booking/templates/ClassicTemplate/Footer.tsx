@@ -6,6 +6,13 @@ import type { TherapistProfile } from '../templateUtils'
 interface FooterProps { therapist: TherapistProfile }
 
 export default function Footer({ therapist }: FooterProps) {
+  // Peel off a leading honorific ("Dr.") so it can carry the accent colour,
+  // matching the hero headline. The rest of the name keeps the footer's cream.
+  const footerNameParts = (therapist.name ?? '').trim().split(/\s+/).filter(Boolean)
+  const footerHasHonorific = /^(dr|mr|mrs|ms|prof)\.?$/i.test(footerNameParts[0] ?? '')
+  const footerPrefix = footerHasHonorific ? footerNameParts[0] : ''
+  const footerRest = (footerHasHonorific ? footerNameParts.slice(1) : footerNameParts).join(' ')
+
   return (
 <footer className="relative overflow-hidden border-t border-[#e8dfc8] bg-[#1a1a18]">
 
@@ -25,7 +32,8 @@ export default function Footer({ therapist }: FooterProps) {
           className="text-[30px] leading-none tracking-[-0.03em] text-[#f3ece4]"
           style={{ fontFamily: "var(--font-fraunces), serif" }}
         >
-          {therapist.name}
+          {footerPrefix && <span className="text-[#b46b50]">{footerPrefix} </span>}
+          {footerRest || therapist.name}
         </p>
 
         <p className="mt-2 text-[12px] tracking-[0.08em] text-[#b46b50]">

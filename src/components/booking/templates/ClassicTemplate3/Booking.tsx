@@ -159,11 +159,11 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
 
               <dl>
                 <Spec k="Duration"     v={`${therapist.sessionDuration ?? 50} minutes`} />
-                <Spec
+                {/* <Spec
                   k="Investment"
                   v={effectivePrice ? `₹ ${effectivePrice.toLocaleString()}` : '—'}
                   highlight={!!selectedService?.price}
-                />
+                /> */}
                 <Spec k="Format"       v="Online · In-person" />
                 <Spec k="Cancellation" v="Free up to 48 hrs" />
                 <Spec k="Confirmation" v="Instant via email" />
@@ -213,7 +213,7 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
                   <span className="ct3-eyebrow" style={{ display: 'block', marginBottom: '0.9rem' }}>Select a day</span>
                   <div style={{ height: 1, background: 'var(--rule)', marginBottom: '1rem' }} />
                   {availableDays.length === 0 ? (
-                    <p className="ct3-serif" style={{ fontSize: 14, color: 'var(--ink-3)', fontStyle: 'italic' }}>
+                    <p className="ct3-serif" style={{ fontSize: 14, color: 'var(--ink-3)' }}>
                       No availability found. Contact directly to schedule.
                     </p>
                   ) : (

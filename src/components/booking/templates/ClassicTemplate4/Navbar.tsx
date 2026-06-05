@@ -6,6 +6,8 @@ import type { TherapistProfile } from '../templateUtils'
 interface NavProps {
   scrollTo: (id: string) => void
   therapist: TherapistProfile
+  theme: 'dark' | 'light'
+  onToggleTheme: () => void
 }
 
 const SECTIONS = [
@@ -18,7 +20,7 @@ const SECTIONS = [
 ]
 
 
-export default function Navbar({ scrollTo, therapist }: NavProps) {
+export default function Navbar({ scrollTo, therapist, theme, onToggleTheme }: NavProps) {
   const [activeId, setActiveId] = useState('home')
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
@@ -91,7 +93,27 @@ export default function Navbar({ scrollTo, therapist }: NavProps) {
           </nav>
 
           {/* Right actions */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div className="ct4-nav-actions">
+            {/* Theme toggle (dark ↔ light) */}
+            <button
+              className="ct4-theme-toggle"
+              onClick={onToggleTheme}
+              aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+              title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
+            >
+              {theme === 'dark' ? (
+                /* Sun — click to go light */
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+                  <circle cx="12" cy="12" r="4" />
+                  <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41" />
+                </svg>
+              ) : (
+                /* Moon — click to go dark */
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+                </svg>
+              )}
+            </button>
             <button
               className="ct4-nav-cta"
               onClick={() => { scrollTo('book'); setMenuOpen(false) }}

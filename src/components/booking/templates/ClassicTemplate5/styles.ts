@@ -176,21 +176,23 @@ export const ct5Styles = `
     align-items: center;
     gap: 8px;
     padding: 11px 24px;
-    background: var(--forest);
-    color: var(--cream);
+    // background: var(--forest);
+    color: var(--sage);
     font-family: 'Inter', sans-serif;
     font-size: 11px;
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    border: none;
-    border-radius: var(--radius-pill);
+ background: transparent; transform: translateY(-1px); color:var(--sage); border :5px inset var(--sage); border-radius:50px;  
+
     cursor: pointer;
     transition: background 0.25s ease, transform 0.2s ease;
     white-space: nowrap;
   }
   @media (min-width: 580px) { .ct5-nav-cta { display: inline-flex; } }
-  .ct5-nav-cta:hover { background: var(--sage); transform: translateY(-1px); }
+
+  // .ct5-nav-cta:hover { background: var(--sage); transform: translateY(-1px); }
+  .ct5-nav-cta:hover { background: transparent; transform: translateY(-1px); color:var(--sage); border :5px outset var(--sage); border-radius:50px;  }
 
   /* Hamburger */
   .ct5-hamburger {
@@ -314,17 +316,17 @@ export const ct5Styles = `
     inset: 0;
     object-fit: cover;
     width: 100%; height: 100%;
-    opacity: 0.75;
-    mix-blend-mode: luminosity;
+    // opacity: 0.75;
+    // mix-blend-mode: luminosity;
   }
-  .ct5-hero-photo-overlay {
-    position: absolute; inset: 0;
-    background: linear-gradient(
-      135deg,
-      rgba(45,74,50,0.55) 0%,
-      rgba(122,158,126,0.2) 60%,
-      rgba(196,133,90,0.15) 100%
-    );
+  // .ct5-hero-photo-overlay {
+  //   position: absolute; inset: 0;
+  //   background: linear-gradient(
+  //     135deg,
+  //     rgba(45,74,50,0.55) 0%,
+  //     rgba(122,158,126,0.2) 60%,
+  //     rgba(196,133,90,0.15) 100%
+  //   );
   }
   .ct5-hero-no-photo {
     position: absolute; inset: 0;
@@ -408,19 +410,23 @@ export const ct5Styles = `
     font-weight: 400;
     line-height: 1.0;
     letter-spacing: -0.02em;
-    color: var(--ink);
+    // color: var(--ink);
+        color: var(--forest);
+
     margin: 0 0 1rem;
   }
   .ct5-hero-name em {
     font-style: italic;
-    color: var(--sage);
+    // color: var(--forest);
+        color: var(--ink);
+
   }
 
   .ct5-hero-cred {
     font-family: 'Inter', sans-serif;
     font-size: 13px;
     font-weight: 400;
-    color: var(--warm-gray);
+    color: var(--sage);
     letter-spacing: 0.02em;
     margin: 0 0 1.6rem;
   }
@@ -449,6 +455,18 @@ export const ct5Styles = `
     gap: 14px;
     flex-wrap: wrap;
     margin-bottom: 3rem;
+  }
+  /* Mobile: keep both CTAs on a single row, sharing the width evenly */
+  @media (max-width: 560px) {
+    .ct5-hero-ctas { flex-wrap: nowrap; gap: 10px; }
+    .ct5-hero-ctas .ct5-btn-primary,
+    .ct5-hero-ctas .ct5-btn-ghost {
+      flex: 1 1 0;
+      justify-content: center;
+      padding-left: 16px;
+      padding-right: 16px;
+      white-space: nowrap;
+    }
   }
 
   /* Mobile stats */
@@ -553,6 +571,7 @@ export const ct5Styles = `
   .ct5-container {
     max-width: 1220px;
     margin: 0 auto;
+    
   }
 
   .ct5-label {
@@ -567,14 +586,14 @@ export const ct5Styles = `
     color: var(--sage);
     margin-bottom: 1.2rem;
   }
-  .ct5-label::before {
-    content: '';
-    display: block;
-    width: 20px; height: 1.5px;
-    background: var(--sage);
-    border-radius: 2px;
-    flex-shrink: 0;
-  }
+  // .ct5-label::before {
+  //   content: '';
+  //   display: block;
+  //   width: 20px; height: 1.5px;
+  //   background: var(--sage);
+  //   border-radius: 2px;
+  //   flex-shrink: 0;
+  // }
 
   .ct5-section-title {
     font-family: 'Cormorant Garamond', serif;
@@ -661,7 +680,9 @@ export const ct5Styles = `
   /* ════════════════════════════════════════════
      ABOUT SECTION
   ════════════════════════════════════════════ */
-  .ct5-about { background: var(--surface-warm); }
+  // .ct5-about { background: var(--surface-warm); }
+  .ct5-about { background: var(--bg); }
+
   .ct5-about-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -920,7 +941,7 @@ export const ct5Styles = `
   /* ════════════════════════════════════════════
      FAQ
   ════════════════════════════════════════════ */
-  .ct5-faq { background: var(--surface-warm); }
+  .ct5-faq { background: var(--bg); }
   .ct5-faq-grid {
     display: grid;
     grid-template-columns: 1fr 1.5fr;
@@ -1002,39 +1023,62 @@ export const ct5Styles = `
     margin: 1rem 0 2rem;
   }
 
-  /* Session card */
+  /* Session card — premium dark "ticket" with depth + organic glow */
   .ct5-session-card {
-    background: var(--forest);
+    position: relative;
+    background:
+      radial-gradient(120% 80% at 0% 0%, rgba(122,158,126,0.20), transparent 55%),
+      var(--forest);
+    border: 1px solid rgba(255,255,255,0.06);
     border-radius: var(--radius-lg);
-    padding: 2rem 2.2rem;
+    padding: 1.9rem 2.1rem;
     margin-bottom: 1.5rem;
+    box-shadow: 0 1px 2px rgba(26,46,28,0.2), 0 24px 50px -28px rgba(26,46,28,0.55);
+    overflow: hidden;
+  }
+  /* faint corner ring for crafted, editorial feel */
+  .ct5-session-card::after {
+    content: '';
+    position: absolute; right: -50px; bottom: -50px;
+    width: 150px; height: 150px; border-radius: 50%;
+    border: 1px solid rgba(168,197,171,0.16);
+    pointer-events: none;
   }
   .ct5-session-title {
+    display: flex; align-items: center; gap: 9px;
     font-family: 'Inter', sans-serif;
     font-size: 9px;
     font-weight: 600;
-    letter-spacing: 0.22em;
+    letter-spacing: 0.24em;
     text-transform: uppercase;
     color: var(--sage-light);
-    margin-bottom: 1.2rem;
-    display: block;
+    margin-bottom: 1.3rem;
+  }
+  .ct5-session-title::before {
+    content: '';
+    width: 16px; height: 1.5px; border-radius: 2px;
+    background: var(--sage-light); flex-shrink: 0;
   }
   .ct5-session-row {
+    position: relative; z-index: 1;
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
+    padding: 11px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
   }
-  .ct5-session-row:last-child { border-bottom: none; }
+  .ct5-session-row:last-child { border-bottom: none; padding-bottom: 0; }
   .ct5-session-key {
-    font-size: 12px;
-    color: rgba(247,244,239,0.45);
-    font-weight: 400;
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: rgba(247,244,239,0.5);
+    font-weight: 500;
   }
   .ct5-session-val {
     font-family: 'Cormorant Garamond', serif;
-    font-size: 16px;
+    font-size: 18px;
     font-weight: 500;
     color: var(--cream);
     text-align: right;
@@ -1042,11 +1086,20 @@ export const ct5Styles = `
 
   /* Booking card */
   .ct5-booking-card {
+    position: relative;
     background: var(--surface);
     border: 1.5px solid var(--border);
     border-radius: 24px;
     padding: 2.5rem;
-    box-shadow: 0 4px 40px rgba(30,26,20,0.06);
+    box-shadow: 0 1px 2px rgba(30,26,20,0.04), 0 20px 50px -24px rgba(30,26,20,0.18);
+    overflow: hidden;
+  }
+  /* Subtle sage→terra hairline across the top — quiet premium accent */
+  .ct5-booking-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--sage), var(--terra-light));
+    opacity: 0.9;
   }
 
   .ct5-booking-step-label {
@@ -1066,39 +1119,41 @@ export const ct5Styles = `
   }
 
   /* Day chips */
-  .ct5-day-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .ct5-day-chips { display: flex; flex-wrap: wrap; gap: 9px; }
   .ct5-day-chip {
-    padding: 9px 16px;
-    background: transparent;
+    padding: 11px 18px;
+    background: var(--surface);
     border: 1.5px solid var(--border);
-    border-radius: var(--radius-pill);
+    border-radius: 12px;            /* match the time slots (was pill) */
     font-family: 'Inter', sans-serif;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
+    letter-spacing: 0.01em;
     color: var(--charcoal);
     cursor: pointer;
-    transition: all 0.2s ease;
+    transition: transform 0.2s ease, border-color 0.2s ease, color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
     white-space: nowrap;
   }
-  .ct5-day-chip:hover:not(.selected) { border-color: var(--sage); color: var(--forest); }
-  .ct5-day-chip.selected { background: var(--forest); color: var(--cream); border-color: var(--forest); }
+  .ct5-day-chip:hover:not(.selected) { border-color: var(--sage); color: var(--forest); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(45,74,50,0.08); }
+  .ct5-day-chip.selected { background: var(--forest); color: var(--cream); border-color: var(--forest); box-shadow: 0 8px 20px rgba(45,74,50,0.22); }
 
-  /* Time chips */
-  .ct5-time-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  /* Time chips — grid so they tile evenly, rounded to match day chips */
+  .ct5-time-chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 9px; }
   .ct5-time-chip {
-    padding: 8px 14px;
-    background: transparent;
+    padding: 11px 12px;
+    background: var(--surface);
     border: 1.5px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: 12px;
     font-family: 'Inter', sans-serif;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--charcoal);
     cursor: pointer;
-    transition: all 0.2s ease;
+    text-align: center;
+    transition: transform 0.2s ease, border-color 0.2s ease, color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
   }
-  .ct5-time-chip:hover:not(.selected) { border-color: var(--sage-light); }
-  .ct5-time-chip.selected { background: var(--sage); color: var(--cream); border-color: var(--sage); }
+  .ct5-time-chip:hover:not(.selected) { border-color: var(--sage-light); color: var(--forest); transform: translateY(-1px); box-shadow: 0 6px 16px rgba(122,158,126,0.12); }
+  .ct5-time-chip.selected { background: var(--sage); color: var(--cream); border-color: var(--sage); box-shadow: 0 8px 20px rgba(122,158,126,0.3); }
 
   /* Input fields */
   .ct5-input-group { display: flex; flex-direction: column; gap: 4px; }

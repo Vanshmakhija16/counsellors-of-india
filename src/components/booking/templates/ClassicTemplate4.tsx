@@ -22,6 +22,7 @@ interface ClassicTemplate4Props {
 export default function ClassicTemplate4({ therapist, bookedTimes = [], hiddenSections = [] }: ClassicTemplate4Props) {
   const show = (id: string) => !hiddenSections.includes(id)
   const [loaded, setLoaded] = useState(false)
+  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const heroRef = useRef<HTMLElement | null>(null)
   const rootRef = useRef<HTMLDivElement | null>(null)
 
@@ -64,9 +65,14 @@ export default function ClassicTemplate4({ therapist, bookedTimes = [], hiddenSe
   }
 
   return (
-    <div className="ct4-root" ref={rootRef}>
+    <div className="ct4-root" data-theme={theme} ref={rootRef}>
       <style>{ct4Styles}</style>
-      <Navbar scrollTo={scrollTo} therapist={therapist} />
+      <Navbar
+        scrollTo={scrollTo}
+        therapist={therapist}
+        theme={theme}
+        onToggleTheme={() => setTheme(t => (t === 'dark' ? 'light' : 'dark'))}
+      />
       <main>
         {show('hero')     && <Hero     therapist={therapist} loaded={loaded} heroRef={heroRef} />}
         {show('ticker')   && <Ticker   therapist={therapist} />}

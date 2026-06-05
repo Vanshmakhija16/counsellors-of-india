@@ -11,7 +11,7 @@ interface FAQItem {
 const faqs: FAQItem[] = [
   {
     q: 'Do you offer a first consultation?',
-    a: 'Yes — a 20-minute introductory call, complimentary, so we can both feel out whether we are the right fit. There is no obligation to continue after that conversation.',
+    a: 'Yes, a 20 minute introductory call, complimentary, so we can both feel out whether we are the right fit. There is no obligation to continue after that conversation.',
   },
   {
     q: 'Online or in-person sessions?',

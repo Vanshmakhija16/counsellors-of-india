@@ -145,19 +145,19 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
       <div className="pointer-events-none absolute -left-32 -bottom-32 h-[400px] w-[400px] rounded-full bg-[#b46b50]/40 blur-[90px]" />
       <div className="pointer-events-none absolute -right-20 -top-20 h-[300px] w-[300px] rounded-full bg-[#b46b50]/30 blur-[80px]" />
 
-      <div className="relative z-10 mx-auto max-w-[1180px] px-6 pt-20 pb-32 lg:px-12 lg:pt-24 lg:pb-44">
+      <div className="relative z-10 mx-auto max-w-[1180px] px-4 pt-20 pb-32 sm:px-6 lg:px-12 lg:pt-24 lg:pb-44">
         <div className="mb-10 flex items-center gap-3">
           
           <p className="text-[11px] font-medium uppercase tracking-[0.30em] text-[#6b6056]"> Book A Session</p>
         </div>
 
-        <div className="grid overflow-hidden rounded-[24px] border border-[#b46b50]/60 bg-[#f5ecd6] shadow-2xl shadow-[#1a1a18]/15 lg:grid-cols-[1fr_1.1fr]">
+        <div className="grid overflow-hidden rounded-[24px] border border-[#b46b50]/60 bg-[#f5ecd6] shadow-2xl shadow-[#1a1a18]/15 lg:grid-cols-[1fr_1.1fr]" style={{ minWidth: 0 }}>
 
           {/* LEFT — info */}
-          <div className="flex flex-col justify-between p-8 lg:p-12">
+          <div className="flex min-w-0 flex-col justify-between p-5 sm:p-8 lg:p-12">
             <div>
               <h2
-                className="text-[40px] font-normal leading-[1] tracking-[-0.03em] text-[#1a1a18] lg:text-[56px]"
+                className="text-[34px] font-normal leading-[1] tracking-[-0.03em] text-[#1a1a18] sm:text-[40px] lg:text-[56px]"
                 style={{ fontFamily: 'var(--font-fraunces), serif' }}
               >
                 Begin your<br />
@@ -216,7 +216,7 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
           </div>
 
           {/* RIGHT — booking flow */}
-          <div className="flex flex-col justify-center border-l border-[#b46b50]/40 bg-[#efe7d6] p-8 lg:p-12">
+          <div className="flex min-w-0 flex-col justify-center border-t border-[#b46b50]/40 bg-[#efe7d6] p-5 sm:p-8 lg:border-l lg:border-t-0 lg:p-12">
 
             {booked ? (
               <div className="text-center">
@@ -259,12 +259,12 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
                     All slots booked for this day.
                   </p>
                 ) : (
-                  <div className="grid grid-cols-3 gap-2 sm:grid-cols-4">
+                  <div className="grid grid-cols-2 gap-2 min-[400px]:grid-cols-3 sm:grid-cols-4">
                     {slotsForDay.map(slot => (
                       <button
                         key={slot.isoTime}
                         onClick={() => { setSelectedSlot(slot.label); setSelectedSlotIso(slot.isoTime) }}
-                        className="rounded-full border border-[#b46b50] bg-[#f5ecd6] py-2.5 text-[11.5px] font-medium text-[#6b6056] transition-all duration-200 hover:bg-[#b46b50] hover:text-white hover:shadow-sm"
+                        className="rounded-full border border-[#b46b50] bg-[#f5ecd6] px-1 py-2.5 text-center text-[11.5px] font-medium whitespace-nowrap text-[#6b6056] transition-all duration-200 hover:bg-[#b46b50] hover:text-white hover:shadow-sm"
                       >
                         {slot.label}
                       </button>

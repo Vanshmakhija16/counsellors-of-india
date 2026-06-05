@@ -7,7 +7,7 @@ import { resolveCT4Content } from '../templateUtils'
 interface InsightsProps { therapist: TherapistProfile }
 
 const DEFAULT_REVIEWS = [
-  { text: 'Working with this therapist has been one of the most transformative decisions of my life. The depth of understanding — both clinical and human — is extraordinary.', name: 'A.M.' },
+  { text: 'Working with this therapist has been one of the most transformative decisions of my life. The depth of understanding, both clinical and human, is extraordinary.', name: 'A.M.' },
   { text: 'I was deeply sceptical of therapy before our first session. Within six weeks I had tools I still use every day. The care in this practice is genuinely rare.', name: 'R.V.' },
   { text: 'Professional, warm, entirely non-judgmental. I always leave a session with clarity I did not enter with. I cannot recommend this practice highly enough.', name: 'S.P.' },
 ]

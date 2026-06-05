@@ -99,6 +99,14 @@ export default function SideNav({ scrollTo, therapist }: SideNavProps) {
               {s.label}
             </button>
           ))}
+
+          {/* Reserve lives INSIDE the drawer on mobile/tablet — no nav crowding */}
+          <button
+            className="ct3-btn-primary ct3-drawer-cta"
+            onClick={() => { scrollTo('book'); setMenuOpen(false) }}
+          >
+            Reserve a session
+          </button>
         </div>
       </header>
     </>
