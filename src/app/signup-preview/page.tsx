@@ -48,8 +48,8 @@ export default function SignupPreviewPage() {
                 <option>None</option>
               </select>
               <input
-                type="text" defaultValue="Priya Sharma"
-                placeholder="Priya Sharma"
+                type="text" defaultValue="Karan Sharma"
+                placeholder="Karan Sharma"
                 className="flex-1 h-11 px-4 rounded-lg border border-[#e8e4df] text-[#1c1c1e] placeholder-[#6b7280] text-sm focus:outline-none focus:ring-2 focus:ring-[#FF9933]/50 focus:border-transparent"
               />
             </div>

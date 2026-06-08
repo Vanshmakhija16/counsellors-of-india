@@ -3,7 +3,7 @@
 export const demoProfiles: Record<string, any> = {
   classic1: {
     id: 'demo-classic1',
-    name: 'Dr. Priya Sharma',
+    name: 'Dr. Karan Sharma',
     credentials: 'PhD Clinical Psychology, RCI Licensed',
     bio: 'I work with adults navigating anxiety, burnout, grief, and the quieter struggles that rarely have simple names. My approach is warm, direct, and grounded in evidence — shaped by CBT, ACT, and somatic work.',
     image: '',
@@ -61,7 +61,7 @@ export const demoProfiles: Record<string, any> = {
   },
   classic3: {
     id: 'demo-classic3',
-    name: 'Ananya Singh',
+    name: 'Karan Singh',
     credentials: 'MSc Clinical Psychology, RCI Registered',
     bio: 'A practice rooted in compassion and evidence-based methods. I work with individuals and couple navigating anxiety, relationship difficulties, and trauma. Sessions are collaborative, warm, and tailored to your journey.',
     image: '',
@@ -137,7 +137,7 @@ export const demoProfiles: Record<string, any> = {
   },
   classic5: {
     id: 'demo-classic5',
-    name: 'Ananya Singh',
+    name: 'Karan Singh',
     credentials: 'MSc Clinical Psychology, RCI Registered',
     bio: 'A grounded, compassionate practice for those navigating anxiety, trauma, and the complexities of modern life. I bring warmth, evidence, and genuine curiosity to every session.',
     image: '',

@@ -69,7 +69,7 @@ export default function Step1Profile({ data, onChange, onNext }: Props) {
       <Input
         label="Full name"
         type="text"
-        placeholder="Dr. Priya Sharma"
+        placeholder="Dr. Karan Sharma"
         value={data.full_name || ''}
         onChange={e => onChange({ ...data, full_name: e.target.value })}
       />

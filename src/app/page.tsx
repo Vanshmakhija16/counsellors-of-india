@@ -5643,10 +5643,10 @@ padding:
 /* the experience stage */
 .texp-stage{
   position:relative;z-index:2;
-  width:min(92vw,1240px);margin:0 auto;
+  width:min(98vw,1440px);margin:0 auto;
 }
 .texp-window{
-  width:min(1100px,75%);
+  width:min(1500px,80%);
   // height:82vh;
   margin:0 auto;
   border-radius:var(--r-sm);
@@ -7045,13 +7045,13 @@ const MINIS: Record<string,React.ReactNode> = {
   t1:(
     <div style={{background:'#F0EBE2',width:'100%',height:'100%',display:'flex',flexDirection:'column',fontFamily:'Georgia,serif'}}>
       <div style={{background:'rgba(240,235,226,.97)',borderBottom:'1px solid rgba(26,26,24,.08)',padding:'14px 28px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-        <span style={{fontSize:15,color:'#1a1a18',letterSpacing:'-.01em'}}>Dr. Priya Sharma</span>
+        <span style={{fontSize:15,color:'#1a1a18',letterSpacing:'-.01em'}}>Dr. Karan Sharma</span>
         <span style={{fontSize:10,background:'#1a1a18',color:'#f0ebe2',padding:'5px 14px',borderRadius:4,letterSpacing:'.08em'}}>BOOK SESSION</span>
       </div>
       <div style={{flex:1,padding:'48px 60px',display:'flex',gap:48,alignItems:'center'}}>
         <div style={{flex:1}}>
           <div style={{fontSize:10,color:'#b46b50',letterSpacing:'.18em',textTransform:'uppercase',marginBottom:12}}>Clinical Psychologist · Mumbai</div>
-          <div style={{fontSize:64,fontWeight:300,color:'#1a1a18',lineHeight:.95,letterSpacing:'-.03em',marginBottom:24}}>Priya<br/>Sharma</div>
+          <div style={{fontSize:64,fontWeight:300,color:'#1a1a18',lineHeight:.95,letterSpacing:'-.03em',marginBottom:24}}>Karan<br/>Sharma</div>
           <div style={{fontSize:11,color:'#6a6a60',lineHeight:1.7,maxWidth:'44ch',marginBottom:28}}>A calm, trusted space for healing. Specialising in anxiety, relationships, and life transitions.</div>
           <div style={{display:'inline-block',background:'#1a1a18',color:'#f0ebe2',fontSize:10,padding:'10px 22px',borderRadius:4,letterSpacing:'.08em'}}>Begin your journey</div>
         </div>
@@ -7092,13 +7092,13 @@ const MINIS: Record<string,React.ReactNode> = {
   t3:(
     <div style={{background:'#F4F8F5',width:'100%',height:'100%',display:'flex',flexDirection:'column'}}>
       <div style={{background:'rgba(244,248,245,.96)',borderBottom:'1px solid rgba(28,43,38,.07)',padding:'14px 28px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-        <span style={{fontSize:14,color:'#1C2B26',fontFamily:'Georgia,serif',letterSpacing:'-.01em'}}>Ananya Singh</span>
+        <span style={{fontSize:14,color:'#1C2B26',fontFamily:'Georgia,serif',letterSpacing:'-.01em'}}>Karan Singh</span>
         <span style={{fontSize:10,background:'#3A6655',color:'#fff',padding:'5px 14px',borderRadius:100,letterSpacing:'.04em'}}>Book a session</span>
       </div>
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',flex:1}}>
         <div style={{padding:'60px 48px',display:'flex',flexDirection:'column',justifyContent:'center'}}>
           <div style={{fontSize:10,letterSpacing:'.16em',textTransform:'uppercase',color:'#3A6655',marginBottom:16,opacity:.7}}>Counsellor</div>
-          <div style={{fontFamily:'Georgia,serif',fontSize:64,color:'#1C2B26',lineHeight:.95,marginBottom:8}}>Ananya<br/><em style={{color:'#3A6655'}}>Singh</em></div>
+          <div style={{fontFamily:'Georgia,serif',fontSize:64,color:'#1C2B26',lineHeight:.95,marginBottom:8}}>Karan<br/><em style={{color:'#3A6655'}}>Singh</em></div>
           <div style={{height:2,width:48,background:'#3A6655',opacity:.3,margin:'20px 0'}}/>
           <div style={{fontSize:11,color:'#5a6e6a',lineHeight:1.75,maxWidth:'36ch',marginBottom:32}}>Creating space for clarity, growth, and authentic self-understanding.</div>
           <div style={{display:'inline-block',background:'#3A6655',color:'#fff',fontSize:10,padding:'10px 22px',borderRadius:100,width:'fit-content'}}>Begin today</div>
@@ -7199,9 +7199,9 @@ const PLANS_DATA = [
 ]
 
 const TESTIS = [
-  { q:"I had a fully working booking page within an hour of signing up. My clients love how clean and professional it looks.", n:'Dr. Priya M.', r:'Clinical Psychologist, Mumbai' },
+  { q:"I had a fully working booking page within an hour of signing up. My clients love how clean and professional it looks.", n:'Dr. Karan M.', r:'Clinical Psychologist, Mumbai' },
   { q:"Before this I was managing everything on WhatsApp. Now my schedule is organised and I look credible.", n:'Rajan K.', r:'Therapist, Bangalore' },
-  { q:"The templates are beautiful. I got three new clients in the first week just from sharing my profile link.", n:'Ananya S.', r:'Counsellor, Delhi' },
+  { q:"The templates are beautiful. I got three new clients in the first week just from sharing my profile link.", n:'Karan S.', r:'Counsellor, Delhi' },
 ]
 
 /* ─────────────────────────────────────────────────────────────────
@@ -7548,7 +7548,7 @@ function StepMock({ step }: { step: number }) {
               <div className="smk-idrow">
                 <div className="smk-avatar lg"><span className="smk-usr" /></div>
                 <div className="smk-grid2 smk-idrow-fields">
-                  <div className="smk-field"><span className="smk-flabel">Full name</span><div className="smk-input">Dr. Priya Sharma</div></div>
+                  <div className="smk-field"><span className="smk-flabel">Full name</span><div className="smk-input">Dr. Karan Sharma</div></div>
                   <div className="smk-field"><span className="smk-flabel">City</span><div className="smk-input">Mumbai</div></div>
                 </div>
               </div>
@@ -7599,7 +7599,7 @@ function StepMock({ step }: { step: number }) {
               <div className="smk-mainhead">
                 <div>
                   <div className="smk-eyebrow">Step 3 of 3 · Dashboard</div>
-                  <div className="smk-h2">Welcome back, Priya </div>
+                  <div className="smk-h2">Welcome back, Karan </div>
                 </div>
                 <div className="smk-steps" aria-hidden="true">
                   <i className="done" /><i className="done" /><i className="on" />
@@ -8338,7 +8338,7 @@ function DemoForm({ templateId, previewHref, activeName }:
           className="tshow-input"
           value={form.full_name ?? ''}
           onChange={e => update({ full_name: e.target.value })}
-          placeholder="Dr. Priya Sharma"
+          placeholder="Dr. Karan Sharma"
         />
       </label>
 
@@ -8773,9 +8773,9 @@ export default function Home() {
   const marqueeProfiles = useMemo(()=>{
     if(therapists.length>=6) return therapists
     const placeholders = [
-      {full_name:'Dr. Priya Sharma', title:'Clinical Psychologist · Mumbai', username:'#'},
+      {full_name:'Dr. Karan Sharma', title:'Clinical Psychologist · Mumbai', username:'#'},
       {full_name:'Rajan Kumar',       title:'Psychotherapist · Bangalore',   username:'#'},
-      {full_name:'Ananya Singh',      title:'Counsellor · Delhi',            username:'#'},
+      {full_name:'Karan Singh',      title:'Counsellor · Delhi',            username:'#'},
       {full_name:'Dr. Rahul Verma',   title:'Trauma · EMDR · Mumbai',         username:'#'},
       {full_name:'Vikram Nair',       title:'Psychotherapist · Chennai',      username:'#'},
       {full_name:'Meera Joshi',       title:'CBT Therapist · Pune',           username:'#'},
@@ -9022,7 +9022,7 @@ export default function Home() {
               <div className="prac-panel-header">
                 <div className="prac-panel-av">P</div>
                 <div className="prac-panel-id">
-                  <div className="prac-panel-name">Dr. Priya Sharma</div>
+                  <div className="prac-panel-name">Dr. Karan Sharma</div>
                   <div className="prac-panel-role">Clinical Psychologist · Mumbai</div>
                 </div>
                 <div className="prac-panel-live">
@@ -9043,7 +9043,7 @@ export default function Home() {
                   <div className="prac-panel-upcoming-label">Upcoming today</div>
                   {[
                     {i:'R',n:'Rajan K.',t:'10:00 AM — 50 min',bg:'#EBEBEB',c:'#13140F',b:'Confirmed',bc:'#F4EFE2',bt:'#B8862C'},
-                    {i:'A',n:'Ananya S.',t:'12:30 PM — 50 min',bg:'#E8E8E8',c:'#13140F',b:'Pending',bc:'#F5F0E8',bt:'#8A6030'},
+                    {i:'A',n:'Karan S.',t:'12:30 PM — 50 min',bg:'#E8E8E8',c:'#13140F',b:'Pending',bc:'#F5F0E8',bt:'#8A6030'},
                     {i:'M',n:'Meera T.',t:'3:00 PM — 50 min',bg:'#F0F0F0',c:'#3a3a30',b:'Confirmed',bc:'#F4EFE2',bt:'#B8862C'},
                   ].map(a=>(
                     <div key={a.n} className="prac-appt">

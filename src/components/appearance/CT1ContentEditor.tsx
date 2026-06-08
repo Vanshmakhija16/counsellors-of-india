@@ -205,7 +205,7 @@ export default function CT1ContentEditor({ value, onChange }: Props) {
                 <Field label="Client name">
                   <input value={slide.name ?? ''}
                     onChange={e => patch({ carousel: c.carousel.map((s, j) => j === i ? { ...s, name: e.target.value } : s) })}
-                    placeholder="Priya M." className={inp} />
+                    placeholder="Karan M." className={inp} />
                 </Field>
                 <Field label="Role / label">
                   <input value={slide.role ?? ''}

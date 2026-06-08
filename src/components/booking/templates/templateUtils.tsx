@@ -159,7 +159,7 @@ const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct'
 const MIN_ADVANCE_HOURS = 4   // slots within this many hours from now are hidden
 
 // Fallback profile photo used by every template when a therapist has no image.
-export const DEFAULT_PROFILE_IMAGE = '/profiledemo.png'
+export const DEFAULT_PROFILE_IMAGE = '/profiledemo2.png'
 
 /** Returns the therapist's image, or the shared demo image if none is set. */
 export function resolveImage(image?: string | null): string {
@@ -261,7 +261,7 @@ export const SAMPLE_THERAPIST: TherapistProfile = {
   specialties: ['Anxiety', 'Depression', 'Relationships', 'Grief', 'Self-Esteem', 'Work Stress'],
   languages: ['English', 'Hindi', 'Marathi'], experience: 8,
   reviews: [
-    { name: 'A.M.', rating: 5, text: 'Dr. Priya helped me through one of the hardest years of my life.' },
+    { name: 'A.M.', rating: 5, text: 'Dr. Karan helped me through one of the hardest years of my life.' },
     { name: 'R.V.', rating: 5, text: 'I was nervous about online therapy but she made it feel completely natural.' },
     { name: 'S.P.', rating: 5, text: 'Very professional, empathetic, and non-judgmental.' },
   ],
@@ -282,7 +282,7 @@ export const DEFAULT_CT1_CONTENT: Required<CT1Content> = {
     { type: 'quote', tag: 'Guiding Philosophy', text: '"The curious paradox is that when I accept myself just as I am, then I can change."', author: '— Carl Rogers', sub: 'On becoming a person' },
     { type: 'stats', tag: 'By The Numbers', headline: 'Proven Results', stats: [{ val: '94%', label: 'Report reduced anxiety after 8 sessions' }, { val: '87%', label: 'Clients return for continued growth' }, { val: '500+', label: 'Sessions delivered' }] },
     { type: 'process', tag: 'The Process', headline: 'How We Work Together', steps: [{ n: '01', t: 'Free Consultation', d: 'A 20-min call to understand your needs and answer your questions.' }, { n: '02', t: 'Tailored Plan', d: 'We co-create a therapy approach matched to your goals.' }, { n: '03', t: 'Weekly Sessions', d: 'Consistent, focused 50-minute sessions online or in-person.' }] },
-    { type: 'testimonial', tag: 'Client Stories', quote: '"I came in feeling completely lost. Six months later I have language for my feelings, tools for hard days, and a relationship with myself I never thought possible."', name: 'Priya M.', role: 'Client — 2024' },
+    { type: 'testimonial', tag: 'Client Stories', quote: '"I came in feeling completely lost. Six months later I have language for my feelings, tools for hard days, and a relationship with myself I never thought possible."', name: 'Karan M.', role: 'Client — 2024' },
   ],
 }
 

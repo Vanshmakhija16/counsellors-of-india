@@ -481,7 +481,7 @@ with the design and details you chose. </p> </div>
           required
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
-          placeholder="Priya Sharma"
+          placeholder="Karan Sharma"
           className="
             h-11
             px-4
@@ -584,9 +584,9 @@ with the design and details you chose. </p> </div>
         </div>
       )}
 
-      <p className="text-xs text-[#6b7280] mt-1.5">
+      {/* <p className="text-xs text-[#6b7280] mt-1.5">
         Only lowercase letters, numbers, and hyphens
-      </p>
+      </p> */}
     </div>
 
     <Input

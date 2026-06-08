@@ -135,7 +135,7 @@ export default function FeedbackManager({ therapistId }: FeedbackManagerProps) {
             type="text"
             value={form.client_name}
             onChange={(e) => setForm((f) => ({ ...f, client_name: e.target.value }))}
-            placeholder="Client name (e.g. Priya M.)"
+            placeholder="Client name (e.g. Karan M.)"
             className="h-10 w-full rounded-lg border border-[#e8e4df] bg-white px-3 text-sm text-[#1c1c1e] placeholder-[#9ca3af] outline-none focus:border-[#a3b8b4] focus:ring-2 focus:ring-[#a3b8b4]/30"
           />
           <input

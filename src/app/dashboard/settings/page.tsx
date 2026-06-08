@@ -235,7 +235,7 @@ if (photoFile) {
           label="Full name"
           value={form.full_name}
           onChange={e => setForm({ ...form, full_name: e.target.value })}
-          placeholder="Dr. Priya Sharma"
+          placeholder="Dr. Arjun Sharma"
         />
 
         <Input
