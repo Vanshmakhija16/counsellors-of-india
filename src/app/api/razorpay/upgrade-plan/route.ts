@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       .update({
         plan:               targetPlan,
         highest_plan:       newHighest,        // ← persisted so re-selection is free
-        plan_payment_id:    razorpay_payment_id,
+        razorpay_payment_id: razorpay_payment_id,
         plan_activated_at:  new Date().toISOString(),
       })
       .eq('id', user.id)

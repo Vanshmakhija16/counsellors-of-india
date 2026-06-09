@@ -18,6 +18,8 @@ const headlines = [
     Get clients & bookings<span className="text-[#ff9933]"> seamlessly.  </span> <span className="text-[#ff9933]"> </span>  
   </>,
 ];
+
+
 /* ─────────────────────────────────────────────────────────────────
    COUNSELLORS OF INDIA  —  Premium homepage
    Selling points (in order of focus):
@@ -5643,10 +5645,10 @@ padding:
 /* the experience stage */
 .texp-stage{
   position:relative;z-index:2;
-  width:min(98vw,1440px);margin:0 auto;
+  width:calc(100% - 32px);max-width:1200px;margin:0 auto;
 }
 .texp-window{
-  width:min(1500px,80%);
+  width:100%;
   // height:82vh;
   margin:0 auto;
   border-radius:var(--r-sm);
@@ -5692,24 +5694,28 @@ padding:
 
 /* frame */
 .texp-frame-wrap{
-  /* fit the whole window (chrome bar + frame) inside one screen with padding:
-     100vh − top/bottom section padding − chrome bar height */
+  /* Fixed pixel height per device (set via --texp-h on the wrap) — NOT
+     viewport units, so it renders identically in every browser/window.
+     Each device height is tuned so its hero fills one frame. */
+  --texp-h:680px;            /* desktop default */
   position:relative;width:100%;
-  /* center the simulated device horizontally */
-  display:flex;justify-content:center;align-items:stretch;
-  height:calc(100svh - 2 * var(--section-y) - 56px);
-  max-height:760px;min-height:420px;
+  display:flex;justify-content:center;align-items:flex-start;
+  height:var(--texp-h);
   background:var(--surf-1);
   overflow:hidden;
   overscroll-behavior: contain;
-
 }
+.texp-frame-wrap.is-mobile{ --texp-h:600px; }
+.texp-frame-wrap.is-tablet{ --texp-h:660px; }
+.texp-frame-wrap.is-desktop{ --texp-h:500px; }
+
 /* holds the device-sized iframe and never lets it exceed the wrap width */
 .texp-frame-scaler{
   height:100%;max-width:100%;display:flex;
 }
 .texp-frame{
-  height:100%;border:0;display:block;background:#fff;max-width:100%;
+  height:100%;
+  border:0;display:block;background:#fff;max-width:100%;
 }
 .texp-loading{
   position:absolute;inset:0;z-index:2;
@@ -7045,7 +7051,7 @@ const MINIS: Record<string,React.ReactNode> = {
   t1:(
     <div style={{background:'#F0EBE2',width:'100%',height:'100%',display:'flex',flexDirection:'column',fontFamily:'Georgia,serif'}}>
       <div style={{background:'rgba(240,235,226,.97)',borderBottom:'1px solid rgba(26,26,24,.08)',padding:'14px 28px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-        <span style={{fontSize:15,color:'#1a1a18',letterSpacing:'-.01em'}}>Dr. Karan Sharma</span>
+        <span style={{fontSize:15,color:'#1a1a18',letterSpacing:'-.01em'}}>Dr. Karan </span>
         <span style={{fontSize:10,background:'#1a1a18',color:'#f0ebe2',padding:'5px 14px',borderRadius:4,letterSpacing:'.08em'}}>BOOK SESSION</span>
       </div>
       <div style={{flex:1,padding:'48px 60px',display:'flex',gap:48,alignItems:'center'}}>
@@ -7548,7 +7554,7 @@ function StepMock({ step }: { step: number }) {
               <div className="smk-idrow">
                 <div className="smk-avatar lg"><span className="smk-usr" /></div>
                 <div className="smk-grid2 smk-idrow-fields">
-                  <div className="smk-field"><span className="smk-flabel">Full name</span><div className="smk-input">Dr. Karan Sharma</div></div>
+                  <div className="smk-field"><span className="smk-flabel">Full name</span><div className="smk-input">Dr. Karan </div></div>
                   <div className="smk-field"><span className="smk-flabel">City</span><div className="smk-input">Mumbai</div></div>
                 </div>
               </div>
@@ -7765,7 +7771,7 @@ const previewUrl = `/preview/classic${cur.n}`
           <div className="texp-chrome">
             <span className="texp-chrome-dot" /><span className="texp-chrome-dot" /><span className="texp-chrome-dot" />
             <span className="texp-chrome-url">counsellorsofindia.com/your-name</span>
-            {/* <div className="texp-devices" role="group" aria-label="Preview device">
+            <div className="texp-devices" role="group" aria-label="Preview device">
               {(['mobile', 'tablet', 'desktop'] as const).map((d) => (
                 <button
                   key={d}
@@ -7779,10 +7785,10 @@ const previewUrl = `/preview/classic${cur.n}`
                   {d === 'mobile' ? '▯' : d === 'tablet' ? '▭' : '▢'}
                 </button>
               ))}
-            </div> */}
+            </div>
             <span className="texp-chrome-live"><span className="texp-chrome-live-dot" />Live demo</span>
           </div>
-          <div className="texp-frame-wrap">
+          <div className={`texp-frame-wrap is-${device}`}>
             {loading && (
               <div className="texp-loading">
                 <span className="texp-spin" />
@@ -8338,7 +8344,7 @@ function DemoForm({ templateId, previewHref, activeName }:
           className="tshow-input"
           value={form.full_name ?? ''}
           onChange={e => update({ full_name: e.target.value })}
-          placeholder="Dr. Karan Sharma"
+          placeholder="Dr. Karan"
         />
       </label>
 
@@ -8773,7 +8779,7 @@ export default function Home() {
   const marqueeProfiles = useMemo(()=>{
     if(therapists.length>=6) return therapists
     const placeholders = [
-      {full_name:'Dr. Karan Sharma', title:'Clinical Psychologist · Mumbai', username:'#'},
+      {full_name:'Dr. Karan ', title:'Clinical Psychologist · Mumbai', username:'#'},
       {full_name:'Rajan Kumar',       title:'Psychotherapist · Bangalore',   username:'#'},
       {full_name:'Karan Singh',      title:'Counsellor · Delhi',            username:'#'},
       {full_name:'Dr. Rahul Verma',   title:'Trauma · EMDR · Mumbai',         username:'#'},
@@ -9429,6 +9435,8 @@ export default function Home() {
           <div className="faq-wordmark-reveal">
     {/* <HangingWordmark /> */}
   </div>
+
+  
       </section>
 
       {/* ══════════════════════════════════════════════════════════════

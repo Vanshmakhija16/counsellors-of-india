@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import Button from '@/components/ui/Button'
 import { Check, Lock, Zap, ArrowRight, ShieldCheck, Crown, X } from 'lucide-react'
-import { useRazorpay } from '@/lib/useRazorpay'
+import { startPayuPlanCheckout } from '@/lib/payu-client'
 
 const PLAN_PRICE: Record<string, number> = { starter: 1, pro: 2499 }
 const PLAN_RANK:  Record<string, number> = { starter: 1,    pro: 2   }
@@ -75,7 +75,6 @@ function PricingPageInner() {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const supabase     = createClient()
-  const { openRazorpay, loading: rzpLoading } = useRazorpay()
 
   const [currentPlan,   setCurrentPlan]   = useState<string | null>(null)
   const [highestPlan,   setHighestPlan]   = useState<string>('free') // highest plan ever paid for
@@ -141,7 +140,6 @@ const highest =
         return
       }
       const uid = user?.id ?? userId!
-      const uemail = user?.email ?? userEmail
 
       // Already on this plan → just navigate
       if (planId === currentPlan) {
@@ -169,37 +167,15 @@ const highest =
         return
       }
 
-      // New paid plan → Razorpay
-      await openRazorpay({
-        amount:      PLAN_PRICE[planId],
-        description: `Counsellors of India — ${planId.charAt(0).toUpperCase() + planId.slice(1)} Plan (Monthly)`,
-        receipt:     `plan_${planId}_${uid}`.slice(0, 40),
-        prefill:     { email: uemail ?? '' },
-
-        onSuccess: async (payload) => {
-          const res = await fetch('/api/razorpay?action=plan-upgrade', {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify({ ...payload, therapist_id: uid, plan: planId }),
-          })
-          const data = await res.json()
-          if (!res.ok || !data.success) {
-            throw new Error(data.error ?? 'Plan upgrade failed. Please contact support.')
-          }
-          setCurrentPlan(planId)
-          setHighestPlan(planId) // update local state so subsequent re-selections skip payment
-          setSuccessMsg(`🎉 You're now on the ${planId.charAt(0).toUpperCase() + planId.slice(1)} plan!`)
-          sessionStorage.removeItem('pending_plan')
-          setTimeout(() => router.push(redirectAfter), 1200)
-        },
-
-        onFailure: (msg) => {
-          if (msg !== 'Payment cancelled by user.') setErrorMsg(msg)
-        },
-      })
+      // New paid plan → PayU hosted checkout.
+      // This redirects the browser away to PayU; on return, /api/payu/callback
+      // verifies the response hash, applies the upgrade, and routes the user to
+      // /payment/success (or /payment/failure). uid + plan travel via udf1/udf2.
+      sessionStorage.setItem('pending_plan', planId)
+      await startPayuPlanCheckout(planId)
+      // Browser navigates to PayU here — nothing below runs on success.
     } catch (err: unknown) {
       setErrorMsg(err instanceof Error ? err.message : 'Something went wrong.')
-    } finally {
       setSelecting(null)
     }
   }
@@ -418,7 +394,7 @@ const highest =
           <Button
             variant={plan.highlight ? 'primary' : 'outline'}
             fullWidth
-            loading={isBusy || (rzpLoading && isBusy)}
+            loading={isBusy}
             onClick={() => handleSelectPlan(plan.id)}
             disabled={isActive}
             className={
@@ -497,7 +473,7 @@ const highest =
                   size={12}
                   className="text-[#FF9933]"
                 />
-                Secure payment via Razorpay
+                Secure payment via PayU
               </p>
             </div>
           )}

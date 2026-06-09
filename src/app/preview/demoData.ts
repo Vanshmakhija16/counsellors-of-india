@@ -3,7 +3,7 @@
 export const demoProfiles: Record<string, any> = {
   classic1: {
     id: 'demo-classic1',
-    name: 'Dr. Karan Sharma',
+    name: 'Dr. Karan ',
     credentials: 'PhD Clinical Psychology, RCI Licensed',
     bio: 'I work with adults navigating anxiety, burnout, grief, and the quieter struggles that rarely have simple names. My approach is warm, direct, and grounded in evidence — shaped by CBT, ACT, and somatic work.',
     image: '',

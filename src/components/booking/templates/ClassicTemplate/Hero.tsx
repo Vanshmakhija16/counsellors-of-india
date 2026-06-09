@@ -68,11 +68,11 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
     <section
       id="home"
       ref={heroRef}
-      className={`relative overflow-hidden bg-[#efe7d6] pt-32 pb-28 px-6 lg:px-12 lg:pt-44 lg:pb-36 transition-all duration-1000 ${
+      className={`relative overflow-hidden bg-[#efe7d6] px-6 pt-28 pb-16 lg:px-12 lg:pt-32 lg:pb-20 transition-all duration-1000 ${
         heroLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}
     >
-      <div className="relative z-10 mx-auto px-8 max-w-[1180px]">
+      <div className="relative z-10 mx-auto w-full px-8 max-w-[1180px]">
         <div className="grid grid-cols-1 items-center gap-16 lg:grid-cols-[1.1fr_0.9fr] lg:gap-20">
 
           {/* ─────────── LEFT — editorial copy ─────────── */}

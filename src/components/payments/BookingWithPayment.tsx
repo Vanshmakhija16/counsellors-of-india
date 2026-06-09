@@ -72,7 +72,7 @@ export default function BookingWithPayment({
     return (
       <div className="flex flex-col items-center justify-center py-8 gap-3 text-center">
         <div className="w-14 h-14 rounded-full bg-green-100 flex items-center justify-center">
-          <CheckCircle2 size={28} className="text-green-600" />
+          <CheckCircle2 size={28} className="text-orange-600" />
         </div>
         <p className="text-lg font-semibold text-[#1c1c1e]">Payment successful!</p>
         <p className="text-sm text-[#6b7280]">Your session is confirmed. Check your email.</p>

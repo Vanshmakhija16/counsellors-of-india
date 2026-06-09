@@ -86,7 +86,9 @@ export async function POST(req: NextRequest) {
     }
 
     // 4. Verify HMAC signature using therapist's own secret
-    const therapistData = payment.therapists as {
+    // payments.therapists can be returned as an array (due to select relation) or as an object.
+    const rawTherapists = payment.therapists as unknown
+    const therapistData = (Array.isArray(rawTherapists) ? (rawTherapists[0] as any) : (rawTherapists as any)) as {
       razorpay_key_secret_encrypted: string | null
       full_name: string | null
       email: string | null
