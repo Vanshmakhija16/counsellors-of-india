@@ -34,7 +34,9 @@ function ForgotPasswordForm() {
     setError('')
 
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      // Use the configured live URL in production; fall back to the current
+      // origin locally so the reset link always points to the right site.
+      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin}/reset-password`,
     })
 
     if (error) {
