@@ -266,8 +266,10 @@ function SignupForm() {
     // now-verified account so they can log in normally later. If this fails the
     // account would have NO password and every future login returns "Invalid
     // credentials" — so surface the error instead of completing silently.
+    // "should be different from the old password" means the password is ALREADY
+    // set to what the user chose (e.g. a retry) — that's success, not an error.
     const { error: pwErr } = await supabase.auth.updateUser({ password })
-    if (pwErr) {
+    if (pwErr && !/different from the old password/i.test(pwErr.message)) {
       setOtpError(`Could not set your password: ${pwErr.message}`)
       setLoading(false)
       return

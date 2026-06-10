@@ -8,14 +8,14 @@ import Button from '@/components/ui/Button'
 import { Check, Lock, Zap, ArrowRight, ShieldCheck, Crown, X } from 'lucide-react'
 import { startPayuPlanCheckout } from '@/lib/payu-client'
 
-const PLAN_PRICE: Record<string, number> = { starter: 1, pro: 2499 }
+const PLAN_PRICE: Record<string, number> = { starter: 1499, pro: 2499 }
 const PLAN_RANK:  Record<string, number> = { starter: 1,    pro: 2   }
 
 const plans = [
   {
     id: 'starter',
     name: 'Starter',
-    price: '₹0.9',
+    price: '₹1499',
     period: '/ year',
     tagline: 'Professional website for independent therapists',
     highlight: false,

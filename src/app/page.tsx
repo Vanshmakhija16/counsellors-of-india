@@ -7172,7 +7172,7 @@ const AVP=[
 const FILTERS = ['All','Anxiety','Depression','Trauma','Relationships','Burnout','Career','Online','In-person']
 
 const PLANS_DATA = [
-  { id:'starter', name:'Starter', price:'₹0.9',    period:'/ year', hi:true, badge:null,           feats:['professional therapist website','Custom domain' ,'Online Appointment Booking','Payment Collection ','Email confirmations','Client Dashboard', 'Shareable profile link', 'Up to 10 bookings per month'], cta:'Get Started', g:true  },
+  { id:'starter', name:'Starter', price:'₹1499',    period:'/ year', hi:true, badge:null,           feats:['professional therapist website','Custom domain' ,'Online Appointment Booking','Payment Collection ','Email confirmations','Client Dashboard', 'Shareable profile link', 'Up to 10 bookings per month'], cta:'Get Started', g:true  },
 { 
   id:'pro',
   name:'PRO',

@@ -22,7 +22,7 @@ import {
 } from '@/lib/payu'
 
 // Server-authoritative pricing — never trust an amount sent from the client.
-const PLAN_PRICE: Record<string, number> = { starter: 1, pro: 2499 }
+const PLAN_PRICE: Record<string, number> = { starter: 1499, pro: 2499 }
 
 export async function POST(req: NextRequest) {
   try {
