@@ -55,7 +55,8 @@
       "Bash(grep -ivE \"/\\\\*|\\\\*/|//\")",
       "Bash(npx next *)",
       "Bash(xxd src/app/favicon.ico)",
-      "Bash(grep -n '^\\\\s*`$' src/components/booking/templates/ClassicTemplate4/styles.ts)"
+      "Bash(grep -n '^\\\\s*`$' src/components/booking/templates/ClassicTemplate4/styles.ts)",
+      "Bash(git checkout *)"
     ],
     "additionalDirectories": [
       "\\tmp",

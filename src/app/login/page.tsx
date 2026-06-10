@@ -75,7 +75,10 @@ try {
           <div className="space-y-1.5">
             <div className="flex justify-between items-center">
               <label className="text-sm font-medium text-gray-500">Password</label>
-              <Link href="/forgot-password" className="text-xs text-[#E07A12] hover:underline">
+              <Link
+                href={`/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ''}`}
+                className="text-xs text-[#E07A12] hover:underline"
+              >
                 Forgot password?
               </Link>
             </div>

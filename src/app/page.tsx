@@ -5444,10 +5444,8 @@ padding:
   padding: 0 clamp(1.5rem, 5vw, 3rem);
   display: grid;
   grid-template-columns: minmax(0, 1.35fr) minmax(380px, 0.65fr);
-  gap: 2rem;
-  align-items: start;
   gap: clamp(1.5rem, 3vw, 2.5rem);
-  // align-items: stretch;             /* equal height */
+  align-items: stretch;               /* right form matches the left preview height */
 }
 .tshow-split-left {
   min-width: 0;
@@ -5459,6 +5457,7 @@ padding:
 .tshow-split-left .tshow-stage { max-width: none; margin: 0; flex: 1; }
 .tshow-form {
   display: flex; flex-direction: column; gap: 10px;
+  height: 100%;                       /* fill the cell so it matches the left preview */
   background: var(--paper, #fff);
   border: 1px solid var(--border, rgba(31,26,20,.09));
   border-radius: 18px;
@@ -5584,8 +5583,12 @@ padding:
 ═══════════════════════════════════════════════════════════════ */
 .texp{
   position:relative;
-  z-index:4;
-  padding:var(--section-y) 0;
+  /* Sits ABOVE the fixed navbar (z-index:1000) so the section scrolls over and
+     hides it — its opaque background covers the nav behind it. */
+  z-index:1001;
+  /* Clean gap above (from navbar); larger gap below before the next section.
+     Same on every device. */
+  padding: clamp(2rem, 5vh, 3.5rem) 0 clamp(3.5rem, 9vh, 6rem);
   background: var(--surf-2, #FDF5EC);   /* opaque surface so it covers the hero behind it */
 }
 .texp-glow{
@@ -5645,11 +5648,19 @@ padding:
 /* the experience stage */
 .texp-stage{
   position:relative;z-index:2;
-  width:calc(100% - 32px);max-width:1200px;margin:0 auto;
+  /* Responsive side gutter: near-full phone width, roomier on desktop. */
+  width:calc(100% - clamp(12px, 4vw, 32px));
+  max-width:1200px;margin:0 auto;
 }
 .texp-window{
   width:100%;
-  // height:82vh;
+  /* The whole window (chrome bar + frame) is sized to the viewport and laid
+     out as a column. The chrome bar takes its natural height; the frame fills
+     the rest — so the entire preview is responsive as ONE unit and fits in one
+     view on every device, no overflow, no inner scroll. */
+  --texp-chrome-out: clamp(155px, 22vh, 225px);   /* heading + tabs + section gaps */
+  height: clamp(595px, calc(100vh - var(--texp-chrome-out)), 1115px);
+  display:flex;flex-direction:column;
   margin:0 auto;
   border-radius:var(--r-sm);
   overflow:hidden;
@@ -5657,6 +5668,7 @@ padding:
   border:1px solid var(--border);
   box-shadow:var(--shadow-lg);
 }
+.texp-window .texp-chrome{ flex:none; }   /* chrome bar = natural height */
 .texp-chrome{
   display:flex;align-items:center;gap:8px;
   padding:13px 18px;background:#FBFAF8;
@@ -5694,28 +5706,24 @@ padding:
 
 /* frame */
 .texp-frame-wrap{
-  /* Fixed pixel height per device (set via --texp-h on the wrap) — NOT
-     viewport units, so it renders identically in every browser/window.
-     Each device height is tuned so its hero fills one frame. */
-  --texp-h:680px;            /* desktop default */
+  /* Fills whatever height remains in the window below the chrome bar (flex),
+     so the frame is automatically responsive without estimating the chrome
+     height. The scaled preview inside fills this area. */
   position:relative;width:100%;
-  display:flex;justify-content:center;align-items:flex-start;
-  height:var(--texp-h);
+  flex:1;min-height:0;
+  display:flex;justify-content:center;align-items:flex-start;  /* fill from the top */
+  box-sizing:border-box;
   background:var(--surf-1);
   overflow:hidden;
   overscroll-behavior: contain;
 }
-.texp-frame-wrap.is-mobile{ --texp-h:600px; }
-.texp-frame-wrap.is-tablet{ --texp-h:660px; }
-.texp-frame-wrap.is-desktop{ --texp-h:500px; }
 
-/* holds the device-sized iframe and never lets it exceed the wrap width */
+/* sized to the scaled hero footprint (set inline); holds the scaled iframe */
 .texp-frame-scaler{
-  height:100%;max-width:100%;display:flex;
+  position:relative;flex:none;overflow:hidden;
 }
 .texp-frame{
-  height:100%;
-  border:0;display:block;background:#fff;max-width:100%;
+  border:0;display:block;background:#fff;
 }
 .texp-loading{
   position:absolute;inset:0;z-index:2;
@@ -7011,27 +7019,13 @@ padding:
 
 
 
-/* Each device width makes the iframe a real browser window of that size, so
-   the template's own @media breakpoints fire correctly inside the frame.
-   max-width:100% keeps the wide frames from overflowing on small screens. */
-
-/* Desktop */
-.texp-frame.desktop{
-  width:1280px;
-  max-width:100%;
-}
-
-/* Tablet */
-.texp-frame.tablet{
-  width:768px;
-  max-width:100%;
-}
-
-/* Mobile */
-.texp-frame.mobile{
-  width:390px;
-  max-width:100%;
-}
+/* Device width + height are set inline (fixed design size) and the iframe is
+   scaled with transform to fit the frame, so the template's own @media
+   breakpoints fire correctly while the whole hero stays visible. No max-width
+   clamp here — the scaler box + overflow:hidden bounds it. */
+.texp-frame.desktop,
+.texp-frame.tablet,
+.texp-frame.mobile{ max-width:none; }
   
 `
 
@@ -7723,7 +7717,63 @@ function LiveTemplateExperience() {
   // each template's own @media breakpoints fire correctly inside the frame.
   const [device, setDevice] = useState<'mobile' | 'tablet' | 'desktop'>('desktop')
 
-const previewUrl = `/preview/classic${cur.n}`
+  // The iframe is rendered at a fixed design size (one full hero) and SCALED to
+  // fit the frame's width AND height, so the whole section is always visible —
+  // no inner scroll, no crop — identically on every device and browser.
+  // Design size per device. Aspect ratio is tuned so the hero fills the frame
+  // WIDTH (no empty side bands) while showing one complete section. Desktop is
+  // wide-and-short like a real browser viewport; mobile/tablet are taller.
+  // Logical viewport width per device — the iframe renders at this width so the
+  // template's own @media breakpoints fire correctly. The HEIGHT is computed to
+  // fill the frame exactly (see below), so the preview covers the whole space.
+  const DESIGN_W: Record<typeof device, number> = {
+    desktop: 1280,
+    tablet:  834,
+    mobile:  390,
+  }
+  const frameWrapRef = useRef<HTMLDivElement>(null)
+  const [scale, setScale] = useState(1)
+  // Iframe's logical height (pre-scale). Sized so height × scale === frame
+  // height, i.e. the scaled preview fills the frame top-to-bottom with no gap.
+  const [iframeH, setIframeH] = useState(720)
+
+  useEffect(() => {
+    function measure() {
+      const el = frameWrapRef.current
+      if (!el) return
+      // Content box (excludes padding) — the real area the hero must fit in.
+      const cs = getComputedStyle(el)
+      const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight)
+      const padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)
+      const aw = el.clientWidth - padX
+      const ah = el.clientHeight - padY
+      if (aw <= 0 || ah <= 0) return
+      const dw = DESIGN_W[device]
+      if (device === 'desktop') {
+        // Desktop: fill the WIDTH, and size the iframe height so that — once
+        // scaled — it fills the frame HEIGHT exactly. Covers the whole space.
+        const s = aw / dw
+        setScale(s)
+        setIframeH(Math.ceil(ah / s))
+      } else {
+        // Mobile/tablet keep their narrow shape: fit the full device height,
+        // centred, so the whole phone/tablet screen shows (no width blow-up).
+        const s = ah / 760
+        setScale(s)
+        setIframeH(760)
+      }
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    if (frameWrapRef.current) ro.observe(frameWrapRef.current)
+    window.addEventListener('resize', measure)
+    return () => { ro.disconnect(); window.removeEventListener('resize', measure) }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [device])
+
+// embed=1 strips the preview page's own top padding / device chrome so the
+// template fills our frame edge-to-edge (no inner white bands).
+const previewUrl = `/preview/classic${cur.n}?embed=1`
 
 
   // Fallback: clear the loading overlay even if the iframe onLoad is missed
@@ -7788,20 +7838,34 @@ const previewUrl = `/preview/classic${cur.n}`
             </div>
             <span className="texp-chrome-live"><span className="texp-chrome-live-dot" />Live demo</span>
           </div>
-          <div className={`texp-frame-wrap is-${device}`}>
+          <div ref={frameWrapRef} className={`texp-frame-wrap is-${device}`}>
             {loading && (
               <div className="texp-loading">
                 <span className="texp-spin" />
                 <span className="texp-loading-t">Loading {cur.name}…</span>
               </div>
             )}
-            <div className="texp-frame-scaler">
+            {/* Box sized to the SCALED footprint — fills the frame completely
+                (width AND height) so the preview covers the whole space. */}
+            <div
+              className="texp-frame-scaler"
+              style={{
+                width: `${DESIGN_W[device] * scale}px`,
+                height: `${iframeH * scale}px`,
+              }}
+            >
               <iframe
                 key={`${cur.id}-${device}`}
                 className={frameClass}
                 src={previewUrl}
                 title={`${cur.name} live preview`}
                 onLoad={() => setLoading(false)}
+                style={{
+                  width: `${DESIGN_W[device]}px`,
+                  height: `${iframeH}px`,
+                  transform: `scale(${scale})`,
+                  transformOrigin: 'top left',
+                }}
               />
             </div>
           </div>

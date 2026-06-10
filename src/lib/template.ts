@@ -40,7 +40,7 @@ export interface TherapistProfile {
 
 // All plans are paid now (no free tier). Any active paid plan unlocks
 // every template.
-export const PAID_PLANS = new Set(['starter', 'growth', 'clinic'])
+export const PAID_PLANS = new Set(['starter', 'pro'])
 
 export function isPaid(plan: string | null | undefined): boolean {
   return !!plan && PAID_PLANS.has(plan)

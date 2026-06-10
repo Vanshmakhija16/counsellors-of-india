@@ -125,8 +125,8 @@ function SignupForm() {
   }
 
   function handleUsernameChange(val: string) {
-    const clean = val.toLowerCase().replace(/[^a-z0-9-]/g, '')
-    setUsername(clean)
+    // Accept the username exactly as typed — no filtering or lowercasing.
+    setUsername(val)
     setUsernameStatus('idle')
     setSuggestions([])
   }
@@ -163,14 +163,25 @@ function SignupForm() {
     }
   }
 
+  // Mirrors the Supabase project password policy so we reject weak passwords
+  // up front (before sending the OTP) instead of after verification.
+  function validatePassword(pw: string): string | null {
+    if (pw.length < 8) return 'Password must be at least 8 characters'
+    if (!/[a-z]/.test(pw)) return 'Password must contain a lowercase letter'
+    if (!/[A-Z]/.test(pw)) return 'Password must contain an uppercase letter'
+    if (!/[0-9]/.test(pw)) return 'Password must contain a number'
+    if (!/[!@#$%^&*()_+\-=[\]{};':"|<>?,./`~]/.test(pw))
+      return 'Password must contain a symbol (e.g. !@#$%)'
+    return null
+  }
+
   function validateForm(): string | null {
     if (!fullName.trim()) return 'Please enter your name'
     if (usernameStatus === 'taken') return 'Please choose a different username'
     if (!username || username.length < 3) return 'Username must be at least 3 characters'
     // Basic shape check; the OTP step proves the inbox actually exists.
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Please enter a valid email address'
-    if (password.length < 6) return 'Password must be at least 6 characters'
-    return null
+    return validatePassword(password)
   }
 
   // ── STEP 1: validate, then email a 6-digit verification code ────────────
@@ -209,11 +220,24 @@ function SignupForm() {
       options: { shouldCreateUser: true },
     })
 
-    if (otpErr) { setError(otpErr.message); setLoading(false); return }
+    // A rate-limit / "already registered" error here means a code was ALREADY
+    // emailed (e.g. the user hit back and retried) and an unconfirmed auth user
+    // exists — that user can't log in and isn't a real account. Don't dead-end:
+    // move to the OTP screen so the still-valid code can be entered. The
+    // therapists-row guard above already blocks genuinely completed accounts.
+    const alreadySent =
+      otpErr &&
+      (otpErr.status === 429 ||
+        /already|rate|seconds|exceeded/i.test(otpErr.message))
+
+    if (otpErr && !alreadySent) { setError(otpErr.message); setLoading(false); return }
 
     setStep('otp')
     setOtp('')
     setOtpError('')
+    if (alreadySent) {
+      setOtpError('A code was already sent to your email. Enter it below, or wait to resend.')
+    }
     setResendIn(45)
     setLoading(false)
   }
@@ -239,8 +263,15 @@ function SignupForm() {
     }
 
     // Email proven + live session in hand. Set the chosen password on the
-    // now-verified account so they can log in normally later.
-    await supabase.auth.updateUser({ password })
+    // now-verified account so they can log in normally later. If this fails the
+    // account would have NO password and every future login returns "Invalid
+    // credentials" — so surface the error instead of completing silently.
+    const { error: pwErr } = await supabase.auth.updateUser({ password })
+    if (pwErr) {
+      setOtpError(`Could not set your password: ${pwErr.message}`)
+      setLoading(false)
+      return
+    }
 
     await finishSignup(data.user.id)
   }
@@ -607,10 +638,10 @@ with the design and details you chose. </p> </div>
     <input
       type={showPassword ? 'text' : 'password'}
       required
-      minLength={6}
+      minLength={8}
       value={password}
       onChange={(e) => setPassword(e.target.value)}
-      placeholder="Minimum 6 characters"
+      placeholder="Minimum 8 characters"
       className="
         w-full
         h-11
@@ -649,6 +680,9 @@ with the design and details you chose. </p> </div>
       )}
     </button>
   </div>
+  <p className="text-xs text-[#6b7280] mt-1.5">
+    At least 8 characters, with an uppercase &amp; lowercase letter, a number, and a symbol.
+  </p>
 </div>
 
     {error && (

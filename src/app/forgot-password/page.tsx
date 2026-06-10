@@ -1,18 +1,28 @@
 'use client'
 
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import AuthLayout from '@/components/layout/AuthLayout'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import { createClient } from '@/lib/supabase'
 
 export default function ForgotPasswordPage() {
+  return (
+    <Suspense fallback={<AuthLayout title="Forgot Password"><div className="bg-white rounded-2xl border border-[#ece5d9] shadow-sm p-8"><div className="h-48" /></div></AuthLayout>}>
+      <ForgotPasswordForm />
+    </Suspense>
+  )
+}
+
+function ForgotPasswordForm() {
   const supabase = createClient()
   const router = useRouter()
+  const searchParams = useSearchParams()
 
-  const [email, setEmail] = useState('')
+  // Carry the email over from the login form (passed via ?email=).
+  const [email, setEmail] = useState(searchParams.get('email') ?? '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)

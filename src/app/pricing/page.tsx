@@ -421,7 +421,7 @@ const highest =
               </>
             ) : alreadyPaid ? (
               <>
-                Restore Access
+               Continue 
                 <ArrowRight size={14} className="ml-2" />
               </>
             ) : (

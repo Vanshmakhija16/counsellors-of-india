@@ -16,11 +16,23 @@ export default async function TherapistPublicPage({
   const { username } = await params
   const supabase = await createServerSupabaseClient()
 
-  const { data: therapist } = await supabase
-    .from('therapists')
-    .select('*')
-    .eq('username', username)
-    .maybeSingle()
+  // The URL segment may arrive with a leading "@" or surrounding whitespace
+  // (usernames are stored as typed). Try the exact value first, then a
+  // normalised form, so both /@agrim and /agrim resolve to the same profile.
+  // Separate .eq queries (not .or) so special chars in the username can't
+  // break the filter syntax.
+  const raw = decodeURIComponent(username).trim()
+  const candidates = [...new Set([raw, raw.replace(/^@+/, ''), `@${raw.replace(/^@+/, '')}`])]
+
+  let therapist = null
+  for (const candidate of candidates) {
+    const { data } = await supabase
+      .from('therapists')
+      .select('*')
+      .eq('username', candidate)
+      .maybeSingle()
+    if (data) { therapist = data; break }
+  }
 
   if (!therapist) notFound()
 

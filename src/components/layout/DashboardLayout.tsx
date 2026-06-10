@@ -9,7 +9,6 @@ import {
 } from 'lucide-react'
 import Logo from '../ui/Logo'
 import { createClient } from '@/lib/supabase'
-import { isPaid } from '@/lib/template'
 
 const navItems = [
   { label: 'Dashboard',    href: '/dashboard',              icon: LayoutDashboard, match: 'exact' as const },
@@ -40,7 +39,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (!user) { router.replace('/login?redirect=' + encodeURIComponent(pathname)); return }
       const { data } = await supabase.from('therapists').select('plan').eq('id', user.id).maybeSingle()
       if (!alive) return
-      if (isPaid(data?.plan)) {
+      // A plan exists (anything other than the unpaid placeholders) → dashboard.
+      const plan = data?.plan
+      const hasPlan = !!plan && !['none', 'free', ''].includes(plan)
+      if (hasPlan) {
         setGate('ok')
       } else {
         router.replace('/pricing?redirect=' + encodeURIComponent(pathname))

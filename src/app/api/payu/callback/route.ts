@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
       .update({
         plan,
         highest_plan: newHighest,
-        plan: mihpayid,
+        plan_payment_id: mihpayid,
         plan_activated_at: new Date().toISOString(),
       })
       .eq('id', therapistId)
