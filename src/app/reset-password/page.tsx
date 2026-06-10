@@ -1,12 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import AuthLayout from '@/components/layout/AuthLayout'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import { createClient } from '@/lib/supabase'
-import { Eye, EyeOff, Lock } from 'lucide-react' 
+import { Eye, EyeOff, Lock } from 'lucide-react'
 import Link from 'next/link'
 export default function ResetPasswordPage() {
   const supabase = createClient()
@@ -18,6 +18,18 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
 const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  // The recovery link arrives as /reset-password?code=... — exchange that code
+  // for a live session on load, otherwise updateUser() fails with
+  // "Auth session missing".
+  useEffect(() => {
+    const code = new URLSearchParams(window.location.search).get('code')
+    if (!code) return
+    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+      if (error) setError('This reset link is invalid or has expired. Please request a new one.')
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   async function handleReset(e: React.FormEvent) {
     e.preventDefault()
