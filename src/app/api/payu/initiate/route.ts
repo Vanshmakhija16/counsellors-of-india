@@ -51,7 +51,15 @@ export async function POST(req: NextRequest) {
     const udf1 = user.id
     const udf2 = plan
 
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? req.nextUrl.origin
+    // PayU must POST the callback to the CANONICAL host directly. If it posts to
+    // a host that 301-redirects (e.g. non-www → www), the redirect turns the
+    // POST into a GET and the callback 405s. Force the canonical www host.
+    let baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? req.nextUrl.origin
+    baseUrl = baseUrl.replace(/\/+$/, '')                       // no trailing slash
+    baseUrl = baseUrl.replace(
+      /^https?:\/\/counsellorsofindia\.com/i,
+      'https://www.counsellorsofindia.com',
+    )                                                            // non-www → canonical www
     const surl = `${baseUrl}/api/payu/callback`
     const furl = `${baseUrl}/api/payu/callback`
 
