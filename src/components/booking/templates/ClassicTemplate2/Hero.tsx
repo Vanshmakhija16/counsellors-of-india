@@ -47,11 +47,6 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
   const lastName = nameParts.slice(1).join(' ')
   const now = useNowInIST()
 
-  const yearEst =
-    (therapist.experience ?? 0) > 0
-      ? new Date().getFullYear() - (therapist.experience as number)
-      : null
-
   function scrollToBook() {
     document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })
   }
@@ -159,28 +154,28 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
                 </span>
               )}
               <span
-                className="ct2-word  block"
+                className="ct2-word  inline"
                 style={{ animationDelay: '0.05s' }}
               >
                 {firstName}
               </span>
               {lastName && (
                 <span
-                  className="ct2-word  ct2-serif-soft block"
+                  className="ct2-word  ct2-serif-soft inline"
                   style={{
                     color: 'var(--gold)',
                     animationDelay: '0.25s',
                     fontSize: '0.92em',
-                    marginTop: '0.18em',
+                    marginLeft: '0.3em',
                   }}
                 >
-                  {lastName}.
+                  {lastName}
                 </span>
               )}
             </h1>
 
-            {/* Tagline + CTA row */}
-            <div className="mt-14 lg:mt-20 grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-8 items-end">
+            {/* Tagline + CTA — stacked: tagline on top, buttons below in one row */}
+            <div className="mt-6 lg:mt-8 flex flex-col gap-6 items-start">
               <p
                 className="ct2-serif-soft"
                 style={{
@@ -194,7 +189,7 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
                   'A quiet, deliberate space for difficult feelings without performance, without shortcuts.'}
               </p>
 
-              <div className="flex flex-col gap-3">
+              <div className="flex flex-row flex-wrap gap-3">
                 <button onClick={scrollToBook} className="ct2-btn-primary">
                   Reserve a session
                   <ArrowDownRight size={16} />
@@ -207,7 +202,7 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
           </div>
 
           {/* RIGHT RAIL — portrait + index card stack */}
-          <aside className="flex flex-col gap-5 lg:pt-4">
+          <aside className="flex flex-col gap-5 lg:-mt-12">
 
 
 
@@ -218,7 +213,7 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
                 style={{
                   borderRadius: 4,
                   border: '1px solid var(--ink-3)',
-                  aspectRatio: '4 / 3',
+                  aspectRatio: '4 / 3.5',
                   background: 'var(--ink-2)',
                 }}
               >
@@ -227,87 +222,10 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
                   src={resolveImage(therapist.image)}
                   alt={fullName}
                   className="w-full h-full object-cover"
-                  style={{ filter: 'grayscale(0.2) contrast(1.06)' }}
+                  style={{ filter: 'grayscale(0.2) contrast(1.06)', objectPosition: 'center 15%' }}
                 />
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background:
-                      'linear-gradient(180deg, transparent 55%, rgba(11,13,14,0.85) 100%)',
-                  }}
-                />
-                <div
-                  className="absolute bottom-3 left-4 right-4 flex items-center justify-between ct2-mono"
-                  style={{ color: 'var(--bone)', fontSize: 10, letterSpacing: '0.18em' }}
-                >
-                  <span>{firstName.toUpperCase()}</span>
-                  <span style={{ color: 'var(--gold)' }}>● 2026</span>
-                </div>
               </div>
             )}
-
-
-            {/* Index card — staked metadata */}
-            <div
-              className="ct2-float ct2-card p-6"
-              style={{
-                background: 'var(--ink-1)',
-                borderRadius: 4,
-                border: '1px solid var(--ink-3)',
-              }}
-            >
-              <div className="flex items-center justify-between mb-5">
-                <span
-                  className="ct2-mono"
-                  style={{ fontSize: 10, color: 'var(--gold)', letterSpacing: '0.2em' }}
-                >
-                  ◇ INDEX / 001
-                </span>
-                <span
-                  className="ct2-mono"
-                  style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.16em' }}
-                >
-                  {yearEst ? `EST. ${yearEst}` : 'IN PRACTICE'}
-                </span>
-              </div>
-
-              <div className="space-y-3.5 text-sm" style={{ color: 'var(--bone)' }}>
-                {therapist.specialties && therapist.specialties.length > 0 && (
-                  <Row k="Focus" v={therapist.specialties.slice(0, 3).join(' · ')} />
-                )}
-                {therapist.languages && therapist.languages.length > 0 && (
-                  <Row k="Spoken" v={therapist.languages.join(' · ')} />
-                )}
-                <Row k="Format" v="Online · In-person" />
-                <Row
-                  k="Session"
-                  v={`${therapist.sessionDuration ?? 50} min${therapist.fee ? ` · ₹ ${therapist.fee.toLocaleString()}` : ''}`}
-                />
-              </div>
-
-              {/* Big year — large editorial number */}
-              {yearEst && (
-                <div className="mt-7 pt-6" style={{ borderTop: '1px solid var(--ink-3)' }}>
-                  <div
-                    className="ct2-serif-soft"
-                    style={{
-                      fontSize: 84,
-                      lineHeight: 0.9,
-                      color: 'var(--gold)',
-                      letterSpacing: '-0.04em',
-                    }}
-                  >
-                    &#8217;{String(yearEst).slice(-2)}
-                  </div>
-                  <div
-                    className="ct2-mono mt-2"
-                    style={{ fontSize: 10, letterSpacing: '0.18em', color: 'var(--mute)' }}
-                  >
-                    PRACTICING SINCE
-                  </div>
-                </div>
-              )}
-            </div>
 
 
           </aside>
@@ -378,16 +296,3 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
   )
 }
 
-function Row({ k, v }: { k: string; v: string }) {
-  return (
-    <div className="flex items-baseline gap-4">
-      <span
-        className="ct2-mono shrink-0"
-        style={{ fontSize: 10, letterSpacing: '0.16em', color: 'var(--mute)', width: 56 }}
-      >
-        {k.toUpperCase()}
-      </span>
-      <span style={{ fontSize: 13, lineHeight: 1.5, color: 'var(--bone)' }}>{v}</span>
-    </div>
-  )
-}

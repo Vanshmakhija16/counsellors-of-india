@@ -597,13 +597,19 @@ export const ct3Styles = `
 
   width: 100%;
 
-  height: min(62dvh, 680px);
+  height: min(74dvh, 820px);
 
   overflow: hidden;
 
   border-radius: 32px;
 
   background: var(--bg-alt);
+
+  /* The <img> carries this class directly, so cover/position must be here —
+     otherwise the photo stretches to fill the box and looks distorted. */
+  object-fit: cover;
+  object-position: center top;
+  display: block;
 }
 
 .ct3-hero-photo img {

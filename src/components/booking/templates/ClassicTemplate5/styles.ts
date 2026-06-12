@@ -315,6 +315,7 @@ export const ct5Styles = `
     position: absolute;
     inset: 0;
     object-fit: cover;
+    object-position: center 11%;
     width: 100%; height: 100%;
     // opacity: 0.75;
     // mix-blend-mode: luminosity;

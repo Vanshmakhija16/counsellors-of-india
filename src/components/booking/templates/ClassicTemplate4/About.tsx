@@ -148,7 +148,7 @@ const photoSrc = resolveImage(therapist?.image)
                 position: 'relative',
                 width: '100%',
                 aspectRatio: '4 / 5',
-                background: photoSrc ? '#1a1a1a' : 'var(--gold-glow)',
+                background: photoSrc ? 'var(--surface-2)' : 'var(--gold-glow)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',

@@ -203,7 +203,8 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
                 <img
                   src={resolveImage(therapist.image)}
                   alt={therapist.name}
-                  className="h-full w-full object-cover object-center"
+                  className="h-full w-full object-cover"
+                  style={{ objectPosition: 'center 25%' }}
                 />
               </div>
             </div>
