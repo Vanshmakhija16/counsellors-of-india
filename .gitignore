@@ -42,3 +42,7 @@ yarn-error.log*
 next-env.d.ts
 
 .vercel
+
+.supabase/migrations/add_availability_exceptions.sql
+.create mode 100644 supabase/migrations/add_template_lock.sql
+
