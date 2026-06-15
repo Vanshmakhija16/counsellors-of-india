@@ -18,7 +18,7 @@ export default function Footer({ therapist }: FooterProps) {
       }}
       className="px-6 lg:px-10 pt-20 pb-10"
     >
-      <div className="mx-auto max-w-[1240px]">
+      <div className="mx-auto max-w-[1080px]">
         <div className="grid grid-cols-1 md:grid-cols-[1.4fr_1fr_1fr] gap-12 mb-16">
           <div>
             <div
@@ -52,33 +52,21 @@ export default function Footer({ therapist }: FooterProps) {
             <ul className="space-y-2 text-sm" style={{ color: 'var(--bone)' }}>
               {therapist.instagram && (
                 <li>
-                  <a
-                    href={therapist.instagram}
-                    style={{ color: 'var(--bone)' }}
-                    className="hover:underline"
-                  >
+                  <a href={therapist.instagram} style={{ color: 'var(--bone)' }} className="hover:underline">
                     Instagram
                   </a>
                 </li>
               )}
               {therapist.linkedin && (
                 <li>
-                  <a
-                    href={therapist.linkedin}
-                    style={{ color: 'var(--bone)' }}
-                    className="hover:underline"
-                  >
+                  <a href={therapist.linkedin} style={{ color: 'var(--bone)' }} className="hover:underline">
                     LinkedIn
                   </a>
                 </li>
               )}
               {therapist.website && (
                 <li>
-                  <a
-                    href={therapist.website}
-                    style={{ color: 'var(--bone)' }}
-                    className="hover:underline"
-                  >
+                  <a href={therapist.website} style={{ color: 'var(--bone)' }} className="hover:underline">
                     Website
                   </a>
                 </li>

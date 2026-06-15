@@ -50,24 +50,11 @@ export default function Services() {
       className="px-6 lg:px-10 py-28 lg:py-36"
       style={{ background: 'var(--ink-1)' }}
     >
-      <div className="mx-auto max-w-[1240px]">
+      <div className="mx-auto max-w-[1080px]">
         <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-16">
           <div>
             <span className="ct2-eyebrow">— Services</span>
-            {/* <h2
-              className="ct2-serif mt-6"
-              style={{
-                fontSize: 'clamp(38px, 5vw, 64px)',
-                lineHeight: 1.05,
-                color: 'var(--bone)',
-              }}
-            >
-              Four shapes of <em style={{ color: 'var(--gold)' }}>work</em>.
-            </h2> */}
           </div>
-          {/* <p style={{ color: 'var(--mute)', maxWidth: '40ch', lineHeight: 1.7 }}>
-            Different presentations need different containers. Each modality below has its own tempo and structure.
-          </p> */}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-px" style={{ background: 'var(--ink-3)' }}>

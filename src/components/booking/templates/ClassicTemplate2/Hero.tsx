@@ -85,45 +85,10 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
       </div>
 
       <div
-        className={`relative z-10 mx-auto max-w-[1300px] w-full transition-opacity duration-700 ${
+        className={`relative z-10 mx-auto max-w-[1080px] w-full transition-opacity duration-700 ${
           heroLoaded ? 'opacity-100' : 'opacity-0'
         }`}
       >
-        {/* TOP META BAR — three colums of cinematic credits */}
-        {/* <div
-          className="grid grid-cols-2 lg:grid-cols-3 gap-y-3 gap-x-6 pb-10 lg:pb-16"
-          style={{ borderBottom: '1px solid var(--ink-3)' }}
-        >
-          <div className="flex items-center gap-3">
-            <span
-              className="ct2-pulse"
-              style={{
-                width: 7,
-                height: 7,
-                borderRadius: '50%',
-                background: 'var(--gold)',
-                boxShadow: '0 0 12px rgba(201,163,90,0.7)',
-              }}
-            />
-            <span className="ct2-mono" style={{ fontSize: 11, letterSpacing: '0.18em', color: 'var(--bone)' }}>
-              NOW BOOKING · 2026
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 lg:justify-center">
-            <MapPin size={11} style={{ color: 'var(--mute)' }} />
-            <span className="ct2-mono" style={{ fontSize: 11, letterSpacing: '0.16em', color: 'var(--mute)' }}>
-              {(therapist.location ?? 'INDIA').toUpperCase()} · {now || '—'} IST
-            </span>
-          </div>
-
-          <div className="col-span-2 lg:col-span-1 lg:text-right">
-            <span className="ct2-mono" style={{ fontSize: 11, letterSpacing: '0.18em', color: 'var(--mute)' }}>
-              ◇ {therapist.credentials ? therapist.credentials.toUpperCase() : 'PSYCHOTHERAPY PRACTICE'}
-            </span>
-          </div>
-        </div> */}
-
         {/* MAIN GRID — display headline + right rail */}
         <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_0.9fr] gap-12 lg:gap-20 mt-0 lg:mt-0">
           {/* LEFT — headline */}
@@ -204,8 +169,6 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
           {/* RIGHT RAIL — portrait + index card stack */}
           <aside className="flex flex-col gap-5 lg:-mt-12">
 
-
-
             {/* Portrait — smaller, framed */}
             {(
               <div
@@ -226,7 +189,6 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
                 />
               </div>
             )}
-
 
           </aside>
         </div>
@@ -295,4 +257,3 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
     </section>
   )
 }
-

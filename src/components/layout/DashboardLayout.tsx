@@ -18,19 +18,17 @@ const navItems = [
   { label: 'Availability', href: '/dashboard/availability', icon: Clock,           match: 'exact' as const },
   { label: 'Appearance',   href: '/dashboard/appearance',   icon: Palette,         match: 'exact' as const },
   { label: 'Payments',     href: '/dashboard/payments',     icon: CreditCard,      match: 'exact' as const },
-  { label: 'Upgrade Plan',     href: '/pricing',     icon: CreditCard,      match: 'exact' as const },
 ]
+
+const upgradeItem = { label: 'Upgrade Plan', href: '/pricing', icon: CreditCard, match: 'exact' as const }
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
   const [mobileOpen, setMobileOpen] = useState(false)
-  // Payment gate: 'checking' until we know the plan; 'ok' if paid; otherwise we
-  // redirect to /pricing. The dashboard never renders for an unpaid user.
   const [gate, setGate] = useState<'checking' | 'ok'>('checking')
 
-  // Hard gate — the dashboard requires an active paid plan.
   useEffect(() => {
     let alive = true
     ;(async () => {
@@ -39,7 +37,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (!user) { router.replace('/login?redirect=' + encodeURIComponent(pathname)); return }
       const { data } = await supabase.from('therapists').select('plan').eq('id', user.id).maybeSingle()
       if (!alive) return
-      // A plan exists (anything other than the unpaid placeholders) → dashboard.
       const plan = data?.plan
       const hasPlan = !!plan && !['none', 'free', ''].includes(plan)
       if (hasPlan) {
@@ -52,38 +49,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  // Close the mobile drawer whenever the route changes.
-  useEffect(() => {
-    setMobileOpen(false)
-  }, [pathname])
+  useEffect(() => { setMobileOpen(false) }, [pathname])
 
-  // Lock body scroll while the drawer is open.
   useEffect(() => {
     if (mobileOpen) {
       const prev = document.body.style.overflow
       document.body.style.overflow = 'hidden'
-      return () => {
-        document.body.style.overflow = prev
-      }
+      return () => { document.body.style.overflow = prev }
     }
   }, [mobileOpen])
 
-async function handleLogout() {
-  console.log('Logout clicked')
-
-  const { error } = await supabase.auth.signOut()
-
-  console.log('Signout response:', error)
-
-  if (error) {
-    console.error('Logout failed:', error.message)
-    return
+  async function handleLogout() {
+    const { error } = await supabase.auth.signOut()
+    if (error) { console.error('Logout failed:', error.message); return }
+    router.push('/login')
   }
-
-  console.log('Logout success')
-
-  router.push('/login')
-}
 
   function isActive(href: string, match: 'exact' | 'prefix') {
     return match === 'prefix'
@@ -91,99 +71,140 @@ async function handleLogout() {
       : pathname === href
   }
 
-  // While verifying the plan (or redirecting an unpaid user), show nothing but
-  // a spinner — never flash the dashboard to someone who hasn't paid.
   if (gate === 'checking') {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F6F3EE]">
-        <div className="w-6 h-6 border-2 border-[#FF9933] border-t-transparent rounded-full animate-spin" />
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#FFFCF8' }}>
+        <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#FF9933', borderTopColor: 'transparent' }} />
       </div>
     )
   }
 
   return (
-    <div className="flex h-screen bg-stone-50 overflow-hidden">
-      {/* ── Mobile top bar with hamburger ───────────────────────────── */}
-      <header className="lg:hidden fixed top-0 inset-x-0 z-30 h-14 bg-white border-b border-gray-100 flex items-center justify-between px-4">
+    <div className="flex h-screen overflow-hidden" style={{ background: '#FFFCF8', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
+
+      {/* ── Mobile top bar ───────────────────────────────────────── */}
+      <header
+        className="lg:hidden fixed top-0 inset-x-0 z-30 h-14 flex items-center justify-between px-4"
+        style={{ background: '#ffffff', borderBottom: '1px solid rgba(31,26,20,0.08)' }}
+      >
         <button
           type="button"
           onClick={() => setMobileOpen(true)}
           aria-label="Open menu"
-          className="h-10 w-10 rounded-lg flex items-center justify-center text-gray-700 hover:bg-gray-100 transition"
+          className="h-9 w-9 rounded-lg flex items-center justify-center transition"
+          style={{ color: '#46403A' }}
         >
           <Menu size={20} />
         </button>
         <Logo size="sm" />
-        <div className="w-10" /> {/* spacer to keep logo centered */}
+        <div className="w-9" />
       </header>
 
-      {/* ── Backdrop (mobile only, when drawer is open) ─────────────── */}
+      {/* ── Backdrop ─────────────────────────────────────────────── */}
       {mobileOpen && (
         <button
           type="button"
           aria-label="Close menu"
           onClick={() => setMobileOpen(false)}
-          className="lg:hidden fixed inset-0 z-40 bg-black/40"
+          className="lg:hidden fixed inset-0 z-40"
+          style={{ background: 'rgba(20,17,12,0.45)' }}
         />
       )}
 
-      {/* ── Sidebar ─────────────────────────────────────────────────
-        Desktop: static column, always visible.
-        Mobile:  fixed drawer, slides in/out from the left. */}
+      {/* ── Sidebar ──────────────────────────────────────────────── */}
       <aside
         className={`
-          bg-white border-r border-gray-100 flex flex-col shrink-0
+          flex flex-col shrink-0
           fixed inset-y-0 left-0 z-50 w-64
           transform transition-transform duration-200 ease-out
           ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:static lg:translate-x-0 lg:w-60
         `}
+        style={{
+          background: '#ffffff',
+          borderRight: '1px solid rgba(31,26,20,0.08)',
+        }}
       >
-        <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+        {/* Logo row */}
+        <div className="p-5 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(31,26,20,0.08)' }}>
           <Logo size="sm" />
-          {/* Close button — mobile only */}
           <button
             type="button"
             onClick={() => setMobileOpen(false)}
             aria-label="Close menu"
-            className="lg:hidden h-8 w-8 rounded-lg flex items-center justify-center text-gray-500 hover:text-gray-900 hover:bg-gray-100 transition"
+            className="lg:hidden h-8 w-8 rounded-lg flex items-center justify-center transition"
+            style={{ color: '#7A7166' }}
           >
             <X size={16} />
           </button>
         </div>
 
-        <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
+        {/* Nav */}
+        <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto">
           {navItems.map(({ label, href, icon: Icon, match }) => {
             const active = isActive(href, match)
             return (
               <Link
                 key={href}
                 href={href}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition
-                  ${active
-                    ? 'bg-[#d4e4e1] text-[#2d4a47]'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }`}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                style={active ? {
+                  background: 'rgba(255,153,51,0.10)',
+                  color: '#C46800',
+                  borderLeft: '3px solid #FF9933',
+                  paddingLeft: '9px',
+                } : {
+                  color: '#7A7166',
+                  borderLeft: '3px solid transparent',
+                  paddingLeft: '9px',
+                }}
               >
-                <Icon size={18} />
+                <Icon size={17} />
                 {label}
               </Link>
             )
           })}
+
+          {/* Divider */}
+          <div className="my-3" style={{ height: '1px', background: 'rgba(31,26,20,0.07)' }} />
+
+          {/* Upgrade */}
+          <Link
+            href={upgradeItem.href}
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all"
+            style={{
+              background: 'rgba(255,153,51,0.07)',
+              color: '#E07A12',
+              border: '1px solid rgba(255,153,51,0.22)',
+            }}
+          >
+            <upgradeItem.icon size={17} />
+            {upgradeItem.label}
+          </Link>
         </nav>
 
-        <div className="p-3 border-t  border-gray-100">
+        {/* Logout */}
+        <div className="p-3" style={{ borderTop: '1px solid rgba(31,26,20,0.08)' }}>
           <button
             onClick={handleLogout}
-            className="flex items-center bg-red-700 gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-white hover:bg-red-600 w-full transition"
+            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold w-full transition-all"
+            style={{ color: '#7A7166', background: 'transparent' }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = '#FDF5EC'
+              ;(e.currentTarget as HTMLButtonElement).style.color = '#C46800'
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = 'transparent'
+              ;(e.currentTarget as HTMLButtonElement).style.color = '#7A7166'
+            }}
           >
-            <LogOut size={18} />
+            <LogOut size={17} />
             Log out
           </button>
         </div>
       </aside>
 
-      {/* ── Main content ───────────────────────────────────────────── */}
+      {/* ── Main content ─────────────────────────────────────────── */}
       <main className="flex-1 overflow-y-auto pt-14 lg:pt-0">
         {children}
       </main>

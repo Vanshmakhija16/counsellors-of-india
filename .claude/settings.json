@@ -56,7 +56,9 @@
       "Bash(npx next *)",
       "Bash(xxd src/app/favicon.ico)",
       "Bash(grep -n '^\\\\s*`$' src/components/booking/templates/ClassicTemplate4/styles.ts)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "Bash(npm install *)",
+      "Bash(grep -n \"Save Profile\\\\|</div>\\\\s*$\\\\|^  \\)\\\\|^}\" src/app/dashboard/settings/page.tsx)"
     ],
     "additionalDirectories": [
       "\\tmp",

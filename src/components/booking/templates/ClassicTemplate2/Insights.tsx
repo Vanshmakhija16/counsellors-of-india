@@ -48,26 +48,7 @@ export default function Insights() {
       className="px-6 lg:px-10 py-28 lg:py-36"
       style={{ background: 'var(--ink-0)' }}
     >
-      <div className="mx-auto max-w-[1240px]">
-        {/* <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-16">
-          <div>
-            <span className="ct2-eyebrow">— Writing &amp; insights</span>
-            <h2
-              className="ct2-serif mt-6"
-              style={{
-                fontSize: 'clamp(38px, 5vw, 64px)',
-                lineHeight: 1.05,
-                color: 'var(--bone)',
-              }}
-            >
-              Notes from <em style={{ color: 'var(--gold)' }}>the room</em>.
-            </h2>
-          </div>
-          <p style={{ color: 'var(--mute)', maxWidth: '40ch', lineHeight: 1.7 }}>
-            Short, occasional essays on the patterns that keep showing up in clinical work — written for readers, not other clinicians.
-          </p>
-        </div> */}
-
+      <div className="mx-auto max-w-[1080px]">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-px" style={{ background: 'var(--ink-3)' }}>
           {insights.map((it) => (
             <article

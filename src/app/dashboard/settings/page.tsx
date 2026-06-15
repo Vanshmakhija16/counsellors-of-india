@@ -1,12 +1,41 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useMemo } from 'react'
 import { createClient } from '@/lib/supabase'
 import { useTherapist } from '@/lib/useTherapist'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import { Camera, User, CheckCircle } from 'lucide-react'
 import FeedbackManager from '@/components/dashboard/FeedbackManager'
+import { State, City } from 'country-state-city'
+import Cropper, { type Area } from 'react-easy-crop'
+
+// Crops the selected region of an image (from react-easy-crop pixel area)
+// and returns a square JPEG File ready for upload.
+async function getCroppedFile(src: string, area: Area): Promise<File> {
+  const image = await new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new window.Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => resolve(img)
+    img.onerror = reject
+    img.src = src
+  })
+
+  const canvas = document.createElement('canvas')
+  canvas.width = area.width
+  canvas.height = area.height
+  const ctx = canvas.getContext('2d')!
+  ctx.drawImage(
+    image,
+    area.x, area.y, area.width, area.height,
+    0, 0, area.width, area.height,
+  )
+
+  const blob = await new Promise<Blob>((resolve) =>
+    canvas.toBlob(b => resolve(b!), 'image/jpeg', 0.92)
+  )
+  return new File([blob], 'profile.jpg', { type: 'image/jpeg' })
+}
 
 const SPECIALTIES_LIST = [
   'Anxiety', 'Depression', 'Trauma & PTSD', 'Relationship Issues',
@@ -14,6 +43,18 @@ const SPECIALTIES_LIST = [
   'Burnout', 'Panic Disorders', 'Family Conflict', 'Life Transitions',
   'Anger Management', 'Sleep Issues', 'ADHD', 'Eating Disorders',
 ]
+
+// All Indian states + their full city lists, from the country-state-city lib.
+const IN_STATES = State.getStatesOfCountry('IN')
+const STATES_LIST = IN_STATES.map(s => s.name).sort()
+
+// Map a state NAME → its full list of city names (deduped, sorted).
+function citiesOfState(stateName: string): string[] {
+  const st = IN_STATES.find(s => s.name === stateName)
+  if (!st) return []
+  const names = City.getCitiesOfState('IN', st.isoCode).map(c => c.name)
+  return Array.from(new Set(names)).sort()
+}
 
 const LANGUAGES_LIST = [
   'English', 'Hindi', 'Marathi', 'Tamil', 'Telugu',
@@ -39,8 +80,21 @@ export default function SettingsPage() {
     languages: ['English'] as string[],
   })
 
+  // City/State are chosen via dropdowns; the combined "City, State" is stored
+  // in the existing `city` field.
+  const [stateName, setStateName] = useState('')
+  const [cityName, setCityName] = useState('')
+  // Lets the user type a specialty not in the preset list.
+  const [customSpecialty, setCustomSpecialty] = useState('')
+
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
+
+  // Cropper state — the raw image to crop + pan/zoom + chosen pixel area.
+  const [cropSrc, setCropSrc] = useState<string | null>(null)
+  const [crop, setCrop] = useState({ x: 0, y: 0 })
+  const [zoom, setZoom] = useState(1)
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null)
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
   const [error, setError] = useState('')
@@ -62,13 +116,57 @@ export default function SettingsPage() {
       languages:             therapist.languages ?? ['English'],
     })
     setPhotoPreview(therapist.photo_url ?? null)
+
+    // Split a stored "City, State" back into the two dropdowns.
+    const stored = (therapist.city ?? '').trim()
+    if (stored) {
+      const [c, s] = stored.split(',').map(p => p.trim())
+      const matchedState = s && STATES_LIST.includes(s) ? s : ''
+      setStateName(matchedState)
+      setCityName(c ?? '')
+    } else {
+      setStateName('')
+      setCityName('')
+    }
   }, [therapist])
 
+  // When state changes, clear the city if it's not in the new state's list.
+  function handleStateChange(s: string) {
+    setStateName(s)
+    if (!citiesOfState(s).includes(cityName)) setCityName('')
+  }
+
+  // City list for the selected state (recomputed only when the state changes).
+  const cityOptions = useMemo(() => citiesOfState(stateName), [stateName])
+
+  function addCustomSpecialty() {
+    const v = customSpecialty.trim()
+    if (!v) return
+    setForm(prev =>
+      prev.specialties.includes(v)
+        ? prev
+        : { ...prev, specialties: [...prev.specialties, v] }
+    )
+    setCustomSpecialty('')
+  }
+
+  // Selecting a file opens the crop modal instead of using it directly.
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]
     if (!file) return
+    setCropSrc(URL.createObjectURL(file))
+    setCrop({ x: 0, y: 0 })
+    setZoom(1)
+    e.target.value = '' // allow re-selecting the same file
+  }
+
+  // Confirm the crop → produce the final square image for upload + preview.
+  async function applyCrop() {
+    if (!cropSrc || !croppedAreaPixels) return
+    const file = await getCroppedFile(cropSrc, croppedAreaPixels)
     setPhotoFile(file)
     setPhotoPreview(URL.createObjectURL(file))
+    setCropSrc(null)
   }
 
   function toggleSpecialty(s: string) {
@@ -133,7 +231,8 @@ if (photoFile) {
           full_name:             form.full_name,
           title:                 form.title,
           bio:                   form.bio,
-          city:                  form.city,
+          // Combine the City + State dropdowns into the single city field.
+          city:                  [cityName, stateName].filter(Boolean).join(', '),
           phone:                 form.phone,
           fee_per_session:       Number(form.fee_per_session),
           session_duration_mins: Number(form.session_duration_mins),
@@ -265,12 +364,49 @@ if (photoFile) {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input
-            label="City"
-            value={form.city}
-            onChange={e => setForm({ ...form, city: e.target.value })}
-            placeholder="Mumbai"
-          />
+          <div>
+            <label className="block text-sm font-medium text-[#6b7280] mb-1.5">
+              State
+            </label>
+            <select
+              value={stateName}
+              onChange={e => handleStateChange(e.target.value)}
+              className="w-full h-11 px-4 rounded-lg border border-[#e8e4df]
+                         text-[#1c1c1e] text-sm bg-white
+                         focus:outline-none focus:ring-2
+                         focus:ring-[#a3b8b4] focus:border-transparent"
+            >
+              <option value="">Select state</option>
+              {STATES_LIST.map(s => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-[#6b7280] mb-1.5">
+              City
+            </label>
+            <select
+              value={cityName}
+              onChange={e => setCityName(e.target.value)}
+              disabled={!stateName}
+              className="w-full h-11 px-4 rounded-lg border border-[#e8e4df]
+                         text-[#1c1c1e] text-sm bg-white disabled:bg-[#f5f4f1]
+                         disabled:text-[#a3b8b4]
+                         focus:outline-none focus:ring-2
+                         focus:ring-[#a3b8b4] focus:border-transparent"
+            >
+              <option value="">
+                {stateName ? 'Select city' : 'Select a state first'}
+              </option>
+              {cityOptions.map(c => (
+                <option key={c} value={c}>{c}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Input
             label="WhatsApp / Phone"
             value={form.phone}
@@ -367,6 +503,51 @@ if (photoFile) {
                 {s}
               </button>
             ))}
+
+            {/* Custom specialties the user added (not in the preset list) */}
+            {form.specialties
+              .filter(s => !SPECIALTIES_LIST.includes(s))
+              .map(s => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => toggleSpecialty(s)}
+                  className="px-3 py-1.5 rounded-full text-xs font-medium border
+                             bg-[#a3b8b4] text-white border-[#a3b8b4]
+                             inline-flex items-center gap-1.5"
+                  title="Click to remove"
+                >
+                  {s}
+                  <span className="text-white/80">×</span>
+                </button>
+              ))}
+          </div>
+
+          {/* Add your own specialty */}
+          <div className="mt-3 flex gap-2">
+            <input
+              value={customSpecialty}
+              onChange={e => setCustomSpecialty(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') { e.preventDefault(); addCustomSpecialty() }
+              }}
+              placeholder="Add another specialty…"
+              className="flex-1 h-10 px-4 rounded-lg border border-[#e8e4df]
+                         text-[#1c1c1e] placeholder-[#a3b8b4] text-sm bg-white
+                         focus:outline-none focus:ring-2 focus:ring-[#a3b8b4]
+                         focus:border-transparent"
+            />
+            <button
+              type="button"
+              onClick={addCustomSpecialty}
+              disabled={!customSpecialty.trim()}
+              className="px-4 h-10 rounded-lg text-sm font-medium border
+                         bg-[#3e4645] text-white border-[#a3b8b4]
+                         disabled:opacity-50 disabled:cursor-not-allowed
+                         hover:bg-[#92a8a4] transition"
+            >
+              Add
+            </button>
           </div>
         </div>
 
@@ -404,6 +585,8 @@ if (photoFile) {
           </p>
         )}
 
+
+
         {/* Save */}
         <div className="flex items-center gap-3 pt-2">
           <Button
@@ -433,6 +616,65 @@ if (photoFile) {
         {therapist?.id && <FeedbackManager therapistId={therapist.id} />}
 
       </div>
+
+      {/* ── Image crop modal (pan / zoom, like Instagram) ── */}
+      {cropSrc && (
+        <div className="fixed inset-0 z-10000 flex items-center justify-center
+                        bg-black/70 p-4">
+          <div className="w-full max-w-md bg-white rounded-2xl overflow-hidden shadow-2xl">
+            <div className="px-5 py-4 border-b border-[#e8e4df]">
+              <p className="text-sm font-semibold text-[#1c1c1e]">Adjust your photo</p>
+              <p className="text-xs text-[#6b7280] mt-0.5">Drag to move · pinch or use the slider to zoom</p>
+            </div>
+
+            <div className="relative w-full h-72 bg-[#1c1c1e]">
+              <Cropper
+                image={cropSrc}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                cropShape="round"
+                showGrid={false}
+                onCropChange={setCrop}
+                onZoomChange={setZoom}
+                onCropComplete={(_, areaPixels) => setCroppedAreaPixels(areaPixels)}
+              />
+            </div>
+
+            <div className="px-5 py-4 flex items-center gap-3">
+              <span className="text-xs text-[#6b7280]">Zoom</span>
+              <input
+                type="range"
+                min={1}
+                max={3}
+                step={0.01}
+                value={zoom}
+                onChange={e => setZoom(Number(e.target.value))}
+                className="flex-1 accent-[#a3b8b4]"
+              />
+            </div>
+
+            <div className="px-5 pb-5 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setCropSrc(null)}
+                className="px-4 h-10 rounded-lg text-sm font-medium border
+                           border-[#e8e4df] text-[#6b7280] hover:bg-[#f5f4f1] transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={applyCrop}
+                className="px-4 h-10 rounded-lg text-sm font-medium
+                           bg-[#a3b8b4] text-white hover:bg-[#7d9e99] transition"
+              >
+                Apply
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

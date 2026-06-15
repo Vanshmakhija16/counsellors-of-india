@@ -44,7 +44,7 @@ export default function FAQ() {
       className="px-6 lg:px-10 py-28 lg:py-36"
       style={{ background: 'var(--ink-1)' }}
     >
-      <div className="mx-auto max-w-[1240px]">
+      <div className="mx-auto max-w-[1080px]">
         <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.4fr] gap-14 lg:gap-24">
           {/* Left — sticky header */}
           <div>

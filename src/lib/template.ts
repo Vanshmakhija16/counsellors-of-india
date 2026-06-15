@@ -35,6 +35,7 @@ export interface TherapistProfile {
   fee_per_session?: number; session_duration_mins?: number
   template_id?: TemplateId; color_id?: ColorId
   hidden_sections?: string[]; profile_content?: Record<string, unknown>
+  template_locked_until?: string | null
   plan?: string
 }
 
@@ -53,7 +54,7 @@ export function canUseTemplate(_template: Template, therapistPlan: string): bool
 
 // ─── Colors ──────────────────────────────────────────────────────────────────
 export const COLORS: TemplateColor[] = [
-  { id: 'teal',   name: 'Ocean',   hex: '#0D9488', primary: '#0D9488', light: '#F0FDFA', dark: '#0F766E', text: '#FFFFFF' },
+  { id: 'teal',   name: 'Ocean',   hex: '#ff9933', primary: '#ff9933', light: '#F0FDFA', dark: '#0F766E', text: '#FFFFFF' },
   { id: 'amber',  name: 'Amber',   hex: '#D97706', primary: '#D97706', light: '#FFFBEB', dark: '#B45309', text: '#FFFFFF' },
   { id: 'rose',   name: 'Blush',   hex: '#E11D48', primary: '#E11D48', light: '#FFF1F2', dark: '#BE123C', text: '#FFFFFF' },
   { id: 'indigo', name: 'Indigo',  hex: '#4F46E5', primary: '#4F46E5', light: '#EEF2FF', dark: '#4338CA', text: '#FFFFFF' },

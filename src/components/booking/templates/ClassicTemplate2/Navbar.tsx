@@ -34,7 +34,7 @@ export default function Navbar({ scrolled, scrollTo, therapist }: NavbarProps) {
         borderBottom: scrolled ? '1px solid var(--ink-3)' : '1px solid transparent',
       }}
     >
-      <nav className="mx-auto max-w-[1240px] flex items-center justify-between px-6 lg:px-10 mt-4 h-16">
+      <nav className="mx-auto max-w-[1080px] flex items-center justify-between px-6 lg:px-10 mt-4 h-16">
         <button
           onClick={() => scrollTo('home')}
           className="flex items-center gap-3 group"
@@ -47,7 +47,7 @@ export default function Navbar({ scrolled, scrollTo, therapist }: NavbarProps) {
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
-              border: '1px solid var(--gold)',
+              border: '1px solid rounded-2xl var(--gold)',
               color: 'var(--gold)',
               fontSize: 12,
               letterSpacing: '0.06em',

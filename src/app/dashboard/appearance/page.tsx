@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import {
@@ -11,7 +12,9 @@ import Button from '@/components/ui/Button'
 import LivePreview from '@/components/appearance/LivePreview'
 import TemplatePreviewModal from '@/components/appearance/TemplatePreviewModal'
 import TemplateThumbnail from '@/components/appearance/TemplateThumbnail'
-import { Save, Eye, Lock, Check, AlertCircle, Zap, Crown, ChevronRight, Sparkles } from 'lucide-react'
+import TemplateCanvas from '@/components/booking/templates/TemplateCanvas'
+import TemplateLiveSwitcher from '@/components/appearance/TemplateLiveSwitcher'
+import { Save, Lock, Check, AlertCircle, Zap, Crown, ChevronRight, Sparkles } from 'lucide-react'
 import type { ProfileContent, CT1Content, CT2Content, CT3Content, CT4Content, CT5Content } from '@/components/booking/templates/templateUtils'
 import dynamic from 'next/dynamic'
 
@@ -22,6 +25,28 @@ const CT4ContentEditor = dynamic(() => import('../../../components/appearance/CT
 const CT5ContentEditor = dynamic(() => import('../../../components/appearance/CT5ContentEditor'), { ssr: false })
 
 type Tab = 'design' | 'sections' | 'content'
+
+// template id → /try demo param
+const TEMPLATE_TPARAM: Record<TemplateId, string> = {
+  classic: 't1', classic2: 't2', classic3: 't3', classic4: 't4', classic5: 't5',
+}
+
+const STARTER_TEMPLATE_LOCK_DAYS = 365
+
+function addDays(date: Date, days: number) {
+  const next = new Date(date)
+  next.setDate(next.getDate() + days)
+  return next
+}
+
+function formatLockDate(iso: string | null) {
+  if (!iso) return ''
+  return new Intl.DateTimeFormat('en-IN', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  }).format(new Date(iso))
+}
 
 export default function AppearancePage() {
   const supabase = createClient()
@@ -36,10 +61,16 @@ export default function AppearancePage() {
   const [activeTab,        setActiveTab]        = useState<Tab>('design')
   const [previewOpen,      setPreviewOpen]      = useState(false)
   const [templatePreview,  setTemplatePreview]  = useState<TemplateId | null>(null)
+  // Which template is being PREVIEWED in the switcher (independent of the
+  // committed selection until the user clicks Select).
+  const [previewTemplate,  setPreviewTemplate]  = useState<TemplateId>('classic')
+  const [confirmOpen,      setConfirmOpen]      = useState(false)
   const [saving,           setSaving]           = useState(false)
   const [saved,            setSaved]            = useState(false)
   const [saveError,        setSaveError]        = useState<string | null>(null)
   const [lockedTemplate,   setLockedTemplate]   = useState<TemplateId | null>(null)
+  const [committedTemplate,setCommittedTemplate]= useState<TemplateId>('classic')
+  const [templateLockedUntil, setTemplateLockedUntil] = useState<string | null>(null)
 
   useEffect(() => {
     async function load() {
@@ -50,15 +81,22 @@ export default function AppearancePage() {
         setProfile(data)
         setCurrentPlan(data.plan ?? 'free')
         setSelectedTemplate(data.template_id ?? 'classic')
+        setCommittedTemplate(data.template_id ?? 'classic')
+        setPreviewTemplate(data.template_id ?? 'classic')
         setSelectedColor(data.color_id ?? 'teal')
         setHiddenSections(data.hidden_sections ?? [])
         setProfileContent(data.profile_content ?? {})
+        setTemplateLockedUntil(data.template_locked_until ?? null)
       }
     }
     load()
   }, [])
 
   function handleTemplateClick(template: typeof TEMPLATES[0]) {
+    if (isTemplateLocked && template.id !== committedTemplate) {
+      setLockedTemplate(template.id)
+      return
+    }
     if (!canUseTemplate(template, currentPlan)) {
       setLockedTemplate(template.id)
       return
@@ -86,11 +124,30 @@ export default function AppearancePage() {
         setSaveError(`"${template.name}" requires a Growth plan.`)
         setSaving(false); return
       }
+      if (isTemplateLocked && selectedTemplate !== committedTemplate) {
+        setSaveError(`Your Starter template is locked until ${formatLockDate(templateLockedUntil)}.`)
+        setSaving(false); return
+      }
+      const shouldStartStarterLock =
+        currentPlan === 'starter' &&
+        !isTemplateLocked &&
+        (!templateLockedUntil || new Date(templateLockedUntil).getTime() <= Date.now())
+      const nextLockedUntil = shouldStartStarterLock
+        ? addDays(new Date(), STARTER_TEMPLATE_LOCK_DAYS).toISOString()
+        : templateLockedUntil
       const { error } = await supabase
         .from('therapists')
-        .update({ template_id: selectedTemplate, color_id: selectedColor, hidden_sections: hiddenSections, profile_content: profileContent })
+        .update({
+          template_id: selectedTemplate,
+          color_id: selectedColor,
+          hidden_sections: hiddenSections,
+          profile_content: profileContent,
+          template_locked_until: nextLockedUntil,
+        })
         .eq('id', user.id)
       if (error) throw new Error(error.message)
+      setCommittedTemplate(selectedTemplate)
+      setTemplateLockedUntil(nextLockedUntil)
       setSaved(true); setTimeout(() => setSaved(false), 2500)
     } catch (e: unknown) {
       setSaveError(e instanceof Error ? e.message : String(e))
@@ -100,6 +157,9 @@ export default function AppearancePage() {
   }
 
   const isPaid    = PAID_PLANS.has(currentPlan)
+  const isStarter = currentPlan === 'starter'
+  const isTemplateLocked = isStarter && !!templateLockedUntil && new Date(templateLockedUntil).getTime() > Date.now()
+  const lockDateLabel = formatLockDate(templateLockedUntil)
   const color     = getColor(selectedColor)
   const activeTemplate = TEMPLATES.find(t => t.id === selectedTemplate)!
   const currentSections = TEMPLATE_SECTIONS[selectedTemplate] ?? []
@@ -124,17 +184,26 @@ export default function AppearancePage() {
           <p className="text-xs text-[#9ca3af] mt-0.5">Customise your public profile</p>
         </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={() => setPreviewOpen(true)}
+          <a
+            href={`/try?t=${TEMPLATE_TPARAM[previewTemplate]}`}
+            target="_blank"
+            rel="noopener noreferrer"
             className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[#e8e4df] bg-white text-sm font-medium text-[#6b7280] hover:border-[#a3b8b4] hover:text-[#1c1c1e] transition"
           >
-            <Eye size={15} /> Preview
-          </button>
+            <Sparkles size={15} /> Try demo
+          </a>
           <button
-            onClick={handleSave}
+            onClick={() => {
+              // Already locked & trying a different template → show the locked notice.
+              if (isTemplateLocked && selectedTemplate !== committedTemplate) {
+                setLockedTemplate(selectedTemplate)
+                return
+              }
+              setConfirmOpen(true)
+            }}
             disabled={saving}
             className="flex items-center gap-2 px-5 py-2 rounded-xl text-sm font-semibold text-white transition"
-            style={{ background: saving ? '#9ca3af' : saved ? '#16a34a' : color.primary }}
+            style={{ background: saving ? '#ff9933' : saved ? '#16a34a' : color.primary }}
           >
             {saving ? (
               <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
@@ -143,7 +212,7 @@ export default function AppearancePage() {
             ) : (
               <Save size={15} />
             )}
-            {saved ? 'Saved!' : 'Save changes'}
+            {saved ? 'Applied!' : 'Apply this template'}
           </button>
         </div>
       </div>
@@ -181,6 +250,13 @@ export default function AppearancePage() {
                 {isPaid ? <Crown size={13} /> : <Zap size={13} />}
                 {isPaid ? `${currentPlan.charAt(0).toUpperCase() + currentPlan.slice(1)} Plan` : 'Free Plan'}
               </div>
+              {isStarter && (
+                <p className="text-[11px] leading-4 text-amber-700">
+                  {isTemplateLocked
+                    ? `Template locked until ${lockDateLabel}`
+                    : 'Choose one template. Your final choice locks for 1 year.'}
+                </p>
+              )}
               {!isPaid && (
                 <button onClick={() => router.push('/pricing?redirect=/dashboard/appearance')}
                   className="mt-1.5 w-full py-1.5 rounded-lg text-white text-[11px] font-bold transition hover:opacity-90"
@@ -191,17 +267,36 @@ export default function AppearancePage() {
             </div>
           </div>
 
-          {/* Current template mini badge */}
+          {/* Template list — click to preview; active is highlighted */}
           <div className="hidden lg:block px-4 pb-4">
-            <p className="text-[10px] font-bold uppercase tracking-wider text-[#9ca3af] mb-2">Active Template</p>
-            <div className="flex items-center gap-2.5 rounded-xl border border-[#e8e4df] p-2.5 bg-[#fafaf9]">
-              <div className="w-8 h-8 rounded-lg overflow-hidden shrink-0">
-                <TemplateThumbnail id={selectedTemplate} accent={activeTemplate.accent} bg={activeTemplate.bg} color={color.primary} selected />
-              </div>
-              <div className="min-w-0">
-                <p className="text-xs font-semibold text-[#1c1c1e] truncate">{activeTemplate.name}</p>
-                <p className="text-[10px] text-[#9ca3af] truncate">{activeTemplate.style}</p>
-              </div>
+            <p className="text-[10px] font-bold uppercase tracking-wider text-[#9ca3af] mb-2">Templates</p>
+            <div className="space-y-1.5">
+              {TEMPLATES.map((t, i) => {
+                const on = previewTemplate === t.id
+                const committed = committedTemplate === t.id
+                return (
+                  <button
+                    key={t.id}
+                    onClick={() => { setPreviewTemplate(t.id); setActiveTab('design') }}
+                    className="w-full flex items-center gap-2.5 rounded-xl border p-2 transition text-left"
+                    style={on
+                      ? { borderColor: color.primary, background: `${color.primary}0d` }
+                      : { borderColor: '#e8e4df', background: '#fff' }}
+                  >
+                    <div className="w-9 h-9 rounded-lg overflow-hidden shrink-0">
+                      <TemplateThumbnail id={t.id} accent={t.accent} bg={t.bg} color={color.primary} selected={on} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold text-[#1c1c1e] truncate flex items-center gap-1">
+                        <span className="text-[#9ca3af] font-mono">{String(i + 1).padStart(2, '0')}</span>
+                        {t.name}
+                        {committed && <Check size={11} className="text-emerald-500 shrink-0" />}
+                      </p>
+                      <p className="text-[10px] text-[#9ca3af] truncate">{t.style}</p>
+                    </div>
+                  </button>
+                )
+              })}
             </div>
           </div>
         </div>
@@ -217,6 +312,16 @@ export default function AppearancePage() {
             </div>
           )}
 
+          {isTemplateLocked && (
+            <div className="mx-6 mt-6 flex items-start gap-3 rounded-xl border border-[#d9c7aa] bg-[#fff8ed] px-4 py-3 text-sm text-[#7c5a2f]">
+              <Lock size={16} className="mt-0.5 shrink-0" />
+              <div>
+                <p className="font-semibold">Template locked until {lockDateLabel}</p>
+                <p className="text-[#8a6a3e]">You can still edit colors, sections, and page content. Trying demos remains open.</p>
+              </div>
+            </div>
+          )}
+
           {/* Locked template nudge */}
           {lockedTemplate && (
             <div className="mx-6 mt-6 rounded-2xl overflow-hidden border-2 border-amber-200">
@@ -225,13 +330,13 @@ export default function AppearancePage() {
                   <Lock size={18} className="text-amber-600" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-semibold text-amber-900">{TEMPLATES.find(t => t.id === lockedTemplate)?.name} is a Growth template</p>
-                  <p className="text-sm text-amber-700 mt-0.5">Unlock all 4 premium templates plus unlimited bookings, client notes, and payment collection.</p>
+                  <p className="font-semibold text-amber-900">{TEMPLATES.find(t => t.id === lockedTemplate)?.name} can be previewed, but not selected yet</p>
+                  <p className="text-sm text-amber-700 mt-0.5">Your Starter template choice is final until {lockDateLabel}. Use Full preview or Try demo to explore it without changing your live site.</p>
                 </div>
                 <button onClick={() => setLockedTemplate(null)} className="text-amber-400 hover:text-amber-600 text-xl leading-none shrink-0">×</button>
               </div>
               <div className="bg-white px-5 py-3 flex items-center gap-3">
-                <button onClick={() => router.push('/pricing?redirect=/dashboard/appearance')}
+                <button onClick={() => setTemplatePreview(lockedTemplate)}
                   className="px-5 py-2 rounded-xl text-white text-sm font-bold transition hover:opacity-90"
                   style={{ background: color.primary }}>
                   View plans & upgrade →
@@ -246,7 +351,7 @@ export default function AppearancePage() {
             <div className="p-6 space-y-8">
 
               {/* Color Picker — at top so changes feel instant in thumbnails */}
-              <section>
+              {/* <section>
                 <div className="flex items-center justify-between mb-4">
                   <div>
                     <h2 className="text-sm font-bold text-[#1c1c1e] uppercase tracking-wide">Brand Color</h2>
@@ -280,88 +385,32 @@ export default function AppearancePage() {
                     )
                   })}
                 </div>
-              </section>
+              </section> */}
 
               {/* Divider */}
               <div className="border-t border-[#ede9e4]" />
 
-              {/* Template picker */}
+              {/* Template picker — live, switchable, real-template previews */}
               <section>
-                <div className="mb-4">
+                <div className="mb-2">
                   <h2 className="text-sm font-bold text-[#1c1c1e] uppercase tracking-wide">Choose Template</h2>
-                  <p className="text-xs text-[#9ca3af] mt-0.5">Click any template to select it · Use preview to see the full design</p>
+                  <p className="text-xs text-[#9ca3af] mt-0.5">
+                    Switch between the real templates, try a live demo, then select one.
+                  </p>
                 </div>
 
-                <div className="space-y-3">
-                  {TEMPLATES.map(template => {
-                    const unlocked = canUseTemplate(template, currentPlan)
-                    const selected = selectedTemplate === template.id
-
-                    return (
-                      <div
-                        key={template.id}
-                        onClick={() => handleTemplateClick(template)}
-                        className={`group relative rounded-2xl overflow-hidden border-2 cursor-pointer transition-all duration-200 ${
-                          selected
-                            ? 'shadow-lg'
-                            : 'border-[#e8e4df] hover:border-[#d1d5db] hover:shadow-md'
-                        }`}
-                        style={selected ? { borderColor: color.primary } : {}}
-                      >
-                        <div className="flex">
-                          {/* Thumbnail */}
-                          <div className="w-36 h-24 shrink-0 overflow-hidden relative">
-                            <TemplateThumbnail
-                              id={template.id}
-                              accent={template.accent}
-                              bg={template.bg}
-                              color={color.primary}
-                              selected={selected}
-                            />
-                            {!unlocked && (
-                              <div className="absolute inset-0 flex flex-col items-center justify-center gap-1 backdrop-blur-[1px]"
-                                style={{ background: 'rgba(0,0,0,0.45)' }}>
-                                <Lock size={14} className="text-white" />
-                                <span className="text-white text-[9px] font-bold tracking-widest uppercase">Growth</span>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* Info */}
-                          <div className="flex-1 px-4 py-3 bg-white flex flex-col justify-between">
-                            <div>
-                              <div className="flex items-start justify-between gap-2">
-                                <div>
-                                  <span className="font-semibold text-sm text-[#1c1c1e]">{template.name}</span>
-                                  <span className="ml-2 text-[10px] px-1.5 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-700">
-                                    ✓ Included
-                                  </span>
-                                </div>
-                                {selected && (
-                                  <div className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-                                    style={{ background: color.primary }}>
-                                    <Check size={11} className="text-white" strokeWidth={3} />
-                                  </div>
-                                )}
-                              </div>
-                              <p className="text-xs text-[#6b7280] mt-1">{template.tagline}</p>
-                            </div>
-                            <div className="flex items-center justify-between mt-2">
-                              <span className="text-[10px] text-[#9ca3af]">{template.style}</span>
-                              <button
-                                onClick={e => { e.stopPropagation(); setTemplatePreview(template.id) }}
-                                className="text-[11px] font-medium flex items-center gap-1 transition"
-                                style={{ color: color.primary }}
-                              >
-                                <Eye size={11} /> Full preview
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )
-                  })}
-                </div>
+                <TemplateLiveSwitcher
+                  selectedTemplate={selectedTemplate}
+                  committedTemplate={committedTemplate}
+                  isLocked={isTemplateLocked}
+                  lockDateLabel={lockDateLabel}
+                  brandColor={color.primary}
+                  onSelect={(id) => handleTemplateClick(TEMPLATES.find(t => t.id === id)!)}
+                  onLockedAttempt={(id) => setLockedTemplate(id)}
+                  active={previewTemplate}
+                  onActiveChange={setPreviewTemplate}
+                  hideTabs
+                />
               </section>
             </div>
           )}
@@ -441,86 +490,51 @@ export default function AppearancePage() {
         </div>
 
         {/* ── Right: Live mini preview ─────────────────────────────────────── */}
-        <div className="w-full lg:w-64 shrink-0 border-t lg:border-t-0 lg:border-l border-[#ede9e4] bg-[#f9f8f6] flex flex-col">
-          <div className="px-4 py-3 border-b border-[#ede9e4] bg-white">
-            <p className="text-xs font-bold text-[#1c1c1e] uppercase tracking-wide">Live Preview</p>
-            <p className="text-[10px] text-[#9ca3af] mt-0.5">Updates as you edit</p>
-          </div>
-          {/* Browser chrome */}
-          <div className="mx-3 mt-3 mb-3 rounded-xl overflow-hidden border border-[#e8e4df] shadow-sm flex-1 min-h-[360px] flex flex-col bg-white">
-            <div className="px-2.5 py-2 bg-[#f5f5f5] border-b border-[#e8e4df] flex items-center gap-1.5 shrink-0">
-              <div className="w-2 h-2 rounded-full bg-red-400" />
-              <div className="w-2 h-2 rounded-full bg-amber-400" />
-              <div className="w-2 h-2 rounded-full bg-green-400" />
-              <div className="flex-1 mx-2 h-4 rounded bg-white border border-[#e8e4df] flex items-center px-2">
-                <span className="text-[7px] text-[#9ca3af] truncate">counsellorsofindia.com/...</span>
-              </div>
-            </div>
-            <div className="flex-1 overflow-hidden relative" style={{ minHeight: 320 }}>
-              <div className="absolute inset-0 overflow-y-auto" style={{ zoom: 0.28, transformOrigin: 'top left' }}>
-                <TemplateThumbnail id={selectedTemplate} accent={activeTemplate.accent} bg={activeTemplate.bg} color={color.primary} selected />
-              </div>
-              {/* Actual color-tinted mini preview */}
-              <div className="absolute inset-0 flex flex-col">
-                <div className="flex-1" style={{ background: activeTemplate.bg }}>
-                  {/* Nav line */}
-                  <div className="flex items-center px-2 py-1.5 gap-1" style={{ borderBottom: `0.5px solid ${activeTemplate.accent}30` }}>
-                    <div className="w-6 h-1.5 rounded" style={{ background: '#1a1a18', opacity: 0.7 }} />
-                    <div className="flex-1" />
-                    <div className="w-8 h-3 rounded" style={{ background: color.primary }} />
-                  </div>
-                  {/* Hero block */}
-                  <div className="px-2 pt-2">
-                    <div className="w-5 h-0.5 mb-1" style={{ background: color.primary }} />
-                    <div className="w-full h-2.5 rounded mb-0.5" style={{ background: '#1a1a18', opacity: 0.7 }} />
-                    <div className="w-3/4 h-2.5 rounded mb-1.5" style={{ background: '#1a1a18', opacity: 0.5 }} />
-                    <div className="w-full h-1 rounded mb-0.5 opacity-40" style={{ background: activeTemplate.accent }} />
-                    <div className="w-4/5 h-1 rounded opacity-30" style={{ background: activeTemplate.accent }} />
-                    <div className="mt-2 flex gap-1">
-                      <div className="h-4 w-12 rounded-full" style={{ background: color.primary }} />
-                      <div className="h-4 w-10 rounded-full border" style={{ borderColor: color.primary }} />
-                    </div>
-                  </div>
-                  {/* Service cards */}
-                  <div className="px-2 mt-3 grid grid-cols-2 gap-1">
-                    {[0,1,2,3].map(i => (
-                      <div key={i} className="rounded p-1" style={{ background: `${color.primary}12`, border: `0.5px solid ${color.primary}30` }}>
-                        <div className="w-full h-1 rounded mb-0.5" style={{ background: color.primary, opacity: 0.6 }} />
-                        <div className="w-4/5 h-0.5 rounded opacity-40" style={{ background: activeTemplate.accent }} />
-                      </div>
-                    ))}
-                  </div>
-                  {/* Book button */}
-                  <div className="px-2 mt-3">
-                    <div className="w-full h-5 rounded-lg flex items-center justify-center" style={{ background: color.primary }}>
-                      <span className="text-[6px] text-white font-bold tracking-widest">BOOK A SESSION</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Color swatch row below preview */}
-          <div className="px-3 py-3 border-t border-[#ede9e4] bg-white">
-            <p className="text-[9px] font-bold text-[#9ca3af] uppercase tracking-wider mb-2">Quick Color</p>
-            <div className="flex gap-1.5 flex-wrap">
-              {COLORS.map(c => (
-                <button
-                  key={c.id}
-                  onClick={() => setSelectedColor(c.id)}
-                  title={c.name}
-                  className={`w-6 h-6 rounded-full transition-all duration-150 ${selectedColor === c.id ? 'scale-125 ring-2 ring-offset-1' : 'hover:scale-110'}`}
-                  style={{ background: c.primary, '--tw-ring-color': c.primary } as React.CSSProperties}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
       </div>
 
       {previewOpen     && <LivePreview profile={previewProfile} onClose={() => setPreviewOpen(false)} />}
       {templatePreview && <TemplatePreviewModal templateId={templatePreview} onClose={() => setTemplatePreview(null)} />}
+
+      {/* ── Apply confirmation: warns about the 12-month lock ── */}
+      {confirmOpen && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 p-4"
+          onClick={() => !saving && setConfirmOpen(false)}>
+          <div className="w-full max-w-sm bg-white rounded-2xl overflow-hidden shadow-2xl"
+            onClick={e => e.stopPropagation()}>
+            <div className="px-6 pt-6 pb-4 text-center">
+              <div className="mx-auto mb-4 w-14 h-14 rounded-2xl flex items-center justify-center"
+                style={{ background: `${color.primary}1e` }}>
+                <Lock size={24} style={{ color: color.primary }} />
+              </div>
+              <h2 className="text-lg font-semibold text-[#1c1c1e]">Apply “{activeTemplate.name}”?</h2>
+              <p className="text-sm text-[#6b7280] mt-2 leading-relaxed">
+                {isStarter
+                  ? <>This becomes your live template. You <strong>cannot change it for 12 months</strong>. You can still try other templates as a demo, but applying a different one won’t be allowed until the lock ends.</>
+                  : <>This will be applied to your live profile.</>}
+              </p>
+            </div>
+            <div className="px-6 pb-6 flex gap-2">
+              <button
+                onClick={() => setConfirmOpen(false)}
+                disabled={saving}
+                className="flex-1 h-11 rounded-xl border border-[#e8e4df] text-sm font-medium text-[#6b7280] hover:bg-[#f5f4f1] transition disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={async () => { await handleSave(); setConfirmOpen(false) }}
+                disabled={saving}
+                className="flex-1 h-11 rounded-xl text-sm font-bold text-white transition hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2"
+                style={{ background: color.primary }}
+              >
+                {saving
+                  ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  : <>{isStarter ? 'OK, apply & lock' : 'OK, apply'}</>}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -150,7 +150,13 @@ export interface TherapistProfile {
 
 export interface TimeRange { start: string; end: string }
 export interface DaySchedule { enabled: boolean; ranges: TimeRange[] }
-export interface AvailabilityData { duration: number; schedule: Record<string, DaySchedule> }
+export interface DateException { date: string; type: 'off' | 'custom'; ranges?: TimeRange[] }
+export interface AvailabilityData {
+  duration: number
+  schedule: Record<string, DaySchedule>
+  buffer?: number                  // gap (mins) after each session
+  exceptions?: DateException[]     // date-specific overrides
+}
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
@@ -166,8 +172,9 @@ export function resolveImage(image?: string | null): string {
   return image && image.trim() !== '' ? image : DEFAULT_PROFILE_IMAGE
 }
 
-export function generateSlotsFromRanges(ranges: TimeRange[], durationMin: number): string[] {
+export function generateSlotsFromRanges(ranges: TimeRange[], durationMin: number, bufferMin = 0): string[] {
   const slots: string[] = []
+  const step = durationMin + bufferMin
   for (const range of ranges) {
     const [startH, startM] = range.start.split(':').map(Number)
     const [endH, endM] = range.end.split(':').map(Number)
@@ -178,7 +185,7 @@ export function generateSlotsFromRanges(ranges: TimeRange[], durationMin: number
       const ampm = h >= 12 ? 'PM' : 'AM'
       const displayH = h > 12 ? h - 12 : h === 0 ? 12 : h
       slots.push(`${displayH}:${m.toString().padStart(2, '0')} ${ampm}`)
-      current += durationMin
+      current += step
     }
   }
   return slots
@@ -202,14 +209,25 @@ export function getAvailableDays(
   const bookedSet = new Set(bookedISO.map(t => new Date(t).toISOString()))
   const cutoff    = Date.now() + MIN_ADVANCE_HOURS * 60 * 60 * 1000  // now + 4 h
 
+  const buffer = availability?.buffer ?? 0
+  const exceptions = availability?.exceptions ?? []
+
   const results: AvailableDay[] = []
   for (let i = 0; i < lookaheadDays && results.length < 14; i++) {
     const d = new Date(); d.setDate(d.getDate() + i); d.setHours(0, 0, 0, 0)
     const dayName = DAY_NAMES[d.getDay()]; let rawSlots: string[] = []
-    if (availability?.schedule) {
+
+    // Date-specific exception takes priority over the weekly pattern.
+    const isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const exception = exceptions.find(e => e.date === isoDate)
+
+    if (exception) {
+      if (exception.type === 'off') continue                       // blocked date
+      rawSlots = generateSlotsFromRanges(exception.ranges ?? [], availability?.duration ?? durationMin, buffer)
+    } else if (availability?.schedule) {
       const ds = availability.schedule[dayName]
-      if (ds?.enabled && ds.ranges.length > 0) rawSlots = generateSlotsFromRanges(ds.ranges, availability.duration ?? durationMin)
       if (!ds?.enabled) continue
+      if (ds.ranges.length > 0) rawSlots = generateSlotsFromRanges(ds.ranges, availability.duration ?? durationMin, buffer)
     } else { rawSlots = generateSlotsFromDuration(durationMin) }
 
     // Remove booked slots and slots that are too soon (< 4 hours away)

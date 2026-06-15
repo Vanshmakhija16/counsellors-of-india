@@ -2,11 +2,12 @@
 
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import {
-  TEMPLATES, getColor,
+  TEMPLATES, getColor, PAID_PLANS,
   type TemplateId,
 } from '@/lib/template'
+import { createClient } from '@/lib/supabase'
 import TemplateCanvas from '@/components/booking/templates/TemplateCanvas'
 import TemplateThumbnail from '@/components/appearance/TemplateThumbnail'
 import QuickFillForm from '@/components/demo/QuickFillForm'
@@ -16,7 +17,7 @@ import {
 } from '@/lib/demoSession'
 import {
   Sparkles, X, Pencil, ChevronRight, Check,
-  ArrowLeft, Layers, MousePointerClick, Zap,
+  ArrowLeft, Layers, MousePointerClick, Zap, Lock,
 } from 'lucide-react'
 
 const TPARAM_TO_TEMPLATE: Record<string, TemplateId> = {
@@ -40,11 +41,20 @@ const SIDEBAR_W = 300
 
 function TryDemo() {
   const searchParams = useSearchParams()
+  const router = useRouter()
+  const supabase = createClient()
   const [demo, setDemo] = useState<DemoProfile | null>(null)
   const [panelOpen, setPanelOpen] = useState(false)
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [morphing, setMorphing] = useState(false)
   const morphTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Logged-in paid users see "Apply this" (set + lock) instead of "Claim".
+  const [userId, setUserId] = useState<string | null>(null)
+  const [hasPaidPlan, setHasPaidPlan] = useState(false)
+  const [lockedUntil, setLockedUntil] = useState<string | null>(null)
+  const [confirmOpen, setConfirmOpen] = useState(false)
+  const [applying, setApplying] = useState(false)
 
   useEffect(() => {
     let d = loadDemo()
@@ -52,6 +62,50 @@ function TryDemo() {
     if (requested && requested !== d.template_id) d = saveDemo({ template_id: requested })
     setDemo(d)
   }, [])
+
+  // Detect the signed-in user and whether they're on a paid plan.
+  useEffect(() => {
+    (async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      setUserId(user.id)
+      const { data } = await supabase
+        .from('therapists')
+        .select('plan, template_locked_until')
+        .eq('id', user.id)
+        .maybeSingle()
+      setHasPaidPlan(PAID_PLANS.has(data?.plan ?? ''))
+      setLockedUntil(data?.template_locked_until ?? null)
+    })()
+  }, [])
+
+  // Is the template choice currently locked (within the 1-year window)?
+  const isLocked = !!lockedUntil && new Date(lockedUntil).getTime() > Date.now()
+  const lockDateLabel = lockedUntil
+    ? new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(lockedUntil))
+    : ''
+
+  // Apply the currently-previewed template to the user's live site + lock it
+  // for 12 months. Carries over the demo details they typed.
+  async function applyTemplate() {
+    if (!userId || !demo || isLocked) return
+    setApplying(true)
+    const nextLock = new Date()
+    nextLock.setFullYear(nextLock.getFullYear() + 1)
+    const { error } = await supabase
+      .from('therapists')
+      .update({
+        template_id: demo.template_id,
+        color_id: demo.color_id,
+        template_locked_until: nextLock.toISOString(),
+      })
+      .eq('id', userId)
+    setApplying(false)
+    if (!error) {
+      setConfirmOpen(false)
+      router.push('/dashboard/appearance')
+    }
+  }
 
   useEffect(() => {
     if (!sidebarOpen) return
@@ -494,28 +548,44 @@ function TryDemo() {
               className="absolute -top-8 inset-x-0 h-8 pointer-events-none"
               style={{ background: 'linear-gradient(to top, #0d0d0d, transparent)' }}
             />
-            <Link
-              href="/signup?from=demo"
-              className="relative flex items-center justify-center gap-2 w-full py-[13px] rounded-2xl text-sm font-semibold overflow-hidden transition-all duration-200 hover:opacity-90 hover:-translate-y-px"
-              style={{
-                background: `linear-gradient(135deg, ${theme} 0%, ${theme}cc 100%)`,
-                boxShadow: `0 1px 0 rgba(255,255,255,0.18) inset, 0 10px 36px -6px rgba(${themeRgb},0.55), 0 4px 14px rgba(0,0,0,0.35)`,
-                color: '#fff',
-              }}
-            >
-              <span className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden">
-                <span
-                  className="absolute inset-0"
-                  style={{
-                    background: 'linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.14) 50%, transparent 65%)',
-                    animation: 'tdemoshimmer 2.8s ease infinite',
-                  }}
-                />
-              </span>
-              <Sparkles size={14} className="relative z-10" />
-              <span className="relative z-10 tracking-tight">Claim this profile</span>
-              <ChevronRight size={14} className="relative z-10" />
-            </Link>
+            {hasPaidPlan ? (
+              <button
+                onClick={() => setConfirmOpen(true)}
+                className="relative flex items-center justify-center gap-2 w-full py-[13px] rounded-2xl text-sm font-semibold overflow-hidden transition-all duration-200 hover:opacity-90 hover:-translate-y-px"
+                style={{
+                  background: `linear-gradient(135deg, ${theme} 0%, ${theme}cc 100%)`,
+                  boxShadow: `0 1px 0 rgba(255,255,255,0.18) inset, 0 10px 36px -6px rgba(${themeRgb},0.55), 0 4px 14px rgba(0,0,0,0.35)`,
+                  color: '#fff',
+                }}
+              >
+                <Check size={14} className="relative z-10" />
+                <span className="relative z-10 tracking-tight">Apply this template</span>
+                <ChevronRight size={14} className="relative z-10" />
+              </button>
+            ) : (
+              <Link
+                href="/signup?from=demo"
+                className="relative flex items-center justify-center gap-2 w-full py-[13px] rounded-2xl text-sm font-semibold overflow-hidden transition-all duration-200 hover:opacity-90 hover:-translate-y-px"
+                style={{
+                  background: `linear-gradient(135deg, ${theme} 0%, ${theme}cc 100%)`,
+                  boxShadow: `0 1px 0 rgba(255,255,255,0.18) inset, 0 10px 36px -6px rgba(${themeRgb},0.55), 0 4px 14px rgba(0,0,0,0.35)`,
+                  color: '#fff',
+                }}
+              >
+                <span className="pointer-events-none absolute inset-0 rounded-2xl overflow-hidden">
+                  <span
+                    className="absolute inset-0"
+                    style={{
+                      background: 'linear-gradient(105deg, transparent 35%, rgba(255,255,255,0.14) 50%, transparent 65%)',
+                      animation: 'tdemoshimmer 2.8s ease infinite',
+                    }}
+                  />
+                </span>
+                <Sparkles size={14} className="relative z-10" />
+                <span className="relative z-10 tracking-tight">Claim this profile</span>
+                <ChevronRight size={14} className="relative z-10" />
+              </Link>
+            )}
             <div className="flex items-center justify-center gap-4 mt-3.5">
               {['Easy to implement', 'No coding'].map((t) => (
                 <span key={t} className="flex items-center gap-1 text-[10.5px] text-white/20 font-medium">
@@ -586,17 +656,100 @@ function TryDemo() {
               <QuickFillForm demo={demo} theme={theme} onChange={patch} onSkip={() => setPanelOpen(false)} />
             </div>
             <div className="shrink-0 border-t border-[#ece7df] bg-white px-6 py-4">
-              <Link
-                href="/signup?from=demo"
-                className="flex items-center justify-center gap-1.5 w-full py-3 rounded-xl text-white text-[13.5px] font-semibold transition hover:opacity-90"
-                style={{
-                  background: `linear-gradient(135deg, ${theme}, ${theme}cc)`,
-                  boxShadow: `0 6px 20px -6px rgba(${themeRgb},0.5)`,
-                }}
-              >
-                Claim this site <ChevronRight size={14} />
-              </Link>
-              <p className="text-center text-[11px] text-[#9ca3af] mt-2">Claim Now</p>
+              {hasPaidPlan ? (
+                <>
+                  <button
+                    onClick={() => { setPanelOpen(false); setConfirmOpen(true) }}
+                    className="flex items-center justify-center gap-1.5 w-full py-3 rounded-xl text-white text-[13.5px] font-semibold transition hover:opacity-90"
+                    style={{
+                      background: `linear-gradient(135deg, ${theme}, ${theme}cc)`,
+                      boxShadow: `0 6px 20px -6px rgba(${themeRgb},0.5)`,
+                    }}
+                  >
+                    Apply this template <ChevronRight size={14} />
+                  </button>
+                  <p className="text-center text-[11px] text-[#9ca3af] mt-2">Locks for 12 months</p>
+                </>
+              ) : (
+                <>
+                  <Link
+                    href="/signup?from=demo"
+                    className="flex items-center justify-center gap-1.5 w-full py-3 rounded-xl text-white text-[13.5px] font-semibold transition hover:opacity-90"
+                    style={{
+                      background: `linear-gradient(135deg, ${theme}, ${theme}cc)`,
+                      boxShadow: `0 6px 20px -6px rgba(${themeRgb},0.5)`,
+                    }}
+                  >
+                    Claim this site <ChevronRight size={14} />
+                  </Link>
+                  <p className="text-center text-[11px] text-[#9ca3af] mt-2">Claim Now</p>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Apply confirmation: warns about the 12-month lock ──────────── */}
+      {confirmOpen && (
+        <div style={{ zIndex: 10004 }} className="fixed inset-0 flex items-center justify-center bg-black/70 p-4"
+          onClick={() => !applying && setConfirmOpen(false)}>
+          <div className="w-full max-w-sm bg-white rounded-2xl overflow-hidden shadow-2xl"
+            onClick={e => e.stopPropagation()}>
+            <div className="px-6 pt-6 pb-4 text-center">
+              <div className="mx-auto mb-4 w-14 h-14 rounded-2xl flex items-center justify-center"
+                style={{ background: `${theme}1e` }}>
+                <Lock size={24} style={{ color: theme }} />
+              </div>
+              {isLocked ? (
+                <>
+                  <h2 className="text-lg font-semibold text-[#1c1c1e]">Template locked</h2>
+                  <p className="text-sm text-[#6b7280] mt-2 leading-relaxed">
+                    You can’t use this template until <strong>{lockDateLabel}</strong> (next 12 months).
+                    Feel free to keep trying templates as a demo in the meantime.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <h2 className="text-lg font-semibold text-[#1c1c1e]">Apply “{activeTemplate.name}”?</h2>
+                  <p className="text-sm text-[#6b7280] mt-2 leading-relaxed">
+                    This becomes your live template. You <strong>cannot change it for 12 months</strong>.
+                    You can still try other templates as a demo, but applying a different one won’t be
+                    allowed until the lock ends.
+                  </p>
+                </>
+              )}
+            </div>
+            <div className="px-6 pb-6 flex gap-2">
+              {isLocked ? (
+                <button
+                  onClick={() => setConfirmOpen(false)}
+                  className="flex-1 h-11 rounded-xl text-sm font-bold text-white transition hover:opacity-90"
+                  style={{ background: theme }}
+                >
+                  Got it
+                </button>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setConfirmOpen(false)}
+                    disabled={applying}
+                    className="flex-1 h-11 rounded-xl border border-[#e8e4df] text-sm font-medium text-[#6b7280] hover:bg-[#f5f4f1] transition disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={applyTemplate}
+                    disabled={applying}
+                    className="flex-1 h-11 rounded-xl text-sm font-bold text-white transition hover:opacity-90 disabled:opacity-60 flex items-center justify-center gap-2"
+                    style={{ background: theme }}
+                  >
+                    {applying
+                      ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                      : <>OK, apply &amp; lock</>}
+                  </button>
+                </>
+              )}
             </div>
           </div>
         </div>

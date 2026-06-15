@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase'
 import {
   Calendar, Users, Clock,
   ExternalLink, Copy, CheckCircle,
-  AlertCircle, ArrowRight
+  AlertCircle, ArrowRight,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -15,18 +15,11 @@ export default function DashboardPage() {
   const supabase = createClient()
   const [appointments, setAppointments] = useState<any[]>([])
   const [copied, setCopied] = useState(false)
-  const [stats, setStats] = useState({
-    total: 0,
-    pending: 0,
-    today: 0,
-  })
+  const [stats, setStats] = useState({ total: 0, pending: 0, today: 0 })
 
   useEffect(() => {
     if (!therapist) return
-
     async function fetchAppointments() {
-      // Only show non-completed appointments — completed ones live in history
-      // and shouldn't muddle the "upcoming" widget.
       const { data } = await supabase
         .from('appointments')
         .select('*')
@@ -34,186 +27,238 @@ export default function DashboardPage() {
         .in('status', ['upcoming', 'rescheduled'])
         .order('scheduled_at', { ascending: true })
         .limit(5)
-
       if (data) {
         setAppointments(data)
-
         const today = new Date().toDateString()
         setStats({
           total:   data.length,
           pending: data.filter(a => a.status === 'rescheduled').length,
-          today:   data.filter(a =>
-            new Date(a.scheduled_at).toDateString() === today
-          ).length,
+          today:   data.filter(a => new Date(a.scheduled_at).toDateString() === today).length,
         })
       }
     }
-
     fetchAppointments()
   }, [therapist])
 
   function copyLink() {
     if (!therapist) return
-    navigator.clipboard.writeText(
-      `${window.location.origin}/${therapist.username}`
-    )
+    navigator.clipboard.writeText(`${window.location.origin}/${therapist.username}`)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
   if (loading) return (
-    <div className="p-8 flex items-center justify-center min-h-64">
-      <div className="animate-spin w-6 h-6 rounded-full border-2 
-                      border-[#a3b8b4] border-t-transparent" />
+    <div className="flex items-center justify-center min-h-64" style={{ background: '#FFFCF8' }}>
+      <div
+        className="w-6 h-6 rounded-full border-2 animate-spin"
+        style={{ borderColor: '#FF9933', borderTopColor: 'transparent' }}
+      />
     </div>
   )
 
   const profileComplete = therapist?.is_profile_complete
 
-  return (
-    <div className="p-5 sm:p-8 max-w-5xl">
+  // Greeting
+  const hour = new Date().getHours()
+  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
-      {/* Welcome */}
+  const firstName = therapist?.full_name?.split(' ')[0] ?? ''
+
+  return (
+    <div
+      className="min-h-full px-5 sm:px-8 py-8 max-w-5xl"
+      style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}
+    >
+
+      {/* ── Welcome ────────────────────────────────────────────── */}
       <div className="mb-8">
-        <h1
-          className="text-3xl font-semibold text-[#1c1c1e]"
-          style={{ fontFamily: 'var(--font-cormorant), serif' }}
-        >
-          Good morning, {therapist?.full_name?.split(' ')[0]} 👋
-        </h1>
-        <p className="text-[#6b7280] mt-1">
-          Here's what's happening with your practice today.
+        <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: '#FF9933' }}>
+          {greeting}
         </p>
+        <h1 className="text-3xl font-bold" style={{ color: '#1F1A14', letterSpacing: '-0.02em' }}>
+          {firstName} <span style={{ color: '#46403A', fontWeight: 500 }}>— your practice, at a glance.</span>
+        </h1>
       </div>
 
-      {/* Profile incomplete warning */}
+      {/* ── Profile incomplete warning ─────────────────────────── */}
       {!profileComplete && (
-        <div className="mb-6 p-4 bg-amber-50 border border-amber-200
-                        rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div
+          className="mb-6 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+          style={{
+            background: 'rgba(255,153,51,0.07)',
+            border: '1px solid rgba(255,153,51,0.28)',
+          }}
+        >
           <div className="flex items-center gap-3">
-            <AlertCircle size={18} className="text-amber-600 shrink-0" />
+            <AlertCircle size={17} style={{ color: '#E07A12', flexShrink: 0 }} />
             <div>
-              <p className="text-sm font-semibold text-amber-800">
+              <p className="text-sm font-semibold" style={{ color: '#1F1A14' }}>
                 Complete your profile
               </p>
-              <p className="text-xs text-amber-600 mt-0.5">
-                Your public page won't show until your profile is complete
+              <p className="text-xs mt-0.5" style={{ color: '#7A7166' }}>
+                Your public page won't be visible until your profile is complete
               </p>
             </div>
           </div>
-          <Link href="/onboarding"
-            className="flex items-center gap-1.5 text-xs font-semibold
-                       text-amber-700 hover:text-amber-900 transition">
+          <Link
+            href="/onboarding"
+            className="flex items-center gap-1.5 text-xs font-semibold transition"
+            style={{ color: '#E07A12' }}
+          >
             Complete now <ArrowRight size={13} />
           </Link>
         </div>
       )}
 
-      {/* Booking link */}
-      <div className="mb-8 p-5 bg-[#d4e4e1] rounded-xl border border-[#b8ceca]
-                      flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* ── Booking link banner ────────────────────────────────── */}
+      <div
+        className="mb-8 p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+        style={{
+          background: 'linear-gradient(135deg, #1F1A14 0%, #2e2519 100%)',
+          border: '1px solid rgba(255,153,51,0.18)',
+        }}
+      >
         <div>
-          <p className="text-xs font-semibold text-[#2d4a47] uppercase tracking-widest mb-1">
+          <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: '#FF9933' }}>
             Your booking link
           </p>
-          <p className="text-sm font-medium text-[#2d4a47] break-all">
-            counsellorsofindia.com/{therapist?.username}
+          <p className="text-sm font-medium break-all" style={{ color: '#FDF5EC' }}>
+            counsellorsofindia.com/<span style={{ color: '#FF9933' }}>{therapist?.username}</span>
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             onClick={copyLink}
-            className="flex items-center gap-1.5 px-3 py-2 bg-white
-                       rounded-lg text-xs font-medium text-[#2d4a47]
-                       hover:bg-[#b8ceca] transition border border-[#b8ceca]"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition"
+            style={{
+              background: 'rgba(255,153,51,0.12)',
+              color: '#FF9933',
+              border: '1px solid rgba(255,153,51,0.28)',
+            }}
           >
-            {copied
-              ? <><CheckCircle size={13} /> Copied!</>
-              : <><Copy size={13} /> Copy link</>}
+            {copied ? <><CheckCircle size={13} /> Copied!</> : <><Copy size={13} /> Copy</>}
           </button>
           <Link
             href={`/${therapist?.username}`}
             target="_blank"
-            className="flex items-center gap-1.5 px-3 py-2 bg-[#2d4a47]
-                       rounded-lg text-xs font-medium text-white
-                       hover:bg-[#1a2f2d] transition"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition"
+            style={{ background: '#FF9933', color: '#1F1A14' }}
           >
             <ExternalLink size={13} /> View page
           </Link>
         </div>
       </div>
 
-      {/* Stats */}
+      {/* ── Stats ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         {[
-          { icon: Calendar, label: 'Total bookings', value: stats.total, color: 'bg-[#d4e4e1] text-[#2d4a47]' },
-          { icon: Clock,    label: 'Today\'s sessions', value: stats.today, color: 'bg-amber-50 text-amber-700' },
-          { icon: Users,    label: 'Rescheduled', value: stats.pending, color: 'bg-blue-50 text-blue-700' },
+          {
+            icon: Calendar,
+            label: 'Total bookings',
+            value: stats.total,
+            accent: '#FF9933',
+            bg: 'rgba(255,153,51,0.08)',
+          },
+          {
+            icon: Clock,
+            label: "Today's sessions",
+            value: stats.today,
+            accent: '#2d7a5a',
+            bg: 'rgba(45,122,90,0.08)',
+          },
+          {
+            icon: Users,
+            label: 'Rescheduled',
+            value: stats.pending,
+            accent: '#4a6fa5',
+            bg: 'rgba(74,111,165,0.08)',
+          },
         ].map(stat => (
-          <div key={stat.label}
-            className="bg-white rounded-xl border border-[#e8e4df] p-5">
-            <div className={`w-9 h-9 rounded-lg ${stat.color} 
-                            flex items-center justify-center mb-3`}>
-              <stat.icon size={17} />
+          <div
+            key={stat.label}
+            className="rounded-2xl p-5"
+            style={{ background: '#ffffff', border: '1px solid rgba(31,26,20,0.08)' }}
+          >
+            <div
+              className="w-9 h-9 rounded-xl flex items-center justify-center mb-4"
+              style={{ background: stat.bg }}
+            >
+              <stat.icon size={17} style={{ color: stat.accent }} />
             </div>
-            <p className="text-2xl font-bold text-[#1c1c1e]"
-              style={{ fontFamily: 'var(--font-cormorant), serif' }}>
+            <p className="text-3xl font-bold mb-1" style={{ color: '#1F1A14', letterSpacing: '-0.03em' }}>
               {stat.value}
             </p>
-            <p className="text-xs text-[#6b7280] mt-1">{stat.label}</p>
+            <p className="text-xs font-medium" style={{ color: '#7A7166' }}>
+              {stat.label}
+            </p>
           </div>
         ))}
       </div>
 
-      {/* Recent appointments */}
-      <div className="bg-white rounded-xl border border-[#e8e4df]">
-        <div className="px-4 sm:px-6 py-4 border-b border-[#e8e4df] flex items-center justify-between gap-2">
-          <h2 className="text-base font-semibold text-[#1c1c1e]">
+      {/* ── Upcoming appointments ─────────────────────────────── */}
+      <div
+        className="rounded-2xl overflow-hidden"
+        style={{ background: '#ffffff', border: '1px solid rgba(31,26,20,0.08)' }}
+      >
+        <div
+          className="px-5 sm:px-6 py-4 flex items-center justify-between gap-2"
+          style={{ borderBottom: '1px solid rgba(31,26,20,0.07)' }}
+        >
+          <h2 className="text-sm font-bold" style={{ color: '#1F1A14' }}>
             Upcoming appointments
           </h2>
-          <Link href="/dashboard/appointments"
-            className="text-xs text-[#5a7f7a] font-medium hover:underline">
+          <Link
+            href="/dashboard/appointments"
+            className="text-xs font-semibold transition"
+            style={{ color: '#E07A12' }}
+          >
             View all →
           </Link>
         </div>
 
         {appointments.length === 0 ? (
-          <div className="px-6 py-12 text-center">
-            <Calendar size={32} className="text-[#e8e4df] mx-auto mb-3" />
-            <p className="text-sm font-medium text-[#6b7280]">
+          <div className="px-6 py-14 text-center">
+            <div
+              className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
+              style={{ background: 'rgba(255,153,51,0.07)' }}
+            >
+              <Calendar size={22} style={{ color: '#FF9933' }} />
+            </div>
+            <p className="text-sm font-semibold mb-1" style={{ color: '#1F1A14' }}>
               No appointments yet
             </p>
-            <p className="text-xs text-[#6b7280] mt-1">
+            <p className="text-xs" style={{ color: '#7A7166' }}>
               Share your booking link to get your first client
             </p>
           </div>
         ) : (
-          <div className="divide-y divide-[#e8e4df]">
-            {appointments.map(apt => (
-              <div key={apt.id}
-                className="px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
+          <div>
+            {appointments.map((apt, i) => (
+              <div
+                key={apt.id}
+                className="px-5 sm:px-6 py-4 flex items-center justify-between gap-3"
+                style={i < appointments.length - 1 ? { borderBottom: '1px solid rgba(31,26,20,0.06)' } : {}}
+              >
                 <div>
-                  <p className="text-sm font-semibold text-[#1c1c1e]">
+                  <p className="text-sm font-semibold" style={{ color: '#1F1A14' }}>
                     {apt.client_name}
                   </p>
-                  <p className="text-xs text-[#6b7280] mt-0.5">
+                  <p className="text-xs mt-0.5" style={{ color: '#7A7166' }}>
                     {new Date(apt.scheduled_at).toLocaleDateString('en-IN', {
-                      weekday: 'short',
-                      day: 'numeric',
-                      month: 'short',
-                      hour: '2-digit',
-                      minute: '2-digit',
+                      weekday: 'short', day: 'numeric', month: 'short',
+                      hour: '2-digit', minute: '2-digit',
                     })}
                   </p>
                 </div>
-                <span className={`
-                  text-xs font-medium px-2.5 py-1 rounded-full
-                  ${apt.status === 'upcoming'
-                    ? 'bg-amber-50 text-amber-700'
+                <span
+                  className="text-xs font-semibold px-3 py-1 rounded-full"
+                  style={apt.status === 'upcoming'
+                    ? { background: 'rgba(255,153,51,0.10)', color: '#C46800' }
                     : apt.status === 'rescheduled'
-                    ? 'bg-blue-50 text-blue-700'
-                    : 'bg-[#d4e4e1] text-[#2d4a47]'}
-                `}>
+                    ? { background: 'rgba(74,111,165,0.10)', color: '#4a6fa5' }
+                    : { background: 'rgba(45,122,90,0.10)', color: '#2d7a5a' }
+                  }
+                >
                   {apt.status}
                 </span>
               </div>

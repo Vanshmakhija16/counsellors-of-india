@@ -105,7 +105,7 @@ export default function Booking({ therapist, bookedTimes = [] }: BookingProps) {
       className="px-6 lg:px-10 py-28 lg:py-36"
       style={{ background: 'var(--ink-0)' }}
     >
-      <div className="mx-auto max-w-[1240px]">
+      <div className="mx-auto max-w-[1080px]">
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_1.2fr] gap-14 lg:gap-20">
           {/* Left — pitch */}
           <div>
