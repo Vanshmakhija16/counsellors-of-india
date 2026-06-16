@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { TherapistProfile, getNext7Days } from './templateUtils'
+import { getOrderedSections } from '@/lib/template'
 import { globalStyles } from './ClassicTemplate/styles'
 import Navbar from './ClassicTemplate/Navbar'
 import Hero from './ClassicTemplate/Hero'
@@ -38,6 +39,7 @@ const carouselSlides = [
 
 export default function ClassicTemplate({ therapist, bookedTimes = [], feedbacks = [], hiddenSections = [] }: ClassicTemplateProps) {
   const show = (id: string) => !hiddenSections.includes(id)
+  const orderedIds = getOrderedSections('classic', therapist.section_order, hiddenSections).map(s => s.id)
   const days = getNext7Days()
   const rootRef = useRef<HTMLDivElement | null>(null)
 
@@ -157,42 +159,52 @@ export default function ClassicTemplate({ therapist, bookedTimes = [], feedbacks
 
   const slide = slides[carouselIndex] ?? slides[0]
 
+  // Each entry of TEMPLATE_SECTIONS['classic'] maps to one of these elements.
+  // Built as a lookup (not inlined JSX) so the actual render order can come
+  // from `orderedIds`, while every section keeps its full original props.
+  const sectionEls: Record<string, React.ReactNode> = {
+    hero: <Hero key="hero" therapist={therapist} heroLoaded={heroLoaded} heroRef={heroRef} />,
+    about: <About key="about" therapist={therapist} days={days} />,
+    services: (
+      <Services
+        key="services"
+        services={servicesData}
+        svcTrackRef={svcTrackRef}
+        svcCanPrev={svcCanPrev}
+        svcCanNext={svcCanNext}
+        scrollSvc={scrollSvc}
+        defaultFee={therapist.fee}
+        onBookService={handleBookService}
+      />
+    ),
+    feedback: <Feedback key="feedback" feedbacks={feedbacks} />,
+    expertise: <Expertise key="expertise" therapist={therapist} />,
+    carousel: (
+      <Carousel
+        key="carousel"
+        slide={slide} slides={slides}
+        carouselIndex={carouselIndex} carouselAnim={carouselAnim}
+        goPrev={goPrev} goNext={goNext}
+        setCarouselIndex={setCarouselIndex} setCarouselAnim={setCarouselAnim}
+      />
+    ),
+    booking: (
+      <Booking
+        key="booking"
+        therapist={therapist}
+        bookedTimes={bookedTimes}
+        selectedService={selectedService}
+        onClearService={() => setSelectedService(null)}
+      />
+    ),
+    footer: <Footer key="footer" therapist={therapist} />,
+  }
+
   return (
     <div className="font-sans" ref={rootRef}>
       <style>{globalStyles}</style>
       <Navbar scrolled={scrolled} scrollTo={scrollTo} therapist={therapist} />
-      {show('hero')      && <Hero therapist={therapist} heroLoaded={heroLoaded} heroRef={heroRef} />}
-      {show('about')     && <About therapist={therapist} days={days} />}
-      {show('services')  && (
-        <Services
-          services={servicesData}
-          svcTrackRef={svcTrackRef}
-          svcCanPrev={svcCanPrev}
-          svcCanNext={svcCanNext}
-          scrollSvc={scrollSvc}
-          defaultFee={therapist.fee}
-          onBookService={handleBookService}
-        />
-      )}
-      {show('feedback')  && <Feedback feedbacks={feedbacks} />}
-      {show('expertise') && <Expertise therapist={therapist} />}
-      {show('carousel')  && (
-        <Carousel
-          slide={slide} slides={slides}
-          carouselIndex={carouselIndex} carouselAnim={carouselAnim}
-          goPrev={goPrev} goNext={goNext}
-          setCarouselIndex={setCarouselIndex} setCarouselAnim={setCarouselAnim}
-        />
-      )}
-      {show('booking')   && (
-        <Booking
-          therapist={therapist}
-          bookedTimes={bookedTimes}
-          selectedService={selectedService}
-          onClearService={() => setSelectedService(null)}
-        />
-      )}
-      {show('footer')    && <Footer therapist={therapist} />}
+      {orderedIds.map(id => sectionEls[id])}
     </div>
   )
 }

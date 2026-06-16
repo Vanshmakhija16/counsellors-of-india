@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { TherapistProfile, EditableService } from './templateUtils'
+import { getOrderedSections } from '@/lib/template'
 import { ct4Styles } from './ClassicTemplate4/styles'
 import Navbar from './ClassicTemplate4/Navbar'
 import Hero from './ClassicTemplate4/Hero'
@@ -21,6 +22,7 @@ interface ClassicTemplate4Props {
 
 export default function ClassicTemplate4({ therapist, bookedTimes = [], hiddenSections = [] }: ClassicTemplate4Props) {
   const show = (id: string) => !hiddenSections.includes(id)
+  const orderedIds = getOrderedSections('classic4', therapist.section_order, hiddenSections).map(s => s.id)
   const [loaded, setLoaded] = useState(false)
   const [theme, setTheme] = useState<'dark' | 'light'>('dark')
   const heroRef = useRef<HTMLElement | null>(null)
@@ -74,21 +76,28 @@ export default function ClassicTemplate4({ therapist, bookedTimes = [], hiddenSe
         onToggleTheme={() => setTheme(t => (t === 'dark' ? 'light' : 'dark'))}
       />
       <main>
-        {show('hero')     && <Hero     therapist={therapist} loaded={loaded} heroRef={heroRef} />}
-        {show('ticker')   && <Ticker   therapist={therapist} />}
-        {show('about')    && <About    therapist={therapist} />}
-        {show('services') && <Services therapist={therapist} onBookService={handleBookService} />}
-        {show('insights') && <Insights therapist={therapist} />}
-        {show('booking')  && (
-          <Booking
-            therapist={therapist}
-            bookedTimes={bookedTimes}
-            selectedService={selectedService}
-            onClearService={() => setSelectedService(null)}
-          />
-        )}
-        {show('faq')      && <FAQ      therapist={therapist} />}
-        {show('footer')   && <Footer   therapist={therapist} />}
+        {orderedIds.map(id => {
+          switch (id) {
+            case 'hero':     return <Hero     key={id} therapist={therapist} loaded={loaded} heroRef={heroRef} />
+            case 'ticker':   return <Ticker   key={id} therapist={therapist} />
+            case 'about':    return <About    key={id} therapist={therapist} />
+            case 'services': return <Services key={id} therapist={therapist} onBookService={handleBookService} />
+            case 'insights': return <Insights key={id} therapist={therapist} />
+            case 'booking':
+              return (
+                <Booking
+                  key={id}
+                  therapist={therapist}
+                  bookedTimes={bookedTimes}
+                  selectedService={selectedService}
+                  onClearService={() => setSelectedService(null)}
+                />
+              )
+            case 'faq':    return <FAQ    key={id} therapist={therapist} />
+            case 'footer': return <Footer key={id} therapist={therapist} />
+            default: return null
+          }
+        })}
       </main>
     </div>
   )

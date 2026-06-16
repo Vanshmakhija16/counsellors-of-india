@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
-import { Eye, Sparkles, Check, Lock } from 'lucide-react'
+import { Sparkles, Check, Lock, ChevronLeft, ChevronRight } from 'lucide-react'
 import { TEMPLATES, type TemplateId } from '@/lib/template'
 
 // template id → preview route number + /try demo param
@@ -26,6 +26,8 @@ interface Props {
   active?: TemplateId
   onActiveChange?: (id: TemplateId) => void
   hideTabs?: boolean
+  hideActionBar?: boolean        // hide the name + Try/Select footer
+  frameHeight?: number           // preview viewport height (px)
 }
 
 // Fixed design size of the rendered template (scaled to fit the frame).
@@ -35,6 +37,7 @@ export default function TemplateLiveSwitcher({
   selectedTemplate, committedTemplate, isLocked, lockDateLabel,
   brandColor, onSelect, onLockedAttempt,
   active: controlledActive, onActiveChange, hideTabs = false,
+  hideActionBar = false, frameHeight = 460,
 }: Props) {
   const [internalActive, setInternalActive] = useState<TemplateId>(selectedTemplate)
   const active = controlledActive ?? internalActive
@@ -79,6 +82,13 @@ export default function TemplateLiveSwitcher({
   const canSelect = !isLocked || active === committedTemplate
   const isCurrentSelection = active === selectedTemplate
 
+  // Step through templates with the arrows (wraps around).
+  const activeIndex = TEMPLATES.findIndex(t => t.id === active)
+  const step = (dir: 1 | -1) => {
+    const next = (activeIndex + dir + TEMPLATES.length) % TEMPLATES.length
+    setActive(TEMPLATES[next].id)
+  }
+
   return (
     <div className="rounded-2xl border border-[#e8e4df] overflow-hidden bg-white">
       {/* ── Tabs: switch between the real templates (hidden when controlled) ── */}
@@ -121,7 +131,7 @@ export default function TemplateLiveSwitcher({
           </span>
         </div>
 
-        <div ref={frameRef} className="relative bg-white overflow-hidden" style={{ height: 460 }}>
+        <div ref={frameRef} className="relative bg-white overflow-hidden" style={{ height: frameHeight }}>
           {loading && (
             <div className="absolute inset-0 z-10 flex items-center justify-center bg-white">
               <span className="w-6 h-6 rounded-full border-2 border-[#e8e4df] border-t-[#a3b8b4] animate-spin" />
@@ -135,13 +145,34 @@ export default function TemplateLiveSwitcher({
               scrolling="no"
               tabIndex={-1}
               onLoad={() => setLoading(false)}
-              style={{ width: DESIGN_W, height: 460 / scale, border: 'none', display: 'block', pointerEvents: 'none' }}
+              style={{ width: DESIGN_W, height: frameHeight / scale, border: 'none', display: 'block', pointerEvents: 'none' }}
             />
           </div>
+
+          {/* ── Prominent prev / next arrows so switching is obvious ── */}
+          <button
+            type="button"
+            aria-label="Previous template"
+            onClick={() => step(-1)}
+            className="absolute left-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/95 shadow-lg border border-[#e8e4df] flex items-center justify-center text-[#1c1c1e] hover:bg-white hover:scale-105 transition"
+          >
+            <ChevronLeft size={20} />
+          </button>
+          <button
+            type="button"
+            aria-label="Next template"
+            onClick={() => step(1)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 z-20 w-10 h-10 rounded-full bg-white/95 shadow-lg border border-[#e8e4df] flex items-center justify-center text-[#1c1c1e] hover:bg-white hover:scale-105 transition"
+          >
+            <ChevronRight size={20} />
+          </button>
+
+  
         </div>
       </div>
 
       {/* ── Action bar: name + Try demo + Select ── */}
+      {!hideActionBar && (
       <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-[#ede9e4] bg-white flex-wrap">
         <div>
           <p className="text-sm font-semibold text-[#1c1c1e]">{activeTpl.name}</p>
@@ -181,6 +212,7 @@ export default function TemplateLiveSwitcher({
           )}
         </div>
       </div>
+      )}
     </div>
   )
 }

@@ -37,7 +37,7 @@ const templates = [
     id: 'professional',
     name: 'Professional',
     description: 'Structured and formal',
-    accent: '#4F46E5',
+    accent: '#ff9933',
     accentLight: '#EEF2FF',
     therapist: 'Dr. Arjun Mehta',
     title: 'Psychiatrist & Therapist',

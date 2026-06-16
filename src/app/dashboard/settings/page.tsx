@@ -61,6 +61,31 @@ const LANGUAGES_LIST = [
   'Kannada', 'Bengali', 'Gujarati', 'Punjabi', 'Malayalam'
 ]
 
+// Country dial codes + the exact national number length we expect (digits
+// AFTER the country code). Used to validate the WhatsApp / phone field.
+const COUNTRY_CODES: { code: string; dial: string; flag: string; len: number }[] = [
+  { code: 'IN', dial: '+91',  flag: '🇮🇳', len: 10 },
+  { code: 'US', dial: '+1',   flag: '🇺🇸', len: 10 },
+  { code: 'GB', dial: '+44',  flag: '🇬🇧', len: 10 },
+  { code: 'AE', dial: '+971', flag: '🇦🇪', len: 9  },
+  { code: 'AU', dial: '+61',  flag: '🇦🇺', len: 9  },
+  { code: 'CA', dial: '+1',   flag: '🇨🇦', len: 10 },
+  { code: 'SG', dial: '+65',  flag: '🇸🇬', len: 8  },
+  { code: 'NP', dial: '+977', flag: '🇳🇵', len: 10 },
+  { code: 'NZ', dial: '+64',  flag: '🇳🇿', len: 9  },
+  { code: 'DE', dial: '+49',  flag: '🇩🇪', len: 11 },
+]
+
+// Split a stored phone like "+91 9876543210" into { dial, number }.
+function splitPhone(stored: string): { dial: string; number: string } {
+  const s = (stored ?? '').trim()
+  // Longest dial codes first so "+1" doesn't steal "+91".
+  const match = [...COUNTRY_CODES].sort((a, b) => b.dial.length - a.dial.length)
+    .find(c => s.startsWith(c.dial))
+  if (match) return { dial: match.dial, number: s.slice(match.dial.length).replace(/\D/g, '') }
+  return { dial: '+91', number: s.replace(/\D/g, '') }
+}
+
 export default function SettingsPage() {
   const supabase = createClient()
   const { therapist, loading } = useTherapist()
@@ -86,6 +111,11 @@ export default function SettingsPage() {
   const [cityName, setCityName] = useState('')
   // Lets the user type a specialty not in the preset list.
   const [customSpecialty, setCustomSpecialty] = useState('')
+  // Lets the user type a language not in the preset list.
+  const [customLanguage, setCustomLanguage] = useState('')
+  // WhatsApp / phone split into country dial code + national number.
+  const [dialCode, setDialCode] = useState('+91')
+  const [phoneNumber, setPhoneNumber] = useState('')
 
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
@@ -116,6 +146,11 @@ export default function SettingsPage() {
       languages:             therapist.languages ?? ['English'],
     })
     setPhotoPreview(therapist.photo_url ?? null)
+
+    // Split a stored phone "+91 9876543210" into dial code + national number.
+    const { dial, number } = splitPhone((therapist as any).phone ?? '')
+    setDialCode(dial)
+    setPhoneNumber(number)
 
     // Split a stored "City, State" back into the two dropdowns.
     const stored = (therapist.city ?? '').trim()
@@ -149,6 +184,21 @@ export default function SettingsPage() {
     )
     setCustomSpecialty('')
   }
+
+  function addCustomLanguage() {
+    const v = customLanguage.trim()
+    if (!v) return
+    setForm(prev =>
+      prev.languages.includes(v)
+        ? prev
+        : { ...prev, languages: [...prev.languages, v] }
+    )
+    setCustomLanguage('')
+  }
+
+  // Current country's expected national number length (for validation).
+  const activeCountry = COUNTRY_CODES.find(c => c.dial === dialCode) ?? COUNTRY_CODES[0]
+  const phoneTooShort = phoneNumber.length > 0 && phoneNumber.length !== activeCountry.len
 
   // Selecting a file opens the crop modal instead of using it directly.
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -189,6 +239,13 @@ export default function SettingsPage() {
 
   async function handleSave() {
     if (!therapist) return
+
+    // Validate the phone number length for the chosen country before saving.
+    if (phoneNumber && phoneNumber.length !== activeCountry.len) {
+      setError(`Enter a valid ${activeCountry.len}-digit number for ${activeCountry.dial}.`)
+      return
+    }
+
     setSaving(true)
     setError('')
 
@@ -196,34 +253,33 @@ export default function SettingsPage() {
       let photo_url = therapist.photo_url
 
       // Upload new photo if selected
-// Upload new photo if selected
-if (photoFile) {
-  const ext = photoFile.name.split('.').pop()
-  const path = `${therapist.id}/profile-${Date.now()}.${ext}`
+      if (photoFile) {
+        const ext = photoFile.name.split('.').pop()
+        const path = `${therapist.id}/profile-${Date.now()}.${ext}`
 
-  console.log('Uploading to path:', path)
+        console.log('Uploading to path:', path)
 
-  const { data: uploadData, error: uploadError } = await supabase.storage
-    .from('avatars')
-    .upload(path, photoFile, {
-      upsert: true,
-    })
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(path, photoFile, {
+            upsert: true,
+          })
 
-  console.log('UPLOAD DATA:', uploadData)
-  console.log('UPLOAD ERROR:', uploadError)
+        console.log('UPLOAD DATA:', uploadData)
+        console.log('UPLOAD ERROR:', uploadError)
 
-  if (uploadError) {
-    throw uploadError
-  }
+        if (uploadError) {
+          throw uploadError
+        }
 
-  const { data: urlData } = supabase.storage
-    .from('avatars')
-    .getPublicUrl(path)
+        const { data: urlData } = supabase.storage
+          .from('avatars')
+          .getPublicUrl(path)
 
-  console.log('PUBLIC URL:', urlData)
+        console.log('PUBLIC URL:', urlData)
 
-  photo_url = urlData.publicUrl
-}
+        photo_url = urlData.publicUrl
+      }
 
       const { error: updateError } = await supabase
         .from('therapists')
@@ -233,10 +289,11 @@ if (photoFile) {
           bio:                   form.bio,
           // Combine the City + State dropdowns into the single city field.
           city:                  [cityName, stateName].filter(Boolean).join(', '),
-          phone:                 form.phone,
+          phone:                 phoneNumber ? `${dialCode} ${phoneNumber}` : '',
           fee_per_session:       Number(form.fee_per_session),
           session_duration_mins: Number(form.session_duration_mins),
-          years_experience:      Number(form.years_experience),
+          // "Fresher" is stored as 0 years.
+          years_experience:      Number(form.years_experience || 0),
           session_mode:          form.session_mode,
           specialties:           form.specialties,
           languages:             form.languages,
@@ -260,7 +317,7 @@ if (photoFile) {
   if (loading) return (
     <div className="p-8 flex items-center justify-center min-h-64">
       <div className="animate-spin w-6 h-6 rounded-full border-2
-                      border-[#a3b8b4] border-t-transparent" />
+                      border-[#FF9933] border-t-transparent" />
     </div>
   )
 
@@ -285,20 +342,20 @@ if (photoFile) {
                       bg-[#f2f0ed] rounded-xl border border-[#e8e4df]">
         <div className="relative">
           <div className="w-20 h-20 rounded-full overflow-hidden
-                          border-2 border-[#b8ceca] bg-[#d4e4e1]
+                          border-2 border-[#F5D9B0] bg-[#FFEFD9]
                           flex items-center justify-center">
             {photoPreview ? (
               <img src={photoPreview} alt="Profile"
                 className="w-full h-full object-cover" />
             ) : (
-              <User size={28} className="text-[#a3b8b4]" />
+              <User size={28} className="text-[#FF9933]" />
             )}
           </div>
           <button
             onClick={() => fileRef.current?.click()}
             className="absolute -bottom-1 -right-1 w-7 h-7 rounded-full
-                       bg-[#a3b8b4] flex items-center justify-center
-                       hover:bg-[#7d9e99] transition"
+                       bg-[#FF9933] flex items-center justify-center
+                       hover:bg-[#E07A12] transition"
           >
             <Camera size={12} className="text-white" />
           </button>
@@ -319,7 +376,7 @@ if (photoFile) {
           </p>
           <button
             onClick={() => fileRef.current?.click()}
-            className="text-xs text-[#5a7f7a] font-medium mt-1
+            className="text-xs text-[#C46800] font-medium mt-1
                        hover:underline"
           >
             Change photo
@@ -357,7 +414,7 @@ if (photoFile) {
             placeholder="Tell clients about your approach and experience..."
             className="w-full px-4 py-3 rounded-lg border border-[#e8e4df]
                        text-[#1c1c1e] placeholder-[#6b7280] text-sm
-                       focus:outline-none focus:ring-2 focus:ring-[#a3b8b4]
+                       focus:outline-none focus:ring-2 focus:ring-[#FF9933]
                        focus:border-transparent resize-none transition
                        bg-white"
           />
@@ -374,7 +431,7 @@ if (photoFile) {
               className="w-full h-11 px-4 rounded-lg border border-[#e8e4df]
                          text-[#1c1c1e] text-sm bg-white
                          focus:outline-none focus:ring-2
-                         focus:ring-[#a3b8b4] focus:border-transparent"
+                         focus:ring-[#FF9933] focus:border-transparent"
             >
               <option value="">Select state</option>
               {STATES_LIST.map(s => (
@@ -392,9 +449,9 @@ if (photoFile) {
               disabled={!stateName}
               className="w-full h-11 px-4 rounded-lg border border-[#e8e4df]
                          text-[#1c1c1e] text-sm bg-white disabled:bg-[#f5f4f1]
-                         disabled:text-[#a3b8b4]
+                         disabled:text-[#FF9933]
                          focus:outline-none focus:ring-2
-                         focus:ring-[#a3b8b4] focus:border-transparent"
+                         focus:ring-[#FF9933] focus:border-transparent"
             >
               <option value="">
                 {stateName ? 'Select city' : 'Select a state first'}
@@ -406,13 +463,52 @@ if (photoFile) {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input
-            label="WhatsApp / Phone"
-            value={form.phone}
-            onChange={e => setForm({ ...form, phone: e.target.value })}
-            placeholder="9876543210"
-          />
+        <div>
+          <label className="block text-sm font-medium text-[#6b7280] mb-1.5">
+            WhatsApp / Phone
+          </label>
+          <div className="flex gap-2">
+            <select
+              value={dialCode}
+              onChange={e => {
+                const next = e.target.value
+                setDialCode(next)
+                // Trim the number if it now exceeds the new country's length.
+                const max = (COUNTRY_CODES.find(c => c.dial === next) ?? activeCountry).len
+                setPhoneNumber(p => p.slice(0, max))
+              }}
+              className="h-11 px-2 rounded-lg border border-[#e8e4df]
+                         text-[#1c1c1e] text-sm bg-white shrink-0
+                         focus:outline-none focus:ring-2
+                         focus:ring-[#FF9933] focus:border-transparent"
+            >
+              {COUNTRY_CODES.map(c => (
+                <option key={c.code} value={c.dial}>{c.flag} {c.dial}</option>
+              ))}
+            </select>
+            <input
+              type="tel"
+              inputMode="numeric"
+              value={phoneNumber}
+              onChange={e => {
+                // Keep digits only, capped at this country's expected length.
+                const digits = e.target.value.replace(/\D/g, '').slice(0, activeCountry.len)
+                setPhoneNumber(digits)
+              }}
+              placeholder={'9'.repeat(Math.min(activeCountry.len, 10))}
+              className={`flex-1 h-11 px-4 rounded-lg border text-[#1c1c1e]
+                          placeholder-[#9ca3af] text-sm bg-white
+                          focus:outline-none focus:ring-2 focus:border-transparent
+                          ${phoneTooShort
+                            ? 'border-red-300 focus:ring-red-300'
+                            : 'border-[#e8e4df] focus:ring-[#FF9933]'}`}
+            />
+          </div>
+          <p className={`text-xs mt-1 ${phoneTooShort ? 'text-red-500' : 'text-[#9ca3af]'}`}>
+            {phoneTooShort
+              ? `${activeCountry.dial} needs exactly ${activeCountry.len} digits (${phoneNumber.length}/${activeCountry.len}).`
+              : `${activeCountry.dial} requires ${activeCountry.len} digits.`}
+          </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -436,7 +532,7 @@ if (photoFile) {
               className="w-full h-11 px-4 rounded-lg border border-[#e8e4df]
                          text-[#1c1c1e] text-sm bg-white
                          focus:outline-none focus:ring-2
-                         focus:ring-[#a3b8b4] focus:border-transparent"
+                         focus:ring-[#FF9933] focus:border-transparent"
             >
               {[30, 45, 50, 60, 90].map(d => (
                 <option key={d} value={d}>{d} minutes</option>
@@ -446,15 +542,24 @@ if (photoFile) {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Input
-            label="Years of experience"
-            type="number"
-            value={form.years_experience}
-            onChange={e => setForm({
-              ...form, years_experience: e.target.value
-            })}
-            placeholder="5"
-          />
+          <div>
+            <label className="block text-sm font-medium text-[#6b7280] mb-1.5">
+              Years of experience
+            </label>
+            <select
+              value={form.years_experience}
+              onChange={e => setForm({ ...form, years_experience: e.target.value })}
+              className="w-full h-11 px-4 rounded-lg border border-[#e8e4df]
+                         text-[#1c1c1e] text-sm bg-white
+                         focus:outline-none focus:ring-2
+                         focus:ring-[#FF9933] focus:border-transparent"
+            >
+              <option value="0">Fresher</option>
+              {Array.from({ length: 40 }, (_, i) => i + 1).map(y => (
+                <option key={y} value={y}>{y} {y === 1 ? 'year' : 'years'}</option>
+              ))}
+            </select>
+          </div>
           <div>
             <label className="block text-sm font-medium
                                text-[#6b7280] mb-1.5">
@@ -468,7 +573,7 @@ if (photoFile) {
               className="w-full h-11 px-4 rounded-lg border border-[#e8e4df]
                          text-[#1c1c1e] text-sm bg-white
                          focus:outline-none focus:ring-2
-                         focus:ring-[#a3b8b4] focus:border-transparent"
+                         focus:ring-[#FF9933] focus:border-transparent"
             >
               <option value="online">Online only</option>
               <option value="offline">In-person only</option>
@@ -482,7 +587,7 @@ if (photoFile) {
           <label className="block text-sm font-medium
                              text-[#6b7280] mb-3">
             Specialties
-            <span className="ml-2 text-xs text-[#a3b8b4]">
+            <span className="ml-2 text-xs text-[#FF9933]">
               {form.specialties.length} selected
             </span>
           </label>
@@ -496,8 +601,8 @@ if (photoFile) {
                   px-3 py-1.5 rounded-full text-xs font-medium
                   border transition
                   ${form.specialties.includes(s)
-                    ? 'bg-[#a3b8b4] text-white border-[#a3b8b4]'
-                    : 'bg-white text-[#6b7280] border-[#e8e4df] hover:border-[#a3b8b4]'}
+                    ? 'bg-[#FF9933] text-white border-[#FF9933]'
+                    : 'bg-white text-[#6b7280] border-[#e8e4df] hover:border-[#FF9933]'}
                 `}
               >
                 {s}
@@ -513,7 +618,7 @@ if (photoFile) {
                   type="button"
                   onClick={() => toggleSpecialty(s)}
                   className="px-3 py-1.5 rounded-full text-xs font-medium border
-                             bg-[#a3b8b4] text-white border-[#a3b8b4]
+                             bg-[#FF9933] text-white border-[#FF9933]
                              inline-flex items-center gap-1.5"
                   title="Click to remove"
                 >
@@ -533,8 +638,8 @@ if (photoFile) {
               }}
               placeholder="Add another specialty…"
               className="flex-1 h-10 px-4 rounded-lg border border-[#e8e4df]
-                         text-[#1c1c1e] placeholder-[#a3b8b4] text-sm bg-white
-                         focus:outline-none focus:ring-2 focus:ring-[#a3b8b4]
+                         text-[#1c1c1e] placeholder-[#FF9933] text-sm bg-white
+                         focus:outline-none focus:ring-2 focus:ring-[#FF9933]
                          focus:border-transparent"
             />
             <button
@@ -542,9 +647,9 @@ if (photoFile) {
               onClick={addCustomSpecialty}
               disabled={!customSpecialty.trim()}
               className="px-4 h-10 rounded-lg text-sm font-medium border
-                         bg-[#3e4645] text-white border-[#a3b8b4]
+                         bg-[#FF9933] text-white border-[#FF9933]
                          disabled:opacity-50 disabled:cursor-not-allowed
-                         hover:bg-[#92a8a4] transition"
+                         hover:bg-[#E07A12] transition"
             >
               Add
             </button>
@@ -556,6 +661,9 @@ if (photoFile) {
           <label className="block text-sm font-medium
                              text-[#6b7280] mb-3">
             Languages spoken
+            <span className="ml-2 text-xs text-[#FF9933]">
+              {form.languages.length} selected
+            </span>
           </label>
           <div className="flex flex-wrap gap-2">
             {LANGUAGES_LIST.map(l => (
@@ -567,13 +675,58 @@ if (photoFile) {
                   px-3 py-1.5 rounded-full text-xs font-medium
                   border transition
                   ${form.languages.includes(l)
-                    ? 'bg-[#1c1c1e] text-white border-[#1c1c1e]'
-                    : 'bg-white text-[#6b7280] border-[#e8e4df] hover:border-[#a3b8b4]'}
+                    ? 'bg-[#FF9933] text-white border-[#FF9933]'
+                    : 'bg-white text-[#6b7280] border-[#e8e4df] hover:border-[#FF9933]'}
                 `}
               >
                 {l}
               </button>
             ))}
+
+            {/* Custom languages the user added (not in the preset list) */}
+            {form.languages
+              .filter(l => !LANGUAGES_LIST.includes(l))
+              .map(l => (
+                <button
+                  key={l}
+                  type="button"
+                  onClick={() => toggleLanguage(l)}
+                  className="px-3 py-1.5 rounded-full text-xs font-medium border
+                             bg-[#FF9933] text-white border-[#FF9933]
+                             inline-flex items-center gap-1.5"
+                  title="Click to remove"
+                >
+                  {l}
+                  <span className="text-white/80">×</span>
+                </button>
+              ))}
+          </div>
+
+          {/* Add your own language */}
+          <div className="mt-3 flex gap-2">
+            <input
+              value={customLanguage}
+              onChange={e => setCustomLanguage(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') { e.preventDefault(); addCustomLanguage() }
+              }}
+              placeholder="Add another language…"
+              className="flex-1 h-10 px-4 rounded-lg border border-[#e8e4df]
+                         text-[#1c1c1e] placeholder-[#9ca3af] text-sm bg-white
+                         focus:outline-none focus:ring-2 focus:ring-[#FF9933]
+                         focus:border-transparent"
+            />
+            <button
+              type="button"
+              onClick={addCustomLanguage}
+              disabled={!customLanguage.trim()}
+              className="px-4 h-10 rounded-lg text-sm font-medium border
+                         bg-[#FF9933] text-white border-[#FF9933]
+                         disabled:opacity-50 disabled:cursor-not-allowed
+                         hover:bg-[#E07A12] transition"
+            >
+              Add
+            </button>
           </div>
         </div>
 
@@ -601,7 +754,7 @@ if (photoFile) {
         </div>
 
         {saved && (
-          <p className="text-xs text-center text-[#5a7f7a]">
+          <p className="text-xs text-center text-[#C46800]">
             Your public page has been updated.{' '}
 
           <a    href={`/${(therapist as any)?.username}`}
@@ -621,13 +774,8 @@ if (photoFile) {
       {cropSrc && (
         <div className="fixed inset-0 z-10000 flex items-center justify-center
                         bg-black/70 p-4">
-          <div className="w-full max-w-md bg-white rounded-2xl overflow-hidden shadow-2xl">
-            <div className="px-5 py-4 border-b border-[#e8e4df]">
-              <p className="text-sm font-semibold text-[#1c1c1e]">Adjust your photo</p>
-              <p className="text-xs text-[#6b7280] mt-0.5">Drag to move · pinch or use the slider to zoom</p>
-            </div>
-
-            <div className="relative w-full h-72 bg-[#1c1c1e]">
+          <div className="w-full max-w-md bg-white overflow-hidden rounded-2xl overflow-hidden shadow-2xl">
+            <div className="relative w-full h-72 overflow-hidden bg-[#1c1c1e]">
               <Cropper
                 image={cropSrc}
                 crop={crop}
@@ -638,20 +786,15 @@ if (photoFile) {
                 onCropChange={setCrop}
                 onZoomChange={setZoom}
                 onCropComplete={(_, areaPixels) => setCroppedAreaPixels(areaPixels)}
+                style={{
+                  cropAreaStyle: {
+                    boxShadow: '0 0 0 9999px rgba(28,28,30,0.9)',
+                  },
+                }}
               />
             </div>
 
             <div className="px-5 py-4 flex items-center gap-3">
-              <span className="text-xs text-[#6b7280]">Zoom</span>
-              <input
-                type="range"
-                min={1}
-                max={3}
-                step={0.01}
-                value={zoom}
-                onChange={e => setZoom(Number(e.target.value))}
-                className="flex-1 accent-[#a3b8b4]"
-              />
             </div>
 
             <div className="px-5 pb-5 flex justify-end gap-2">
@@ -667,7 +810,7 @@ if (photoFile) {
                 type="button"
                 onClick={applyCrop}
                 className="px-4 h-10 rounded-lg text-sm font-medium
-                           bg-[#a3b8b4] text-white hover:bg-[#7d9e99] transition"
+                           bg-[#FF9933] text-white hover:bg-[#E07A12] transition"
               >
                 Apply
               </button>

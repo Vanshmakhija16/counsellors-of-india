@@ -140,6 +140,10 @@ export default function AvailabilitySettings() {
     }))
   }
 
+ 
+  
+
+
   function updateRange(day: string, index: number, field: 'start' | 'end', value: string) {
     setSchedule(prev => {
       const ranges = [...prev[day].ranges]
@@ -254,7 +258,7 @@ export default function AvailabilitySettings() {
 
   if (loading) return (
     <div className="p-8 flex items-center justify-center min-h-64">
-      <div className="animate-spin w-6 h-6 rounded-full border-2 border-[#a3b8b4] border-t-transparent" />
+      <div className="animate-spin w-6 h-6 rounded-full border-2 border-[#FF9933] border-t-transparent" />
     </div>
   )
 
@@ -284,9 +288,9 @@ export default function AvailabilitySettings() {
       )}
 
       {/* Quick presets — fill the whole week in one tap */}
-      <Card padding="md" className="mb-6">
+      {/* <Card padding="md" className="mb-6">
         <div className="flex items-center gap-2 mb-3">
-          <Wand2 size={15} className="text-[#5a7f7a]" />
+          <Wand2 size={15} className="text-[#C46800]" />
           <h2 className="text-sm font-semibold text-gray-900">Quick fill</h2>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -295,18 +299,18 @@ export default function AvailabilitySettings() {
               key={name}
               onClick={() => applyPreset(name)}
               className="px-3.5 py-2 rounded-lg text-sm font-medium border border-gray-200
-                         text-gray-600 hover:border-[#7d9e99] hover:text-[#5a7f7a] transition">
+                         text-gray-600 hover:border-[#E07A12] hover:text-[#C46800] transition">
               {name}
             </button>
           ))}
         </div>
-      </Card>
+      </Card> */}
 
       {/* Session Duration */}
       <Card padding="lg" className="mb-6">
         <h2 className="text-base font-semibold text-gray-900 mb-1">Session Duration</h2>
         <p className="text-sm text-gray-500 mb-4">
-          Controls how slots are generated. A 50-min session at 9:00 AM means the next slot is 9:50 AM.
+          {/* Controls how slots are generated. A 50-min session at 9:00 AM means the next slot is 9:50 AM. */}
         </p>
         <div className="flex flex-wrap gap-2">
           {DURATION_OPTIONS.map(d => (
@@ -315,8 +319,8 @@ export default function AvailabilitySettings() {
               onClick={() => setDuration(d)}
               className={`px-4 py-2 rounded-lg text-sm font-medium border transition
                 ${duration === d
-                  ? 'bg-[#a3b8b4] border-[#a3b8b4] text-white'
-                  : 'border-gray-200 text-gray-600 hover:border-[#7d9e99] hover:text-[#5a7f7a]'
+                  ? 'bg-[#FF9933] border-[#FF9933] text-white'
+                  : 'border-gray-200 text-gray-600 hover:border-[#E07A12] hover:text-[#C46800]'
                 }`}>
               {d} min
             </button>
@@ -326,7 +330,7 @@ export default function AvailabilitySettings() {
         <div className="mt-5 pt-5 border-t border-gray-100">
           <h3 className="text-sm font-semibold text-gray-900 mb-1">Buffer between sessions</h3>
           <p className="text-xs text-gray-500 mb-3">
-            A gap added after each session (e.g. notes, breaks) before the next slot starts.
+            {/* A gap added after each session (e.g. notes, breaks) before the next slot starts. */}
           </p>
           <div className="flex flex-wrap gap-2">
             {BUFFER_OPTIONS.map(b => (
@@ -335,8 +339,8 @@ export default function AvailabilitySettings() {
                 onClick={() => setBuffer(b)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium border transition
                   ${buffer === b
-                    ? 'bg-[#a3b8b4] border-[#a3b8b4] text-white'
-                    : 'border-gray-200 text-gray-600 hover:border-[#7d9e99] hover:text-[#5a7f7a]'
+                    ? 'bg-[#FF9933] border-[#FF9933] text-white'
+                    : 'border-gray-200 text-gray-600 hover:border-[#E07A12] hover:text-[#C46800]'
                   }`}>
                 {b === 0 ? 'None' : `${b} min`}
               </button>
@@ -345,8 +349,8 @@ export default function AvailabilitySettings() {
         </div>
 
         <p className="text-xs text-gray-400 mt-4">
-          Currently: <span className="text-[#5a7f7a] font-medium">{duration} minutes</span> per session
-          {buffer > 0 && <> · <span className="text-[#5a7f7a] font-medium">{buffer} min buffer</span></>}
+          Currently: <span className="text-[#C46800] font-medium">{duration} minutes</span> per session
+          {buffer > 0 && <> · <span className="text-[#C46800] font-medium">{buffer} min buffer</span></>}
           · <span className="text-gray-600 font-medium">{totalWeeklySlots} total weekly slots</span>
         </p>
       </Card>
@@ -354,15 +358,15 @@ export default function AvailabilitySettings() {
       {/* Summary strip */}
       <div className="flex gap-4 mb-6">
         <Card padding="sm" className="flex-1 text-center">
-          <p className="text-2xl font-semibold text-[#5a7f7a]">{enabledDays}</p>
+          <p className="text-2xl font-semibold text-[#C46800]">{enabledDays}</p>
           <p className="text-xs text-gray-500 mt-0.5">Active days</p>
         </Card>
         <Card padding="sm" className="flex-1 text-center">
-          <p className="text-2xl font-semibold text-[#5a7f7a]">{totalWeeklySlots}</p>
+          <p className="text-2xl font-semibold text-[#C46800]">{totalWeeklySlots}</p>
           <p className="text-xs text-gray-500 mt-0.5">Weekly slots</p>
         </Card>
         <Card padding="sm" className="flex-1 text-center">
-          <p className="text-2xl font-semibold text-[#5a7f7a]">{previewSlots.length}</p>
+          <p className="text-2xl font-semibold text-[#C46800]">{previewSlots.length}</p>
           <p className="text-xs text-gray-500 mt-0.5">Slots on {activeDay.slice(0, 3)}</p>
         </Card>
       </div>
@@ -377,17 +381,17 @@ export default function AvailabilitySettings() {
               {DAYS.map(day => (
                 <div key={day}
                   className={`flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition
-                    ${activeDay === day ? 'bg-[#d4e4e1]' : 'hover:bg-gray-50'}`}
+                    ${activeDay === day ? 'bg-[#FFEFD9]' : 'hover:bg-gray-50'}`}
                   onClick={() => setActiveDay(day)}>
                   <div className="flex items-center gap-3">
                     <button
                       onClick={e => { e.stopPropagation(); toggleDay(day) }}
                       className={`w-9 h-5 rounded-full transition relative shrink-0
-                        ${schedule[day]?.enabled ? 'bg-[#a3b8b4]' : 'bg-gray-200'}`}>
+                        ${schedule[day]?.enabled ? 'bg-[#FF9933]' : 'bg-gray-200'}`}>
                       <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow-sm transition-all
                         ${schedule[day]?.enabled ? 'left-4' : 'left-0.5'}`} />
                     </button>
-                    <span className={`text-sm font-medium ${activeDay === day ? 'text-[#2d4a47]' : 'text-gray-700'}`}>
+                    <span className={`text-sm font-medium ${activeDay === day ? 'text-[#9A5200]' : 'text-gray-700'}`}>
                       {day}
                     </span>
                   </div>
@@ -414,11 +418,11 @@ export default function AvailabilitySettings() {
               {schedule[activeDay]?.enabled && (
                 <div className="flex items-center gap-3">
                   <button onClick={copyToAllDays}
-                    className="flex items-center gap-1 text-xs text-[#5a7f7a] hover:text-[#2d4a47] font-medium transition">
-                    <Copy size={13} /> Copy to all days
+                    className="flex items-center gap-1 text-xs text-[#C46800] hover:text-[#9A5200] font-medium transition">
+                    <Copy size={13} /> Set for all days
                   </button>
                   <button onClick={() => addRange(activeDay)}
-                    className="flex items-center gap-1 text-xs text-[#5a7f7a] hover:text-[#2d4a47] font-medium transition">
+                    className="flex items-center gap-1 text-xs text-[#C46800] hover:text-[#9A5200] font-medium transition">
                     <Plus size={13} /> Add range
                   </button>
                 </div>
@@ -434,12 +438,12 @@ export default function AvailabilitySettings() {
                       <input type="time" value={range.start}
                         onChange={e => updateRange(activeDay, i, 'start', e.target.value)}
                         className="h-9 px-3 rounded-lg border border-gray-200 text-sm text-gray-700
-                                   focus:outline-none focus:ring-2 focus:ring-[#a3b8b4] bg-white w-32" />
+                                   focus:outline-none focus:ring-2 focus:ring-[#FF9933] bg-white w-32" />
                       <span className="text-gray-400 text-sm">to</span>
                       <input type="time" value={range.end}
                         onChange={e => updateRange(activeDay, i, 'end', e.target.value)}
                         className="h-9 px-3 rounded-lg border border-gray-200 text-sm text-gray-700
-                                   focus:outline-none focus:ring-2 focus:ring-[#a3b8b4] bg-white w-32" />
+                                   focus:outline-none focus:ring-2 focus:ring-[#FF9933] bg-white w-32" />
                     </div>
                     <span className="text-xs text-gray-400 w-16 text-right shrink-0">
                       {generateSlots([range], duration, buffer).length} slots
@@ -458,7 +462,7 @@ export default function AvailabilitySettings() {
                 <Clock size={28} className="mx-auto mb-2 opacity-30" />
                 <p className="text-sm">{activeDay} is a day off.</p>
                 <button onClick={() => toggleDay(activeDay)}
-                  className="mt-2 text-sm text-[#5a7f7a] hover:text-[#2d4a47] font-medium transition">
+                  className="mt-2 text-sm text-[#C46800] hover:text-[#9A5200] font-medium transition">
                   Enable {activeDay} →
                 </button>
               </div>
@@ -474,7 +478,7 @@ export default function AvailabilitySettings() {
               <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
                 {previewSlots.map(slot => (
                   <div key={slot}
-                    className="h-10 rounded-lg border border-[#b8ceca] bg-[#d4e4e1] text-[#2d4a47]
+                    className="h-10 rounded-lg border border-[#F5D9B0] bg-[#FFEFD9] text-[#9A5200]
                                text-xs font-medium flex items-center justify-center">
                     {slot}
                   </div>
@@ -492,16 +496,16 @@ export default function AvailabilitySettings() {
       <Card padding="md" className="mt-6">
         <div className="flex items-center justify-between mb-1 flex-wrap gap-2">
           <div className="flex items-center gap-2">
-            <CalendarOff size={15} className="text-[#5a7f7a]" />
+            <CalendarOff size={15} className="text-[#C46800]" />
             <h2 className="text-sm font-semibold text-gray-900">Time off &amp; exceptions</h2>
           </div>
           <div className="flex items-center gap-3">
             <button onClick={() => addException('off')}
-              className="flex items-center gap-1 text-xs text-[#5a7f7a] hover:text-[#2d4a47] font-medium transition">
+              className="flex items-center gap-1 text-xs text-[#C46800] hover:text-[#9A5200] font-medium transition">
               <Plus size={13} /> Day off
             </button>
             <button onClick={() => addException('custom')}
-              className="flex items-center gap-1 text-xs text-[#5a7f7a] hover:text-[#2d4a47] font-medium transition">
+              className="flex items-center gap-1 text-xs text-[#C46800] hover:text-[#9A5200] font-medium transition">
               <Plus size={13} /> Custom hours
             </button>
           </div>
@@ -519,7 +523,7 @@ export default function AvailabilitySettings() {
                 <input type="date" value={ex.date}
                   onChange={e => updateException(i, { date: e.target.value })}
                   className="h-9 px-3 rounded-lg border border-gray-200 text-sm text-gray-700
-                             focus:outline-none focus:ring-2 focus:ring-[#a3b8b4] bg-white" />
+                             focus:outline-none focus:ring-2 focus:ring-[#FF9933] bg-white" />
                 {ex.type === 'off' ? (
                   <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-red-50 text-red-600 border border-red-100">
                     Day off
@@ -530,12 +534,12 @@ export default function AvailabilitySettings() {
                     <input type="time" value={ex.ranges?.[0]?.start ?? '10:00'}
                       onChange={e => updateExceptionRange(i, 'start', e.target.value)}
                       className="h-9 px-3 rounded-lg border border-gray-200 text-sm text-gray-700
-                                 focus:outline-none focus:ring-2 focus:ring-[#a3b8b4] bg-white w-28" />
+                                 focus:outline-none focus:ring-2 focus:ring-[#FF9933] bg-white w-28" />
                     <span className="text-gray-400 text-sm">to</span>
                     <input type="time" value={ex.ranges?.[0]?.end ?? '14:00'}
                       onChange={e => updateExceptionRange(i, 'end', e.target.value)}
                       className="h-9 px-3 rounded-lg border border-gray-200 text-sm text-gray-700
-                                 focus:outline-none focus:ring-2 focus:ring-[#a3b8b4] bg-white w-28" />
+                                 focus:outline-none focus:ring-2 focus:ring-[#FF9933] bg-white w-28" />
                   </div>
                 )}
                 <button onClick={() => removeException(i)}
@@ -549,9 +553,9 @@ export default function AvailabilitySettings() {
       </Card>
 
       {/* Info box */}
-      <div className="mt-6 p-4 bg-[#f0f7f6] border border-[#b8ceca] rounded-xl">
-        <p className="text-sm text-[#2d4a47] font-medium mb-1">How this works</p>
-        <p className="text-xs text-[#5a7f7a] leading-relaxed">
+      <div className="mt-6 p-4 bg-[#FFF7EE] border border-[#F5D9B0] rounded-xl">
+        <p className="text-sm text-[#9A5200] font-medium mb-1">How this works</p>
+        <p className="text-xs text-[#C46800] leading-relaxed">
           Your portfolio (Growth plan) shows the next 14 days with real available slots based on this schedule.
           When a client picks a slot and books, it's saved as an appointment and that slot is marked taken automatically.
         </p>

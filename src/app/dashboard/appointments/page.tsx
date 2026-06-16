@@ -110,7 +110,7 @@ export default function AppointmentsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, email, or phone"
-            className="w-full h-11 pl-9 pr-4 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#a3b8b4] focus:border-transparent"
+            className="w-full h-11 pl-9 pr-4 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF9933] focus:border-transparent"
           />
         </div>
         <div className="relative">
@@ -119,7 +119,7 @@ export default function AppointmentsPage() {
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="w-full h-11 pl-9 pr-3 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#a3b8b4] focus:border-transparent"
+            className="w-full h-11 pl-9 pr-3 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#FF9933] focus:border-transparent"
           />
         </div>
         {(search || dateFrom) && (
@@ -145,7 +145,7 @@ export default function AppointmentsPage() {
               className={`px-4 h-9 rounded-full text-xs font-medium border transition ${
                 active
                   ? 'bg-[#1c1c1e] text-white border-[#1c1c1e]'
-                  : 'bg-white text-[#6b7280] border-[#e8e4df] hover:border-[#a3b8b4]'
+                  : 'bg-white text-[#6b7280] border-[#e8e4df] hover:border-[#FF9933]'
               }`}
             >
               {t.label} ({counts[t.key]})
@@ -157,7 +157,7 @@ export default function AppointmentsPage() {
       <div className="bg-white rounded-xl border border-[#e8e4df] overflow-hidden">
         {loading ? (
           <div className="flex justify-center py-20">
-            <div className="animate-spin w-6 h-6 rounded-full border-2 border-[#a3b8b4] border-t-transparent" />
+            <div className="animate-spin w-6 h-6 rounded-full border-2 border-[#FF9933] border-t-transparent" />
           </div>
         ) : err ? (
           <div className="p-6 text-sm text-red-700">{err}</div>
@@ -177,7 +177,7 @@ export default function AppointmentsPage() {
           <ul className="divide-y divide-[#e8e4df]">
             {filtered.map((apt) => (
               <li key={apt.id} className="px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                <div className="w-10 h-10 rounded-full bg-[#d4e4e1] text-[#2d4a47] flex items-center justify-center shrink-0">
+                <div className="w-10 h-10 rounded-full bg-[#FFEFD9] text-[#9A5200] flex items-center justify-center shrink-0">
                   <User size={16} />
                 </div>
 
@@ -188,7 +188,7 @@ export default function AppointmentsPage() {
                     {apt.patient_id ? (
                       <Link
                         href={`/clinical/patients/${apt.patient_id}`}
-                        className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-[#2d4a47] hover:underline"
+                        className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-[#9A5200] hover:underline"
                       >
                         Chart <ExternalLink size={10} />
                       </Link>
@@ -225,7 +225,7 @@ export default function AppointmentsPage() {
                         type="button"
                         onClick={() => setStatus(apt, 'completed')}
                         disabled={updatingId === apt.id}
-                        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#354744] text-white text-xs font-medium hover:bg-[#1a2f2d] transition disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#FF9933] text-white text-xs font-medium hover:bg-[#E07A12] transition disabled:opacity-50"
                       >
                         {updatingId === apt.id ? <Loader2 size={11} className="animate-spin" /> : <CheckCircle size={11} />}
                         Mark complete
@@ -246,7 +246,7 @@ export default function AppointmentsPage() {
                     <button
                       type="button"
                       onClick={() => setNotesFor(apt)}
-                      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-[#b8ceca] text-[#2d4a47] text-xs font-medium hover:bg-[#d4e4e1] transition"
+                      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-[#F5D9B0] text-[#9A5200] text-xs font-medium hover:bg-[#FFEFD9] transition"
                     >
                       <FileText size={11} /> Notes
                     </button>
@@ -273,7 +273,7 @@ function StatusPill({ status }: { status: AppointmentStatus }) {
   const styles: Record<AppointmentStatus, string> = {
     upcoming: 'bg-amber-50 text-amber-700 border-amber-200',
     rescheduled: 'bg-blue-50 text-blue-700 border-blue-200',
-    completed: 'bg-[#d4e4e1] text-[#2d4a47] border-[#b8ceca]',
+    completed: 'bg-emerald-50 text-emerald-700 border-emerald-200',
   }
   return (
     <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border uppercase tracking-wide ${styles[status]}`}>

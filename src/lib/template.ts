@@ -35,6 +35,7 @@ export interface TherapistProfile {
   fee_per_session?: number; session_duration_mins?: number
   template_id?: TemplateId; color_id?: ColorId
   hidden_sections?: string[]; profile_content?: Record<string, unknown>
+  section_order?: string[]
   template_locked_until?: string | null
   plan?: string
 }
@@ -57,7 +58,7 @@ export const COLORS: TemplateColor[] = [
   { id: 'teal',   name: 'Ocean',   hex: '#ff9933', primary: '#ff9933', light: '#F0FDFA', dark: '#0F766E', text: '#FFFFFF' },
   { id: 'amber',  name: 'Amber',   hex: '#D97706', primary: '#D97706', light: '#FFFBEB', dark: '#B45309', text: '#FFFFFF' },
   { id: 'rose',   name: 'Blush',   hex: '#E11D48', primary: '#E11D48', light: '#FFF1F2', dark: '#BE123C', text: '#FFFFFF' },
-  { id: 'indigo', name: 'Indigo',  hex: '#4F46E5', primary: '#4F46E5', light: '#EEF2FF', dark: '#4338CA', text: '#FFFFFF' },
+  { id: 'indigo', name: 'Indigo',  hex: '#ff9933', primary: '#ff9933', light: '#EEF2FF', dark: '#4338CA', text: '#FFFFFF' },
   { id: 'slate',  name: 'Slate',   hex: '#475569', primary: '#475569', light: '#F8FAFC', dark: '#334155', text: '#FFFFFF' },
   { id: 'sage',   name: 'Sage',    hex: '#65A30D', primary: '#65A30D', light: '#F7FEE7', dark: '#4D7C0F', text: '#FFFFFF' },
 ]
@@ -180,4 +181,42 @@ export function getColor(id: ColorId): TemplateColor {
 
 export function getTemplate(id: TemplateId): Template {
   return TEMPLATES.find(t => t.id === id) ?? TEMPLATES[0]
+}
+
+// Resolves the final list of section ids to RENDER, in order, for a given
+// template — combining the template's default section list with any saved
+// custom order, then dropping hidden ones. Used by both the dashboard editor
+// and every template component, so there is exactly one ordering rule:
+//   1. ids from `order` that still belong to this template, in that order
+//   2. any of the template's own sections not present in `order` (new
+//      sections added later, or a stale/missing order), appended in their
+//      default position
+//   3. hidden ids removed last
+export function getOrderedSections(
+  templateId: TemplateId,
+  order?: string[] | null,
+  hidden?: string[] | null,
+): SectionConfig[] {
+  const all = TEMPLATE_SECTIONS[templateId] ?? []
+  const byId = new Map(all.map(s => [s.id, s]))
+  const hiddenSet = new Set(hidden ?? [])
+
+  const ordered: SectionConfig[] = []
+  const seen = new Set<string>()
+
+  for (const id of order ?? []) {
+    const section = byId.get(id)
+    if (section && !seen.has(id)) {
+      ordered.push(section)
+      seen.add(id)
+    }
+  }
+  for (const section of all) {
+    if (!seen.has(section.id)) {
+      ordered.push(section)
+      seen.add(section.id)
+    }
+  }
+
+  return ordered.filter(s => !hiddenSet.has(s.id))
 }

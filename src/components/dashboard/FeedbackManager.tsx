@@ -136,14 +136,14 @@ export default function FeedbackManager({ therapistId }: FeedbackManagerProps) {
             value={form.client_name}
             onChange={(e) => setForm((f) => ({ ...f, client_name: e.target.value }))}
             placeholder="Client name (e.g. Karan M.)"
-            className="h-10 w-full rounded-lg border border-[#e8e4df] bg-white px-3 text-sm text-[#1c1c1e] placeholder-[#9ca3af] outline-none focus:border-[#a3b8b4] focus:ring-2 focus:ring-[#a3b8b4]/30"
+            className="h-10 w-full rounded-lg border border-[#e8e4df] bg-white px-3 text-sm text-[#1c1c1e] placeholder-[#9ca3af] outline-none focus:border-[#FF9933] focus:ring-2 focus:ring-[#FF9933]/30"
           />
           <input
             type="text"
             value={form.client_role}
             onChange={(e) => setForm((f) => ({ ...f, client_role: e.target.value }))}
             placeholder="Optional · role/year (e.g. Client — 2025)"
-            className="h-10 w-full rounded-lg border border-[#e8e4df] bg-white px-3 text-sm text-[#1c1c1e] placeholder-[#9ca3af] outline-none focus:border-[#a3b8b4] focus:ring-2 focus:ring-[#a3b8b4]/30"
+            className="h-10 w-full rounded-lg border border-[#e8e4df] bg-white px-3 text-sm text-[#1c1c1e] placeholder-[#9ca3af] outline-none focus:border-[#FF9933] focus:ring-2 focus:ring-[#FF9933]/30"
           />
         </div>
 
@@ -174,7 +174,7 @@ export default function FeedbackManager({ therapistId }: FeedbackManagerProps) {
           value={form.text}
           onChange={(e) => setForm((f) => ({ ...f, text: e.target.value }))}
           placeholder="What did this client share about their experience?"
-          className="mt-3 w-full resize-none rounded-lg border border-[#e8e4df] bg-white px-3 py-2.5 text-sm text-[#1c1c1e] placeholder-[#9ca3af] outline-none focus:border-[#a3b8b4] focus:ring-2 focus:ring-[#a3b8b4]/30"
+          className="mt-3 w-full resize-none rounded-lg border border-[#e8e4df] bg-white px-3 py-2.5 text-sm text-[#1c1c1e] placeholder-[#9ca3af] outline-none focus:border-[#FF9933] focus:ring-2 focus:ring-[#FF9933]/30"
         />
 
         <div className="mt-3 flex items-center justify-between">
@@ -244,7 +244,7 @@ export default function FeedbackManager({ therapistId }: FeedbackManagerProps) {
                     type="checkbox"
                     checked={f.is_published}
                     onChange={() => togglePublished(f)}
-                    className="h-3.5 w-3.5 accent-[#a3b8b4]"
+                    className="h-3.5 w-3.5 accent-[#FF9933]"
                   />
                   Published
                 </label>

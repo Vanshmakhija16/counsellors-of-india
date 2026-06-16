@@ -116,7 +116,7 @@ export default function RazorpayConnect() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
-        <RefreshCw size={20} className="animate-spin text-[#a3b8b4]" />
+        <RefreshCw size={20} className="animate-spin text-[#FF9933]" />
       </div>
     )
   }
@@ -256,14 +256,14 @@ export default function RazorpayConnect() {
           <button
             type="button"
             onClick={() => setShowSecret(v => !v)}
-            className="absolute right-3 top-9 text-[#a3b8b4] hover:text-[#5a7f7a] transition"
+            className="absolute right-3 top-9 text-[#FF9933] hover:text-[#C46800] transition"
           >
             {showSecret ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>
         </div>
 
         <p className="text-xs text-[#6b7280] flex items-start gap-1.5">
-          <ShieldCheck size={13} className="shrink-0 mt-0.5 text-[#a3b8b4]" />
+          <ShieldCheck size={13} className="shrink-0 mt-0.5 text-[#FF9933]" />
           Your secret key is encrypted with AES-256-GCM before being stored.
           It is never visible in the UI or sent to the browser again.
         </p>
@@ -301,7 +301,7 @@ export default function RazorpayConnect() {
       {/* ── Webhook setup instructions ─────────────────────────────── */}
       <div className="border border-[#e8e4df] rounded-xl overflow-hidden">
         <div className="px-4 py-3 bg-[#f2f0ed] flex items-center gap-2">
-          <Wifi size={15} className="text-[#5a7f7a]" />
+          <Wifi size={15} className="text-[#C46800]" />
           <h3 className="text-sm font-semibold text-[#1c1c1e]">Webhook Configuration</h3>
           {status?.webhook_verified && (
             <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-teal-100 text-teal-700 font-medium flex items-center gap-1">
@@ -332,7 +332,7 @@ export default function RazorpayConnect() {
             href="https://dashboard.razorpay.com/app/website-app-settings/webhooks"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-[#5a7f7a] font-medium text-xs hover:underline"
+            className="inline-flex items-center gap-1.5 text-[#C46800] font-medium text-xs hover:underline"
           >
             Configure webhooks in Razorpay <ExternalLink size={11} />
           </a>
@@ -354,7 +354,7 @@ export default function RazorpayConnect() {
               'Booking is auto-confirmed and both parties receive an email',
             ].map((step, i) => (
               <li key={i} className="flex items-start gap-2.5">
-                <span className="w-5 h-5 rounded-full bg-[#d4e4e1] text-[#2d4a47] text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
+                <span className="w-5 h-5 rounded-full bg-[#FFEFD9] text-[#9A5200] text-xs font-bold flex items-center justify-center shrink-0 mt-0.5">
                   {i + 1}
                 </span>
                 <span>{step}</span>

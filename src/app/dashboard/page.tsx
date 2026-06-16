@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase'
 import {
   Calendar, Users, Clock,
   ExternalLink, Copy, CheckCircle,
-  AlertCircle, ArrowRight,
+  AlertCircle, ArrowRight, Palette, Sparkles,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -76,7 +76,7 @@ export default function DashboardPage() {
           {greeting}
         </p>
         <h1 className="text-3xl font-bold" style={{ color: '#1F1A14', letterSpacing: '-0.02em' }}>
-          {firstName} <span style={{ color: '#46403A', fontWeight: 500 }}>— your practice, at a glance.</span>
+          {firstName} <span style={{ color: '#46403A', fontWeight: 500 }}></span>
         </h1>
       </div>
 
@@ -148,6 +148,40 @@ export default function DashboardPage() {
           </Link>
         </div>
       </div>
+
+      {/* ── Customize your website ─────────────────────────────── */}
+      <Link
+        href="/dashboard/appearance"
+        className="group mb-8 p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition hover:shadow-md"
+        style={{
+          background: '#ffffff',
+          border: '1px solid rgba(255,153,51,0.30)',
+        }}
+      >
+        <div className="flex items-center gap-4">
+          {/* <div
+            className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
+            style={{ background: 'rgba(255,153,51,0.10)' }}
+          >
+            <Palette size={22} style={{ color: '#FF9933' }} />
+          </div> */}
+          <div>
+            <p className="text-sm font-bold flex items-center gap-1.5" style={{ color: '#1F1A14' }}>
+              Design your website
+              <Sparkles size={14} style={{ color: '#FF9933' }} />
+            </p>
+            <p className="text-xs mt-0.5" style={{ color: '#7A7166' }}>
+              Pick a template, preview it live, and edit your text & photos, all in one place.
+            </p>
+          </div>
+        </div>
+        <span
+          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold shrink-0 transition group-hover:gap-2.5"
+          style={{ background: '#FF9933', color: '#1F1A14' }}
+        >
+          Customize <ArrowRight size={14} />
+        </span>
+      </Link>
 
       {/* ── Stats ─────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">

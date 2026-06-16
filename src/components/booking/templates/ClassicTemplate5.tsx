@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { TherapistProfile } from './templateUtils'
+import { getOrderedSections } from '@/lib/template'
 import { ct5Styles } from './ClassicTemplate5/styles'
 import Navbar from './ClassicTemplate5/Navbar'
 import Hero from './ClassicTemplate5/Hero'
@@ -21,6 +22,7 @@ interface ClassicTemplate5Props {
 
 export default function ClassicTemplate5({ therapist, bookedTimes = [], hiddenSections = [] }: ClassicTemplate5Props) {
   const show = (id: string) => !hiddenSections.includes(id)
+  const orderedIds = getOrderedSections('classic5', therapist.section_order, hiddenSections).map(s => s.id)
   const [loaded, setLoaded] = useState(false)
   const heroRef = useRef<HTMLElement | null>(null)
 
@@ -43,14 +45,19 @@ export default function ClassicTemplate5({ therapist, bookedTimes = [], hiddenSe
       <style>{ct5Styles}</style>
       <Navbar scrollTo={scrollTo} therapist={therapist} />
       <main>
-        {show('hero')     && <Hero therapist={therapist} loaded={loaded} heroRef={heroRef} />}
-        {show('ticker')   && <Ticker />}
-        {show('about')    && <About therapist={therapist} />}
-        {show('services') && <Services therapist={therapist} />}
-        {show('insights') && <Insights therapist={therapist} />}
-        {show('faq')      && <FAQ />}
-        {show('booking')  && <Booking therapist={therapist} bookedTimes={bookedTimes} />}
-        {show('footer')   && <Footer therapist={therapist} />}
+        {orderedIds.map(id => {
+          switch (id) {
+            case 'hero':     return <Hero key={id} therapist={therapist} loaded={loaded} heroRef={heroRef} />
+            case 'ticker':   return <Ticker key={id} />
+            case 'about':    return <About key={id} therapist={therapist} />
+            case 'services': return <Services key={id} therapist={therapist} />
+            case 'insights': return <Insights key={id} therapist={therapist} />
+            case 'faq':      return <FAQ key={id} />
+            case 'booking':  return <Booking key={id} therapist={therapist} bookedTimes={bookedTimes} />
+            case 'footer':   return <Footer key={id} therapist={therapist} />
+            default: return null
+          }
+        })}
       </main>
     </div>
   )

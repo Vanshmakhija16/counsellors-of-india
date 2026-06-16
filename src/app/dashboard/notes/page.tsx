@@ -87,13 +87,13 @@ export default function NotesPage() {
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Search by patient name or note content"
-          className="w-full h-11 pl-9 pr-4 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#a3b8b4] focus:border-transparent"
+          className="w-full h-11 pl-9 pr-4 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF9933] focus:border-transparent"
         />
       </div>
 
       {loading ? (
         <div className="bg-white rounded-xl border border-[#e8e4df] py-20 flex justify-center">
-          <div className="animate-spin w-6 h-6 rounded-full border-2 border-[#a3b8b4] border-t-transparent" />
+          <div className="animate-spin w-6 h-6 rounded-full border-2 border-[#FF9933] border-t-transparent" />
         </div>
       ) : err ? (
         <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{err}</div>
@@ -126,7 +126,7 @@ export default function NotesPage() {
                     {n.patient ? (
                       <Link
                         href={`/clinical/patients/${n.patient.id}`}
-                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1c1c1e] hover:text-[#2d4a47] transition"
+                        className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1c1c1e] hover:text-[#9A5200] transition"
                       >
                         <User size={13} className="text-[#9ca3af]" />
                         {patientName}
@@ -154,7 +154,7 @@ export default function NotesPage() {
                           setEditingId(n.id)
                           setEditValue(n.content)
                         }}
-                        className="h-8 w-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:text-[#2d4a47] hover:border-[#b8ceca] transition"
+                        className="h-8 w-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-500 hover:text-[#9A5200] hover:border-[#F5D9B0] transition"
                         title="Edit"
                       >
                         <Edit2 size={12} />
@@ -177,7 +177,7 @@ export default function NotesPage() {
                       value={editValue}
                       onChange={(e) => setEditValue(e.target.value)}
                       rows={6}
-                      className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#a3b8b4] focus:border-transparent resize-y"
+                      className="w-full px-4 py-3 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#FF9933] focus:border-transparent resize-y"
                     />
                     <div className="flex items-center justify-end gap-2">
                       <button
@@ -192,7 +192,7 @@ export default function NotesPage() {
                         type="button"
                         onClick={() => handleSave(n.id)}
                         disabled={savingId === n.id || editValue.trim().length === 0}
-                        className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-[#354744] text-white text-xs font-medium hover:bg-[#1a2f2d] transition disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-[#FF9933] text-white text-xs font-medium hover:bg-[#E07A12] transition disabled:opacity-50"
                       >
                         <Save size={11} /> Save
                       </button>

@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { TherapistProfile, EditableService } from './templateUtils'
+import { getOrderedSections } from '@/lib/template'
 import { ct3Styles } from './ClassicTemplate3/styles'
 import SideNav  from './ClassicTemplate3/SideNav'
 import Hero     from './ClassicTemplate3/Hero'
@@ -20,6 +21,7 @@ interface ClassicTemplate3Props {
 
 export default function ClassicTemplate3({ therapist, bookedTimes = [], hiddenSections = [] }: ClassicTemplate3Props) {
   const show = (id: string) => !hiddenSections.includes(id)
+  const orderedIds = getOrderedSections('classic3', therapist.section_order, hiddenSections).map(s => s.id)
   const [heroLoaded, setHeroLoaded]           = useState(false)
   const heroRef                               = useRef<HTMLElement | null>(null)
   const rootRef                               = useRef<HTMLDivElement | null>(null)
@@ -61,22 +63,27 @@ export default function ClassicTemplate3({ therapist, bookedTimes = [], hiddenSe
       <style>{ct3Styles}</style>
       <SideNav scrollTo={scrollTo} therapist={therapist} />
       <div style={{ paddingTop: 'var(--nav-h)' }}>
-        {show('hero')     && <Hero therapist={therapist} heroLoaded={heroLoaded} heroRef={heroRef} />}
-        {/* About includes the ticker above it */}
-        {show('about')    && <About therapist={therapist} />}
-        {show('services') && <Services therapist={therapist} onBookService={handleBookService} />}
-        {show('insights') && <Insights therapist={therapist} />}
-        {show('booking')  && (
-          <Booking
-            therapist={therapist}
-            bookedTimes={bookedTimes}
-            selectedService={selectedService}
-            onClearService={() => setSelectedService(null)}
-          />
-        )}
-                {show('faq')      && <FAQ therapist={therapist} />}
-
-        {show('footer')   && <Footer therapist={therapist} />}
+        {orderedIds.map(id => {
+          switch (id) {
+            case 'hero':     return <Hero key={id} therapist={therapist} heroLoaded={heroLoaded} heroRef={heroRef} />
+            case 'about':    return <About key={id} therapist={therapist} />
+            case 'services': return <Services key={id} therapist={therapist} onBookService={handleBookService} />
+            case 'insights': return <Insights key={id} therapist={therapist} />
+            case 'booking':
+              return (
+                <Booking
+                  key={id}
+                  therapist={therapist}
+                  bookedTimes={bookedTimes}
+                  selectedService={selectedService}
+                  onClearService={() => setSelectedService(null)}
+                />
+              )
+            case 'faq':    return <FAQ key={id} therapist={therapist} />
+            case 'footer': return <Footer key={id} therapist={therapist} />
+            default: return null
+          }
+        })}
       </div>
     </div>
   )

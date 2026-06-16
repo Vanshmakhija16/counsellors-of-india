@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { TherapistProfile } from './templateUtils'
+import { getOrderedSections } from '@/lib/template'
 import { ct2Styles } from './ClassicTemplate2/styles'
 import Navbar from './ClassicTemplate2/Navbar'
 import Hero from './ClassicTemplate2/Hero'
@@ -20,6 +21,7 @@ interface ClassicTemplate2Props {
 
 export default function ClassicTemplate2({ therapist, bookedTimes = [], hiddenSections = [] }: ClassicTemplate2Props) {
   const show = (id: string) => !hiddenSections.includes(id)
+  const orderedIds = getOrderedSections('classic2', therapist.section_order, hiddenSections).map(s => s.id)
   const [scrolled, setScrolled] = useState(false)
   const [heroLoaded, setHeroLoaded] = useState(false)
   const heroRef = useRef<HTMLElement | null>(null)
@@ -49,13 +51,18 @@ export default function ClassicTemplate2({ therapist, bookedTimes = [], hiddenSe
       <style>{ct2Styles}</style>
       <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT,WONK@0,9..144,300..900,0..100,0..1;1,9..144,300..900,0..100,0..1&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet" />
       <Navbar scrolled={scrolled} scrollTo={scrollTo} therapist={therapist} />
-      {show('hero')     && <Hero therapist={therapist} heroLoaded={heroLoaded} heroRef={heroRef} />}
-      {show('about')    && <About therapist={therapist} />}
-      {show('services') && <Services />}
-      {show('insights') && <Insights />}
-      {show('booking')  && <Booking therapist={therapist} bookedTimes={bookedTimes} />}
-      {show('faq')      && <FAQ />}
-      {show('footer')   && <Footer therapist={therapist} />}
+      {orderedIds.map(id => {
+        switch (id) {
+          case 'hero':     return <Hero key={id} therapist={therapist} heroLoaded={heroLoaded} heroRef={heroRef} />
+          case 'about':    return <About key={id} therapist={therapist} />
+          case 'services': return <Services key={id} />
+          case 'insights': return <Insights key={id} />
+          case 'booking':  return <Booking key={id} therapist={therapist} bookedTimes={bookedTimes} />
+          case 'faq':      return <FAQ key={id} />
+          case 'footer':   return <Footer key={id} therapist={therapist} />
+          default: return null
+        }
+      })}
     </div>
   )
 }

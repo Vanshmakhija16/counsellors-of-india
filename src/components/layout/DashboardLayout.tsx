@@ -5,19 +5,31 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
   LayoutDashboard, Calendar, Settings, LogOut, Clock, Palette,
-  ClipboardList, Menu, X, CreditCard,
+  ClipboardList, Menu, X, CreditCard, PanelLeftClose, PanelLeft,
 } from 'lucide-react'
 import Logo from '../ui/Logo'
 import { createClient } from '@/lib/supabase'
 
-const navItems = [
-  { label: 'Dashboard',    href: '/dashboard',              icon: LayoutDashboard, match: 'exact' as const },
-  { label: 'Appointments', href: '/dashboard/appointments', icon: Calendar,        match: 'exact' as const },
-  { label: 'My Clients',   href: '/clinical/patients',      icon: ClipboardList,   match: 'prefix' as const },
-  { label: 'Settings',     href: '/dashboard/settings',     icon: Settings,        match: 'exact' as const },
-  { label: 'Availability', href: '/dashboard/availability', icon: Clock,           match: 'exact' as const },
-  { label: 'Appearance',   href: '/dashboard/appearance',   icon: Palette,         match: 'exact' as const },
-  { label: 'Payments',     href: '/dashboard/payments',     icon: CreditCard,      match: 'exact' as const },
+// Grouped nav: first "Set up your page", then "Run your practice" — mirroring
+// the real journey from building the site to operating the practice day-to-day.
+const navGroups = [
+  {
+    title: 'Set up your page',
+    items: [
+      { label: 'Templates',    href: '/dashboard/appearance',   icon: Palette,   match: 'exact' as const },
+      { label: 'Profile',      href: '/dashboard/settings',     icon: Settings,  match: 'exact' as const },
+      { label: 'Availability', href: '/dashboard/availability', icon: Clock,     match: 'exact' as const },
+    ],
+  },
+  {
+    title: 'Run your practice',
+    items: [
+      { label: 'Dashboard',    href: '/dashboard',              icon: LayoutDashboard, match: 'exact' as const },
+      { label: 'Appointments', href: '/dashboard/appointments', icon: Calendar,        match: 'exact' as const },
+      { label: 'My Clients',   href: '/clinical/patients',      icon: ClipboardList,   match: 'prefix' as const },
+      // { label: 'Payments',     href: '/dashboard/payments',     icon: CreditCard,      match: 'exact' as const },
+    ],
+  },
 ]
 
 const upgradeItem = { label: 'Upgrade Plan', href: '/pricing', icon: CreditCard, match: 'exact' as const }
@@ -27,7 +39,21 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const router = useRouter()
   const supabase = createClient()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [collapsed, setCollapsed] = useState(false)   // desktop sidebar hidden
   const [gate, setGate] = useState<'checking' | 'ok'>('checking')
+
+  // Restore the desktop collapsed preference.
+  useEffect(() => {
+    setCollapsed(localStorage.getItem('dash-sidebar-collapsed') === '1')
+  }, [])
+
+  function toggleCollapsed() {
+    setCollapsed(prev => {
+      const next = !prev
+      localStorage.setItem('dash-sidebar-collapsed', next ? '1' : '0')
+      return next
+    })
+  }
 
   useEffect(() => {
     let alive = true
@@ -119,6 +145,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           transform transition-transform duration-200 ease-out
           ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:static lg:translate-x-0 lg:w-60
+          ${collapsed ? 'lg:hidden' : ''}
         `}
         style={{
           background: '#ffffff',
@@ -128,6 +155,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Logo row */}
         <div className="p-5 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(31,26,20,0.08)' }}>
           <Logo size="sm" />
+          {/* Mobile: close drawer */}
           <button
             type="button"
             onClick={() => setMobileOpen(false)}
@@ -137,33 +165,56 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           >
             <X size={16} />
           </button>
+          {/* Desktop: collapse sidebar */}
+          <button
+            type="button"
+            onClick={toggleCollapsed}
+            aria-label="Collapse sidebar"
+            title="Collapse sidebar"
+            className="hidden lg:flex h-8 w-8 rounded-lg items-center justify-center transition hover:bg-[#FDF5EC]"
+            style={{ color: '#7A7166' }}
+          >
+            <PanelLeftClose size={17} />
+          </button>
         </div>
 
         {/* Nav */}
-        <nav className="flex-1 py-4 px-3 space-y-0.5 overflow-y-auto">
-          {navItems.map(({ label, href, icon: Icon, match }) => {
-            const active = isActive(href, match)
-            return (
-              <Link
-                key={href}
-                href={href}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                style={active ? {
-                  background: 'rgba(255,153,51,0.10)',
-                  color: '#C46800',
-                  borderLeft: '3px solid #FF9933',
-                  paddingLeft: '9px',
-                } : {
-                  color: '#7A7166',
-                  borderLeft: '3px solid transparent',
-                  paddingLeft: '9px',
-                }}
+        <nav className="flex-1 py-4 px-3 overflow-y-auto">
+          {navGroups.map((group, gi) => (
+            <div key={group.title} className={gi > 0 ? 'mt-5' : ''}>
+              <p
+                className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider"
+                style={{ color: '#B3A998' }}
               >
-                <Icon size={17} />
-                {label}
-              </Link>
-            )
-          })}
+                {group.title}
+              </p>
+              <div className="space-y-0.5">
+                {group.items.map(({ label, href, icon: Icon, match }) => {
+                  const active = isActive(href, match)
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all"
+                      style={active ? {
+                        background: 'rgba(255,153,51,0.10)',
+                        color: '#C46800',
+                        borderLeft: '3px solid #FF9933',
+                        paddingLeft: '9px',
+                      } : {
+                        color: '#7A7166',
+                        borderLeft: '3px solid transparent',
+                        paddingLeft: '9px',
+                      }}
+                    >
+                      <Icon size={17} />
+                      {label}
+                    </Link>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
 
           {/* Divider */}
           <div className="my-3" style={{ height: '1px', background: 'rgba(31,26,20,0.07)' }} />
@@ -204,8 +255,22 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
       </aside>
 
+      {/* ── Reopen button (desktop, when collapsed) ──────────────── */}
+      {collapsed && (
+        <button
+          type="button"
+          onClick={toggleCollapsed}
+          aria-label="Open sidebar"
+          title="Open sidebar"
+          className="hidden lg:flex fixed top-4 left-4 z-40 h-9 w-9 rounded-lg items-center justify-center shadow-sm transition hover:bg-[#FDF5EC]"
+          style={{ background: '#ffffff', border: '1px solid rgba(31,26,20,0.08)', color: '#46403A' }}
+        >
+          <PanelLeft size={18} />
+        </button>
+      )}
+
       {/* ── Main content ─────────────────────────────────────────── */}
-      <main className="flex-1 overflow-y-auto pt-14 lg:pt-0">
+      <main className={`flex-1 overflow-y-auto pt-14 lg:pt-0 ${collapsed ? 'lg:pl-16' : ''}`}>
         {children}
       </main>
     </div>
