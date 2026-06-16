@@ -638,7 +638,7 @@ export default function SettingsPage() {
               }}
               placeholder="Add another specialty…"
               className="flex-1 h-10 px-4 rounded-lg border border-[#e8e4df]
-                         text-[#1c1c1e] placeholder-[#FF9933] text-sm bg-white
+                         text-[#1c1c1e] placeholder-[#9ca3af] text-sm bg-white
                          focus:outline-none focus:ring-2 focus:ring-[#FF9933]
                          focus:border-transparent"
             />

@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import {
   Phone, MessageCircle, ArrowUpRight, ArrowRight,
 } from 'lucide-react'
+import { getInitials, getFirstName } from './templateUtils'
 
 interface Props {
   therapist: {
@@ -28,10 +29,9 @@ interface Props {
 }
 
 export default function StaticProfile({ therapist }: Props) {
-  const initials = therapist.name
-    .split(' ').map(w => w[0]).join('').slice(0, 2)
+  const initials = getInitials(therapist.name)
 
-  const firstName = therapist.name.split(' ')[0]
+  const firstName = getFirstName(therapist.name)
 
   const whatsappLink = therapist.whatsapp
     ? `https://wa.me/${therapist.whatsapp}?text=Hi ${therapist.name}, I'd like to book a session.`

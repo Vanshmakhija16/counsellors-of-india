@@ -17,14 +17,15 @@ import ClassicTemplate5 from '@/components/booking/templates/ClassicTemplate5'
 import {
   TherapistProfile as TemplateTherapist,
   SAMPLE_THERAPIST,
+  getInitials,
 } from '@/components/booking/templates/templateUtils'
 
 /** Map the loose public TherapistProfile onto the template-internal shape,
  *  filling any gaps from SAMPLE_THERAPIST so a half-filled profile never
  *  breaks a template. */
 export function toTemplateTherapist(p: TherapistProfile): TemplateTherapist {
-  const initials = (p.full_name ?? '')
-    .split(' ').map(part => part[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()
+  // Initials skip honorifics: "Mr Shweta Jain" → "SJ".
+  const initials = getInitials(p.full_name ?? '')
   return {
     ...SAMPLE_THERAPIST,
     name: p.full_name ?? SAMPLE_THERAPIST.name,

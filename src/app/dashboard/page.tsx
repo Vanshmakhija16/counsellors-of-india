@@ -62,7 +62,12 @@ export default function DashboardPage() {
   const hour = new Date().getHours()
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
 
-  const firstName = therapist?.full_name?.split(' ')[0] ?? ''
+  // Drop any honorific (Dr/Mr/Mrs/Ms/Prof…) and show just the first name.
+  const nameParts = (therapist?.full_name ?? '').trim().split(/\s+/).filter(Boolean)
+  const firstName = nameParts.length > 1 &&
+    /^(dr|mr|mrs|ms|miss|mx|prof|professor|sir|madam)\.?$/i.test(nameParts[0])
+    ? nameParts[1]
+    : (nameParts[0] ?? '')
 
   return (
     <div

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { TherapistProfile } from '../templateUtils'
-import { resolveImage } from '../templateUtils'
+import { resolveImage, getInitials } from '../templateUtils'
 
 interface AboutProps { therapist: TherapistProfile }
 
@@ -40,13 +40,7 @@ export default function About({ therapist }: AboutProps) {
   const displayName = therapist.name ?? 'Your Name'
   
 const photoSrc = resolveImage(therapist?.image)
-  const initials = therapist.initials ?? displayName
-    .split(' ')
-    .map((w: string) => w[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
+  const initials = therapist.initials ?? getInitials(displayName)
 
   return (
     <section id="about" ref={sectionRef} className="ct4-section ct4-about ct4-marble">

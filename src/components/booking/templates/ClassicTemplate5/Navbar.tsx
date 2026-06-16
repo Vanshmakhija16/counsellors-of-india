@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { TherapistProfile } from '../templateUtils'
+import { getInitials } from '../templateUtils'
 
 interface NavProps {
   scrollTo: (id: string) => void
@@ -24,13 +25,7 @@ export default function Navbar({ scrollTo, therapist }: NavProps) {
   const [progress,  setProgress]  = useState(0)
 
   const name = therapist.name ?? ''
-  const initials = name
-    .split(' ')
-    .filter(p => !/^(dr\.?|mr\.?|ms\.?|mrs\.?|prof\.?)$/i.test(p))
-    .map(p => p[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase() || 'T'
+  const initials = getInitials(name) || 'T'
 
   useEffect(() => {
     const onScroll = () => {

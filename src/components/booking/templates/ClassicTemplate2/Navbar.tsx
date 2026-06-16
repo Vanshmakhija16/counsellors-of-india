@@ -1,6 +1,7 @@
 'use client'
 
 import type { TherapistProfile } from '../templateUtils'
+import { getInitials } from '../templateUtils'
 
 interface NavbarProps {
   scrolled: boolean
@@ -17,13 +18,7 @@ const LINKS = [
 ]
 
 export default function Navbar({ scrolled, scrollTo, therapist }: NavbarProps) {
-  const initials = (therapist.name ?? '')
-    .split(' ')
-    .map((p) => p[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-    .toUpperCase()
+  const initials = getInitials(therapist.name ?? '')
 
   return (
     <header

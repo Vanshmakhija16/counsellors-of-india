@@ -204,7 +204,7 @@
 
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import type { TherapistProfile } from '../templateUtils'
-import { resolveImage } from '../templateUtils'
+import { resolveImage, getInitials } from '../templateUtils'
 
 interface HeroProps {
   therapist: TherapistProfile
@@ -253,14 +253,7 @@ export default function Hero({
 
   const photo = resolveImage(therapist.image)
 
-  const initials =
-    (therapist.name ?? '')
-      .split(' ')
-      .filter(Boolean)
-      .filter((w) => !/^(dr|mr|mrs|ms|prof)\.?$/i.test(w))
-      .map((w) => w[0].toUpperCase())
-      .slice(0, 2)
-      .join('') || '?'
+  const initials = getInitials(therapist.name ?? '') || '?'
 
   const scrollProgress =
     typeof window !== 'undefined'

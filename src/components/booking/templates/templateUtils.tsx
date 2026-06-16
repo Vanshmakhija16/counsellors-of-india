@@ -4,6 +4,35 @@ export interface Review {
   rating: number
 }
 
+// ── Name helpers ──────────────────────────────────────────────────────────
+// Honorifics/titles that should NOT count as part of the display name or
+// initials (e.g. "Mr Shweta Jain" → first name "Shweta", initials "SJ").
+const HONORIFICS = new Set([
+  'dr', 'mr', 'mrs', 'ms', 'miss', 'mx', 'prof', 'professor', 'sir', 'madam',
+])
+
+/** Strip a leading honorific ("Dr.", "Mr", "Prof.") from a full name. */
+export function stripHonorific(name: string): string {
+  const parts = (name ?? '').trim().split(/\s+/).filter(Boolean)
+  if (parts.length > 1 && HONORIFICS.has(parts[0].replace(/\./g, '').toLowerCase())) {
+    return parts.slice(1).join(' ')
+  }
+  return parts.join(' ')
+}
+
+/** First name only, with any honorific removed. */
+export function getFirstName(name: string): string {
+  return stripHonorific(name).split(/\s+/)[0] ?? ''
+}
+
+/** Initials from the real name (ignoring honorifics): "Mr Shweta Jain" → "SJ". */
+export function getInitials(name: string): string {
+  const parts = stripHonorific(name).split(/\s+/).filter(Boolean)
+  if (parts.length === 0) return '·'
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
+}
+
 // ── Shared editable building blocks ──────────────────────────────────────
 
 export interface EditableService {

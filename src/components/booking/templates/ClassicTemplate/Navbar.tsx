@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { Menu, X } from 'lucide-react'
 import type { TherapistProfile } from '../templateUtils'
+import { getInitials, getFirstName } from '../templateUtils'
 
 interface NavbarProps {
   scrolled: boolean
@@ -10,19 +11,12 @@ interface NavbarProps {
   therapist: TherapistProfile
 }
 
-function getInitials(name: string): string {
-  if (!name) return '·'
-  const parts = name.replace(/^Dr\.?\s+/i, '').trim().split(/\s+/)
-  if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
-  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase()
-}
-
 const NAV_LINKS = ['Home', 'About', 'Services', 'Explore'] as const
 
 export default function Navbar({ scrolled, scrollTo, therapist }: NavbarProps) {
   const initials = getInitials(therapist.name ?? '')
   // Brand mark uses the FIRST name (after stripping an honorific like "Dr.")
-  const firstName = (therapist.name ?? '').replace(/^(dr|mr|mrs|ms|prof)\.?\s+/i, '').split(/\s+/)[0] ?? ''
+  const firstName = getFirstName(therapist.name ?? '')
 
   // Sidebar is closed by default on every load.
   const [menuOpen, setMenuOpen] = useState(false)
