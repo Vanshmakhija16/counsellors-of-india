@@ -24,7 +24,7 @@ const CT5ContentEditor = dynamic(() => import('../../../components/appearance/CT
 
 // template id → /try demo param
 const TEMPLATE_TPARAM: Record<TemplateId, string> = {
-  classic: 't1', classic2: 't2', classic3: 't3', classic4: 't4', classic5: 't5',
+  classic: 't1', classic2: 't2', classic3: 't3', classic4: 't4', classic5: 't5', classic6: 't6',
 }
 
 const STARTER_TEMPLATE_LOCK_DAYS = 365

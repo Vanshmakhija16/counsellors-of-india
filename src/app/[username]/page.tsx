@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import { notFound } from 'next/navigation'
 import { getColor } from '@/lib/template'
@@ -7,7 +8,82 @@ import ClassicTemplate2 from '@/components/booking/templates/ClassicTemplate2'
 import ClassicTemplate3 from '@/components/booking/templates/ClassicTemplate3'
 import ClassicTemplate4 from '@/components/booking/templates/ClassicTemplate4'
 import ClassicTemplate5 from '@/components/booking/templates/ClassicTemplate5'
+import ClassicTemplate6 from '@/components/booking/templates/ClassicTemplate6'
 
+const BASE_URL = 'https://www.counsellorsofindia.com'
+
+/* ── Dynamic OG metadata per therapist profile ── */
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ username: string }>
+}): Promise<Metadata> {
+  const { username } = await params
+  const supabase = await createServerSupabaseClient()
+
+  const raw = decodeURIComponent(username).trim()
+  const candidates = [...new Set([raw, raw.replace(/^@+/, ''), `@${raw.replace(/^@+/, '')}`])]
+
+  let therapist = null
+  for (const candidate of candidates) {
+    const { data } = await supabase
+      .from('therapists')
+      .select('full_name, title, city, specialties, photo_url, bio, username')
+      .eq('username', candidate)
+      .maybeSingle()
+    if (data) { therapist = data; break }
+  }
+
+  if (!therapist) {
+    return { title: 'Therapist Not Found | Counsellors of India' }
+  }
+
+  const name       = therapist.full_name ?? 'Therapist'
+  const specialty  = Array.isArray(therapist.specialties) && therapist.specialties.length > 0
+    ? therapist.specialties[0]
+    : 'Counselling'
+  const city       = therapist.city ?? 'India'
+  const title      = therapist.title ?? 'Therapist'
+  const photo      = therapist.photo_url ?? `${BASE_URL}/og-image.png`
+  const profileUrl = `${BASE_URL}/${therapist.username}`
+
+  // CSV row 10: dynamic alt → "{Full Name} – {Specialty} therapist in {City}, India | Counsellors of India"
+  const imageAlt   = `${name} – ${specialty} therapist in ${city}, India | Counsellors of India`
+  const pageTitle  = `${name} – ${title} in ${city} | Counsellors of India`
+  const description = therapist.bio
+    ? therapist.bio.slice(0, 155)
+    : `Book a session with ${name}, ${title} in ${city}. Online therapy & counselling on Counsellors of India.`
+
+  return {
+    title: pageTitle,
+    description,
+    alternates: { canonical: profileUrl },
+    openGraph: {
+      type: 'profile',
+      url: profileUrl,
+      siteName: 'Counsellors of India',
+      title: pageTitle,
+      description,
+      images: [
+        {
+          url: photo,
+          width: 800,
+          height: 800,
+          alt: imageAlt,
+        },
+      ],
+      locale: 'en_IN',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: pageTitle,
+      description,
+      images: [{ url: photo, alt: imageAlt }],
+    },
+  }
+}
+
+/* ── Page component ── */
 export default async function TherapistPublicPage({
   params,
 }: {
@@ -16,11 +92,6 @@ export default async function TherapistPublicPage({
   const { username } = await params
   const supabase = await createServerSupabaseClient()
 
-  // The URL segment may arrive with a leading "@" or surrounding whitespace
-  // (usernames are stored as typed). Try the exact value first, then a
-  // normalised form, so both /@agrim and /agrim resolve to the same profile.
-  // Separate .eq queries (not .or) so special chars in the username can't
-  // break the filter syntax.
   const raw = decodeURIComponent(username).trim()
   const candidates = [...new Set([raw, raw.replace(/^@+/, ''), `@${raw.replace(/^@+/, '')}`])]
 
@@ -39,7 +110,6 @@ export default async function TherapistPublicPage({
   const hiddenSections: string[] = therapist.hidden_sections ?? []
   const color = getColor(therapist.color_id ?? 'teal')
 
-  // CSS variable injection — overrides :root defaults in every template's stylesheet
   const brandStyle = `
     :root {
       --brand: ${color.primary};
@@ -109,6 +179,7 @@ export default async function TherapistPublicPage({
       case 'classic3': return <ClassicTemplate3 therapist={profile} bookedTimes={bookedTimes} hiddenSections={hiddenSections} />
       case 'classic4': return <ClassicTemplate4 therapist={profile} bookedTimes={bookedTimes} hiddenSections={hiddenSections} />
       case 'classic5': return <ClassicTemplate5 therapist={profile} bookedTimes={bookedTimes} hiddenSections={hiddenSections} />
+      case 'classic6': return <ClassicTemplate6 therapist={profile} bookedTimes={bookedTimes} hiddenSections={hiddenSections} />
       default:         return <ClassicTemplate  therapist={profile} bookedTimes={bookedTimes} feedbacks={feedbacks ?? []} hiddenSections={hiddenSections} />
     }
   })()

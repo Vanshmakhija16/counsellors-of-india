@@ -11,6 +11,7 @@ const META: Record<TemplateId, { n: number; t: string }> = {
   classic3: { n: 3, t: 't3' },
   classic4: { n: 4, t: 't4' },
   classic5: { n: 5, t: 't5' },
+  classic6: { n: 6, t: 't6' },
 }
 
 interface Props {

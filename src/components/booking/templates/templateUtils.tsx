@@ -173,6 +173,7 @@ export interface TherapistProfile {
   plan?: string
   availability?: AvailabilityData | null
   profile_content?: ProfileContent
+  section_order?: string[]        // custom display order of section IDs
 }
 
 // ── Availability types ────────────────────────────────────────────────────

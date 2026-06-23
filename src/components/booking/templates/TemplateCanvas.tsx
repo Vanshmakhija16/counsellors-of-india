@@ -14,6 +14,7 @@ import ClassicTemplate2 from '@/components/booking/templates/ClassicTemplate2'
 import ClassicTemplate3 from '@/components/booking/templates/ClassicTemplate3'
 import ClassicTemplate4 from '@/components/booking/templates/ClassicTemplate4'
 import ClassicTemplate5 from '@/components/booking/templates/ClassicTemplate5'
+import ClassicTemplate6 from '@/components/booking/templates/ClassicTemplate6'
 import {
   TherapistProfile as TemplateTherapist,
   SAMPLE_THERAPIST,
@@ -50,6 +51,7 @@ function renderTemplate(profile: TherapistProfile) {
     case 'classic3': return <ClassicTemplate3 therapist={t} hiddenSections={hidden} />
     case 'classic4': return <ClassicTemplate4 therapist={t} hiddenSections={hidden} />
     case 'classic5': return <ClassicTemplate5 therapist={t} hiddenSections={hidden} />
+    case 'classic6': return <ClassicTemplate6 therapist={t} hiddenSections={hidden} />
     default:         return <ClassicTemplate therapist={t} feedbacks={[]} hiddenSections={hidden} />
   }
 }

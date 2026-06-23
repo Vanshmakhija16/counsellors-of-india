@@ -1,4 +1,4 @@
-export type TemplateId = 'classic' | 'classic2' | 'classic3' | 'classic4' | 'classic5'
+export type TemplateId = 'classic' | 'classic2' | 'classic3' | 'classic4' | 'classic5' | 'classic6'
 export type ColorId   = 'teal' | 'amber' | 'rose' | 'indigo' | 'slate' | 'sage'
 
 export interface TemplateColor {
@@ -113,6 +113,17 @@ export const TEMPLATE_SECTIONS: Record<TemplateId, SectionConfig[]> = {
     { id: 'booking',  label: 'Book Session', defaultEnabled: true },
     { id: 'footer',   label: 'Footer',      defaultEnabled: true },
   ],
+  classic6: [
+    { id: 'hero',         label: 'Hero',          defaultEnabled: true },
+    { id: 'about',        label: 'About Me',      defaultEnabled: true },
+    { id: 'expertise',    label: 'Expertise',     defaultEnabled: true },
+    { id: 'process',      label: 'Process',       defaultEnabled: true },
+    { id: 'testimonials', label: 'Testimonials',  defaultEnabled: true },
+    { id: 'faq',          label: 'FAQ',           defaultEnabled: true },
+    { id: 'readings',     label: 'Readings',      defaultEnabled: true },
+    { id: 'booking',      label: 'Book Session',  defaultEnabled: true },
+    { id: 'footer',       label: 'Footer',        defaultEnabled: true },
+  ],
 }
 
 // ─── Templates ────────────────────────────────────────────────────────────────
@@ -171,6 +182,17 @@ export const TEMPLATES: Template[] = [
     accent: '#7a6652',
     bg: '#f9f5ef',
     sections: TEMPLATE_SECTIONS.classic5,
+  },
+  {
+    id: 'classic6',
+    name: 'The Quiet Room',
+    tagline: 'Cinematic dusk-to-daylight light that shifts as visitors go deeper',
+    style: 'Dusk · Editorial · Animated',
+    plan: 'growth',
+    thumbnail: 'classic6',
+    accent: '#C79A3D',
+    bg: '#2A2330',
+    sections: TEMPLATE_SECTIONS.classic6,
   },
 ]
 

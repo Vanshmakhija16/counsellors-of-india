@@ -4,28 +4,28 @@ const steps = [
   {
     number: '01',
     icon: UserCircle,
-    title: 'Create your account',
+    title: 'Create your therapist account',
     description:
       'Sign up in 30 seconds. No technical skills needed — just your name and email to get started.',
   },
   {
     number: '02',
     icon: LayoutTemplate,
-    title: 'Set up your profile',
+    title: 'Build your counsellor profile',
     description:
       'Add your photo, specialties, fees, and availability. Your professional booking page is ready instantly.',
   },
   {
     number: '03',
     icon: CalendarCheck,
-    title: 'Share your booking link',
+    title: 'Share your booking link with clients',
     description:
       'Send your unique link to clients via WhatsApp, Instagram, or email. They book a slot in under a minute.',
   },
   {
     number: '04',
     icon: Users,
-    title: 'Manage your practice',
+    title: 'Manage appointments & session notes',
     description:
       'Track appointments, write session notes, and manage all your clients from one simple dashboard.',
   },
@@ -38,21 +38,12 @@ export default function HowItWorks() {
 
         {/* Heading */}
         <div className="text-center mb-12">
-          {/* <span className="text-[#5a7f7a] text-sm font-medium tracking-wide uppercase">
-            How it works
-          </span> */}
           <h2
-            className="text-4xl text-black font-semibold "
+            className="text-4xl text-black font-semibold"
             style={{ fontFamily: 'var(--font-cormorant), serif' }}
           >
-                How it Works         
- </h2>
-
-
-          {/* <p className="text-gray-500 mt-3 max-w-xl mx-auto">
-            No technical knowledge required. Most therapists are fully set up
-            within 10 minutes.
-          </p> */}
+            Get your counselling practice online in under 10 minutes
+          </h2>
         </div>
 
         {/* Steps */}
@@ -87,20 +78,6 @@ export default function HowItWorks() {
             )
           })}
         </div>
-
-        {/* Connector line — desktop only */}
-        {/* <div className="hidden md:flex items-center justify-center mt-10 gap-2">
-          {steps.map((step, i) => (
-            <div key={step.number} className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-[#a3b8b4] text-white text-xs font-semibold flex items-center justify-center">
-                {i + 1}
-              </div>
-              {i < steps.length - 1 && (
-                <div className="w-16 h-px bg-[#b8ceca]" />
-              )}
-            </div>
-          ))}
-        </div> */}
 
       </div>
     </section>

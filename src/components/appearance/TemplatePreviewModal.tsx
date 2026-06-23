@@ -21,6 +21,7 @@ const TEMPLATE_NAMES: Record<TemplateId, string> = {
   classic3: 'Elegant & Light',
   classic4: 'Premium Black',
   classic5: 'Calm & Natural',
+  classic6: 'The Quiet Room',
 }
 
 function renderTemplate(id: TemplateId) {

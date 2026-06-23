@@ -20,6 +20,7 @@ const headlines = [
 ];
 
 
+
 /* ─────────────────────────────────────────────────────────────────
    COUNSELLORS OF INDIA  —  Premium homepage
    Selling points (in order of focus):
@@ -99,6 +100,7 @@ body,.pg{font-family:var(--sans);background:var(--bg);color:var(--ink);-webkit-f
 
 /* ─ NAV ─────────────────────────────────────────── */
 /* ─ NAV ─────────────────────────────────────────── */
+.nav-mobile-title{ display:none; } /* hidden on desktop — shown only on mobile/tablet, see media query below */
 .nav{
   position:fixed;
   top:14px;left:50%;transform:translateX(-50%);
@@ -144,8 +146,8 @@ font-family: "Times New Roman", Times, serif;font-size:16px;font-weight:900;
   transition:color .2s;letter-spacing:-.003em;
 }
 .nav.scrolled .nav-a{color:var(--ink3)}
-.nav-a:hover{color:#fff}
-.nav.scrolled .nav-a:hover{color:var(--ink)}
+.nav-a:hover{color:var(--gold2)}
+.nav.scrolled .nav-a:hover{color:var(--gold2)}
 .nav-r{display:flex;align-items:center;gap:8px}
 .btn{
   display:inline-flex;align-items:center;gap:6px;
@@ -1488,7 +1490,7 @@ font-family: "Times New Roman", Times, serif;font-size:16px;font-weight:900;
 .nav .nav-mid{position:static;left:auto;transform:none;display:flex;align-items:center;gap:32px;margin:0 auto}
 .nav .nav-a{font-size:13.5px;font-weight:400;color:var(--ink3);text-decoration:none;background:none;border:none;cursor:pointer;letter-spacing:-.003em;position:relative;transition:color .2s;padding:4px 0}
 .nav .nav-a::after{content:'';position:absolute;left:0;right:0;bottom:-2px;height:1px;background:var(--gold);transform:scaleX(0);transform-origin:center;transition:transform .28s cubic-bezier(.22,.87,.36,1)}
-.nav .nav-a:hover{color:var(--ink)}
+.nav .nav-a:hover{color:var(--gold2)}
 .nav .nav-a:hover::after{transform:scaleX(1)}
 .nav .nav-r{display:flex;align-items:center;gap:6px;flex-shrink:0}
 .nav .btn{height:40px;border-radius:999px;font-size:13px;font-weight:500;letter-spacing:-.005em}
@@ -1528,6 +1530,7 @@ font-family: "Times New Roman", Times, serif;font-size:16px;font-weight:900;
 }
 @media (max-width: 600px){
   .logo-name{ display:none; }   /* keep just the mark on small screens */
+  .logo-img{ height: 90px; }    /* very large, prominent on phones */
 }
 
 .nav-mid{
@@ -1605,7 +1608,7 @@ font-family: "Times New Roman", Times, serif;font-size:16px;font-weight:900;
     transform: none;        /* cancel the desktop translateX(-50%) centering */
     width: auto;
     max-width: none;
-    height: 60px;
+    height: 110px;
     padding: 0 10px 0 16px;
     border-radius: 999px;
     justify-content: space-between;
@@ -1615,9 +1618,24 @@ font-family: "Times New Roman", Times, serif;font-size:16px;font-weight:900;
     display: none;
   }
 
+  /* Centered brand text between logo icon and hamburger — mobile/tablet only */
+  .nav-mobile-title{
+    display: block;
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    color: var(--ink);
+    white-space: nowrap;
+    pointer-events: none;
+  }
+
   .logo-img{
-    width: 39px;
-    height: 54px;
+    width: auto;
+    height: 100px;
   }
 
   /* hamburger-only on mobile: hide the desktop links + CTAs entirely */
@@ -7717,6 +7735,25 @@ function LiveTemplateExperience() {
   // each template's own @media breakpoints fire correctly inside the frame.
   const [device, setDevice] = useState<'mobile' | 'tablet' | 'desktop'>('desktop')
 
+  // Detect the visitor's real viewport and select the matching tab.
+  // Runs on mount AND on every resize, so switching from mobile to desktop
+  // (or back) updates the active tab automatically — not just on first load.
+  // A manual click still works: once the visitor taps a tab themselves we
+  // stop auto-switching so their choice sticks even if they resize again.
+  const userPickedDevice = useRef(false)
+  useEffect(() => {
+    function syncDeviceToViewport() {
+      if (userPickedDevice.current) return
+      const w = window.innerWidth
+      if (w < 640) setDevice('mobile')
+      else if (w < 1024) setDevice('tablet')
+      else setDevice('desktop')
+    }
+    syncDeviceToViewport()
+    window.addEventListener('resize', syncDeviceToViewport)
+    return () => window.removeEventListener('resize', syncDeviceToViewport)
+  }, [])
+
   // The iframe is rendered at a fixed design size (one full hero) and SCALED to
   // fit the frame's width AND height, so the whole section is always visible —
   // no inner scroll, no crop — identically on every device and browser.
@@ -7830,7 +7867,7 @@ const previewUrl = `/preview/classic${cur.n}?embed=1`
                   aria-pressed={device === d}
                   aria-label={`Preview ${d}`}
                   title={d.charAt(0).toUpperCase() + d.slice(1)}
-                  onClick={() => { if (d !== device) { setLoading(true); setDevice(d) } }}
+                  onClick={() => { userPickedDevice.current = true; if (d !== device) { setLoading(true); setDevice(d) } }}
                 >
                   {d === 'mobile' ? '▯' : d === 'tablet' ? '▭' : '▢'}
                 </button>
@@ -7884,255 +7921,7 @@ const TPARAM_TO_TEMPLATE_ID: Record<string, DemoProfile['template_id']> = {
   t1: 'classic', t2: 'classic2', t3: 'classic3', t4: 'classic4', t5: 'classic5',
 }
 
-// function TemplateShowcase({ onPreview }: { onPreview: (t: typeof TMPLS[0]) => void }) {
-//   const [active, setActive] = useState(0)
-//   const trackRef = useRef<HTMLDivElement>(null)
-//   const stageRef = useRef<HTMLDivElement>(null)
-//   const innerRefs = useRef<(HTMLDivElement | null)[]>([])
-//   const [scales, setScales] = useState<number[]>(TMPLS.map(() => 1))
 
-//   // Scale each 1080×675 mock to fill its card's 16:10 preview area
-//   useEffect(() => {
-//     function measure() {
-//       setScales(innerRefs.current.map(el => {
-//         const parent = el?.parentElement
-//         if (!parent) return 1
-//         const rect = parent.getBoundingClientRect()
-//         const w = rect.width
-//         return w > 0 ? w / 1080 : 1
-//       }))
-//     }
-//     measure()
-//     const ro = new ResizeObserver(measure)
-//     innerRefs.current.forEach(el => { if (el?.parentElement) ro.observe(el.parentElement) })
-//     window.addEventListener('resize', measure)
-//     return () => { ro.disconnect(); window.removeEventListener('resize', measure) }
-//   }, [])
-
-//   // Compute translateX so the active card is centered in the stage
-//   const [offset, setOffset] = useState(0)
-//   useEffect(() => {
-//     const stage = stageRef.current
-//     const track = trackRef.current
-//     if (!stage || !track) return
-//     const cards = track.querySelectorAll<HTMLElement>('.tshow-card')
-//     const card = cards[active]
-//     if (!card) return
-//     const stageW = stage.getBoundingClientRect().width
-//     const cardLeft = card.offsetLeft
-//     const cardW = card.offsetWidth
-//     const paddingLeft = parseFloat(getComputedStyle(track).paddingLeft) || 0
-//     // center the active card
-//     const target = cardLeft - (stageW / 2 - cardW / 2) - paddingLeft
-//     setOffset(Math.max(0, target))
-//   }, [active])
-
-//   const prev = () => setActive(a => Math.max(0, a - 1))
-//   const next = () => setActive(a => Math.min(TMPLS.length - 1, a + 1))
-
-//   // ── free hand-drag (mouse / touch) ───────────────────────────────
-//   const [drag, setDrag] = useState(0)          // live finger/cursor delta
-//   const [dragging, setDragging] = useState(false)
-//   const startX = useRef(0)
-//   const moved = useRef(0)
-
-//   const onPointerDown = (e: React.PointerEvent) => {
-//     startX.current = e.clientX
-//     moved.current = 0
-//     setDragging(true)
-//     ;(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId)
-//   }
-//   const onPointerMove = (e: React.PointerEvent) => {
-//     if (!dragging) return
-//     const dx = e.clientX - startX.current
-//     moved.current = dx
-//     setDrag(dx)
-//   }
-//   const endDrag = () => {
-//     if (!dragging) return
-//     setDragging(false)
-//     const dx = moved.current
-//     setDrag(0)
-//     // snap to nearest card based on how far the user dragged
-//     const card = trackRef.current?.querySelector<HTMLElement>('.tshow-card')
-//     const step = card ? card.offsetWidth + (parseFloat(getComputedStyle(trackRef.current!).gap) || 0) : 320
-//     const jump = Math.round(-dx / step)
-//     if (jump !== 0) setActive(a => Math.min(TMPLS.length - 1, Math.max(0, a + jump)))
-//   }
-
-//   // ── mouse-wheel: horizontal scroll steps through templates ───────
-//   const wheelLock = useRef(false)
-//   const onWheel = (e: React.WheelEvent) => {
-//     const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
-//     if (Math.abs(d) < 8 || wheelLock.current) return
-//     wheelLock.current = true
-//     if (d > 0) next(); else prev()
-//     setTimeout(() => { wheelLock.current = false }, 320)
-//   }
-
-//   return (
-//     <section id="templates" className="tshow sec-rise rv">
-//       <div className="tshow-glow" aria-hidden="true" />
-
-//       {/* ── header (outside / above the two columns) ── */}
-//       <div className="tshow-head">
-//         <div className="tshow-head-left">
-//           <div className="tshow-eyebrow">Profile Templates</div>
-//           <h2 className="tshow-h">Try<em> Demo</em></h2>
-//           <p className="tshow-sub">
-//             Every template is a complete, live therapist website. Browse like you're exploring real practices.
-//           </p>
-//         </div>
-//         <div className="tshow-head-right">
-//           <button className="tshow-nav-btn" onClick={prev} disabled={active === 0} aria-label="Previous">
-//             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-//               <polyline points="15 18 9 12 15 6"/>
-//             </svg>
-//           </button>
-//           <button className="tshow-nav-btn" onClick={next} disabled={active === TMPLS.length - 1} aria-label="Next">
-//             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-//               <polyline points="9 18 15 12 9 6"/>
-//             </svg>
-//           </button>
-//         </div>
-//       </div>
-
-//       {/* ── two equal columns: templates (left) + details form (right) ── */}
-//       <div className="tshow-split">
-//       <div className="tshow-split-left">
-
-//       {/* ── gallery ── */}
-//       <div
-//         ref={stageRef}
-//         className="tshow-stage"
-//         onPointerDown={onPointerDown}
-//         onPointerMove={onPointerMove}
-//         onPointerUp={endDrag}
-//         onPointerCancel={endDrag}
-//         onWheel={onWheel}
-//         style={{ cursor: dragging ? 'grabbing' : 'grab', touchAction: 'pan-y' }}
-//       >
-//         <div
-//           ref={trackRef}
-//           className="tshow-track"
-//           style={{
-//             transform: `translateX(${-offset + drag}px)`,
-//             transition: dragging ? 'none' : undefined,
-//           }}
-//         >
-//           {TMPLS.map((t, i) => {
-//             const sc = scales[i] ?? 1
-//             return (
-//               <article
-//                 key={t.id}
-//                 className={`tshow-card ${active === i ? 'is-active' : ''}`}
-//                 onClick={() => {
-//                   // ignore clicks that were actually drags
-//                   if (Math.abs(moved.current) > 6) return
-//                   if (active !== i) { setActive(i); return }
-//                   onPreview(t)
-//                 }}
-//                 tabIndex={0}
-//                 onKeyDown={e => { if (e.key === 'Enter') { if (active === i) onPreview(t); else setActive(i) } }}
-//                 aria-label={`${t.name} template`}
-//               >
-//                 {/* ── preview (fills the card; height matches the form) ── */}
-//                 <div className="tshow-card-screen">
-
-//                   {/* live dot badge */}
-//                   <div className="tshow-card-live-badge">
-//                     <span className="tshow-card-live-dot" />
-//                     Live preview
-//                   </div>
-
-//                   {/* category badge */}
-//                   {/* <span className={`tshow-card-badge ${t.badgeClass}`}>
-//                     {t.badge}
-//                   </span> */}
-
-//                   {/* the actual template render, scaled down */}
-//                   <div
-//                     ref={el => { innerRefs.current[i] = el }}
-//                     className="tshow-card-screen-inner"
-//                     style={{ transform: `scale(${sc})`, transformOrigin: 'top left' }}
-//                   >
-//                     {MINIS[t.id]}
-//                   </div>
-
-//                   {/* hover overlay with CTAs */}
-//                   <div className="tshow-card-hover">
-//                     {/* <button
-//                       type="button"
-//                       className="tshow-btn tshow-btn-ghost"
-//                       onClick={e => { e.stopPropagation(); onPreview(t) }}
-//                     >
-//                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-//                         <circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/>
-//                       </svg>
-//                       Preview
-//                     </button> */}
-//                     <a
-//                       href={`/try?t=${t.id}`}
-//                       className="tshow-btn tshow-btn-solid"
-//                       onClick={e => e.stopPropagation()}
-//                     >
-//                       Enter details
-//                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-//                         <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
-//                       </svg>
-//                     </a>
-//                   </div>
-//                 </div>
-
-//                 {/* ── minimal footer ── */}
-//                 {/* <div className="tshow-card-foot">
-//                   <div className="tshow-card-meta">
-//                     <span className="tshow-card-num">{String(i + 1).padStart(2, '0')}</span>
-//                     <div>
-//                       <div className="tshow-card-name">{t.name}</div>
-//                       <div className="tshow-card-desc">{t.desc}</div>
-//                     </div>
-//                   </div>
-//                   <button
-//                     type="button"
-//                     className="tshow-card-open"
-//                     onClick={e => { e.stopPropagation(); onPreview(t) }}
-//                     aria-label={`Open ${t.name} live preview`}
-//                   >
-//                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-//                       <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-//                     </svg>
-//                   </button>
-//                 </div> */}
-//               </article>
-//             )
-//           })}
-//         </div>
-//       </div>
-
-//       {/* ── dots ── */}
-//       <div className="tshow-progress" aria-label="Template navigation">
-//         {TMPLS.map((t, i) => (
-//           <button
-//             key={t.id}
-//             className={`tshow-progress-dot ${active === i ? 'on' : ''}`}
-//             onClick={() => setActive(i)}
-//             aria-label={`Go to ${t.name}`}
-//           />
-//         ))}
-//       </div>
-//       </div>{/* /tshow-split-left */}
-
-//       {/* ── right column: minimal details form ── */}
-//       <DemoForm
-//         templateId={TPARAM_TO_TEMPLATE_ID[TMPLS[active].id]}
-//         previewHref={`/try?t=${TMPLS[active].id}`}
-//         activeName={TMPLS[active].name}
-//       />
-//       </div>{/* /tshow-split */}
-//     </section>
-//   )
-// }
 
 function TemplateShowcase({ onPreview }: { onPreview: (t: typeof TMPLS[0]) => void }) {
 
@@ -8735,6 +8524,8 @@ const quotes = [
   "Accept bookings & payments with ease.",
 ];
 
+
+
 /* ─────────────────────────────────────────────────────────────────
    MAIN PAGE
 ───────────────────────────────────────────────────────────────── */
@@ -8873,6 +8664,9 @@ export default function Home() {
     <img src="/coi.png" alt="Counsellors of India" className="logo-img"/>
     <span className=' ' >Counsellors of India</span>
   </Link>
+
+  {/* Centered brand text — mobile/tablet only, sits between logo and hamburger */}
+  <span className="nav-mobile-title">Counsellors of India</span>
 
   <div className="nav-mid">
     <a href="#hero" className="nav-a">Home</a>

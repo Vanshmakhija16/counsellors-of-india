@@ -173,6 +173,35 @@ export const demoProfiles: Record<string, any> = {
       }
     },
   },
+  classic6: {
+    id: 'demo-classic6',
+    name: 'Dr. Aanya Mehta',
+    credentials: 'M.Phil Clinical Psychology · RCI Licensed',
+    bio: "I'm a licensed clinical psychologist. People usually find their way here at a point where something has quietly become too heavy to carry alone.\nMy work is unhurried and collaborative — less about fixing you, more about helping you understand yourself with a little more compassion and a lot less judgement.",
+    image: '/template1.png',
+    location: 'Bengaluru, Karnataka',
+    experience: 12,
+    fee: 1800,
+    specialties: ['Anxiety & Stress', 'Relationships', 'Trauma & EMDR', 'Grief', 'Self-Esteem', 'Life Transitions'],
+    languages: ['English', 'Hindi', 'Kannada'],
+    sessionDuration: 50,
+    sessionMode: 'both',
+    phone: '',
+    plan: 'pro',
+    whatsapp: '',
+    instagram: '',
+    linkedin: '',
+    website: '',
+    tagline: "Therapy that doesn't rush you. A calm, confidential space to think clearly, feel fully, and move at your own pace.",
+    approach_text: 'No pressure, no performance — just two people, working honestly, one session at a time.',
+    education: [
+      { degree: 'M.Phil Clinical Psychology', institution: 'NIMHANS, Bengaluru', year: '2012' },
+      { degree: 'MA Psychology', institution: 'Christ University', year: '2009' },
+    ],
+    certifications: ['RCI Licensed Psychologist', 'EMDR Level II Certified', 'Certified in Trauma-Focused CBT'],
+    availability: null,
+    profile_content: {},
+  },
 }
 
 export const demoBookedTimes: string[] = []
