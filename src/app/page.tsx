@@ -1618,12 +1618,15 @@ font-family: "Times New Roman", Times, serif;font-size:16px;font-weight:900;
     display: none;
   }
 
-  /* Centered brand text between logo icon and hamburger — mobile/tablet only */
+  /* Centered brand text between logo icon and hamburger — mobile/tablet only.
+     margin-left guarantees a minimum gap from the logo on every screen width,
+     even if the pill or logo shrink/grow — the text never touches the logo. */
   .nav-mobile-title{
     display: block;
     position: absolute;
     left: 50%;
     top: 50%;
+    margin-left: 14px;
     transform: translate(-50%, -50%);
     font-size: 16px;
     font-weight: 600;
@@ -2660,7 +2663,7 @@ padding:
   background:
     radial-gradient(ellipse 60% 50% at 82% 18%, rgba(255,153,51,.08) 0%, transparent 62%),
     radial-gradient(ellipse 50% 55% at 8% 88%, rgba(255,153,51,.045) 0%, transparent 60%),
-    var(--surf-1);
+    #fdf5ec ;
   overflow:hidden;
 }
 /* faint editorial baseline grid — barely there */
@@ -6697,7 +6700,7 @@ padding:
   opacity: 0;
   visibility: hidden;
   transition: all 0.35s ease;
-  z-index: 999;
+  z-index: 100000;
 }
 
 .mobile-overlay.show {
@@ -6714,7 +6717,7 @@ padding:
   top: 0;
   right: 0;
 
-  width: min(88vw, 380px);
+  width: min(75vw, 300px);
   height: 100vh;
 
   background: #ffffff;
@@ -6727,7 +6730,7 @@ padding:
   transform: translateX(100%);
   transition: transform 0.4s cubic-bezier(.22,1,.36,1);
 
-  z-index: 1000;
+  z-index: 100001;
 
   overflow-y: auto;
 
@@ -6790,10 +6793,11 @@ padding:
 
 .sidebar-brand h3 {
   font-size: 1.05rem;
-  font-weight: 700;
+  font-weight: 600;
   color: #111;
   margin: 0;
   line-height: 1.1;
+  white-space: nowrap;
 }
 
 .sidebar-brand p {
@@ -6995,7 +6999,7 @@ padding:
 
 @media (max-width: 480px) {
   .mobile-sidebar {
-    width: 92vw;
+    width: 82vw;
     padding: 24px;
   }
 
@@ -8721,12 +8725,9 @@ export default function Home() {
 
  <div className="sidebar-top">
   <div className="sidebar-brand">
-    <img src="/coi.png" alt="logo" />
+    <img src="/coi.png" alt="Counsellors of India" />
 
-    <div>
-      <h3>Counsellors</h3>
-      <p>of India</p>
-    </div>
+    <h3>Counsellors of India</h3>
   </div>
 
   <button
@@ -8741,29 +8742,24 @@ export default function Home() {
     <div className="sidebar-links">
 
       <a href="#hero">
-        <span>01</span>
         Home
       </a>
 
      <a href="#templates">
-        <span>02</span>
         Templates
       </a>
 
       <a href="#how">
-        <span>02</span>
         How it works
       </a>
 
       <a href="#therapists">
-        <span>03</span>
         Therapists
       </a>
 
 
 
       <a href="#pricing">
-        <span>05</span>
         Pricing
       </a>
 
@@ -8782,12 +8778,6 @@ export default function Home() {
       <Link href="/login" className="footer-link">
         Sign in
       </Link>
-
-      <div className="footer-dot"></div>
-
-      <a href="#pricing" className="footer-link">
-        Plans
-      </a>
 
     </div>
 
