@@ -39,12 +39,12 @@ export default function Footer({ therapist }: FooterProps) {
               {therapist.credentials || 'Licensed Clinical Psychologist'}<br />
               {therapist.city || 'India'}
             </p>
-            <div style={{ marginTop: '1.5rem' }}>
+            {/* <div style={{ marginTop: '1.5rem' }}>
               <div className="ct5-footer-badge">
                 <span style={{ fontSize: 8 }}>🌿</span>
                 Counsellors of India
               </div>
-            </div>
+            </div> */}
           </div>
 
           {/* Navigation */}
@@ -79,9 +79,9 @@ export default function Footer({ therapist }: FooterProps) {
           <span className="ct5-footer-copy">
             © {year} {name} · Counsellors of India. All rights reserved.
           </span>
-          <span className="ct5-footer-copy" style={{ opacity: 0.4 }}>
+          {/* <span className="ct5-footer-copy" style={{ opacity: 0.4 }}>
             Confidential · Evidence-Based · RCI Licensed
-          </span>
+          </span> */}
         </div>
       </div>
     </footer>

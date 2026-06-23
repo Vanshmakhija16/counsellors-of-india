@@ -21,10 +21,10 @@ function ForgotPasswordForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  // Carry the email over from the login form (passed via ?email=).
   const [email, setEmail] = useState(searchParams.get('email') ?? '')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [noAccount, setNoAccount] = useState(false)
   const [success, setSuccess] = useState(false)
 
   async function handleSubmit(e: React.FormEvent) {
@@ -32,15 +32,41 @@ function ForgotPasswordForm() {
 
     setLoading(true)
     setError('')
+    setNoAccount(false)
 
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      // Use the configured live URL in production; fall back to the current
-      // origin locally so the reset link always points to the right site.
-      redirectTo: `${process.env.NEXT_PUBLIC_APP_URL ?? window.location.origin}/reset-password`,
+    // Step 1: check if this email is registered (server-side, service-role)
+    const checkRes = await fetch('/api/auth/check-email', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email }),
     })
 
-    if (error) {
-      setError(error.message)
+    const checkData = await checkRes.json()
+
+    if (!checkRes.ok) {
+      setError('Something went wrong. Please try again.')
+      setLoading(false)
+      return
+    }
+
+    if (!checkData.exists) {
+      // No account — tell the user instead of silently sending nothing
+      setNoAccount(true)
+      setLoading(false)
+      return
+    }
+
+    // Step 2: account exists — send the reset email
+    // Always use window.location.origin so the link points to the correct
+    // domain at runtime (avoids localhost leaking into production emails).
+    const redirectTo = `${window.location.origin}/auth/callback`
+
+    const { error: resetError } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo,
+    })
+
+    if (resetError) {
+      setError(resetError.message)
     } else {
       setSuccess(true)
     }
@@ -57,16 +83,13 @@ function ForgotPasswordForm() {
             <p className="text-green-600 font-medium">
               Password reset link sent successfully.
             </p>
-
             <p className="text-sm text-gray-500">
               Please check your email inbox.
             </p>
-
             <Button
               fullWidth
               onClick={() => router.push('/login')}
-                            className="bg-[#FF9933]! hover:bg-[#E07A12]! text-white!"
-
+              className="bg-[#FF9933]! hover:bg-[#E07A12]! text-white!"
             >
               Back to Login
             </Button>
@@ -79,10 +102,34 @@ function ForgotPasswordForm() {
               type="email"
               required
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value)
+                setNoAccount(false)
+                setError('')
+              }}
               placeholder="priya@example.com"
             />
 
+            {/* No account found */}
+            {noAccount && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl px-4 py-3 space-y-1">
+                <p className="text-sm text-amber-800 font-medium">
+                  No account found with this email.
+                </p>
+                <p className="text-sm text-amber-700">
+                  Would you like to{' '}
+                  <Link
+                    href={`/signup?email=${encodeURIComponent(email)}`}
+                    className="font-semibold underline underline-offset-2 hover:text-amber-900"
+                  >
+                    create an account
+                  </Link>
+                  {' '}instead?
+                </p>
+              </div>
+            )}
+
+            {/* Generic error */}
             {error && (
               <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">
                 {error}

@@ -140,11 +140,11 @@ export default function Hero({ therapist, scrollTo }: HeroProps) {
       <div className="qr-hero-grid">
         <div className="qr-hero-text">
           <span className="qr-eyebrow" style={{ color: 'var(--qr-honey)' }}>The Quiet Room</span>
-          <h1 className="qr-hero-h1" ref={linesRef}>
+          {/* <h1 className="qr-hero-h1" ref={linesRef}>
             {lines.map((l, i) => (
               <span key={i} className="qr-hero-line"><span>{l}</span></span>
             ))}
-          </h1>
+          </h1> */}
           <p className="qr-hero-sub">
             {therapist.tagline?.trim()
               || "Therapy that doesn't rush you. A calm, confidential space to think clearly, feel fully, and move at your own pace."}
