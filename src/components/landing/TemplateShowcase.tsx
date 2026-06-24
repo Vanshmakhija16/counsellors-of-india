@@ -127,13 +127,13 @@ export default function TemplateShowcase() {
 
             {/* Template header banner */}
             <div
-              className="h-28 w-full"
+              className={`${active === 'minimal' ? 'h-14' : 'h-28'} w-full transition-all duration-500`}
               style={{ backgroundColor: current.accentLight }}
               role="presentation"
             />
 
             {/* Avatar + info */}
-            <div className="px-6 pb-6 -mt-14 relative z-20">
+            <div className="px-6 pb-6 -mt-10 relative z-20">
               {/* Initials avatar */}
               <div
                 className="

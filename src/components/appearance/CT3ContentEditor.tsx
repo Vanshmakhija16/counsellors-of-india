@@ -15,9 +15,12 @@ type Section = 'services' | 'faq'
 export default function CT3ContentEditor({ value, onChange }: Props) {
   const [open, setOpen] = useState<Section | null>('services')
 
+  // CRITICAL: use Array.isArray — NOT .length — to distinguish "user saved an
+  // empty list" from "field was never set". An empty [] means the user deleted
+  // everything intentionally; it must render as empty, NOT fall back to defaults.
   const c = {
-    services: value.services?.length ? value.services : DEFAULT_CT3_CONTENT.services,
-    faq:      value.faq?.length      ? value.faq      : DEFAULT_CT3_CONTENT.faq,
+    services: Array.isArray(value.services) ? value.services : DEFAULT_CT3_CONTENT.services,
+    faq:      Array.isArray(value.faq)      ? value.faq      : DEFAULT_CT3_CONTENT.faq,
   }
 
   function patch(updates: Partial<CT3Content>) {
@@ -30,7 +33,7 @@ export default function CT3ContentEditor({ value, onChange }: Props) {
     <div className="space-y-3">
 
       {/* ── SERVICES ─────────────────────────────────────────────────── */}
-      <Accordion label="Services — What You Offer" open={open === 'services'} onToggle={() => toggle('services')}>
+      <Accordion label="Services - What You Offer" open={open === 'services'} onToggle={() => toggle('services')}>
         <div className="space-y-4">
           {c.services.map((svc, i) => (
             <div key={i} className="rounded-lg border border-[#e8e4df] p-3 space-y-2 bg-white">

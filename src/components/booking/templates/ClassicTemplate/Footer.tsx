@@ -89,7 +89,7 @@ export default function Footer({ therapist }: FooterProps) {
     <div>
 
       <p className="mb-5 text-[10px] font-semibold uppercase tracking-[0.30em] text-[#b46b50]">
-        Socials``
+        Socials
       </p>
 
       <div className="flex flex-wrap gap-2.5">

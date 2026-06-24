@@ -5,13 +5,10 @@ export interface Review {
 }
 
 // ── Name helpers ──────────────────────────────────────────────────────────
-// Honorifics/titles that should NOT count as part of the display name or
-// initials (e.g. "Mr Shweta Jain" → first name "Shweta", initials "SJ").
 const HONORIFICS = new Set([
   'dr', 'mr', 'mrs', 'ms', 'miss', 'mx', 'prof', 'professor', 'sir', 'madam',
 ])
 
-/** Strip a leading honorific ("Dr.", "Mr", "Prof.") from a full name. */
 export function stripHonorific(name: string): string {
   const parts = (name ?? '').trim().split(/\s+/).filter(Boolean)
   if (parts.length > 1 && HONORIFICS.has(parts[0].replace(/\./g, '').toLowerCase())) {
@@ -20,12 +17,10 @@ export function stripHonorific(name: string): string {
   return parts.join(' ')
 }
 
-/** First name only, with any honorific removed. */
 export function getFirstName(name: string): string {
   return stripHonorific(name).split(/\s+/)[0] ?? ''
 }
 
-/** Initials from the real name (ignoring honorifics): "Mr Shweta Jain" → "SJ". */
 export function getInitials(name: string): string {
   const parts = stripHonorific(name).split(/\s+/).filter(Boolean)
   if (parts.length === 0) return '·'
@@ -38,11 +33,11 @@ export function getInitials(name: string): string {
 export interface EditableService {
   name: string
   desc: string
-  price?: number    // optional per-service price; overrides therapist.fee when set
-  tag?: string      // optional badge (CT5 uses this)
-  kind?: string     // optional subtitle (CT1, CT2, CT3 use this)
-  code?: string     // optional code label (CT2, CT3)
-  forWhom?: string[] // optional tags (CT1, CT2)
+  price?: number
+  tag?: string
+  kind?: string
+  code?: string
+  forWhom?: string[]
 }
 
 export interface EditableFAQ {
@@ -55,16 +50,12 @@ export interface EditableFAQ {
 export interface CT1CarouselSlide {
   type: 'quote' | 'stats' | 'process' | 'testimonial'
   tag: string
-  // quote
   text?: string
   author?: string
   sub?: string
-  // stats
   headline?: string
   stats?: { val: string; label: string }[]
-  // process
   steps?: { n: string; t: string; d: string }[]
-  // testimonial
   quote?: string
   name?: string
   role?: string
@@ -103,7 +94,6 @@ export interface CT3Content {
 
 export interface CT4TrustItem { label: string; value: string }
 
-/** A single quote entry in the hero carousel */
 export interface CT4HeroQuote {
   quote: string
   quote_author: string
@@ -111,10 +101,8 @@ export interface CT4HeroQuote {
 
 export interface CT4Content {
   hero?: {
-    /** Legacy single-quote fields — kept for backwards compat */
     quote?: string
     quote_author?: string
-    /** Array of quotes that rotate in the hero (no limit) */
     quotes?: CT4HeroQuote[]
   }
   ticker?: { items?: string[] }
@@ -173,7 +161,7 @@ export interface TherapistProfile {
   plan?: string
   availability?: AvailabilityData | null
   profile_content?: ProfileContent
-  section_order?: string[]        // custom display order of section IDs
+  section_order?: string[]
 }
 
 // ── Availability types ────────────────────────────────────────────────────
@@ -184,20 +172,18 @@ export interface DateException { date: string; type: 'off' | 'custom'; ranges?: 
 export interface AvailabilityData {
   duration: number
   schedule: Record<string, DaySchedule>
-  buffer?: number                  // gap (mins) after each session
-  exceptions?: DateException[]     // date-specific overrides
+  buffer?: number
+  exceptions?: DateException[]
 }
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
 const DAY_SHORT = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 const MONTH_NAMES = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
-const MIN_ADVANCE_HOURS = 4   // slots within this many hours from now are hidden
+const MIN_ADVANCE_HOURS = 4
 
-// Fallback profile photo used by every template when a therapist has no image.
 export const DEFAULT_PROFILE_IMAGE = '/profiledemo2.png'
 
-/** Returns the therapist's image, or the shared demo image if none is set. */
 export function resolveImage(image?: string | null): string {
   return image && image.trim() !== '' ? image : DEFAULT_PROFILE_IMAGE
 }
@@ -234,10 +220,10 @@ export function getAvailableDays(
   availability: AvailabilityData | null | undefined,
   durationMin: number,
   lookaheadDays = 14,
-  bookedISO: string[] = [],   // already-booked ISO strings — filtered out here
+  bookedISO: string[] = [],
 ): AvailableDay[] {
   const bookedSet = new Set(bookedISO.map(t => new Date(t).toISOString()))
-  const cutoff    = Date.now() + MIN_ADVANCE_HOURS * 60 * 60 * 1000  // now + 4 h
+  const cutoff    = Date.now() + MIN_ADVANCE_HOURS * 60 * 60 * 1000
 
   const buffer = availability?.buffer ?? 0
   const exceptions = availability?.exceptions ?? []
@@ -247,12 +233,11 @@ export function getAvailableDays(
     const d = new Date(); d.setDate(d.getDate() + i); d.setHours(0, 0, 0, 0)
     const dayName = DAY_NAMES[d.getDay()]; let rawSlots: string[] = []
 
-    // Date-specific exception takes priority over the weekly pattern.
     const isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     const exception = exceptions.find(e => e.date === isoDate)
 
     if (exception) {
-      if (exception.type === 'off') continue                       // blocked date
+      if (exception.type === 'off') continue
       rawSlots = generateSlotsFromRanges(exception.ranges ?? [], availability?.duration ?? durationMin, buffer)
     } else if (availability?.schedule) {
       const ds = availability.schedule[dayName]
@@ -260,15 +245,13 @@ export function getAvailableDays(
       if (ds.ranges.length > 0) rawSlots = generateSlotsFromRanges(ds.ranges, availability.duration ?? durationMin, buffer)
     } else { rawSlots = generateSlotsFromDuration(durationMin) }
 
-    // Remove booked slots and slots that are too soon (< 4 hours away)
     const slots = rawSlots.filter(label => {
       const iso = slotToISO(label, d)
-      if (bookedSet.has(new Date(iso).toISOString())) return false  // already booked
-      if (new Date(iso).getTime() < cutoff)            return false  // too soon
+      if (bookedSet.has(new Date(iso).toISOString())) return false
+      if (new Date(iso).getTime() < cutoff)            return false
       return true
     })
 
-    // Skip days with no available slots
     if (slots.length === 0) continue
 
     results.push({
@@ -379,18 +362,18 @@ export const DEFAULT_CT4_CONTENT = {
     quote_author: 'Carl R. Rogers',
     quotes: [
       { quote: 'The curious paradox is that when I accept myself just as I am, then I can change.', quote_author: 'Carl R. Rogers' },
-      { quote: 'You don\'t have to control your thoughts. You just have to stop letting them control you.', quote_author: 'Dan Millman' },
-      { quote: 'There is no timestamp on trauma. There isn\'t a formula that you follow to heal.', quote_author: 'Tom Zuba' },
+      { quote: "You don't have to control your thoughts. You just have to stop letting them control you.", quote_author: 'Dan Millman' },
+      { quote: "There is no timestamp on trauma. There isn't a formula that you follow to heal.", quote_author: 'Tom Zuba' },
     ] as CT4HeroQuote[],
   },
-  ticker:   { items: ['Licensed Practitioner', 'Confidential Sessions', 'Evidence-Based Practice', 'Online & In-Person', 'RCI Accredited', 'Integrative Approach', 'First Session Diagnostic', 'Free Cancellation 48h'] },
+  ticker: { items: ['Licensed Practitioner', 'Confidential Sessions', 'Evidence-Based Practice', 'Online & In-Person', 'RCI Accredited', 'Integrative Approach', 'First Session Diagnostic', 'Free Cancellation 48h'] },
   services: [
     { name: 'Individual Psychotherapy', desc: 'One-on-one sessions tailored to your unique history, needs, and goals. Evidence-based modalities in a confidential, non-judgmental space.', price: 1500 },
-    { name: 'Couple Therapy',          desc: 'Restoring connection, communication, and mutual understanding between partners — from conflict navigation to deeper intimacy.',              price: 2000 },
-    { name: 'Anxiety & Stress',         desc: 'Cognitive, somatic, and mindfulness-based tools to break cycles of rumination, worry, and overwhelm.',                                   price: 1500 },
-    { name: 'Grief & Loss',             desc: 'Compassionate support through bereavement, major life transitions, and the complex terrain of what it means to lose.',                   price: 1200 },
-    { name: 'Identity & Self-Esteem',   desc: 'Deepening self-awareness and cultivating an authentic, grounded sense of self — free from self-criticism and comparison.',               price: 1200 },
-    { name: 'Burnout & Recovery',       desc: 'Rebuilding energy, boundaries, and meaning for high-achieving individuals navigating chronic professional exhaustion.',                   price: 1800 },
+    { name: 'Couple Therapy',           desc: 'Restoring connection, communication, and mutual understanding between partners — from conflict navigation to deeper intimacy.', price: 2000 },
+    { name: 'Anxiety & Stress',         desc: 'Cognitive, somatic, and mindfulness-based tools to break cycles of rumination, worry, and overwhelm.', price: 1500 },
+    { name: 'Grief & Loss',             desc: 'Compassionate support through bereavement, major life transitions, and the complex terrain of what it means to lose.', price: 1200 },
+    { name: 'Identity & Self-Esteem',   desc: 'Deepening self-awareness and cultivating an authentic, grounded sense of self — free from self-criticism and comparison.', price: 1200 },
+    { name: 'Burnout & Recovery',       desc: 'Rebuilding energy, boundaries, and meaning for high-achieving individuals navigating chronic professional exhaustion.', price: 1800 },
   ] as EditableService[],
   faq: [
     { q: 'How is the first session structured?', a: 'The first session (typically 60 minutes) is primarily an intake — I want to understand your history, what has brought you here, and what you hope to gain from our work together. By the end, we will have co-created a loose roadmap for our sessions.' },
@@ -421,44 +404,47 @@ export const DEFAULT_CT5_CONTENT: Required<CT5Content> = {
   ],
 }
 
-// ── Resolve helpers (merge saved + defaults) ──────────────────────────────
+// ── Resolve helpers ───────────────────────────────────────────────────────
+// CRITICAL: use Array.isArray — NOT .length — to distinguish "user saved an
+// empty list" from "field was never set". An empty [] means the user deleted
+// everything intentionally; it must render as empty, NOT fall back to defaults.
 
 export function resolveCT1Content(saved?: CT1Content): Required<CT1Content> {
   return {
-    services: saved?.services?.length ? saved.services : DEFAULT_CT1_CONTENT.services,
-    carousel: saved?.carousel?.length ? saved.carousel : DEFAULT_CT1_CONTENT.carousel,
+    services: Array.isArray(saved?.services) ? saved!.services : DEFAULT_CT1_CONTENT.services,
+    carousel: Array.isArray(saved?.carousel) ? saved!.carousel : DEFAULT_CT1_CONTENT.carousel,
   }
 }
 
 export function resolveCT2Content(saved?: CT2Content): Required<CT2Content> {
   return {
-    services: saved?.services?.length ? saved.services : DEFAULT_CT2_CONTENT.services,
-    insights: saved?.insights?.length ? saved.insights : DEFAULT_CT2_CONTENT.insights,
-    faq:      saved?.faq?.length      ? saved.faq      : DEFAULT_CT2_CONTENT.faq,
+    services: Array.isArray(saved?.services) ? saved!.services : DEFAULT_CT2_CONTENT.services,
+    insights: Array.isArray(saved?.insights) ? saved!.insights : DEFAULT_CT2_CONTENT.insights,
+    faq:      Array.isArray(saved?.faq)      ? saved!.faq      : DEFAULT_CT2_CONTENT.faq,
   }
 }
 
 export function resolveCT3Content(saved?: CT3Content): Required<CT3Content> {
   return {
-    services: saved?.services?.length ? saved.services : DEFAULT_CT3_CONTENT.services,
-    faq:      saved?.faq?.length      ? saved.faq      : DEFAULT_CT3_CONTENT.faq,
+    services: Array.isArray(saved?.services) ? saved!.services : DEFAULT_CT3_CONTENT.services,
+    faq:      Array.isArray(saved?.faq)      ? saved!.faq      : DEFAULT_CT3_CONTENT.faq,
   }
 }
 
 export function resolveCT4Content(saved?: CT4Content) {
   return {
-    hero:     { ...DEFAULT_CT4_CONTENT.hero,     ...(saved?.hero ?? {}) },
+    hero:     { ...DEFAULT_CT4_CONTENT.hero, ...(saved?.hero ?? {}) },
     ticker:   { items: saved?.ticker?.items ?? DEFAULT_CT4_CONTENT.ticker.items },
-    services: saved?.services?.length ? saved.services : DEFAULT_CT4_CONTENT.services,
-    faq:      saved?.faq?.length      ? saved.faq      : DEFAULT_CT4_CONTENT.faq,
-    insights: { trust_bar: saved?.insights?.trust_bar?.length ? saved.insights.trust_bar : DEFAULT_CT4_CONTENT.insights.trust_bar },
+    services: Array.isArray(saved?.services)                    ? saved!.services                   : DEFAULT_CT4_CONTENT.services,
+    faq:      Array.isArray(saved?.faq)                         ? saved!.faq                        : DEFAULT_CT4_CONTENT.faq,
+    insights: { trust_bar: Array.isArray(saved?.insights?.trust_bar) ? saved!.insights!.trust_bar! : DEFAULT_CT4_CONTENT.insights.trust_bar },
   }
 }
 
 export function resolveCT5Content(saved?: CT5Content): Required<CT5Content> {
   return {
     ticker:   { items: saved?.ticker?.items ?? DEFAULT_CT5_CONTENT.ticker.items },
-    services: saved?.services?.length ? saved.services : DEFAULT_CT5_CONTENT.services,
-    faq:      saved?.faq?.length      ? saved.faq      : DEFAULT_CT5_CONTENT.faq,
+    services: Array.isArray(saved?.services) ? saved!.services : DEFAULT_CT5_CONTENT.services,
+    faq:      Array.isArray(saved?.faq)      ? saved!.faq      : DEFAULT_CT5_CONTENT.faq,
   }
 }

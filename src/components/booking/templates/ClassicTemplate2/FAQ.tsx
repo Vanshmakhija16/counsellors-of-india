@@ -3,39 +3,16 @@
 import { useState } from 'react'
 import { ChevronDown } from 'lucide-react'
 
-interface FAQItem {
+export interface FAQItem {
   q: string
   a: string
 }
 
-const faqs: FAQItem[] = [
-  {
-    q: 'Do you offer a first consultation?',
-    a: 'Yes, a 20 minute introductory call, complimentary, so we can both feel out whether we are the right fit. There is no obligation to continue after that conversation.',
-  },
-  {
-    q: 'Online or in-person sessions?',
-    a: 'Both are available. Most clients work online for the practical flexibility it offers; some prefer the containment of an in-person room. We will choose what suits the work.',
-  },
-  {
-    q: 'How long do people usually stay in therapy?',
-    a: 'It varies. Some clients come for a focused 8–12 sessions around a specific theme. Others stay for longer, deeper work that unfolds over months or years. We will revisit this together every few months.',
-  },
-  {
-    q: 'What are your fees, and do you offer concessions?',
-    a: 'Standard fees are listed on the booking page. A limited number of reduced-fee slots are reserved each year for clients in genuine financial difficulty — please ask if relevant.',
-  },
-  {
-    q: 'What happens if I need to cancel a session?',
-    a: 'Cancellations made 48 hours or more before the session are free. Within 48 hours, the full fee applies — this protects the time held for you and the rhythm of the work.',
-  },
-  {
-    q: 'Is everything I say confidential?',
-    a: 'Yes, with the standard clinical exceptions — risk to self or others, court orders, or supervision (anonymised). I will explain all of this in detail at our first session.',
-  },
-]
+interface Props {
+  faqs: FAQItem[]
+}
 
-export default function FAQ() {
+export default function FAQ({ faqs }: Props) {
   const [openIndex, setOpenIndex] = useState<number | null>(0)
 
   return (

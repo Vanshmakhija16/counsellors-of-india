@@ -5729,14 +5729,18 @@ padding:
 .texp-frame-wrap{
   /* Fills whatever height remains in the window below the chrome bar (flex),
      so the frame is automatically responsive without estimating the chrome
-     height. The scaled preview inside fills this area. */
+     height. The scaled preview inside fills this area. If the template's
+     real content is taller than this box, the wrapper scrolls internally —
+     and once it reaches the bottom (or top), the page's own scroll takes
+     over automatically. This is native browser behaviour for a scrollable
+     box with no overscroll-behavior override — nothing else needed. */
   position:relative;width:100%;
   flex:1;min-height:0;
   display:flex;justify-content:center;align-items:flex-start;  /* fill from the top */
   box-sizing:border-box;
   background:var(--surf-1);
-  overflow:hidden;
-  overscroll-behavior: contain;
+  overflow-y:auto;
+  overflow-x:hidden;
 }
 
 /* sized to the scaled hero footprint (set inline); holds the scaled iframe */
@@ -7772,11 +7776,31 @@ function LiveTemplateExperience() {
     tablet:  834,
     mobile:  390,
   }
+  // Fixed, realistic viewport HEIGHT per device — this is what the iframe's
+  // own CSS height is always set to. Templates use 100vh/100dvh hero sections
+  // by design (correct for real visitors); that only works sanely if 100vh
+  // INSIDE the iframe resolves to a believable number. Deriving iframe height
+  // from the rendered content's own scrollHeight previously caused a
+  // feedback loop (taller iframe → 100vh means more → hero grows again →
+  // measured even taller next time → endless growth) AND was unreliable
+  // (timing-sensitive scrollHeight reads often missed late-hydrating content,
+  // silently falling back to one-screen-only — which is why only the hero
+  // was ever scrollable). FULL_PAGE_H below replaces both: it's large enough
+  // to comfortably fit a complete real template page (hero + about + services
+  // + booking + footer) for every device, fixed and reliable, no measurement.
+  const VIEWPORT_H: Record<typeof device, number> = {
+    desktop: 900,
+    tablet:  1112,
+    mobile:  844,
+  }
+  const FULL_PAGE_H: Record<typeof device, number> = {
+    desktop: 3200,
+    tablet:  3600,
+    mobile:  4200,
+  }
   const frameWrapRef = useRef<HTMLDivElement>(null)
+  const iframeElRef  = useRef<HTMLIFrameElement>(null)
   const [scale, setScale] = useState(1)
-  // Iframe's logical height (pre-scale). Sized so height × scale === frame
-  // height, i.e. the scaled preview fills the frame top-to-bottom with no gap.
-  const [iframeH, setIframeH] = useState(720)
 
   useEffect(() => {
     function measure() {
@@ -7791,17 +7815,15 @@ function LiveTemplateExperience() {
       if (aw <= 0 || ah <= 0) return
       const dw = DESIGN_W[device]
       if (device === 'desktop') {
-        // Desktop: fill the WIDTH, and size the iframe height so that — once
-        // scaled — it fills the frame HEIGHT exactly. Covers the whole space.
+        // Desktop: fill the WIDTH. Scale is width-based only — independent
+        // of content height, so it never feeds back on itself.
         const s = aw / dw
         setScale(s)
-        setIframeH(Math.ceil(ah / s))
       } else {
         // Mobile/tablet keep their narrow shape: fit the full device height,
         // centred, so the whole phone/tablet screen shows (no width blow-up).
-        const s = ah / 760
+        const s = ah / VIEWPORT_H[device]
         setScale(s)
-        setIframeH(760)
       }
     }
     measure()
@@ -7821,9 +7843,19 @@ const previewUrl = `/preview/classic${cur.n}?embed=1`
   // (lazy frames / dev hydration can swallow the event).
   useEffect(() => {
     setLoading(true)
+    // Reset scroll position to the top. Without this, switching templates
+    // while scrolled down inside .texp-frame-wrap leaves the viewport stuck
+    // at the old scroll offset — the new template loads in underneath,
+    // off-screen, making it LOOK like nothing changed/refreshed.
+    if (frameWrapRef.current) frameWrapRef.current.scrollTop = 0
     const t = setTimeout(() => setLoading(false), 1500)
     return () => clearTimeout(t)
   }, [active, device])
+
+  function handleIframeLoad() {
+    setLoading(false)
+  }
+
 
   const frameClass =
   device === 'mobile'
@@ -7886,24 +7918,32 @@ const previewUrl = `/preview/classic${cur.n}?embed=1`
                 <span className="texp-loading-t">Loading {cur.name}…</span>
               </div>
             )}
-            {/* Box sized to the SCALED footprint — fills the frame completely
-                (width AND height) so the preview covers the whole space. */}
+            {/* Box AND iframe both sized to a generous FIXED full-page height
+                (FULL_PAGE_H) — big enough to comfortably fit any real
+                template's complete content with no internal scrollbar, so
+                there's only ONE scrollbar total (the outer .texp-frame-wrap).
+                Crucially this is NOT what 100vh resolves to inside the
+                iframe — see /preview/*?embed=1, which pins the hero's
+                min-height to a fixed, realistic value in embed mode so the
+                hero renders at normal size instead of stretching to fill
+                this much taller box. */}
             <div
               className="texp-frame-scaler"
               style={{
                 width: `${DESIGN_W[device] * scale}px`,
-                height: `${iframeH * scale}px`,
+                height: `${FULL_PAGE_H[device] * scale}px`,
               }}
             >
               <iframe
+                ref={iframeElRef}
                 key={`${cur.id}-${device}`}
                 className={frameClass}
                 src={previewUrl}
                 title={`${cur.name} live preview`}
-                onLoad={() => setLoading(false)}
+                onLoad={handleIframeLoad}
                 style={{
                   width: `${DESIGN_W[device]}px`,
-                  height: `${iframeH}px`,
+                  height: `${FULL_PAGE_H[device]}px`,
                   transform: `scale(${scale})`,
                   transformOrigin: 'top left',
                 }}

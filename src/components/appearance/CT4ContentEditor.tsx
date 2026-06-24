@@ -27,13 +27,16 @@ export default function CT4ContentEditor({ value, onChange }: Props) {
     return DEFAULT_CT4_CONTENT.hero.quotes
   })()
 
+  // CRITICAL: use Array.isArray — NOT .length — to distinguish "user saved an
+  // empty list" from "field was never set". An empty [] means the user deleted
+  // everything intentionally; it must render as empty, NOT fall back to defaults.
   const c = {
     ticker:   { items: value.ticker?.items ?? DEFAULT_CT4_CONTENT.ticker.items },
-    services: value.services?.length ? value.services : DEFAULT_CT4_CONTENT.services,
-    faq:      value.faq?.length      ? value.faq      : DEFAULT_CT4_CONTENT.faq,
+    services: Array.isArray(value.services) ? value.services : DEFAULT_CT4_CONTENT.services,
+    faq:      Array.isArray(value.faq)      ? value.faq      : DEFAULT_CT4_CONTENT.faq,
     insights: {
-      trust_bar: value.insights?.trust_bar?.length
-        ? value.insights.trust_bar
+      trust_bar: Array.isArray(value.insights?.trust_bar)
+        ? value.insights!.trust_bar!
         : DEFAULT_CT4_CONTENT.insights.trust_bar,
     },
   }
@@ -160,7 +163,7 @@ export default function CT4ContentEditor({ value, onChange }: Props) {
       </Accordion>
 
       {/* ── SERVICES ─────────────────────────────────────────────── */}
-      <Accordion label="Services — What You Offer" open={open === 'services'} onToggle={() => toggle('services')}>
+      <Accordion label="Services - What You Offer" open={open === 'services'} onToggle={() => toggle('services')}>
         <div className="space-y-4">
           <p className="text-xs text-[#9ca3af] mb-1">
             Set a price per service to override the default session fee when a client clicks "Book Now" on that service.

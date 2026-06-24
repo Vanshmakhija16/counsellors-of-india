@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useRef, useState } from 'react'
 import { X } from 'lucide-react'
 import { TemplateId, ColorId, getColor } from '@/lib/template'
 import { SAMPLE_THERAPIST } from '@/components/booking/templates/templateUtils'
@@ -24,6 +25,11 @@ const TEMPLATE_NAMES: Record<TemplateId, string> = {
   classic6: 'The Quiet Room',
 }
 
+// Render at this fixed width (a realistic desktop viewport),
+// then scale it down to fit the modal. This makes vw/clamp/font-size
+// all behave as they would on a real 1280px screen.
+const RENDER_WIDTH = 1280
+
 function renderTemplate(id: TemplateId) {
   switch (id) {
     case 'classic' : return <ClassicTemplate therapist={SAMPLE_THERAPIST} />
@@ -31,12 +37,26 @@ function renderTemplate(id: TemplateId) {
     case 'classic3': return <ClassicTemplate3 therapist={SAMPLE_THERAPIST} />
     case 'classic4': return <ClassicTemplate4 therapist={SAMPLE_THERAPIST} />
     case 'classic5': return <ClassicTemplate5 therapist={SAMPLE_THERAPIST} />
-    // default:         return <ClassicTemplate4 therapist={SAMPLE_THERAPIST} feedbacks={[]} />
   }
 }
 
 export default function TemplatePreviewModal({ templateId, colorId = 'teal', onClose }: Props) {
   const color = getColor(colorId)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const [scale, setScale] = useState(1)
+
+  // Recalculate scale whenever the modal wrapper resizes
+  useEffect(() => {
+    const el = wrapperRef.current
+    if (!el) return
+    const update = () => {
+      setScale(el.clientWidth / RENDER_WIDTH)
+    }
+    update()
+    const ro = new ResizeObserver(update)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   const brandVars = `
     --brand: ${color.primary};
@@ -68,11 +88,31 @@ export default function TemplatePreviewModal({ templateId, colorId = 'teal', onC
           </button>
         </div>
 
-        {/* Scrollable preview with brand color injected */}
-        <div className="flex-1 overflow-y-auto"
-          style={{ ['--warm-accent' as string]: color.primary, ['--teal' as string]: color.primary, ['--brand' as string]: color.primary }}>
+        {/* Scrollable area — outer scroll container */}
+        <div
+          ref={wrapperRef}
+          className="flex-1 overflow-y-auto overflow-x-hidden"
+        >
           <style>{`:root { ${brandVars} }`}</style>
-          {renderTemplate(templateId)}
+
+          {/*
+            Inner scaler:
+            - Fixed at RENDER_WIDTH so the template "thinks" it's on a 1280px screen
+            - transform-origin top-left so scaling anchors to top-left
+            - Height set so the outer container knows the real scrollable height
+              (otherwise the scaled-down content would clip)
+          */}
+          <div
+            style={{
+              width: RENDER_WIDTH,
+              transformOrigin: 'top left',
+              transform: `scale(${scale})`,
+              // Make the outer scroll container see the correct height after scaling
+              marginBottom: `calc((${scale} - 1) * 100%)`,
+            }}
+          >
+            {renderTemplate(templateId)}
+          </div>
         </div>
       </div>
     </div>

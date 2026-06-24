@@ -513,8 +513,7 @@ export const ct3Styles = `
 
 .ct3-hero {
   /* dvh stops the iOS/Android URL-bar jump; svh fallback before it. */
-  min-height: calc(100svh - var(--nav-h));
-  min-height: calc(100dvh - var(--nav-h));
+  /* min-height removed — was forcing full viewport height in iframe previews */
 
   display: grid;
   grid-template-columns: 0.95fr 1.05fr;
@@ -975,7 +974,7 @@ export const ct3Styles = `
    Width alone would treat this like a tablet; the near-1:1 aspect needs a
    balanced, centred single column so the photo + copy don't feel stranded. */
 @media (min-width: 600px) and (max-width: 884px) and (max-aspect-ratio: 13/10) {
-  .ct3-hero {
+  
     grid-template-columns: 1fr;
     justify-items: center;
     text-align: center;

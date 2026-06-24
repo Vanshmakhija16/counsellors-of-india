@@ -12,7 +12,7 @@ import LivePreview from '@/components/appearance/LivePreview'
 import TemplatePreviewModal from '@/components/appearance/TemplatePreviewModal'
 import TemplateLiveSwitcher from '@/components/appearance/TemplateLiveSwitcher'
 import DraggableDock from '@/components/appearance/DraggableDock'
-import { Save, Lock, Check, AlertCircle, Sparkles, Pencil, LayoutList, X, GripVertical, ArrowLeft, ChevronRight, Image as ImageIcon, ChevronUp, ChevronDown } from 'lucide-react'
+import { Save, Lock, Check, AlertCircle, Sparkles, Pencil, LayoutList, X, GripVertical, ArrowLeft, ChevronLeft, ChevronRight, Image as ImageIcon, ChevronUp, ChevronDown } from 'lucide-react'
 import type { ProfileContent, CT1Content, CT2Content, CT3Content, CT4Content, CT5Content } from '@/components/booking/templates/templateUtils'
 import dynamic from 'next/dynamic'
 
@@ -62,18 +62,19 @@ export default function AppearancePage() {
   const [draggedId,        setDraggedId]        = useState<string | null>(null)
   const [dragOverId,       setDragOverId]       = useState<string | null>(null)
   const [profileContent,   setProfileContent]   = useState<ProfileContent>({})
+  const [savedProfileContent, setSavedProfileContent] = useState<ProfileContent>({})
   const [previewOpen,      setPreviewOpen]      = useState(false)
-  const [editOpen,         setEditOpen]         = useState(false)   // right-side edit drawer
+  const [editOpen,         setEditOpen]         = useState(false)
   const [editMode,         setEditMode]         = useState<'choose' | 'content' | 'sections'>('choose')
   const [templatePreview,  setTemplatePreview]  = useState<TemplateId | null>(null)
-  // Which template is being PREVIEWED in the switcher (independent of the
-  // committed selection until the user clicks Select).
   const [previewTemplate,  setPreviewTemplate]  = useState<TemplateId>('classic')
   const [confirmOpen,      setConfirmOpen]      = useState(false)
   const [saving,           setSaving]           = useState(false)
   const [saved,            setSaved]            = useState(false)
   const [savingSections,   setSavingSections]   = useState(false)
   const [savedSections,    setSavedSections]    = useState(false)
+  const [savingContent,    setSavingContent]    = useState(false)
+  const [savedContent,     setSavedContent]     = useState(false)
   const [saveError,        setSaveError]        = useState<string | null>(null)
   const [lockedTemplate,   setLockedTemplate]   = useState<TemplateId | null>(null)
   const [committedTemplate,setCommittedTemplate]= useState<TemplateId>('classic')
@@ -96,11 +97,19 @@ export default function AppearancePage() {
         setSectionOrder(data.section_order ?? [])
         setSavedSectionOrder(data.section_order ?? [])
         setProfileContent(data.profile_content ?? {})
+        setSavedProfileContent(data.profile_content ?? {})
         setTemplateLockedUntil(data.template_locked_until ?? null)
       }
     }
     load()
   }, [])
+
+  // Step through templates with prev/next arrows (wraps around).
+  const activeIndex = TEMPLATES.findIndex(t => t.id === previewTemplate)
+  function stepTemplate(dir: 1 | -1) {
+    const next = (activeIndex + dir + TEMPLATES.length) % TEMPLATES.length
+    setPreviewTemplate(TEMPLATES[next].id)
+  }
 
   function handleTemplateClick(template: typeof TEMPLATES[0]) {
     if (isTemplateLocked && template.id !== committedTemplate) {
@@ -121,10 +130,6 @@ export default function AppearancePage() {
     setHiddenSections(p => p.includes(id) ? p.filter(s => s !== id) : [...p, id])
   }
 
-  // Moves a section up/down within the CURRENT visible ordering (orderedSections,
-  // which already accounts for any saved order + defaults). Persists the full
-  // resulting id list as the new section_order so position is explicit from
-  // here on, even for sections that hadn't been touched before.
   function moveSection(id: string, dir: -1 | 1) {
     const ids = orderedSections.map(s => s.id)
     const i = ids.indexOf(id)
@@ -135,9 +140,6 @@ export default function AppearancePage() {
     setSectionOrder(next)
   }
 
-  // Drops `draggedId` into the position currently occupied by `targetId`,
-  // shifting everything between them. Same persisted-array approach as
-  // moveSection, just computed from the drag source/target instead of a step.
   function reorderByDrag(draggedSectionId: string, targetId: string) {
     if (draggedSectionId === targetId) return
     const ids = orderedSections.map(s => s.id)
@@ -154,9 +156,6 @@ export default function AppearancePage() {
     setProfileContent(p => ({ ...p, [key]: val }))
   }
 
-  // Update the therapist row, gracefully retrying without `section_order` if
-  // that column hasn't been added to the DB yet (migration not run). This keeps
-  // Apply working even before the section-reorder migration is applied.
   async function updateTherapist(userId: string, payload: Record<string, unknown>) {
     let { error } = await supabase.from('therapists').update(payload).eq('id', userId)
     if (error && 'section_order' in payload && /section_order/i.test(error.message ?? '')) {
@@ -166,8 +165,6 @@ export default function AppearancePage() {
     if (error) throw new Error(error.message)
   }
 
-  // Saves ONLY the section visibility toggles immediately — no template-lock
-  // confirmation needed, since this doesn't touch the selected template.
   async function handleSaveSections() {
     setSavingSections(true); setSaveError(null)
     try {
@@ -184,19 +181,32 @@ export default function AppearancePage() {
     }
   }
 
+  async function handleSaveContent() {
+    setSavingContent(true); setSaveError(null)
+    try {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { setSavingContent(false); return }
+      await updateTherapist(user.id, { profile_content: profileContent })
+      setSavedProfileContent(profileContent)
+      setSavedContent(true); setTimeout(() => setSavedContent(false), 2500)
+    } catch (e: unknown) {
+      setSaveError(e instanceof Error ? e.message : String(e))
+    } finally {
+      setSavingContent(false)
+    }
+  }
+
   async function handleSave() {
     setSaving(true); setSaveError(null)
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { setSaving(false); return }
-      // Apply the template the user is currently previewing.
       const templateToApply = previewTemplate
       const template = TEMPLATES.find(t => t.id === templateToApply)!
       if (!canUseTemplate(template, currentPlan)) {
         setSaveError(`"${template.name}" requires a Growth plan.`)
         setSaving(false); return
       }
-      // Locked to a *different* template → block (one-template-per-year).
       if (isTemplateLocked && templateToApply !== committedTemplate) {
         setSaveError(`Your template is locked until ${formatLockDate(templateLockedUntil)}.`)
         setSaving(false); return
@@ -220,6 +230,7 @@ export default function AppearancePage() {
       setCommittedTemplate(templateToApply)
       setSavedHiddenSections(hiddenSections)
       setSavedSectionOrder(sectionOrder)
+      setSavedProfileContent(profileContent)
       setTemplateLockedUntil(nextLockedUntil)
       setSaved(true); setTimeout(() => setSaved(false), 2500)
     } catch (e: unknown) {
@@ -234,12 +245,13 @@ export default function AppearancePage() {
   const lockDateLabel = formatLockDate(templateLockedUntil)
   const color     = getColor(selectedColor)
   const activeTemplate = TEMPLATES.find(t => t.id === selectedTemplate)!
-  // Full section list for this template, in the user's chosen order (hidden
-  // ones included — the editor needs to show and reorder those too).
   const orderedSections = getOrderedSections(selectedTemplate, sectionOrder, null)
   const sectionsHaveUnsavedChanges =
     JSON.stringify([...hiddenSections].sort()) !== JSON.stringify([...savedHiddenSections].sort()) ||
     JSON.stringify(sectionOrder) !== JSON.stringify(savedSectionOrder)
+
+  const contentHasUnsavedChanges =
+    JSON.stringify(profileContent) !== JSON.stringify(savedProfileContent)
 
   const previewProfile: TherapistProfile = {
     ...(profile ?? {}),
@@ -256,7 +268,7 @@ export default function AppearancePage() {
       {/* ── Header ──────────────────────────────────────────────────────────── */}
       <div
         data-dock-bounds
-        className="sticky top-0 z-30 bg-white border-b border-[#ede9e4] px-4 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-3"
+        className="sticky top-0 z-30 bg-white border-b border-[#ede9e4] px-4 sm:px-8 py-4 flex items-center justify-between gap-3"
       >
         <div>
           <h1 className="text-xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-cormorant), serif' }}>
@@ -264,9 +276,32 @@ export default function AppearancePage() {
           </h1>
           <p className="text-xs text-[#9ca3af] mt-0.5">Pick a design, edit your content, then apply</p>
         </div>
+
+        {/* Template prev / next arrows */}
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs text-[#9ca3af] mr-1 hidden sm:inline">
+            {activeIndex + 1} / {TEMPLATES.length}
+          </span>
+          <button
+            type="button"
+            aria-label="Previous template"
+            onClick={() => stepTemplate(-1)}
+            className="h-9 w-9 rounded-xl border border-[#e8e4df] bg-white flex items-center justify-center text-[#1c1c1e] hover:bg-[#fff7ee] hover:border-[#FF9933] hover:text-[#C46800] transition"
+          >
+            <ChevronLeft size={18} />
+          </button>
+          <button
+            type="button"
+            aria-label="Next template"
+            onClick={() => stepTemplate(1)}
+            className="h-9 w-9 rounded-xl border border-[#e8e4df] bg-white flex items-center justify-center text-[#1c1c1e] hover:bg-[#fff7ee] hover:border-[#FF9933] hover:text-[#C46800] transition"
+          >
+            <ChevronRight size={18} />
+          </button>
+        </div>
       </div>
 
-      {/* ── Banners (float over the top of the preview) ──────────────────────── */}
+      {/* ── Banners ──────────────────────────────────────────────────── */}
       <div className="px-4 sm:px-8 pt-4 space-y-3 empty:hidden">
         {saveError && (
           <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -275,10 +310,9 @@ export default function AppearancePage() {
             <button onClick={() => setSaveError(null)} className="ml-auto text-red-400 hover:text-red-600">×</button>
           </div>
         )}
-
       </div>
 
-      {/* ── Full-width live preview (the hero) ────────────────────────────────── */}
+      {/* ── Full-width live preview ────────────────────────────────────── */}
       <div className="px-4 sm:px-8 py-4">
         <div className="rounded-2xl overflow-hidden shadow-sm border border-[#ede9e4]">
           <TemplateLiveSwitcher
@@ -293,7 +327,9 @@ export default function AppearancePage() {
             onActiveChange={setPreviewTemplate}
             hideTabs
             hideActionBar
+            hideArrows
             frameHeight={680}
+            profileContent={profileContent as Record<string, unknown>}
           />
         </div>
       </div>
@@ -386,17 +422,40 @@ export default function AppearancePage() {
                 </button>
               </div>
             ) : (
-              <>
+              <div className="space-y-4">
+                {contentHasUnsavedChanges && (
+                  <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200 text-xs text-amber-700">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0" />
+                    Unsaved changes — hit Save Changes to make them live
+                  </div>
+                )}
+
                 {selectedTemplate === 'classic'  && <CT1ContentEditor value={(profileContent as any).classic  ?? {}} onChange={v => patchContent('classic',  v as CT1Content)} />}
                 {selectedTemplate === 'classic2' && <CT2ContentEditor value={(profileContent as any).classic2 ?? {}} onChange={v => patchContent('classic2', v as CT2Content)} />}
                 {selectedTemplate === 'classic3' && <CT3ContentEditor value={(profileContent as any).classic3 ?? {}} onChange={v => patchContent('classic3', v as CT3Content)} />}
                 {selectedTemplate === 'classic4' && <CT4ContentEditor value={(profileContent as any).classic4 ?? {}} onChange={v => patchContent('classic4', v as CT4Content)} />}
                 {selectedTemplate === 'classic5' && <CT5ContentEditor value={(profileContent as any).classic5 ?? {}} onChange={v => patchContent('classic5', v as CT5Content)} />}
-              </>
+
+                <button
+                  onClick={handleSaveContent}
+                  disabled={savingContent || !contentHasUnsavedChanges}
+                  className="w-full flex items-center justify-center gap-2 h-12 mt-2 rounded-xl text-sm font-bold text-white transition disabled:opacity-50"
+                  style={{ background: savedContent ? '#16a34a' : BRAND }}
+                >
+                  {savingContent ? (
+                    <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                  ) : savedContent ? (
+                    <Check size={16} />
+                  ) : (
+                    <Save size={16} />
+                  )}
+                  {savedContent ? 'Saved! Changes are live ✓' : contentHasUnsavedChanges ? 'Save Changes' : 'No changes to save'}
+                </button>
+              </div>
             )
           )}
 
-          {/* ── STEP B: show / hide sections ── */}
+          {/* ── STEP C: show / hide sections ── */}
           {editMode === 'sections' && (
             <div className="space-y-2">
               <p className="text-xs text-[#9ca3af] -mt-1 mb-2">Drag a row by its handle to reorder, or tap a row to show/hide it.</p>
@@ -436,7 +495,6 @@ export default function AppearancePage() {
                       transform: isDragOver ? 'scale(1.01)' : undefined,
                     }}
                   >
-                    {/* drag handle */}
                     <span
                       title="Drag to reorder"
                       className="h-6 w-5 flex items-center justify-center text-[#c4bdb2] cursor-grab active:cursor-grabbing shrink-0 -ml-1"
@@ -444,7 +502,6 @@ export default function AppearancePage() {
                       <GripVertical size={14} />
                     </span>
 
-                    {/* reorder controls (kept as a precise fallback alongside drag) */}
                     <div className="flex flex-col -my-1 shrink-0">
                       <button
                         type="button"
@@ -488,7 +545,6 @@ export default function AppearancePage() {
                 )
               })}
 
-              {/* Save just the section visibility — independent of the global Apply flow */}
               <button
                 onClick={handleSaveSections}
                 disabled={savingSections || !sectionsHaveUnsavedChanges}
@@ -509,10 +565,9 @@ export default function AppearancePage() {
         </div>
       </aside>
 
-      {/* ── Draggable dock: grip + Edit + Apply + Try demo (move it anywhere) ── */}
+      {/* ── Draggable dock ── */}
       <DraggableDock storageKey="appearance-dock-pos" defaultTop={16}>
         <div className="flex items-center gap-1 rounded-2xl bg-white shadow-xl border border-[#ede9e4] p-1.5">
-          {/* Drag handle */}
           <span
             data-drag-handle
             title="Drag to move"
@@ -521,7 +576,6 @@ export default function AppearancePage() {
             <GripVertical size={16} />
           </span>
 
-          {/* Edit toggle */}
           <button
             onClick={() => setEditOpen(o => { if (!o) setEditMode('choose'); return !o })}
             className="flex items-center gap-2 h-10 px-4 rounded-xl text-sm font-semibold border transition hover:bg-[#fff7ee] hover:border-[#FF9933] hover:text-[#C46800]"
@@ -531,10 +585,8 @@ export default function AppearancePage() {
             {editOpen ? 'Close' : 'Edit'}
           </button>
 
-          {/* Apply */}
           <button
             onClick={() => {
-              // Locked to a different template → show the "can't change for a year" notice.
               if (isTemplateLocked && previewTemplate !== committedTemplate) {
                 setLockedTemplate(previewTemplate)
                 return
@@ -559,7 +611,6 @@ export default function AppearancePage() {
             {saved ? 'Applied!' : 'Apply'}
           </button>
 
-          {/* Try demo */}
           <a
             href={`/try?t=${TEMPLATE_TPARAM[previewTemplate]}`}
             target="_blank"
@@ -575,7 +626,7 @@ export default function AppearancePage() {
       {previewOpen     && <LivePreview profile={previewProfile} onClose={() => setPreviewOpen(false)} />}
       {templatePreview && <TemplatePreviewModal templateId={templatePreview} onClose={() => setTemplatePreview(null)} />}
 
-      {/* ── Locked notice popup: tried to apply a different template while locked ── */}
+      {/* ── Locked notice popup ── */}
       {lockedTemplate && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 p-4"
           onClick={() => setLockedTemplate(null)}>
@@ -586,11 +637,11 @@ export default function AppearancePage() {
                 <Lock size={24} className="text-amber-600" />
               </div>
               <h2 className="text-lg font-semibold text-[#1c1c1e]">
-                Can’t switch to “{TEMPLATES.find(t => t.id === lockedTemplate)?.name}” yet
+                Can't switch to "{TEMPLATES.find(t => t.id === lockedTemplate)?.name}" yet
               </h2>
               <p className="text-sm text-[#6b7280] mt-2 leading-relaxed">
                 Your template choice is final until <strong>{lockDateLabel}</strong>. You can still
-                preview this design or open it as a demo, but it can’t go live until the lock ends.
+                preview this design or open it as a demo, but it can't go live until the lock ends.
               </p>
             </div>
             <div className="px-6 pb-6 flex gap-2">
@@ -615,7 +666,7 @@ export default function AppearancePage() {
         </div>
       )}
 
-      {/* ── Apply confirmation: warns about the 12-month lock ── */}
+      {/* ── Apply confirmation ── */}
       {confirmOpen && (
         <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 p-4"
           onClick={() => !saving && setConfirmOpen(false)}>
@@ -626,10 +677,10 @@ export default function AppearancePage() {
                 style={{ background: `${color.primary}1e` }}>
                 <Lock size={24} style={{ color: color.primary }} />
               </div>
-              <h2 className="text-lg font-semibold text-[#1c1c1e]">Apply “{TEMPLATES.find(t => t.id === previewTemplate)?.name}”?</h2>
+              <h2 className="text-lg font-semibold text-[#1c1c1e]">Apply "{TEMPLATES.find(t => t.id === previewTemplate)?.name}"?</h2>
               <p className="text-sm text-[#6b7280] mt-2 leading-relaxed">
                 {isStarter
-                  ? <>This becomes your live template and will show on your public page. You <strong>cannot change it for 12 months</strong>. You can still preview other templates, but applying a different one won’t be allowed until the lock ends.</>
+                  ? <>This becomes your live template and will show on your public page. You <strong>cannot change it for 12 months</strong>. You can still preview other templates, but applying a different one won't be allowed until the lock ends.</>
                   : <>This will be applied to your live public profile.</>}
               </p>
             </div>

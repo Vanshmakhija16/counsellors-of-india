@@ -15,10 +15,13 @@ type Section = 'ticker' | 'services' | 'faq'
 export default function CT5ContentEditor({ value, onChange }: Props) {
   const [open, setOpen] = useState<Section | null>('services')
 
+  // CRITICAL: use Array.isArray — NOT .length — to distinguish "user saved an
+  // empty list" from "field was never set". An empty [] means the user deleted
+  // everything intentionally; it must render as empty, NOT fall back to defaults.
   const c = {
     ticker:   { items: value.ticker?.items ?? DEFAULT_CT5_CONTENT.ticker.items },
-    services: value.services?.length ? value.services : DEFAULT_CT5_CONTENT.services,
-    faq:      value.faq?.length      ? value.faq      : DEFAULT_CT5_CONTENT.faq,
+    services: Array.isArray(value.services) ? value.services : DEFAULT_CT5_CONTENT.services,
+    faq:      Array.isArray(value.faq)      ? value.faq      : DEFAULT_CT5_CONTENT.faq,
   }
 
   function patch(updates: Partial<CT5Content>) {
@@ -55,7 +58,7 @@ export default function CT5ContentEditor({ value, onChange }: Props) {
       </Accordion>
 
       {/* ── SERVICES ─────────────────────────────────────────────────── */}
-      <Accordion label="Services — What You Offer" open={open === 'services'} onToggle={() => toggle('services')}>
+      <Accordion label="Services - What You Offer" open={open === 'services'} onToggle={() => toggle('services')}>
         <div className="space-y-4">
           {c.services.map((svc, i) => (
             <div key={i} className="rounded-lg border border-[#e8e4df] p-3 space-y-2 bg-white">

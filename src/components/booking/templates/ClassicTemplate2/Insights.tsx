@@ -2,7 +2,7 @@
 
 import { ArrowUpRight } from 'lucide-react'
 
-interface InsightItem {
+export interface InsightItem {
   number: string
   category: string
   title: string
@@ -11,37 +11,11 @@ interface InsightItem {
   date: string
 }
 
-const insights: InsightItem[] = [
-  {
-    number: '001',
-    category: 'On anxiety',
-    title: 'The anxiety underneath your productivity',
-    excerpt:
-      'When ambition is fuelled by avoidance, achievement starts to feel like relief instead of joy. A note on the difference.',
-    readingTime: '6 min read',
-    date: 'May 2026',
-  },
-  {
-    number: '002',
-    category: 'On grief',
-    title: 'Grief without a vocabulary',
-    excerpt:
-      'Some losses don\'t arrive with a name — the friendship that quietly thinned, the version of yourself you outgrew. They are still grief.',
-    readingTime: '8 min read',
-    date: 'Apr 2026',
-  },
-  {
-    number: '003',
-    category: 'On relationships',
-    title: 'Why repair matters more than rupture',
-    excerpt:
-      'Conflict isn\'t the threat to intimacy that we think it is. Unrepaired conflict is. A short piece on returning to each other.',
-    readingTime: '5 min read',
-    date: 'Mar 2026',
-  },
-]
+interface Props {
+  insights: InsightItem[]
+}
 
-export default function Insights() {
+export default function Insights({ insights }: Props) {
   return (
     <section
       id="insights"

@@ -8,42 +8,11 @@ export interface ServiceItem {
   forWhom: string[]
 }
 
-const services: ServiceItem[] = [
-  {
-    code: '01',
-    title: 'Individual psychotherapy',
-    kind: 'One-to-one · weekly',
-    desc:
-      'Long-form work for adults navigating anxiety, depression, identity, and the residue of difficult early life — patient, reflective, and unhurried.',
-    forWhom: ['Anxiety', 'Depression', 'Self-worth', 'Burnout'],
-  },
-  {
-    code: '02',
-    title: 'Trauma & EMDR',
-    kind: 'Specialist · paced',
-    desc:
-      'Trauma-informed work using EMDR and somatic methods. We move only at the speed your nervous system allows — never the other way around.',
-    forWhom: ['PTSD', 'EMDR', 'Somatic work', 'Recovery'],
-  },
-  {
-    code: '03',
-    title: 'Couple & relational',
-    kind: 'Two-people work',
-    desc:
-      'Structured sessions for couple re-learning how to fight fairly, listen well, and choose each other again — even after rupture.',
-    forWhom: ['Couple', 'Conflict', 'Attachment', 'Repair'],
-  },
-  {
-    code: '04',
-    title: 'Career & meaning',
-    kind: 'Reflective work',
-    desc:
-      'Psychotherapy for professionals questioning purpose, identity, or the cost of their ambition. Clarity-focused, never prescriptive.',
-    forWhom: ['Direction', 'Meaning', 'Mid-career', 'Transition'],
-  },
-]
+interface Props {
+  services: ServiceItem[]
+}
 
-export default function Services() {
+export default function Services({ services }: Props) {
   return (
     <section
       id="services"

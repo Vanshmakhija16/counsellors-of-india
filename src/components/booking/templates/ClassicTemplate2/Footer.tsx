@@ -85,12 +85,12 @@ export default function Footer({ therapist }: FooterProps) {
           >
             © {year} {fullName.toUpperCase()} · COUNSELLORS OF INDIA
           </p>
-          <p
+          {/* <p
             className="ct2-mono"
             style={{ fontSize: 11, color: 'var(--mute)', letterSpacing: '0.14em' }}
           >
             EDITORIAL DARK · CT2
-          </p>
+          </p> */}
         </div>
       </div>
     </footer>

@@ -10,8 +10,6 @@ import {
 import Logo from '../ui/Logo'
 import { createClient } from '@/lib/supabase'
 
-// Grouped nav: first "Set up your page", then "Run your practice" — mirroring
-// the real journey from building the site to operating the practice day-to-day.
 const navGroups = [
   {
     title: 'Set up your page',
@@ -27,22 +25,25 @@ const navGroups = [
       { label: 'Dashboard',    href: '/dashboard',              icon: LayoutDashboard, match: 'exact' as const },
       { label: 'Appointments', href: '/dashboard/appointments', icon: Calendar,        match: 'exact' as const },
       { label: 'My Clients',   href: '/clinical/patients',      icon: ClipboardList,   match: 'prefix' as const },
-      // { label: 'Payments',     href: '/dashboard/payments',     icon: CreditCard,      match: 'exact' as const },
     ],
   },
 ]
 
 const upgradeItem = { label: 'Upgrade Plan', href: '/pricing', icon: CreditCard, match: 'exact' as const }
 
+// Routes that should render with no sidebar/chrome (e.g. iframe previews).
+const NO_SIDEBAR_PREFIXES = ['/dashboard/appearance/live-preview']
+
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [collapsed, setCollapsed] = useState(false)   // desktop sidebar hidden
+  const [collapsed, setCollapsed] = useState(false)
   const [gate, setGate] = useState<'checking' | 'ok'>('checking')
 
-  // Restore the desktop collapsed preference.
+  const noSidebar = NO_SIDEBAR_PREFIXES.some(p => pathname.startsWith(p))
+
   useEffect(() => {
     setCollapsed(localStorage.getItem('dash-sidebar-collapsed') === '1')
   }, [])
@@ -105,6 +106,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     )
   }
 
+  // Bare render for iframe preview routes — no sidebar, no chrome.
+  if (noSidebar) {
+    return <>{children}</>
+  }
+
   return (
     <div className="flex h-screen overflow-hidden" style={{ background: '#FFFCF8', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
 
@@ -155,7 +161,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         {/* Logo row */}
         <div className="p-5 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(31,26,20,0.08)' }}>
           <Logo size="sm" />
-          {/* Mobile: close drawer */}
           <button
             type="button"
             onClick={() => setMobileOpen(false)}
@@ -165,7 +170,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           >
             <X size={16} />
           </button>
-          {/* Desktop: collapse sidebar */}
           <button
             type="button"
             onClick={toggleCollapsed}
@@ -216,10 +220,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           ))}
 
-          {/* Divider */}
           <div className="my-3" style={{ height: '1px', background: 'rgba(31,26,20,0.07)' }} />
 
-          {/* Upgrade */}
           <Link
             href={upgradeItem.href}
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all"

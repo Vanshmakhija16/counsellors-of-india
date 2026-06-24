@@ -279,7 +279,7 @@ export const ct5Styles = `
      HERO — SPLIT EDITORIAL
   ════════════════════════════════════════════ */
   .ct5-hero {
-    min-height: 100vh;
+    min-height: clamp(520px, 75vh, 800px);
     padding-top: var(--nav-h);
     display: grid;
     grid-template-columns: 1fr 1fr;

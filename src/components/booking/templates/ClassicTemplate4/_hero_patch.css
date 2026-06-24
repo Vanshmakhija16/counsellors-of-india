@@ -1,0 +1,10 @@
+  .ct4-hero-plain {
+    position: relative;
+    height: calc(100vh - var(--nav-h));
+    background: var(--void);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: clamp(3rem, 8vh, 6rem) clamp(1.5rem, 8vw, 10rem);
+    overflow: hidden;
+  }

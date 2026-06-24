@@ -320,10 +320,12 @@ export const ct4Styles = `
 
   /* ═══════════════════════════════════════
      HERO — PLAIN CENTRED (NO PHOTO)
+     min-height uses clamp so it doesn't stretch to full viewport inside
+     iframe previews (100vh = iframe height there, not page height).
   ═══════════════════════════════════════ */
   .ct4-hero-plain {
     position: relative;
-    min-height: 100vh;
+    min-height: clamp(520px, 75vh, 800px);
     background: var(--void);
     display: flex; flex-direction: column;
     align-items: center; justify-content: center;

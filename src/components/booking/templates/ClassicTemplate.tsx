@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { TherapistProfile, getNext7Days } from './templateUtils'
+import { TherapistProfile, getNext7Days, resolveCT1Content } from './templateUtils'
 import { getOrderedSections } from '@/lib/template'
 import { globalStyles } from './ClassicTemplate/styles'
 import Navbar from './ClassicTemplate/Navbar'
@@ -22,19 +22,13 @@ interface ClassicTemplateProps {
   hiddenSections?: string[]
 }
 
-const servicesData: ServiceItem[] = [
-  { code: 'S/01', title: 'Counselling Psychology', kind: 'Individual Therapy', desc: 'One-to-one psychotherapy for adults navigating anxiety, depression, self-worth, identity, burnout, and life transitions — grounded in CBT, ACT, and somatic work.', forWhom: ['Anxiety', 'Burnout', 'Self-Esteem', 'Life Transitions'] },
-  { code: 'S/02', title: 'Relationship Counselling', kind: 'Couple & Partners', desc: 'Structured sessions for couple and partners working through communication breakdowns, attachment patterns, conflict, intimacy, and rebuilding trust.', forWhom: ['Couple', 'Communication', 'Attachment', 'Trust'] },
-  { code: 'S/03', title: 'Trauma & EMDR', kind: 'Trauma-Informed Care', desc: 'Specialist trauma work using EMDR and somatic methods, at your pace — helping you process difficult experiences while restoring safety in your body.', forWhom: ['PTSD', 'EMDR', 'Somatic', 'Recovery'] },
-  { code: 'S/04', title: 'Career & Identity', kind: 'Personal Direction', desc: 'Reflective psychotherapy for individuals questioning purpose, identity, or major career inflection points, clarity-focused and non-prescriptive.', forWhom: ['Direction', 'Meaning', 'Purpose', 'Mid-Career'] },
-]
-
-const carouselSlides = [
-  { type: 'quote', bg: 'linear-gradient(135deg, #1a2e2b 0%, #243d38 60%, #1c3330 100%)', accent: '#a8c5be', text: '"The curious paradox is that when I accept myself just as I am, then I can change."', author: '— Carl Rogers', sub: 'On becoming a person', tag: 'Guiding Philosophy' },
-  { type: 'stats', bg: 'linear-gradient(135deg, #2d1f14 0%, #3d2b1a 60%, #2a1c10 100%)', accent: '#c9a97a', headline: 'Proven Results', stats: [{ val: '94%', label: 'Report reduced anxiety after 8 sessions' }, { val: '87%', label: 'Clients return for continued growth' }, { val: '500+', label: 'Sessions delivered across 6 countries' }], tag: 'By The Numbers' },
-  { type: 'process', bg: 'linear-gradient(135deg, #1e1e2e 0%, #262636 60%, #1a1a28 100%)', accent: '#9b8ec4', headline: 'How We Work Together', steps: [{ n: '01', t: 'Free Consultation', d: 'A 20-min call to understand your needs and answer your questions.' }, { n: '02', t: 'Tailored Plan', d: 'We co-create a therapy approach matched to your goals.' }, { n: '03', t: 'Weekly Sessions', d: 'Consistent, focused 50-minute sessions online or in-person.' }], tag: 'The Process' },
-  { type: 'quote', bg: 'linear-gradient(135deg, #1f2a1f 0%, #293829 60%, #1c2b1c 100%)', accent: '#8ab89a', text: "\"You don't have to see the whole staircase. Just take the first step.\"", author: '— Martin Luther King Jr.', sub: 'On courage and beginnings', tag: 'Words of Courage' },
-  { type: 'testimonial', bg: 'linear-gradient(135deg, #1f2430 0%, #29303f 60%, #1a1f2a 100%)', accent: '#7a9fc4', quote: '"I came in feeling completely lost. Six months later I have language for my feelings, tools for hard days, and a relationship with myself I never thought possible."', name: 'Karan M.', role: 'Client — 2024', tag: 'Client Stories' },
+// Hardcoded carousel slide backgrounds/accents (visual only, not editable)
+const SLIDE_STYLES = [
+  { bg: 'linear-gradient(135deg, #1a2e2b 0%, #243d38 60%, #1c3330 100%)', accent: '#a8c5be' },
+  { bg: 'linear-gradient(135deg, #2d1f14 0%, #3d2b1a 60%, #2a1c10 100%)', accent: '#c9a97a' },
+  { bg: 'linear-gradient(135deg, #1e1e2e 0%, #262636 60%, #1a1a28 100%)', accent: '#9b8ec4' },
+  { bg: 'linear-gradient(135deg, #1f2a1f 0%, #293829 60%, #1c2b1c 100%)', accent: '#8ab89a' },
+  { bg: 'linear-gradient(135deg, #1f2430 0%, #29303f 60%, #1a1f2a 100%)', accent: '#7a9fc4' },
 ]
 
 export default function ClassicTemplate({ therapist, bookedTimes = [], feedbacks = [], hiddenSections = [] }: ClassicTemplateProps) {
@@ -43,9 +37,31 @@ export default function ClassicTemplate({ therapist, bookedTimes = [], feedbacks
   const days = getNext7Days()
   const rootRef = useRef<HTMLDivElement | null>(null)
 
+  // ── Resolve saved content from profile_content ──────────────────────────
+  // resolveCT1Content falls back to defaults only when the field is undefined/null
+  // (never set), but respects [] as intentional empty (Array.isArray check).
+  const ct1 = resolveCT1Content((therapist.profile_content as any)?.classic)
+
+  // Map CT1 services → ServiceItem shape the Services component expects
+  const servicesData: ServiceItem[] = ct1.services.map((s, i) => ({
+    code:    s.code ?? `S/${String(i + 1).padStart(2, '0')}`,
+    title:   s.name,
+    kind:    s.kind ?? '',
+    desc:    s.desc,
+    forWhom: s.forWhom ?? [],
+    price:   s.price,
+  }))
+
+  // Map CT1 carousel slides → the shape Carousel expects, merging visual styles
+  const carouselSlides = ct1.carousel.map((slide, i) => ({
+    ...slide,
+    ...(SLIDE_STYLES[i % SLIDE_STYLES.length]),
+  }))
+
+  const baseSlides = carouselSlides.length > 0 ? carouselSlides : []
   const slides = therapist.specialties && therapist.specialties.length > 0
-    ? [...carouselSlides, { type: 'specialties', bg: 'linear-gradient(135deg, #2a1f1f 0%, #3a2929 60%, #251a1a 100%)', accent: '#c49090', headline: 'Areas of Focus', items: therapist.specialties, tag: 'Specialties' }]
-    : carouselSlides
+    ? [...baseSlides, { type: 'specialties', bg: 'linear-gradient(135deg, #2a1f1f 0%, #3a2929 60%, #251a1a 100%)', accent: '#c49090', headline: 'Areas of Focus', items: therapist.specialties, tag: 'Specialties' }]
+    : baseSlides
 
   const [scrolled, setScrolled] = useState(false)
   const [heroLoaded, setHeroLoaded] = useState(false)
@@ -145,8 +161,6 @@ export default function ClassicTemplate({ therapist, bookedTimes = [], feedbacks
       const targetRect = target.getBoundingClientRect()
       scrollParent.scrollBy({ top: targetRect.top - parentRect.top - 20, behavior: 'smooth' })
     } else {
-      // Scroll only THIS document's own window — never asks a parent (e.g. the
-      // live-preview iframe's host page) to scroll the iframe into view.
       const y = target.getBoundingClientRect().top + window.scrollY - 20
       window.scrollTo({ top: y, behavior: 'smooth' })
     }
@@ -159,9 +173,6 @@ export default function ClassicTemplate({ therapist, bookedTimes = [], feedbacks
 
   const slide = slides[carouselIndex] ?? slides[0]
 
-  // Each entry of TEMPLATE_SECTIONS['classic'] maps to one of these elements.
-  // Built as a lookup (not inlined JSX) so the actual render order can come
-  // from `orderedIds`, while every section keeps its full original props.
   const sectionEls: Record<string, React.ReactNode> = {
     hero: <Hero key="hero" therapist={therapist} heroLoaded={heroLoaded} heroRef={heroRef} />,
     about: <About key="about" therapist={therapist} days={days} />,
