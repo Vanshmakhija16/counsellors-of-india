@@ -21,27 +21,22 @@ interface ClassicTemplate2Props {
 }
 
 export default function ClassicTemplate2({ therapist, bookedTimes = [], hiddenSections = [] }: ClassicTemplate2Props) {
-  const show = (id: string) => !hiddenSections.includes(id)
   const orderedIds = getOrderedSections('classic2', therapist.section_order, hiddenSections).map(s => s.id)
   const [scrolled, setScrolled] = useState(false)
   const [heroLoaded, setHeroLoaded] = useState(false)
   const heroRef = useRef<HTMLElement | null>(null)
 
-  // ── Resolve saved content from profile_content ──────────────────────────
+  // Resolve real saved content — falls back to defaults only if never set
   const ct2 = resolveCT2Content((therapist.profile_content as any)?.classic2)
 
-  // Map CT2 services → ServiceItem shape the Services component expects
-  const servicesData = ct2.services.map((s, i) => ({
+  // Map EditableService → ServiceItem shape CT2/Services expects
+  const services = ct2.services.map((s, i) => ({
     code:    s.code ?? String(i + 1).padStart(2, '0'),
     title:   s.name,
     kind:    s.kind ?? '',
     desc:    s.desc,
     forWhom: s.forWhom ?? [],
   }))
-
-  const insightsData = ct2.insights
-
-  const faqData = ct2.faq.map(f => ({ q: f.q, a: f.a }))
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 24)
@@ -68,13 +63,13 @@ export default function ClassicTemplate2({ therapist, bookedTimes = [], hiddenSe
       <Navbar scrolled={scrolled} scrollTo={scrollTo} therapist={therapist} />
       {orderedIds.map(id => {
         switch (id) {
-          case 'hero':     return <Hero key={id} therapist={therapist} heroLoaded={heroLoaded} heroRef={heroRef} />
-          case 'about':    return <About key={id} therapist={therapist} />
-          case 'services': return <Services key={id} services={servicesData} />
-          case 'insights': return <Insights key={id} insights={insightsData} />
-          case 'booking':  return <Booking key={id} therapist={therapist} bookedTimes={bookedTimes} />
-          case 'faq':      return <FAQ key={id} faqs={faqData} />
-          case 'footer':   return <Footer key={id} therapist={therapist} />
+          case 'hero':     return <Hero     key={id} therapist={therapist} heroLoaded={heroLoaded} heroRef={heroRef} />
+          case 'about':    return <About    key={id} therapist={therapist} />
+          case 'services': return <Services key={id} services={services} />
+          case 'insights': return <Insights key={id} insights={ct2.insights} />
+          case 'booking':  return <Booking  key={id} therapist={therapist} bookedTimes={bookedTimes} />
+          case 'faq':      return <FAQ      key={id} faqs={ct2.faq} />
+          case 'footer':   return <Footer   key={id} therapist={therapist} />
           default: return null
         }
       })}

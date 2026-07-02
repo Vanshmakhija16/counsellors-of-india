@@ -103,6 +103,10 @@ export default function SettingsPage() {
     session_mode: 'both',
     specialties: [] as string[],
     languages: ['English'] as string[],
+    instagram: '',
+    linkedin: '',
+    whatsapp: '',
+    website: '',
   })
 
   // City/State are chosen via dropdowns; the combined "City, State" is stored
@@ -144,6 +148,10 @@ export default function SettingsPage() {
       session_mode:          therapist.session_mode ?? 'both',
       specialties:           therapist.specialties ?? [],
       languages:             therapist.languages ?? ['English'],
+      instagram:             therapist.instagram ?? '',
+      linkedin:              therapist.linkedin ?? '',
+      whatsapp:              therapist.whatsapp ?? '',
+      website:               therapist.website ?? '',
     })
     setPhotoPreview(therapist.photo_url ?? null)
 
@@ -297,6 +305,10 @@ export default function SettingsPage() {
           session_mode:          form.session_mode,
           specialties:           form.specialties,
           languages:             form.languages,
+          instagram:             form.instagram || null,
+          linkedin:              form.linkedin || null,
+          whatsapp:              form.whatsapp || null,
+          website:               form.website || null,
           photo_url,
           is_profile_complete:   true,
         })
@@ -728,6 +740,73 @@ export default function SettingsPage() {
               Add
             </button>
           </div>
+        </div>
+
+        {/* Social Media Links */}
+        <div>
+          <label className="block text-sm font-medium text-[#6b7280] mb-3">
+            Social & contact links
+          </label>
+          <div className="space-y-3">
+
+            {/* Instagram */}
+            <div className="flex items-center gap-3 h-11 px-4 rounded-lg border border-[#e8e4df] bg-white focus-within:ring-2 focus-within:ring-[#FF9933] focus-within:border-transparent transition">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E1306C" strokeWidth="1.8" className="shrink-0">
+                <rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/>
+              </svg>
+              <input
+                value={form.instagram}
+                onChange={e => setForm({ ...form, instagram: e.target.value })}
+                placeholder="instagram.com/yourhandle or @handle"
+                className="flex-1 text-sm text-[#1c1c1e] placeholder-[#9ca3af] bg-transparent outline-none"
+              />
+            </div>
+
+            {/* LinkedIn */}
+            <div className="flex items-center gap-3 h-11 px-4 rounded-lg border border-[#e8e4df] bg-white focus-within:ring-2 focus-within:ring-[#FF9933] focus-within:border-transparent transition">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="#0077B5" className="shrink-0">
+                <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/>
+                <rect x="2" y="9" width="4" height="12"/>
+                <circle cx="4" cy="4" r="2"/>
+              </svg>
+              <input
+                value={form.linkedin}
+                onChange={e => setForm({ ...form, linkedin: e.target.value })}
+                placeholder="linkedin.com/in/yourprofile"
+                className="flex-1 text-sm text-[#1c1c1e] placeholder-[#9ca3af] bg-transparent outline-none"
+              />
+            </div>
+
+            {/* WhatsApp */}
+            <div className="flex items-center gap-3 h-11 px-4 rounded-lg border border-[#e8e4df] bg-white focus-within:ring-2 focus-within:ring-[#FF9933] focus-within:border-transparent transition">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="#25D366" className="shrink-0">
+                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347"/>
+              </svg>
+              <input
+                value={form.whatsapp}
+                onChange={e => setForm({ ...form, whatsapp: e.target.value })}
+                placeholder="+91 98765 43210"
+                className="flex-1 text-sm text-[#1c1c1e] placeholder-[#9ca3af] bg-transparent outline-none"
+              />
+            </div>
+
+            {/* Website */}
+            <div className="flex items-center gap-3 h-11 px-4 rounded-lg border border-[#e8e4df] bg-white focus-within:ring-2 focus-within:ring-[#FF9933] focus-within:border-transparent transition">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280" strokeWidth="1.8" className="shrink-0">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="2" y1="12" x2="22" y2="12"/>
+                <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+              </svg>
+              <input
+                value={form.website}
+                onChange={e => setForm({ ...form, website: e.target.value })}
+                placeholder="https://yourwebsite.com"
+                className="flex-1 text-sm text-[#1c1c1e] placeholder-[#9ca3af] bg-transparent outline-none"
+              />
+            </div>
+
+          </div>
+          <p className="text-xs text-[#9ca3af] mt-2">These appear in the footer of your public profile page.</p>
         </div>
 
         {/* Error */}

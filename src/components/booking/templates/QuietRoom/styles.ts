@@ -68,16 +68,16 @@ export const quietRoomStyles = `
   width: 60vw; height: 60vw; max-width: 720px; max-height: 720px;
   border-radius: 45% 55% 52% 48% / 50% 46% 54% 50%;
   background: radial-gradient(circle at 42% 38%,
-    rgba(199, 154, 61, 0.55) 0%,
-    rgba(199, 154, 61, 0.28) 28%,
-    rgba(139, 79, 82, 0.12) 52%,
+    rgba(199, 154, 61, 0.30) 0%,
+    rgba(199, 154, 61, 0.14) 28%,
+    rgba(139, 79, 82, 0.06) 52%,
     transparent 72%);
   filter: blur(34px);
-  opacity: 0.2;
+  opacity: 0.1;
   will-change: transform, opacity;
 }
 /* Static fallback strength when JS / motion is off. */
-.qr-window--static { opacity: 0.16; }
+.qr-window--static { opacity: 0.08; }
 
 /* ── Primary CTA ── */
 .qr-cta {

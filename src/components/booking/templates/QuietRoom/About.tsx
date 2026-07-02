@@ -112,7 +112,7 @@ export default function About({ therapist }: AboutProps) {
             ))}
           </div>
           <p className="qr-about-philosophy">
-            {therapist.approach_text?.trim() || 'No pressure, no performance — just two people, working honestly, one session at a time.'}
+            {therapist.approach_text?.trim() || 'No pressure, no performance just two people, working honestly, one session at a time.'}
           </p>
 
           <div className="qr-about-creds qr-mono">
@@ -125,7 +125,7 @@ export default function About({ therapist }: AboutProps) {
           </div>
         </div>
 
-        <div className="qr-about-photo" ref={photoRef}>
+        <div className="qr-about-photo" ref={photoRef} style={{ borderRadius: '50%', overflow: 'hidden', aspectRatio: '1/1', marginTop: '48px' }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={resolveImage(therapist.image)} alt={therapist.name} />
         </div>

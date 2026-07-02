@@ -312,26 +312,56 @@ export default function AppearancePage() {
         )}
       </div>
 
-      {/* ── Full-width live preview ────────────────────────────────────── */}
-      <div className="px-4 sm:px-8 py-4">
-        <div className="rounded-2xl overflow-hidden shadow-sm border border-[#ede9e4]">
-          <TemplateLiveSwitcher
-            selectedTemplate={selectedTemplate}
-            committedTemplate={committedTemplate}
-            isLocked={isTemplateLocked}
-            lockDateLabel={lockDateLabel}
-            brandColor={BRAND}
-            onSelect={(id) => handleTemplateClick(TEMPLATES.find(t => t.id === id)!)}
-            onLockedAttempt={(id) => setLockedTemplate(id)}
-            active={previewTemplate}
-            onActiveChange={setPreviewTemplate}
-            hideTabs
-            hideActionBar
-            hideArrows
-            frameHeight={680}
-            profileContent={profileContent as Record<string, unknown>}
-          />
+      {/* ── Template sidebar + Live preview ────────────────────────── */}
+      <div className="px-4 sm:px-8 py-4 flex gap-4 items-start">
+
+        {/* LEFT — template name list */}
+        <div className="hidden sm:flex flex-col gap-1 w-44 shrink-0 bg-white rounded-2xl border border-[#ede9e4] p-2">
+          <p className="text-[10px] font-semibold text-[#9ca3af] uppercase tracking-wider px-2 pt-1 pb-0.5">Templates</p>
+          {TEMPLATES.map((t, i) => {
+            const isActive    = previewTemplate === t.id
+            const isCommitted = t.id === committedTemplate
+            return (
+              <button
+                key={t.id}
+                onClick={() => setPreviewTemplate(t.id)}
+                className="flex items-center justify-between gap-1.5 px-2.5 py-2.5 rounded-xl text-xs font-semibold transition text-left w-full"
+                style={isActive
+                  ? { background: BRAND, color: '#fff' }
+                  : { color: '#6b7280', background: 'transparent' }}
+              >
+                <span className="flex items-center gap-2">
+                  <span className={`text-[10px] tabular-nums ${isActive ? 'opacity-60' : 'opacity-40'}`}>{String(i + 1).padStart(2, '0')}</span>
+                  <span className="leading-tight">{t.name}</span>
+                </span>
+                {isCommitted && <Check size={11} className={isActive ? 'text-white' : 'text-emerald-500'} />}
+              </button>
+            )
+          })}
         </div>
+
+        {/* RIGHT — iframe preview only */}
+        <div className="flex-1 min-w-0">
+          <div className="rounded-2xl overflow-hidden shadow-sm border border-[#ede9e4]">
+            <TemplateLiveSwitcher
+              selectedTemplate={selectedTemplate}
+              committedTemplate={committedTemplate}
+              isLocked={isTemplateLocked}
+              lockDateLabel={lockDateLabel}
+              brandColor={BRAND}
+              onSelect={(id) => handleTemplateClick(TEMPLATES.find(t => t.id === id)!)}
+              onLockedAttempt={(id) => setLockedTemplate(id)}
+              active={previewTemplate}
+              onActiveChange={setPreviewTemplate}
+              hideTabs
+              hideActionBar
+              hideArrows
+              frameHeight={400}
+              profileContent={profileContent as Record<string, unknown>}
+            />
+          </div>
+        </div>
+
       </div>
 
       {/* ── Slide-in Edit drawer (right side) ─────────────────────────────────── */}

@@ -1,94 +1,80 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
-  LayoutDashboard, Calendar, Settings, LogOut, Clock, Palette,
-  ClipboardList, Menu, X, CreditCard, PanelLeftClose, PanelLeft,
+  LayoutDashboard, Calendar, Settings, LogOut,
+  Clock, Palette, ClipboardList, CreditCard,
+  ChevronDown, ExternalLink, User, Zap,
 } from 'lucide-react'
 import Logo from '../ui/Logo'
 import { createClient } from '@/lib/supabase'
 
-const navGroups = [
-  {
-    title: 'Set up your page',
-    items: [
-      { label: 'Templates',    href: '/dashboard/appearance',   icon: Palette,   match: 'exact' as const },
-      { label: 'Profile',      href: '/dashboard/settings',     icon: Settings,  match: 'exact' as const },
-      { label: 'Availability', href: '/dashboard/availability', icon: Clock,     match: 'exact' as const },
-    ],
-  },
-  {
-    title: 'Run your practice',
-    items: [
-      { label: 'Dashboard',    href: '/dashboard',              icon: LayoutDashboard, match: 'exact' as const },
-      { label: 'Appointments', href: '/dashboard/appointments', icon: Calendar,        match: 'exact' as const },
-      { label: 'My Clients',   href: '/clinical/patients',      icon: ClipboardList,   match: 'prefix' as const },
-    ],
-  },
+const navItems = [
+  { label: 'Dashboard',    href: '/dashboard',              icon: LayoutDashboard, match: 'exact'  as const },
+  { label: 'Templates',    href: '/dashboard/appearance',   icon: Palette,         match: 'exact'  as const },
+  { label: 'Profile',      href: '/dashboard/settings',     icon: Settings,        match: 'exact'  as const },
+  { label: 'Availability', href: '/dashboard/availability', icon: Clock,           match: 'exact'  as const },
+  { label: 'Appointments', href: '/dashboard/appointments', icon: Calendar,        match: 'exact'  as const },
+  { label: 'My Clients',   href: '/clinical/patients',      icon: ClipboardList,   match: 'prefix' as const },
 ]
 
-const upgradeItem = { label: 'Upgrade Plan', href: '/pricing', icon: CreditCard, match: 'exact' as const }
-
-// Routes that should render with no sidebar/chrome (e.g. iframe previews).
-const NO_SIDEBAR_PREFIXES = ['/dashboard/appearance/live-preview']
+const NO_NAV_PREFIXES = ['/dashboard/appearance/live-preview']
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname()
-  const router = useRouter()
-  const supabase = createClient()
-  const [mobileOpen, setMobileOpen] = useState(false)
-  const [collapsed, setCollapsed] = useState(false)
-  const [gate, setGate] = useState<'checking' | 'ok'>('checking')
+  const pathname  = usePathname()
+  const router    = useRouter()
+  const supabase  = createClient()
 
-  const noSidebar = NO_SIDEBAR_PREFIXES.some(p => pathname.startsWith(p))
+  const [gate,        setGate]        = useState<'checking' | 'ok'>('checking')
+  const [profileOpen, setProfileOpen] = useState(false)
+  const [therapist,   setTherapist]   = useState<{
+    full_name?: string; username?: string; plan?: string
+  } | null>(null)
+  const dropdownRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    setCollapsed(localStorage.getItem('dash-sidebar-collapsed') === '1')
-  }, [])
+  const noNav = NO_NAV_PREFIXES.some(p => pathname.startsWith(p))
 
-  function toggleCollapsed() {
-    setCollapsed(prev => {
-      const next = !prev
-      localStorage.setItem('dash-sidebar-collapsed', next ? '1' : '0')
-      return next
-    })
-  }
-
+  /* ── Auth gate ─────────────────────────────────────────────────── */
   useEffect(() => {
     let alive = true
     ;(async () => {
-      const { data: { user } } = await supabase.auth.getUser()
+      const { data: { user }, error: userErr } = await supabase.auth.getUser()
+      console.log('[DEBUG dashboard-gate] getUser', { userId: user?.id, userErr })
       if (!alive) return
       if (!user) { router.replace('/login?redirect=' + encodeURIComponent(pathname)); return }
-      const { data } = await supabase.from('therapists').select('plan').eq('id', user.id).maybeSingle()
+      const { data, error: planErr } = await supabase
+        .from('therapists')
+        .select('plan, full_name, username')
+        .eq('id', user.id)
+        .maybeSingle()
+      console.log('[DEBUG dashboard-gate] plan query', { data, planErr })
       if (!alive) return
-      const plan = data?.plan
+      const plan    = data?.plan
       const hasPlan = !!plan && !['none', 'free', ''].includes(plan)
-      if (hasPlan) {
-        setGate('ok')
-      } else {
-        router.replace('/pricing?redirect=' + encodeURIComponent(pathname))
-      }
+      console.log('[DEBUG dashboard-gate] result', { plan, hasPlan })
+      if (hasPlan) { setTherapist(data); setGate('ok') }
+      else router.replace('/pricing?redirect=' + encodeURIComponent(pathname))
     })()
     return () => { alive = false }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  useEffect(() => { setMobileOpen(false) }, [pathname])
-
+  /* ── Close dropdown on outside click ──────────────────────────── */
   useEffect(() => {
-    if (mobileOpen) {
-      const prev = document.body.style.overflow
-      document.body.style.overflow = 'hidden'
-      return () => { document.body.style.overflow = prev }
+    function handle(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node))
+        setProfileOpen(false)
     }
-  }, [mobileOpen])
+    document.addEventListener('mousedown', handle)
+    return () => document.removeEventListener('mousedown', handle)
+  }, [])
+
+  useEffect(() => { setProfileOpen(false) }, [pathname])
 
   async function handleLogout() {
-    const { error } = await supabase.auth.signOut()
-    if (error) { console.error('Logout failed:', error.message); return }
+    await supabase.auth.signOut()
     router.push('/login')
   }
 
@@ -98,182 +84,232 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       : pathname === href
   }
 
-  if (gate === 'checking') {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#FFFCF8' }}>
-        <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#FF9933', borderTopColor: 'transparent' }} />
-      </div>
-    )
-  }
+  /* ── Loading spinner ───────────────────────────────────────────── */
+  if (gate === 'checking') return (
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#FFFCF8' }}>
+      <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"
+        style={{ borderColor: '#FF9933', borderTopColor: 'transparent' }} />
+    </div>
+  )
 
-  // Bare render for iframe preview routes — no sidebar, no chrome.
-  if (noSidebar) {
-    return <>{children}</>
-  }
+  if (noNav) return <>{children}</>
+
+  /* ── Derived display values ────────────────────────────────────── */
+  const firstName = therapist?.full_name?.trim().split(/\s+/)[0] ?? 'Account'
+  const initials  = therapist?.full_name
+    ? therapist.full_name.trim().split(/\s+/).map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
+    : '?'
+  const planLabel = ({ growth: 'Growth', pro: 'Pro' } as Record<string, string>)[therapist?.plan ?? ''] ?? 'Starter'
+  const isPro     = ['growth', 'pro'].includes(therapist?.plan ?? '')
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ background: '#FFFCF8', fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}>
-
-      {/* ── Mobile top bar ───────────────────────────────────────── */}
+    <div
+      className="min-h-screen flex flex-col"
+      style={{ background: '#FFFCF8', fontFamily: "'Plus Jakarta Sans','Inter',system-ui,sans-serif" }}
+    >
+      {/* ════════════════════════════════════════════════════════════
+          NAVBAR
+      ════════════════════════════════════════════════════════════ */}
       <header
-        className="lg:hidden fixed top-0 inset-x-0 z-30 h-14 flex items-center justify-between px-4"
-        style={{ background: '#ffffff', borderBottom: '1px solid rgba(31,26,20,0.08)' }}
-      >
-        <button
-          type="button"
-          onClick={() => setMobileOpen(true)}
-          aria-label="Open menu"
-          className="h-9 w-9 rounded-lg flex items-center justify-center transition"
-          style={{ color: '#46403A' }}
-        >
-          <Menu size={20} />
-        </button>
-        <Logo size="sm" />
-        <div className="w-9" />
-      </header>
-
-      {/* ── Backdrop ─────────────────────────────────────────────── */}
-      {mobileOpen && (
-        <button
-          type="button"
-          aria-label="Close menu"
-          onClick={() => setMobileOpen(false)}
-          className="lg:hidden fixed inset-0 z-40"
-          style={{ background: 'rgba(20,17,12,0.45)' }}
-        />
-      )}
-
-      {/* ── Sidebar ──────────────────────────────────────────────── */}
-      <aside
-        className={`
-          flex flex-col shrink-0
-          fixed inset-y-0 left-0 z-50 w-64
-          transform transition-transform duration-200 ease-out
-          ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}
-          lg:static lg:translate-x-0 lg:w-60
-          ${collapsed ? 'lg:hidden' : ''}
-        `}
+        className="sticky top-0 z-40 w-full"
         style={{
-          background: '#ffffff',
-          borderRight: '1px solid rgba(31,26,20,0.08)',
+          background:   'rgba(255,255,255,0.92)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(31,26,20,0.07)',
         }}
       >
-        {/* Logo row */}
-        <div className="p-5 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(31,26,20,0.08)' }}>
-          <Logo size="sm" />
-          <button
-            type="button"
-            onClick={() => setMobileOpen(false)}
-            aria-label="Close menu"
-            className="lg:hidden h-8 w-8 rounded-lg flex items-center justify-center transition"
-            style={{ color: '#7A7166' }}
-          >
-            <X size={16} />
-          </button>
-          <button
-            type="button"
-            onClick={toggleCollapsed}
-            aria-label="Collapse sidebar"
-            title="Collapse sidebar"
-            className="hidden lg:flex h-8 w-8 rounded-lg items-center justify-center transition hover:bg-[#FDF5EC]"
-            style={{ color: '#7A7166' }}
-          >
-            <PanelLeftClose size={17} />
-          </button>
-        </div>
+        {/* Inner row — same max-width as page content */}
+        <div className="mx-auto flex items-center h-16 px-5 sm:px-8 max-w-6xl gap-5">
 
-        {/* Nav */}
-        <nav className="flex-1 py-4 px-3 overflow-y-auto">
-          {navGroups.map((group, gi) => (
-            <div key={group.title} className={gi > 0 ? 'mt-5' : ''}>
-              <p
-                className="px-3 mb-1.5 text-[10px] font-bold uppercase tracking-wider"
-                style={{ color: '#B3A998' }}
-              >
-                {group.title}
-              </p>
-              <div className="space-y-0.5">
-                {group.items.map(({ label, href, icon: Icon, match }) => {
-                  const active = isActive(href, match)
-                  return (
-                    <Link
-                      key={href}
-                      href={href}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all"
-                      style={active ? {
-                        background: 'rgba(255,153,51,0.10)',
-                        color: '#C46800',
-                        borderLeft: '3px solid #FF9933',
-                        paddingLeft: '9px',
-                      } : {
-                        color: '#7A7166',
-                        borderLeft: '3px solid transparent',
-                        paddingLeft: '9px',
-                      }}
-                    >
-                      <Icon size={17} />
-                      {label}
-                    </Link>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-
-          <div className="my-3" style={{ height: '1px', background: 'rgba(31,26,20,0.07)' }} />
-
-          <Link
-            href={upgradeItem.href}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all"
-            style={{
-              background: 'rgba(255,153,51,0.07)',
-              color: '#E07A12',
-              border: '1px solid rgba(255,153,51,0.22)',
-            }}
-          >
-            <upgradeItem.icon size={17} />
-            {upgradeItem.label}
+          {/* Logo */}
+          <Link href="/dashboard" className="shrink-0">
+            <Logo size="sm" />
           </Link>
-        </nav>
 
-        {/* Logout */}
-        <div className="p-3" style={{ borderTop: '1px solid rgba(31,26,20,0.08)' }}>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold w-full transition-all"
-            style={{ color: '#7A7166', background: 'transparent' }}
-            onMouseEnter={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = '#FDF5EC'
-              ;(e.currentTarget as HTMLButtonElement).style.color = '#C46800'
-            }}
-            onMouseLeave={e => {
-              (e.currentTarget as HTMLButtonElement).style.background = 'transparent'
-              ;(e.currentTarget as HTMLButtonElement).style.color = '#7A7166'
-            }}
-          >
-            <LogOut size={17} />
-            Log out
-          </button>
+          {/* Divider */}
+          <div className="hidden sm:block w-px h-5 shrink-0" style={{ background: 'rgba(31,26,20,0.10)' }} />
+
+          {/* ── Nav links ─────────────────────────────────────── */}
+          <nav className="flex-1 flex items-center gap-0.5 overflow-x-auto scrollbar-none min-w-0">
+            {navItems.map(({ label, href, icon: Icon, match }) => {
+              const active = isActive(href, match)
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  className="relative flex items-center gap-2 px-3 h-10 rounded-xl text-[13px] font-semibold whitespace-nowrap transition-all duration-150 shrink-0 group"
+                  style={active
+                    ? { background: 'rgba(255,153,51,0.10)', color: '#C46800' }
+                    : { color: '#6b6560' }
+                  }
+                >
+                  <Icon
+                    size={14}
+                    strokeWidth={active ? 2.3 : 1.9}
+                    style={{ flexShrink: 0 }}
+                  />
+                  <span className="hidden sm:inline">{label}</span>
+
+                  {/* Active underline dot */}
+                  {active && (
+                    <span
+                      className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
+                      style={{ background: '#FF9933' }}
+                    />
+                  )}
+                </Link>
+              )
+            })}
+          </nav>
+
+          {/* ── Right cluster ─────────────────────────────────── */}
+          <div className="flex items-center gap-2 shrink-0 ml-auto">
+
+            {/* View live site — desktop */}
+            {therapist?.username && (
+              <a
+                href={`/${therapist.username}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hidden md:flex items-center gap-1.5 h-9 px-3.5 rounded-xl text-[12px] font-semibold transition-all duration-150 hover:bg-[#f5f3f0]"
+                style={{ color: '#7A7166', border: '1px solid rgba(31,26,20,0.09)' }}
+              >
+                <ExternalLink size={12} />
+                My site
+              </a>
+            )}
+
+            {/* Upgrade — only shown for non-pro users */}
+            {!isPro && (
+              <Link
+                href="/pricing"
+                className="hidden sm:flex items-center gap-1.5 h-9 px-3.5 rounded-xl text-[12px] font-bold transition-all duration-150 hover:brightness-95"
+                style={{
+                  background: 'rgba(255,153,51,0.09)',
+                  color:      '#C46800',
+                  border:     '1px solid rgba(255,153,51,0.22)',
+                }}
+              >
+                <Zap size={12} />
+                Upgrade
+              </Link>
+            )}
+
+            {/* ── Profile pill / dropdown ──────────────────────── */}
+            <div className="relative" ref={dropdownRef}>
+              <button
+                onClick={() => setProfileOpen(o => !o)}
+                className="flex items-center gap-2.5 h-10 pl-1.5 pr-3 rounded-xl transition-all duration-150"
+                style={{
+                  border:     '1px solid rgba(31,26,20,0.09)',
+                  background: profileOpen ? '#FDF5EC' : 'rgba(255,255,255,0.8)',
+                }}
+              >
+                {/* Avatar circle */}
+                <span
+                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold text-white shrink-0 select-none"
+                  style={{ background: 'linear-gradient(135deg,#FF9933,#E07A12)' }}
+                >
+                  {initials}
+                </span>
+
+                {/* Name */}
+                <span className="hidden sm:block text-[13px] font-semibold max-w-[72px] truncate" style={{ color: '#2d2926' }}>
+                  {firstName}
+                </span>
+
+                <ChevronDown
+                  size={13}
+                  className="transition-transform duration-200"
+                  style={{ color: '#B3A998', transform: profileOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
+                />
+              </button>
+
+              {/* ── Dropdown ──────────────────────────────────── */}
+              {profileOpen && (
+                <div
+                  className="absolute right-0 top-full mt-2 w-56 rounded-2xl overflow-hidden shadow-2xl"
+                  style={{
+                    background:  '#fff',
+                    border:      '1px solid rgba(31,26,20,0.08)',
+                    boxShadow:   '0 8px 32px rgba(31,26,20,0.12), 0 2px 8px rgba(31,26,20,0.06)',
+                  }}
+                >
+                  {/* Identity block */}
+                  <div className="px-4 py-3.5" style={{ borderBottom: '1px solid rgba(31,26,20,0.07)' }}>
+                    <p className="text-[13px] font-bold truncate" style={{ color: '#1c1c1e' }}>
+                      {therapist?.full_name ?? 'Your account'}
+                    </p>
+                    <span
+                      className="inline-flex items-center gap-1 mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full"
+                      style={{ background: 'rgba(255,153,51,0.12)', color: '#C46800' }}
+                    >
+                      {planLabel} plan
+                    </span>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="p-1.5 space-y-px">
+                    {[
+                      { label: 'Edit profile', href: '/dashboard/settings', icon: User },
+                      ...(therapist?.username
+                        ? [{ label: 'View my site', href: `/${therapist.username}`, icon: ExternalLink, external: true }]
+                        : []),
+                      ...(!isPro ? [{ label: 'Upgrade plan', href: '/pricing', icon: Zap }] : []),
+                      ...(!isPro ? [] : []),
+                    ].map(item => (
+                      item.external ? (
+                        <a
+                          key={item.label}
+                          href={item.href}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-colors hover:bg-[#FDF5EC] w-full"
+                          style={{ color: '#46403A' }}
+                        >
+                          <item.icon size={14} style={{ color: '#B3A998' }} />
+                          {item.label}
+                        </a>
+                      ) : (
+                        <Link
+                          key={item.label}
+                          href={item.href}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-colors hover:bg-[#FDF5EC] w-full"
+                          style={{ color: '#46403A' }}
+                        >
+                          <item.icon size={14} style={{ color: '#B3A998' }} />
+                          {item.label}
+                        </Link>
+                      )
+                    ))}
+                  </div>
+
+                  {/* Logout — red, separated */}
+                  <div className="p-1.5" style={{ borderTop: '1px solid rgba(31,26,20,0.07)' }}>
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium w-full text-left transition-colors hover:bg-red-50"
+                      style={{ color: '#b91c1c' }}
+                    >
+                      <LogOut size={14} style={{ color: '#b91c1c' }} />
+                      Log out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
-      </aside>
+      </header>
 
-      {/* ── Reopen button (desktop, when collapsed) ──────────────── */}
-      {collapsed && (
-        <button
-          type="button"
-          onClick={toggleCollapsed}
-          aria-label="Open sidebar"
-          title="Open sidebar"
-          className="hidden lg:flex fixed top-4 left-4 z-40 h-9 w-9 rounded-lg items-center justify-center shadow-sm transition hover:bg-[#FDF5EC]"
-          style={{ background: '#ffffff', border: '1px solid rgba(31,26,20,0.08)', color: '#46403A' }}
-        >
-          <PanelLeft size={18} />
-        </button>
-      )}
-
-      {/* ── Main content ─────────────────────────────────────────── */}
-      <main className={`flex-1 overflow-y-auto pt-14 lg:pt-0 ${collapsed ? 'lg:pl-16' : ''}`}>
-        {children}
+      {/* ════════════════════════════════════════════════════════════
+          PAGE CONTENT — centred, max-width matches navbar
+      ════════════════════════════════════════════════════════════ */}
+      <main className="flex-1 w-full">
+        <div className="mx-auto max-w-6xl px-5 sm:px-8 py-8">
+          {children}
+        </div>
       </main>
     </div>
   )

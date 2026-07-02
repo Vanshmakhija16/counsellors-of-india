@@ -96,16 +96,24 @@ export default async function TherapistPublicPage({
   const candidates = [...new Set([raw, raw.replace(/^@+/, ''), `@${raw.replace(/^@+/, '')}`])]
 
   let therapist = null
+  let lastError: any = null
   for (const candidate of candidates) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('therapists')
       .select('*')
       .eq('username', candidate)
       .maybeSingle()
+    if (error) lastError = error
     if (data) { therapist = data; break }
   }
 
+  console.log('[DEBUG /[username]]', { raw, candidates, found: !!therapist, error: lastError })
+
   if (!therapist) notFound()
+
+  // ── Determine if the logged-in visitor is this profile's owner ──────────
+  const { data: { user } } = await supabase.auth.getUser()
+  const isOwner = !!user && user.id === therapist.id
 
   const hiddenSections: string[] = therapist.hidden_sections ?? []
   const color = getColor(therapist.color_id ?? 'teal')
@@ -157,12 +165,28 @@ export default async function TherapistPublicPage({
     )
   }
 
+  const now = new Date().toISOString()
+
+  // Fetch booked slots, excluding:
+  // - cancelled / payment_failed / expired statuses
+  // - pending_payment holds whose hold_until has already passed (stale holds)
+  //   These slots are effectively free again and should show as available.
   const { data: booked } = await supabase
     .from('appointments')
-    .select('scheduled_at')
+    .select('scheduled_at, status, hold_until')
     .eq('therapist_id', therapist.id)
-    .in('status', ['pending', 'confirmed'])
-    .gte('scheduled_at', new Date().toISOString())
+    .not('status', 'in', '("cancelled","payment_failed","expired")')
+    .gte('scheduled_at', now)
+
+  const bookedTimes = (booked ?? [])
+    .filter(b => {
+      // Keep confirmed/upcoming slots always
+      if (b.status !== 'pending_payment') return true
+      // For pending_payment: only block the slot if the hold is still active
+      if (!b.hold_until) return true
+      return new Date(b.hold_until).getTime() > Date.now()
+    })
+    .map(b => b.scheduled_at)
 
   const { data: feedbacks } = await supabase
     .from('feedbacks')
@@ -171,8 +195,6 @@ export default async function TherapistPublicPage({
     .eq('is_published', true)
     .order('created_at', { ascending: false })
 
-  const bookedTimes = booked?.map(b => b.scheduled_at) ?? []
-
   const Template = (() => {
     switch (therapist.template_id) {
       case 'classic2': return <ClassicTemplate2 therapist={profile} bookedTimes={bookedTimes} hiddenSections={hiddenSections} />
@@ -180,7 +202,7 @@ export default async function TherapistPublicPage({
       case 'classic4': return <ClassicTemplate4 therapist={profile} bookedTimes={bookedTimes} hiddenSections={hiddenSections} />
       case 'classic5': return <ClassicTemplate5 therapist={profile} bookedTimes={bookedTimes} hiddenSections={hiddenSections} />
       case 'classic6': return <ClassicTemplate6 therapist={profile} bookedTimes={bookedTimes} hiddenSections={hiddenSections} />
-      default:         return <ClassicTemplate  therapist={profile} bookedTimes={bookedTimes} feedbacks={feedbacks ?? []} hiddenSections={hiddenSections} />
+      default:         return <ClassicTemplate  therapist={profile} bookedTimes={bookedTimes} feedbacks={feedbacks ?? []} hiddenSections={hiddenSections} isOwner={isOwner} />
     }
   })()
 

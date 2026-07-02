@@ -1,0 +1,64 @@
+/* ─────────────────────────────────────────────────────────────────
+   TEMPLATE MARQUEE — below "Explore templates, your way"
+───────────────────────────────────────────────────────────────── */
+.tmq {
+  width: 100%;
+  overflow: hidden;
+  padding: 18px 0;
+  background: var(--surf-1);
+  border-top: 1px solid var(--border2);
+  border-bottom: 1px solid var(--border2);
+  position: relative;
+  mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 8%, #000 92%, transparent 100%);
+}
+.tmq-track {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: max-content;
+  animation: tmq-scroll 28s linear infinite;
+  will-change: transform;
+}
+.tmq:hover .tmq-track {
+  animation-play-state: paused;
+}
+@keyframes tmq-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.tmq-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 18px;
+  padding: 0 32px;
+  flex-shrink: 0;
+}
+.tmq-name {
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -.01em;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.tmq-pill {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  color: var(--ink3);
+  background: var(--gold-bg);
+  border: 1px solid var(--gold-line);
+  border-radius: 100px;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+.tmq-sep {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--gold2);
+  opacity: 0.45;
+  flex-shrink: 0;
+}

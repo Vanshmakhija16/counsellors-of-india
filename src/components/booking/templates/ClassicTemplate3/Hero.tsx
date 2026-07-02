@@ -238,6 +238,8 @@ export default function Hero({
   heroRef,
 }: HeroProps) {
   const sectionRef = useRef<HTMLElement | null>(null)
+  const contentRef = useRef<HTMLDivElement | null>(null)
+  const [photoHeight, setPhotoHeight] = useState<number | null>(null)
 
   const scrollY = useScrollY()
 
@@ -248,6 +250,18 @@ export default function Hero({
       ).current = sectionRef.current
     }
   }, [heroRef])
+
+  // Match photo height to content column height
+  useEffect(() => {
+    const el = contentRef.current
+    if (!el) return
+    const ro = new ResizeObserver(() => {
+      setPhotoHeight(el.getBoundingClientRect().height + 43)
+    })
+    ro.observe(el)
+    setPhotoHeight(el.getBoundingClientRect().height + 43)
+    return () => ro.disconnect()
+  }, [])
 
   const firstName = getFirstName(therapist.name ?? '')
 
@@ -302,7 +316,7 @@ export default function Hero({
       >
         <div className="ct3-hero-glow" />
 
-        <div className="ct3-hero-photo-card">
+        <div className="ct3-hero-photo-card" style={photoHeight ? { height: photoHeight } : {}}>
           {photo ? (
             <img
               src={photo}
@@ -336,6 +350,7 @@ export default function Hero({
         className={`ct3-hero-content ${
           heroLoaded ? 'ct3-fade-up' : 'opacity-0'
         }`}
+        ref={contentRef}
       >
         <div className="ct3-eyebrow">
           THERAPIST • WELLNESS • CARE

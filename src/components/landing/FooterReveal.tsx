@@ -4,7 +4,7 @@
 export default function FooterReveal() {
   return (
     <div
-      className="sticky bottom-0 z-0 h-[50vh] w-full flex flex-col items-center justify-center overflow-hidden"
+      className="relative bottom-0 z-0 h-[50vh] w-full flex flex-col items-center justify-center overflow-hidden"
       style={{ background: '#0a0a0a' }}
     >
 

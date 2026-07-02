@@ -2,6 +2,9 @@
 
 import { useState } from 'react'
 import type { TherapistProfile } from '../templateUtils'
+import EditableText from '../edit/EditableText'
+import EditableList from '../edit/EditableList'
+import { useEditableTemplate } from '../edit/EditContext'
 
 interface AboutProps {
   therapist: TherapistProfile
@@ -9,6 +12,7 @@ interface AboutProps {
 }
 
 export default function About({ therapist }: AboutProps) {
+  const { editMode } = useEditableTemplate()
   const [expanded, setExpanded] = useState(false)
   const yearsLabel =
     (therapist.experience ?? 0) > 0
@@ -40,42 +44,48 @@ export default function About({ therapist }: AboutProps) {
             </h2>
 
             <div className="mt-7 space-y-6">
-              {therapist.bio ? (
-                <p className="text-[17px] leading-[1.85] text-[#c8b99a]">
-                  <span
-                    className="mr-2 float-left text-[52px] leading-[0.85] text-[#b46b50]"
-                    style={{ fontFamily: 'var(--font-fraunces), serif' }}
-                  >
-                    {therapist.bio.trim().charAt(0) || 'I'}
-                  </span>
-                  {therapist.bio.trim().slice(1)}
-                </p>
-              ) : (
-                <>
-                  <p className="text-[17px] leading-[1.85] text-[#c8b99a]">
-                    <span
-                      className="mr-2 float-left text-[52px] leading-[0.85] text-[#b46b50]"
-                      style={{ fontFamily: 'var(--font-fraunces), serif' }}
-                    >
-                      I
-                    </span>
-                    work with adults navigating anxiety, burnout, relationship
-                    difficulties, and childhood experiences. My approach is warm,
-                    direct, and grounded in evidence — never preachy, never
-                    performative.
-                  </p>
+              <EditableText field="bio" as="textarea" placeholder="Write a short bio about your practice and approach…">
+                {(bio) =>
+                  bio ? (
+                    <p className="text-[17px] leading-[1.85] text-[#c8b99a]">
+                      <span
+                        className="mr-2 float-left text-[52px] leading-[0.85] text-[#b46b50]"
+                        style={{ fontFamily: 'var(--font-fraunces), serif' }}
+                      >
+                        {bio.trim().charAt(0) || 'I'}
+                      </span>
+                      {bio.trim().slice(1)}
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-[17px] leading-[1.85] text-[#c8b99a]">
+                        <span
+                          className="mr-2 float-left text-[52px] leading-[0.85] text-[#b46b50]"
+                          style={{ fontFamily: 'var(--font-fraunces), serif' }}
+                        >
+                          I
+                        </span>
+                        work with adults navigating anxiety, burnout, relationship
+                        difficulties, and childhood experiences. My approach is warm,
+                        direct, and grounded in evidence — never preachy, never
+                        performative.
+                      </p>
 
-                  <p className="text-[17px] leading-[1.85] text-[#c8b99a]">
-                    Sessions are collaborative. We move at your pace, with
-                    curiosity rather than judgement. Most clients experience
-                    meaningful shifts within 8–12 sessions.
-                  </p>
-                </>
-              )}
+                      <p className="text-[17px] leading-[1.85] text-[#c8b99a]">
+                        Sessions are collaborative. We move at your pace, with
+                        curiosity rather than judgement. Most clients experience
+                        meaningful shifts within 8–12 sessions.
+                      </p>
+                    </>
+                  )
+                }
+              </EditableText>
 
-              {therapist.approach_text && (
+              {(therapist.approach_text || editMode) && (
                 <p className="text-[17px] leading-[1.85] text-[#c8b99a]">
-                  {therapist.approach_text}
+                  <EditableText field="approach_text" as="textarea" placeholder="Optional: describe your therapeutic approach in more detail…">
+                    {(v) => v}
+                  </EditableText>
                 </p>
               )}
             </div>
@@ -122,11 +132,15 @@ export default function About({ therapist }: AboutProps) {
                   className="mt-2 text-[22px] leading-tight tracking-[-0.02em] text-[#f3ece4]"
                   style={{ fontFamily: 'var(--font-fraunces), serif' }}
                 >
-                  {therapist.name || 'Your therapist'}
+                  <EditableText field="name" placeholder="Your full name">
+                    {(v) => v || 'Your therapist'}
+                  </EditableText>
                 </p>
-                {therapist.credentials && (
+                {(therapist.credentials || editMode) && (
                   <p className="mt-1 text-[12px] leading-snug text-[#6b6056]">
-                    {therapist.credentials}
+                    <EditableText field="credentials" placeholder="e.g. M.Phil Clinical Psychology" className="text-[12px]">
+                      {(v) => v}
+                    </EditableText>
                   </p>
                 )}
               </div>
@@ -159,7 +173,7 @@ export default function About({ therapist }: AboutProps) {
 
               {/* meta list */}
               <div className="space-y-4 px-6 py-5 text-[13px] text-[#8b8074]">
-                {therapist.location && (
+                {(therapist.location || editMode) && (
                   <div className="flex items-start gap-3">
                     <svg
                       className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-[#6b6056]"
@@ -171,11 +185,15 @@ export default function About({ therapist }: AboutProps) {
                       <path d="M12 21s-6-5.33-6-11a6 6 0 1112 0c0 5.67-6 11-6 11z" />
                       <circle cx="12" cy="10" r="2.5" />
                     </svg>
-                    <span>{therapist.location}</span>
+                    <span className="w-full">
+                      <EditableText field="location" placeholder="City" className="text-[13px]">
+                        {(v) => v}
+                      </EditableText>
+                    </span>
                   </div>
                 )}
 
-                {therapist.languages && therapist.languages.length > 0 && (
+                {(therapist.languages?.length || editMode) ? (
                   <div className="flex items-start gap-3">
                     <svg
                       className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-[#6b6056]"
@@ -186,9 +204,13 @@ export default function About({ therapist }: AboutProps) {
                     >
                       <path d="M4 5h16M4 12h10M4 19h16M15 5c0 7-2 11-6 14" />
                     </svg>
-                    <span>{therapist.languages.join(', ')}</span>
+                    <span className="w-full">
+                      <EditableList field="languages" placeholder="English, Hindi…">
+                        {(v) => v.join(', ')}
+                      </EditableList>
+                    </span>
                   </div>
-                )}
+                ) : null}
 
                 {therapist.sessionMode && (
                   <div className="flex items-start gap-3">
@@ -231,23 +253,31 @@ export default function About({ therapist }: AboutProps) {
               )} */}
 
               {/* certifications */}
-              {therapist.certifications && therapist.certifications.length > 0 && (
+              {(therapist.certifications?.length || editMode) ? (
                 <div className="border-t border-[#2a2a28] px-6 py-5">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-[#6b6056]">
                     Certifications
                   </p>
-                  <div className="mt-3 flex flex-wrap gap-1.5">
-                    {therapist.certifications.map((c) => (
-                      <span
-                        key={c}
-                        className="rounded-full border border-[#b46b50]/40 bg-[#1a1a18] px-2.5 py-1 text-[11px] text-[#8b8074]"
-                      >
-                        {c}
-                      </span>
-                    ))}
-                  </div>
+                  {editMode ? (
+                    <div className="mt-3">
+                      <EditableList field="certifications" placeholder="RCI Licensed, EMDR Certified…">
+                        {(v) => v.join(', ')}
+                      </EditableList>
+                    </div>
+                  ) : (
+                    <div className="mt-3 flex flex-wrap gap-1.5">
+                      {(therapist.certifications ?? []).map((c) => (
+                        <span
+                          key={c}
+                          className="rounded-full border border-[#b46b50]/40 bg-[#1a1a18] px-2.5 py-1 text-[11px] text-[#8b8074]"
+                        >
+                          {c}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              )}
+              ) : null}
             </div>
           </aside>
         </div>

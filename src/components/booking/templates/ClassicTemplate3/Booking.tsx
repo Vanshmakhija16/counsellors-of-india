@@ -4,6 +4,15 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Loader2, X } from 'lucide-react'
 import type { TherapistProfile, EditableService } from '../templateUtils'
 import { getAvailableDays, slotToISO } from '../templateUtils'
+import { useBooking } from '@/lib/useBooking'
+
+// ── Temporary: send to WhatsApp instead of API/payment ──────────────────
+const USE_WHATSAPP = true
+function openWhatsApp(therapist: TherapistProfile, name: string, slot: string, date: string) {
+  const num = (therapist.whatsapp ?? therapist.phone ?? '').replace(/\D/g, '')
+  const msg = `Hi, I'd like to book a session.%0AName: ${encodeURIComponent(name)}%0ADate & Time: ${encodeURIComponent(date + ', ' + slot)}%0AService Duration: ${therapist.sessionDuration ?? 50} mins`
+  window.open(`https://wa.me/${num}?text=${msg}`, '_blank')
+}
 
 interface BookingProps {
   therapist: TherapistProfile
@@ -23,12 +32,20 @@ function Spec({ k, v, highlight }: { k: string; v: string; highlight?: boolean }
   )
 }
 
-export default function Booking({ therapist, bookedTimes = [], selectedService, onClearService }: BookingProps) {
+export default function Booking({ therapist, bookedTimes: initialBookedTimes = [], selectedService, onClearService }: BookingProps) {
   const sectionRef = useRef<HTMLElement | null>(null)
   const [mounted, setMounted] = useState(false)
+  const [bookedTimes, setBookedTimes] = useState<string[]>(initialBookedTimes)
+  const [slotsLoading, setSlotsLoading] = useState(true)
 
   useEffect(() => {
     setMounted(true)
+    if (!therapist.id) { setSlotsLoading(false); return }
+    fetch(`/api/booked-slots?therapist_id=${encodeURIComponent(therapist.id)}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.bookedTimes) setBookedTimes(d.bookedTimes) })
+      .catch(() => {})
+      .finally(() => setSlotsLoading(false))
     const section = sectionRef.current
     if (!section) return
     function revealAll() {
@@ -43,68 +60,70 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
     }, { threshold: 0, rootMargin: '0px 0px -5% 0px' })
     obs.observe(section)
     return () => obs.disconnect()
-  }, [])
+  }, [therapist.id])
 
   const availableDays = useMemo(
-    () => getAvailableDays(therapist.availability, therapist.sessionDuration ?? 50, 14),
-    [therapist.availability, therapist.sessionDuration]
-  )
-  const bookedSet = useMemo(
-    () => new Set(bookedTimes.map(t => new Date(t).toISOString())),
-    [bookedTimes]
+    () => getAvailableDays(therapist.availability, therapist.sessionDuration ?? 50, 14, bookedTimes),
+    [therapist.availability, therapist.sessionDuration, bookedTimes]
   )
 
   const [selectedDayIdx, setSelectedDayIdx] = useState(0)
-  const [selectedSlot, setSelectedSlot]     = useState<string | null>(null)
+  const [selectedSlot, setSelectedSlot]       = useState<string | null>(null)
   const [selectedSlotIso, setSelectedSlotIso] = useState<string | null>(null)
-  const [clientName, setClientName]         = useState('')
-  const [clientEmail, setClientEmail]       = useState('')
-  const [clientPhone, setClientPhone]       = useState('')
-  const [bookingError, setBookingError]     = useState('')
-  const [bookingLoading, setBookingLoading] = useState(false)
-  const [booked, setBooked]                 = useState(false)
+  const [clientName, setClientName]           = useState('')
+  const [clientEmail, setClientEmail]         = useState('')
+  const [clientPhone, setClientPhone]         = useState('')
+  const [bookingError, setBookingError]       = useState('')
+  const [booked, setBooked]                   = useState(false)
+
+  const { book, loading: bookingLoading } = useBooking({
+    onSuccess: () => setBooked(true),
+    onError:   (msg) => setBookingError(msg),
+    onSlotsRefresh: (fresh) => {
+      setBookedTimes(fresh)
+      setSelectedSlot(null)
+      setSelectedSlotIso(null)
+    },
+  })
+
+  const effectivePrice: number | null = (() => {
+    if (selectedService?.price != null) {
+      const n = Number(selectedService.price)
+      return isNaN(n) || n <= 0 ? 500 : n
+    }
+    return typeof therapist.fee === 'number' && therapist.fee > 0 ? therapist.fee : 500
+  })()
 
   const day = availableDays[selectedDayIdx]
   const slotsForDay = useMemo(() => {
     if (!day) return []
     return day.slots
       .map(label => ({ label, isoTime: slotToISO(label, day.dateObj) }))
-      .filter(s => !bookedSet.has(new Date(s.isoTime).toISOString()))
       .filter(s => new Date(s.isoTime).getTime() > Date.now())
-  }, [day, bookedSet])
-
-  const effectivePrice = selectedService?.price != null ? selectedService.price : therapist.fee
+  }, [day])
 
   async function handleConfirm() {
     if (!selectedSlot || !selectedSlotIso) return
-    if (!clientName.trim() || !clientEmail.trim() || !clientPhone.trim()) {
-      setBookingError('Please complete all fields to continue.')
+    if (!clientName.trim() || !clientPhone.trim()) {
+      setBookingError('Please complete name and phone to continue.')
       return
     }
-    try {
-      setBookingLoading(true); setBookingError('')
-      const res = await fetch('/api/book', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          therapist_id:  therapist.id,
-          client_name:   clientName,
-          client_email:  clientEmail,
-          client_phone:  clientPhone,
-          scheduled_at:  selectedSlotIso,
-          duration_mins: therapist.sessionDuration,
-          service_name:  selectedService?.name ?? null,
-          service_price: effectivePrice ?? null,
-        }),
-      })
-      const data = await res.json()
-      if (!res.ok) { setBookingError(data.error ?? 'Booking failed. Please try again.'); return }
+    setBookingError('')
+    if (USE_WHATSAPP) {
+      openWhatsApp(therapist, clientName, selectedSlot, day?.fullLabel ?? '')
       setBooked(true)
-    } catch {
-      setBookingError('Network error. Please try again.')
-    } finally {
-      setBookingLoading(false)
+      return
     }
+    await book({
+      therapist_id:  therapist.id!,
+      client_name:   clientName,
+      client_email:  clientEmail,
+      client_phone:  clientPhone,
+      scheduled_at:  selectedSlotIso,
+      duration_mins: therapist.sessionDuration ?? 50,
+      service_name:  selectedService?.name ?? null,
+      service_price: effectivePrice,
+    })
   }
 
   return (
@@ -113,7 +132,6 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
 
         <div className="ct3-folio-header ct3-reveal">
           <div>
-            {/* <span className="ct3-eyebrow">— VI · Reserve</span> */}
             <h2 className="ct3-folio-title" style={{ marginTop: '0.5rem' }}>
               Choose a <em>time</em>.
             </h2>
@@ -124,16 +142,11 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
 
           {/* Left — session summary */}
           <div className="ct3-reveal">
-            {/* <p className="ct3-booking-intro">
-              All first sessions are {therapist.sessionDuration ?? 50} minutes. Confirmation sent immediately; meeting link shared the day before.
-            </p> */}
-
             <div className="ct3-booking-details">
               <span className="ct3-eyebrow" style={{ display: 'block', marginBottom: '1.1rem' }}>
                 Session details
               </span>
 
-              {/* Selected service pill */}
               {selectedService && (
                 <div style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -159,27 +172,23 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
 
               <dl>
                 <Spec k="Duration"     v={`${therapist.sessionDuration ?? 50} minutes`} />
-                {/* <Spec
-                  k="Investment"
-                  v={effectivePrice ? `₹ ${effectivePrice.toLocaleString()}` : '—'}
-                  highlight={!!selectedService?.price}
-                /> */}
                 <Spec k="Format"       v="Online · In-person" />
-                <Spec k="Cancellation" v="Free up to 48 hrs" />
                 <Spec k="Confirmation" v="Instant via email" />
+                {effectivePrice != null && effectivePrice > 0 && (
+                  <Spec k="Payment" v="🔒 Secure via PayU" highlight />
+                )}
               </dl>
 
-              {/* Price line */}
-              {effectivePrice && selectedService && (
+              {effectivePrice != null && effectivePrice > 0 && selectedService && (
                 <p style={{
                   marginTop: '1rem', fontFamily: "'DM Sans', sans-serif",
                   fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.6,
                 }}>
-                  You will be invoiced{' '}
+                  You will be charged{' '}
                   <span style={{ color: 'var(--gold)', fontWeight: 500 }}>
                     ₹ {effectivePrice.toLocaleString()}
                   </span>{' '}
-                  for {selectedService.name}.
+                  for {selectedService.name} via PayU before booking is confirmed.
                 </p>
               )}
             </div>
@@ -188,7 +197,7 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
           {/* Right — booking flow */}
           <div className="ct3-booking-card ct3-reveal" style={{ transitionDelay: '0.1s' }}>
 
-            {!mounted ? (
+            {!mounted || slotsLoading ? (
               <div style={{ padding: '2rem 0', opacity: 0.2 }}>
                 <div style={{ height: 8, background: 'var(--rule)', marginBottom: 12, width: '55%' }} />
                 <div style={{ height: 8, background: 'var(--rule)', marginBottom: 12, width: '38%' }} />
@@ -279,24 +288,19 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
                       </p>
                     )}
 
-                    {effectivePrice && (
-                      <p style={{ fontSize: 12, color: 'var(--ink-3)', marginTop: '1.1rem', fontFamily: "'DM Sans', sans-serif" }}>
-                        You will be invoiced{' '}
-                        <span style={{ color: 'var(--gold)', fontWeight: 500 }}>₹ {effectivePrice.toLocaleString()}</span>
-                        {selectedService ? ` for ${selectedService.name}` : ''}.
-                      </p>
-                    )}
-
                     <button
                       className="ct3-btn-primary ct3-btn-full"
                       style={{ marginTop: '1.5rem', opacity: bookingLoading ? 0.65 : 1 }}
                       onClick={handleConfirm}
                       disabled={bookingLoading}
                     >
-                      {bookingLoading
-                        ? <><Loader2 size={13} className="animate-spin" /> Reserving…</>
-                        : <>Confirm reservation →</>
-                      }
+                      {bookingLoading ? (
+                        <><Loader2 size={13} className="animate-spin" /> Processing…</>
+                      ) : effectivePrice != null && effectivePrice > 0 ? (
+                        <>Pay ₹{effectivePrice.toLocaleString()} & Confirm →</>
+                      ) : (
+                        <>Confirm reservation →</>
+                      )}
                     </button>
                   </div>
                 )}

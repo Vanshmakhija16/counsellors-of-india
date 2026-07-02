@@ -518,12 +518,13 @@ export const ct3Styles = `
   display: grid;
   grid-template-columns: 0.95fr 1.05fr;
 
-  align-items: center;
+  align-items: start;
 
   gap: clamp(2rem, 3vw, 4rem);
 
   /* Symmetric gutter left & right via the shared token */
   padding: clamp(1.2rem, 2vw, 2rem) var(--gutter);
+  padding-top: clamp(6rem, 8vw, 8rem);
 
   overflow: hidden;
 
@@ -552,7 +553,7 @@ export const ct3Styles = `
 
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: stretch;
 }
 
 .ct3-hero-glow {
@@ -577,6 +578,7 @@ export const ct3Styles = `
   z-index: 2;
 
   width: min(100%, 500px);
+  height: auto;
 
   border-radius: 32px;
 
@@ -595,8 +597,8 @@ export const ct3Styles = `
   position: relative;
 
   width: 100%;
-
-  height: min(74dvh, 820px);
+  height: 100%;
+  min-height: 0;
 
   overflow: hidden;
 
@@ -604,8 +606,6 @@ export const ct3Styles = `
 
   background: var(--bg-alt);
 
-  /* The <img> carries this class directly, so cover/position must be here —
-     otherwise the photo stretches to fill the box and looks distorted. */
   object-fit: cover;
   object-position: center top;
   display: block;

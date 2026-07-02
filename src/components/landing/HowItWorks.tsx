@@ -42,7 +42,7 @@ export default function HowItWorks() {
             className="text-4xl text-black font-semibold"
             style={{ fontFamily: 'var(--font-cormorant), serif' }}
           >
-            Get your counselling practice online in under 10 minutes
+            Get your counselling practice <em>online in under 10 minutes</em>
           </h2>
         </div>
 

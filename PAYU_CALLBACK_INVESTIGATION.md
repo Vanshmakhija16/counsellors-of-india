@@ -70,7 +70,7 @@ Returns:
   fields: {
     key: PAYU_KEY,
     txnid: "plan<timestamp><random>",
-    amount: "1.00" or "2499.00",
+    amount: "1499.00" or "2499.00",
     productinfo: "COI Starter Plan" or "COI Pro Plan",
     firstname: extracted from user metadata,
     email: user.email,

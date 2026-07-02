@@ -63,8 +63,13 @@ export default function CT1ContentEditor({ value, onChange }: Props) {
               </Field>
               <Field label="Tags (comma-separated)">
                 <input value={(svc.forWhom ?? []).join(', ')}
-                  onChange={e => patch({ services: c.services.map((s, j) => j === i ? { ...s, forWhom: e.target.value.split(',').map(t => t.trim()).filter(Boolean) } : s) })}
+                  onChange={e => patch({ services: c.services.map((s, j) => j === i ? { ...s, forWhom: e.target.value.split(',').map(t => t.trim()).filter(Boolean) } : s) })} 
                   placeholder="e.g. Anxiety, Burnout, Self-Esteem" className={inp} />
+              </Field>
+              <Field label="Price (e.g. 1500, Varies, Free)">
+                <input value={svc.price ?? ''}
+                  onChange={e => patch({ services: c.services.map((s, j) => j === i ? { ...s, price: e.target.value } : s) })}
+                  placeholder="e.g. 1500 or Varies or Free" className={inp} />
               </Field>
             </div>
           ))}
@@ -115,7 +120,7 @@ export default function CT1ContentEditor({ value, onChange }: Props) {
                 <Field label="Author">
                   <input value={slide.author ?? ''}
                     onChange={e => patch({ carousel: c.carousel.map((s, j) => j === i ? { ...s, author: e.target.value } : s) })}
-                    placeholder="— Carl Rogers" className={inp} />
+                    placeholder=" - Carl Rogers" className={inp} />
                 </Field>
                 <Field label="Sub-caption">
                   <input value={slide.sub ?? ''}

@@ -130,7 +130,7 @@ export const TEMPLATE_SECTIONS: Record<TemplateId, SectionConfig[]> = {
 export const TEMPLATES: Template[] = [
   {
     id: 'classic',
-    name: 'Warm & Simple',
+    name: 'The Consultation Room',
     tagline: 'Clean, trustworthy, works for everyone',
     style: 'Minimal · Light · Professional',
     plan: 'starter',
@@ -141,7 +141,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: 'classic2',
-    name: 'Dark & Bold',
+    name: 'The Night Clinic',
     tagline: 'High-contrast editorial for a strong first impression',
     style: 'Dark · Editorial · Dramatic',
     plan: 'growth',
@@ -152,7 +152,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: 'classic3',
-    name: 'Elegant & Light',
+    name: 'The Mindful Space',
     tagline: 'Warm paper tones with luxury magazine typography',
     style: 'Warm · Literary · Refined',
     plan: 'growth',
@@ -163,7 +163,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: 'classic4',
-    name: 'Premium Black',
+    name: 'The Executive Suite',
     tagline: 'Ultra-luxury dark profile with gold accents',
     style: 'Dark · Luxury · High-end',
     plan: 'growth',
@@ -174,7 +174,7 @@ export const TEMPLATES: Template[] = [
   },
   {
     id: 'classic5',
-    name: 'Calm & Natural',
+    name: 'The Retreat',
     tagline: 'Earthy, warm tones that feel grounding and safe',
     style: 'Natural · Soft · Welcoming',
     plan: 'growth',

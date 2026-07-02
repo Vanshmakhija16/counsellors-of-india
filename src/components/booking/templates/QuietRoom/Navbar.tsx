@@ -55,8 +55,6 @@ export default function Navbar({ scrollTo, therapist }: NavProps) {
     <>
       <style>{`
         .qr-nav { position: fixed; top: 0; inset-inline: 0; z-index: 50;
-          display: flex; align-items: center; justify-content: space-between;
-          padding: 22px clamp(20px, 5vw, 56px);
           transition: background 700ms var(--qr-calm-inout), padding 500ms var(--qr-calm-inout),
             backdrop-filter 700ms var(--qr-calm-inout); }
         .qr-nav--scrolled { padding-top: 14px; padding-bottom: 14px;
@@ -64,13 +62,17 @@ export default function Navbar({ scrollTo, therapist }: NavProps) {
         .qr-nav--scrolled.qr-nav--dusk  { background: rgba(42, 35, 48, 0.6); }
         .qr-nav--scrolled.qr-nav--light { background: rgba(232, 226, 214, 0.65); }
 
+        .qr-nav-inner { max-width: 1140px; margin: 0 auto; padding: 22px clamp(20px, 5vw, 56px);
+          display: flex; align-items: center; justify-content: space-between; }
+        .qr-nav--scrolled .qr-nav-inner { padding-top: 14px; padding-bottom: 14px; }
+
         .qr-brand { display: flex; align-items: center; gap: 12px; cursor: pointer; }
         .qr-brand-mark { width: 36px; height: 36px; border-radius: 9px;
           display: grid; place-items: center; font-family: 'Spectral', serif; font-style: italic;
           font-size: 15px; border: 1px solid currentColor; opacity: 0.92; }
         .qr-brand-name { font-family: 'Spectral', serif; font-weight: 300; font-size: 19px; letter-spacing: 0.01em; }
 
-        .qr-nav-links { display: flex; align-items: center; gap: 30px; }
+        .qr-nav-links { display: flex; align-items: center; gap: 30px; padding-right: clamp(8px, 2vw, 28px); }
         @media (max-width: 860px) { .qr-nav-links--desktop { display: none; } }
         .qr-nav-link { background: none; border: none; cursor: pointer; color: inherit;
           font-family: 'IBM Plex Sans', sans-serif; font-size: 14px; position: relative; padding: 4px 0; opacity: 0.82; }
@@ -101,21 +103,22 @@ export default function Navbar({ scrollTo, therapist }: NavProps) {
         className={`qr-nav ${scrolled ? 'qr-nav--scrolled' : ''} ${overDusk ? 'qr-nav--dusk' : 'qr-nav--light'}`}
         style={{ color: ink }}
       >
-        <div className="qr-brand" onClick={() => scrollTo('home')}>
-          <span className="qr-brand-mark">{initials}</span>
-          <span className="qr-brand-name">{firstName}</span>
-        </div>
+        <div className="qr-nav-inner">
+          <div className="qr-brand" onClick={() => scrollTo('home')}>
+            <span className="qr-brand-mark">{initials}</span>
+            <span className="qr-brand-name">{firstName}</span>
+          </div>
 
-        <div className="qr-nav-links qr-nav-links--desktop">
-          {LINKS.map(l => (
-            <button key={l.id} className="qr-nav-link" onClick={() => scrollTo(l.id)}>{l.label}</button>
-          ))}
-          <button className="qr-nav-cta qr-nav-cta--desktop" onClick={() => scrollTo('book')}>Book a session</button>
-        </div>
+          <div className="qr-nav-links qr-nav-links--desktop">
+            {LINKS.map(l => (
+              <button key={l.id} className="qr-nav-link" onClick={() => scrollTo(l.id)}>{l.label}</button>
+            ))}
+          </div>
 
-        <button className="qr-burger" aria-label="Open menu" onClick={() => setMenuOpen(true)}>
-          <Menu size={22} />
-        </button>
+          <button className="qr-burger" aria-label="Open menu" onClick={() => setMenuOpen(true)}>
+            <Menu size={22} />
+          </button>
+        </div>
       </nav>
 
       <div className={`qr-drawer ${menuOpen ? 'qr-drawer--open' : ''}`}>
@@ -125,9 +128,6 @@ export default function Navbar({ scrollTo, therapist }: NavProps) {
         {LINKS.map(l => (
           <button key={l.id} onClick={() => { setMenuOpen(false); scrollTo(l.id) }}>{l.label}</button>
         ))}
-        <button onClick={() => { setMenuOpen(false); scrollTo('book') }} style={{ color: 'var(--qr-honey)' }}>
-          Book a session
-        </button>
       </div>
     </>
   )

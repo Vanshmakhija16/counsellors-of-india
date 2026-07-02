@@ -21,6 +21,10 @@ export interface Therapist {
   session_mode: string
   plan: string
   is_profile_complete: boolean
+  instagram: string | null
+  linkedin: string | null
+  whatsapp: string | null
+  website: string | null
 }
 
 export function useTherapist() {

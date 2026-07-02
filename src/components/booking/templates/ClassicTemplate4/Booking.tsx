@@ -4,7 +4,15 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Loader2, X } from 'lucide-react'
 import type { TherapistProfile, EditableService } from '../templateUtils'
 import { getAvailableDays, slotToISO } from '../templateUtils'
-import { useRazorpay } from '@/lib/useRazorpay'
+import { useBooking } from '@/lib/useBooking'
+
+// ── Temporary: send to WhatsApp instead of API/payment ──────────────────
+const USE_WHATSAPP = true
+function openWhatsApp(therapist: TherapistProfile, name: string, slot: string, date: string) {
+  const num = (therapist.whatsapp ?? therapist.phone ?? '').replace(/\D/g, '')
+  const msg = `Hi, I'd like to book a session.%0AName: ${encodeURIComponent(name)}%0ADate & Time: ${encodeURIComponent(date + ', ' + slot)}%0AService Duration: ${therapist.sessionDuration ?? 50} mins`
+  window.open(`https://wa.me/${num}?text=${msg}`, '_blank')
+}
 
 interface BookingProps {
   therapist: TherapistProfile
@@ -13,12 +21,29 @@ interface BookingProps {
   onClearService?: () => void
 }
 
-export default function Booking({ therapist, bookedTimes = [], selectedService, onClearService }: BookingProps) {
+function SpecRow({ k, v, highlight }: { k: string; v: string; highlight?: boolean }) {
+  return (
+    <div className="ct4-spec-row">
+      <dt className="ct4-spec-key">{k}</dt>
+      <dd className="ct4-spec-val" style={highlight ? { color: 'var(--gold)', fontWeight: 500 } : undefined}>{v}</dd>
+    </div>
+  )
+}
+
+export default function Booking({ therapist, bookedTimes: initialBookedTimes = [], selectedService, onClearService }: BookingProps) {
   const sectionRef = useRef<HTMLElement | null>(null)
   const [mounted, setMounted] = useState(false)
+  const [bookedTimes, setBookedTimes] = useState<string[]>(initialBookedTimes)
+  const [slotsLoading, setSlotsLoading] = useState(true)
 
   useEffect(() => {
     setMounted(true)
+    if (!therapist.id) { setSlotsLoading(false); return }
+    fetch(`/api/booked-slots?therapist_id=${encodeURIComponent(therapist.id)}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.bookedTimes) setBookedTimes(d.bookedTimes) })
+      .catch(() => {})
+      .finally(() => setSlotsLoading(false))
     const section = sectionRef.current
     if (!section) return
     const revealAll = () =>
@@ -31,7 +56,7 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
     )
     observer.observe(section)
     return () => observer.disconnect()
-  }, [])
+  }, [therapist.id])
 
   const availableDays = useMemo(
     () => getAvailableDays(therapist.availability, therapist.sessionDuration ?? 50, 14, bookedTimes),
@@ -39,16 +64,23 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
   )
 
   const [selectedDayIdx, setSelectedDayIdx] = useState(0)
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
+  const [selectedSlot, setSelectedSlot]       = useState<string | null>(null)
   const [selectedSlotIso, setSelectedSlotIso] = useState<string | null>(null)
-  const [clientName, setClientName] = useState('')
-  const [clientEmail, setClientEmail] = useState('')
-  const [clientPhone, setClientPhone] = useState('')
-  const [bookingError, setBookingError] = useState('')
-  const [bookingLoading, setBookingLoading] = useState(false)
-  const [booked, setBooked] = useState(false)
+  const [clientName, setClientName]           = useState('')
+  const [clientEmail, setClientEmail]         = useState('')
+  const [clientPhone, setClientPhone]         = useState('')
+  const [bookingError, setBookingError]       = useState('')
+  const [booked, setBooked]                   = useState(false)
 
-  const { openRazorpay } = useRazorpay()
+  const { book, loading: bookingLoading } = useBooking({
+    onSuccess: () => setBooked(true),
+    onError:   (msg) => setBookingError(msg),
+    onSlotsRefresh: (fresh) => {
+      setBookedTimes(fresh)
+      setSelectedSlot(null)
+      setSelectedSlotIso(null)
+    },
+  })
 
   const day = availableDays[selectedDayIdx]
   const slotsForDay = useMemo(() => {
@@ -56,68 +88,37 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
     return day.slots.map(label => ({ label, isoTime: slotToISO(label, day.dateObj) }))
   }, [day])
 
-  const effectivePrice = selectedService?.price != null ? selectedService.price : therapist.fee
-
-  async function doBooking() {
-    const res = await fetch('/api/book', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        therapist_id:  therapist.id,
-        client_name:   clientName,
-        client_email:  clientEmail,
-        client_phone:  clientPhone,
-        scheduled_at:  selectedSlotIso,
-        duration_mins: therapist.sessionDuration,
-        service_name:  selectedService?.name ?? null,
-        service_price: effectivePrice ?? null,
-      }),
-    })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error ?? 'Booking failed. Please try again.')
-    setBooked(true)
-  }
+  // CT4 EditableService.price is string — normalise, with 500 fallback if fee not set
+  const effectivePrice: number | null = (() => {
+    if (selectedService?.price != null) {
+      const n = Number(selectedService.price)
+      return isNaN(n) || n <= 0 ? 500 : n
+    }
+    return typeof therapist.fee === 'number' && therapist.fee > 0 ? therapist.fee : 500
+  })()
 
   async function handleConfirm() {
     if (!selectedSlot || !selectedSlotIso) return
-    if (!clientName.trim() || !clientEmail.trim() || !clientPhone.trim()) {
-      setBookingError('Please complete all fields to continue.')
+    if (!clientName.trim() || !clientPhone.trim()) {
+      setBookingError('Please complete name and phone to continue.')
       return
     }
     setBookingError('')
-
-    if (effectivePrice && effectivePrice > 0) {
-      setBookingLoading(true)
-      await openRazorpay({
-        amount:      effectivePrice,
-        description: selectedService?.name
-          ? `${selectedService.name} with ${therapist.name}`
-          : `Therapy session with ${therapist.name}`,
-        receipt: `book_${therapist.id}_${Date.now()}`,
-        prefill: { name: clientName, email: clientEmail, contact: clientPhone },
-        onSuccess: async (payload) => {
-          const verifyRes = await fetch('/api/razorpay?action=verify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          })
-          const vd = await verifyRes.json()
-          if (!verifyRes.ok || !vd.verified) throw new Error('Payment verification failed.')
-          await doBooking()
-        },
-        onFailure: (msg) => { setBookingError(msg); setBookingLoading(false) },
-      })
-      setBookingLoading(false)
-    } else {
-      try {
-        setBookingLoading(true)
-        await doBooking()
-      } catch (e: any) {
-        setBookingError(e?.message ?? 'Network error. Please try again.')
-      } finally {
-        setBookingLoading(false)
-      }
+    if (USE_WHATSAPP) {
+      openWhatsApp(therapist, clientName, selectedSlot, day?.fullLabel ?? '')
+      setBooked(true)
+      return
     }
+    await book({
+      therapist_id:  therapist.id!,
+      client_name:   clientName,
+      client_email:  clientEmail,
+      client_phone:  clientPhone,
+      scheduled_at:  selectedSlotIso,
+      duration_mins: therapist.sessionDuration ?? 50,
+      service_name:  selectedService?.name ?? null,
+      service_price: effectivePrice,
+    })
   }
 
   return (
@@ -130,7 +131,7 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
         </div>
 
         <div className="ct4-booking-grid">
-          {/* LEFT: Info / Session Summary */}
+          {/* LEFT: Session Summary */}
           <div className="ct4-reveal">
             <div className="ct4-spec-card">
               <span className="ct4-eyebrow" style={{ display: 'block', marginBottom: '1.2rem' }}>Session Summary</span>
@@ -157,15 +158,15 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
                 <SpecRow k="Duration"     v={`${therapist.sessionDuration ?? 50} Minutes`} />
                 <SpecRow k="Investment"   v={effectivePrice ? `₹ ${effectivePrice.toLocaleString()}` : '—'} highlight={selectedService?.price != null} />
                 <SpecRow k="Format"       v="Online · In-Person" />
-                <SpecRow k="Confirmation" v="Immediate via Whatsapp" />
-                <SpecRow k="Payment"      v="🔒 Secure via Razorpay" />
+                <SpecRow k="Confirmation" v="Immediate via WhatsApp" />
+                <SpecRow k="Payment"      v="🔒 Secure via PayU" />
               </dl>
             </div>
           </div>
 
           {/* RIGHT: Booking flow */}
           <div className="ct4-booking-card ct4-reveal" style={{ transitionDelay: '0.12s' }}>
-            {!mounted ? (
+            {!mounted || slotsLoading ? (
               <div style={{ padding: '2rem 0', opacity: 0.25 }}>
                 <div style={{ height: 10, background: 'var(--border)', marginBottom: 14, width: '55%', borderRadius: 2 }} />
                 <div style={{ height: 10, background: 'var(--border)', marginBottom: 14, width: '38%', borderRadius: 2 }} />
@@ -234,11 +235,11 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
                       <p className="ct4-mono" style={{ color: '#e07070', fontSize: 11, letterSpacing: '0.12em', marginTop: '1rem' }}>⚠ {bookingError}</p>
                     )}
 
-                    {effectivePrice && effectivePrice > 0 && (
+                    {effectivePrice != null && effectivePrice > 0 && (
                       <p style={{ fontSize: 12, color: 'var(--silver)', marginTop: '1.2rem', letterSpacing: '0.04em' }}>
                         You will be charged{' '}
                         <span style={{ color: 'var(--gold)', fontWeight: 500 }}>₹ {effectivePrice.toLocaleString()}</span>
-                        {selectedService ? ` for ${selectedService.name}` : ''} via Razorpay before your booking is confirmed.
+                        {selectedService ? ` for ${selectedService.name}` : ''} via PayU before your booking is confirmed.
                       </p>
                     )}
 
@@ -250,7 +251,7 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
                     >
                       {bookingLoading ? (
                         <><Loader2 size={13} className="animate-spin" /> Processing…</>
-                      ) : effectivePrice && effectivePrice > 0 ? (
+                      ) : effectivePrice != null && effectivePrice > 0 ? (
                         <>Pay ₹{effectivePrice.toLocaleString()} & Confirm →</>
                       ) : (
                         <>Confirm Reservation →</>
@@ -264,14 +265,5 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
         </div>
       </div>
     </section>
-  )
-}
-
-function SpecRow({ k, v, highlight }: { k: string; v: string; highlight?: boolean }) {
-  return (
-    <div className="ct4-spec-row">
-      <dt className="ct4-spec-key">{k}</dt>
-      <dd className="ct4-spec-val" style={highlight ? { color: 'var(--gold)', fontWeight: 500 } : undefined}>{v}</dd>
-    </div>
   )
 }

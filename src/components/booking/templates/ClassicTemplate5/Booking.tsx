@@ -4,19 +4,35 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Loader2 } from 'lucide-react'
 import type { TherapistProfile } from '../templateUtils'
 import { getAvailableDays, slotToISO } from '../templateUtils'
-import { useRazorpay } from '@/lib/useRazorpay'
+import { useBooking } from '@/lib/useBooking'
+
+// ── Temporary: send to WhatsApp instead of API/payment ──────────────────
+const USE_WHATSAPP = true
+function openWhatsApp(therapist: TherapistProfile, name: string, slot: string, date: string) {
+  const num = (therapist.whatsapp ?? therapist.phone ?? '').replace(/\D/g, '')
+  const msg = `Hi, I'd like to book a session.%0AName: ${encodeURIComponent(name)}%0ADate & Time: ${encodeURIComponent(date + ', ' + slot)}%0AService Duration: ${therapist.sessionDuration ?? 50} mins`
+  window.open(`https://wa.me/${num}?text=${msg}`, '_blank')
+}
 
 interface BookingProps {
   therapist: TherapistProfile
   bookedTimes?: string[]
 }
 
-export default function Booking({ therapist, bookedTimes = [] }: BookingProps) {
+export default function Booking({ therapist, bookedTimes: initialBookedTimes = [] }: BookingProps) {
   const sectionRef = useRef<HTMLElement | null>(null)
   const [mounted, setMounted] = useState(false)
+  const [bookedTimes, setBookedTimes] = useState<string[]>(initialBookedTimes)
+  const [slotsLoading, setSlotsLoading] = useState(true)
 
   useEffect(() => {
     setMounted(true)
+    if (!therapist.id) { setSlotsLoading(false); return }
+    fetch(`/api/booked-slots?therapist_id=${encodeURIComponent(therapist.id)}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.bookedTimes) setBookedTimes(d.bookedTimes) })
+      .catch(() => {})
+      .finally(() => setSlotsLoading(false))
     const section = sectionRef.current
     if (!section) return
     const revealAll = () =>
@@ -29,7 +45,7 @@ export default function Booking({ therapist, bookedTimes = [] }: BookingProps) {
     }, { threshold: 0, rootMargin: '0px 0px -5% 0px' })
     obs.observe(section)
     return () => obs.disconnect()
-  }, [])
+  }, [therapist.id])
 
   const availableDays = useMemo(
     () => getAvailableDays(therapist.availability, therapist.sessionDuration ?? 50, 14, bookedTimes),
@@ -37,16 +53,23 @@ export default function Booking({ therapist, bookedTimes = [] }: BookingProps) {
   )
 
   const [selectedDayIdx, setSelectedDayIdx] = useState(0)
-  const [selectedSlot, setSelectedSlot] = useState<string | null>(null)
+  const [selectedSlot, setSelectedSlot]       = useState<string | null>(null)
   const [selectedSlotIso, setSelectedSlotIso] = useState<string | null>(null)
-  const [clientName, setClientName] = useState('')
-  const [clientEmail, setClientEmail] = useState('')
-  const [clientPhone, setClientPhone] = useState('')
-  const [bookingError, setBookingError] = useState('')
-  const [bookingLoading, setBookingLoading] = useState(false)
-  const [booked, setBooked] = useState(false)
+  const [clientName, setClientName]           = useState('')
+  const [clientEmail, setClientEmail]         = useState('')
+  const [clientPhone, setClientPhone]         = useState('')
+  const [bookingError, setBookingError]       = useState('')
+  const [booked, setBooked]                   = useState(false)
 
-  const { openRazorpay } = useRazorpay()
+  const { book, loading: bookingLoading } = useBooking({
+    onSuccess: () => setBooked(true),
+    onError:   (msg) => setBookingError(msg),
+    onSlotsRefresh: (fresh) => {
+      setBookedTimes(fresh)
+      setSelectedSlot(null)
+      setSelectedSlotIso(null)
+    },
+  })
 
   const day = availableDays[selectedDayIdx]
   const slotsForDay = useMemo(() => {
@@ -54,63 +77,27 @@ export default function Booking({ therapist, bookedTimes = [] }: BookingProps) {
     return day.slots.map(label => ({ label, isoTime: slotToISO(label, day.dateObj) }))
   }, [day])
 
-  async function doBooking() {
-    const res = await fetch('/api/book', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        therapist_id:  therapist.id,
-        client_name:   clientName,
-        client_email:  clientEmail,
-        client_phone:  clientPhone,
-        scheduled_at:  selectedSlotIso,
-        duration_mins: therapist.sessionDuration,
-        service_price: therapist.fee ?? null,
-      }),
-    })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error ?? 'Booking failed. Please try again.')
-    setBooked(true)
-  }
-
   async function handleConfirm() {
     if (!selectedSlot || !selectedSlotIso) return
-    if (!clientName.trim() || !clientEmail.trim() || !clientPhone.trim()) {
-      setBookingError('Please complete all fields to continue.')
+    if (!clientName.trim() || !clientPhone.trim()) {
+      setBookingError('Please complete name and phone to continue.')
       return
     }
     setBookingError('')
-
-    if (therapist.fee && therapist.fee > 0) {
-      setBookingLoading(true)
-      await openRazorpay({
-        amount:      therapist.fee,
-        description: `Therapy session with ${therapist.name}`,
-        receipt:     `book_${therapist.id}_${Date.now()}`,
-        prefill:     { name: clientName, email: clientEmail, contact: clientPhone },
-        onSuccess: async (payload) => {
-          const verifyRes = await fetch('/api/razorpay?action=verify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload),
-          })
-          const vd = await verifyRes.json()
-          if (!verifyRes.ok || !vd.verified) throw new Error('Payment verification failed.')
-          await doBooking()
-        },
-        onFailure: (msg) => { setBookingError(msg); setBookingLoading(false) },
-      })
-      setBookingLoading(false)
-    } else {
-      try {
-        setBookingLoading(true)
-        await doBooking()
-      } catch (e: any) {
-        setBookingError(e?.message ?? 'Network error. Please try again.')
-      } finally {
-        setBookingLoading(false)
-      }
+    if (USE_WHATSAPP) {
+      openWhatsApp(therapist, clientName, selectedSlot, day?.fullLabel ?? '')
+      setBooked(true)
+      return
     }
+    await book({
+      therapist_id:  therapist.id!,
+      client_name:   clientName,
+      client_email:  clientEmail,
+      client_phone:  clientPhone,
+      scheduled_at:  selectedSlotIso,
+      duration_mins: therapist.sessionDuration ?? 50,
+      service_price: typeof therapist.fee === 'number' && therapist.fee > 0 ? therapist.fee : 500,
+    })
   }
 
   return (
@@ -142,26 +129,14 @@ export default function Booking({ therapist, bookedTimes = [] }: BookingProps) {
               </div>
               <div className="ct5-session-row">
                 <span className="ct5-session-key">Payment</span>
-                <span className="ct5-session-val">🔒 Secure via Razorpay</span>
+                <span className="ct5-session-val">🔒 Secure via PayU</span>
               </div>
             </div>
-
-            {/* <div style={{ marginTop: '1.5rem', display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {[
-                { icon: '🔒', text: 'Fully confidential always' },
-                { icon: '📋', text: 'Evidence-based, personalised care' },
-                { icon: '✅', text: 'RCI Licensed Psychologist' },
-              ].map((t, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, fontSize: 13, fontWeight: 300, color: 'var(--charcoal)' }}>
-                  <span style={{ fontSize: 16 }}>{t.icon}</span>{t.text}
-                </div>
-              ))}
-            </div> */}
           </div>
 
           {/* RIGHT — Booking flow card */}
           <div className="ct5-booking-card ct5-reveal" style={{ transitionDelay: '0.12s' }}>
-            {!mounted ? (
+            {!mounted || slotsLoading ? (
               <div style={{ padding: '1rem 0', opacity: 0.2 }}>
                 {[55, 38, 46].map((w, i) => (
                   <div key={i} style={{ height: 8, background: 'var(--border)', marginBottom: 14, width: `${w}%`, borderRadius: 4 }} />
@@ -177,7 +152,6 @@ export default function Booking({ therapist, bookedTimes = [] }: BookingProps) {
                 </p>
               </div>
             ) : !selectedSlot ? (
-              /* ── PICKER VIEW — day + time. Swaps out once a slot is chosen ── */
               <>
                 {/* Step 1 */}
                 <div style={{ marginBottom: '1.8rem' }}>
@@ -216,19 +190,15 @@ export default function Booking({ therapist, bookedTimes = [] }: BookingProps) {
                 </div>
               </>
             ) : (
-              /* ── DETAILS VIEW — swapped in after a slot is picked ── */
               <div style={{ animation: 'ct5-fade-up 0.5s ease both' }}>
-                {/* Back to change date/time */}
                 <button
                   type="button"
-                  className="ct5-booking-back"
                   onClick={() => { setSelectedSlot(null); setSelectedSlotIso(null); setClientName(''); setClientEmail(''); setClientPhone(''); setBookingError('') }}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--warm-gray)', fontFamily: "'Inter', sans-serif", fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', padding: 0, marginBottom: '1.2rem' }}
                 >
                   ← Change date or time
                 </button>
 
-                {/* Selected session summary */}
                 <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 12, paddingBottom: '1.2rem', marginBottom: '1.6rem', borderBottom: '1px solid var(--border)' }}>
                   <span style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 22, color: 'var(--forest)' }}>
                     {day?.label} {day?.date} {day?.month?.toUpperCase()}
@@ -262,11 +232,11 @@ export default function Booking({ therapist, bookedTimes = [] }: BookingProps) {
                   <p style={{ color: '#b85050', fontSize: 11, fontWeight: 500, letterSpacing: '0.06em', marginTop: '1rem' }}>⚠ {bookingError}</p>
                 )}
 
-                {therapist.fee && therapist.fee > 0 && (
+                {therapist.fee != null && therapist.fee > 0 && (
                   <p style={{ fontSize: 12, color: 'var(--warm-gray)', marginTop: '1rem', lineHeight: 1.5 }}>
                     You will be charged{' '}
                     <strong style={{ color: 'var(--forest)' }}>₹{therapist.fee.toLocaleString()}</strong>
-                    {' '}via Razorpay before your booking is confirmed.
+                    {' '}via PayU before your booking is confirmed.
                   </p>
                 )}
 
@@ -278,7 +248,7 @@ export default function Booking({ therapist, bookedTimes = [] }: BookingProps) {
                 >
                   {bookingLoading ? (
                     <><Loader2 size={13} className="animate-spin" /> Processing…</>
-                  ) : therapist.fee && therapist.fee > 0 ? (
+                  ) : therapist.fee != null && therapist.fee > 0 ? (
                     <>Pay ₹{therapist.fee.toLocaleString()} & Confirm &nbsp;→</>
                   ) : (
                     <>Confirm Session &nbsp;→</>

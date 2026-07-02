@@ -37,6 +37,7 @@ function SignupForm() {
   const [password, setPassword]   = useState('')
   const [photoFile, setPhotoFile] = useState<File | null>(null)
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
+  const [phone, setPhone]         = useState('')
   const [error, setError]         = useState('')
   const [loading, setLoading]     = useState(false)
   // The demo the user built on /try, carried into their real account.
@@ -181,6 +182,7 @@ function SignupForm() {
     if (!username || username.length < 3) return 'Username must be at least 3 characters'
     // Basic shape check; the OTP step proves the inbox actually exists.
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return 'Please enter a valid email address'
+    if (!phone.trim() || !/^[6-9]\d{9}$/.test(phone.replace(/\s/g, ''))) return 'Please enter a valid 10-digit Indian mobile number'
     return validatePassword(password)
   }
 
@@ -312,8 +314,9 @@ function SignupForm() {
       full_name:           displayName,
       email,
       username,
+      phone:               phone.replace(/\s/g, '') || null,
       photo_url,
-      plan:                'none',   // unpaid — must choose & pay a plan before dashboard
+      plan:                'none',
       is_active:           true,
       is_profile_complete: false,
       ...demoFields,
@@ -630,6 +633,29 @@ with the design and details you chose. </p> </div>
       onChange={(e) => setEmail(e.target.value)}
       placeholder="priya@example.com"
     />
+
+    {/* Phone */}
+    <div>
+      <label className="block text-sm font-medium text-[#6b7280] mb-1.5">
+        Mobile Number
+      </label>
+      <div className="flex gap-2">
+        <div className="h-11 flex items-center px-3 rounded-lg border border-[#e8e4df] bg-[#f2f0ed] text-sm text-[#6b7280] shrink-0">
+          +91
+        </div>
+        <input
+          type="tel"
+          required
+          value={phone}
+          onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+          placeholder="9876543210"
+          inputMode="numeric"
+          maxLength={10}
+          className="flex-1 h-11 px-4 rounded-lg border border-[#e8e4df] text-sm text-[#1c1c1e] placeholder-[#6b7280] focus:outline-none focus:ring-2 focus:ring-[#FF9933]/50"
+        />
+      </div>
+      <p className="text-xs text-[#6b7280] mt-1.5">Used for client communication and WhatsApp notifications.</p>
+    </div>
 
 <div>
   <label className="block text-sm font-medium text-[#6b7280] mb-1.5">

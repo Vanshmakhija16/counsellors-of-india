@@ -7,6 +7,7 @@ import ClassicTemplate3 from '@/components/booking/templates/ClassicTemplate3'
 import ClassicTemplate4 from '@/components/booking/templates/ClassicTemplate4'
 import ClassicTemplate5 from '@/components/booking/templates/ClassicTemplate5'
 import ClassicTemplate6 from '@/components/booking/templates/ClassicTemplate6'
+import PreviewMessageListener from './PreviewMessageListener'
 
 type SearchParams = Promise<{ embed?: string; pc?: string }>
 
@@ -56,16 +57,21 @@ export default async function LivePreviewPage({
 
   const profile = {
     id:              therapist.id,
-    name:            therapist.full_name ?? '',
+    name:            therapist.full_name ?? '',          // templates use .name
+    full_name:       therapist.full_name ?? '',
     credentials:     therapist.title ?? '',
     bio:             therapist.bio ?? '',
-    image:           therapist.photo_url ?? '',
+    image:           therapist.photo_url ?? '',          // templates use .image
+    photo_url:       therapist.photo_url ?? '',
     location:        therapist.city ?? '',
+    city:            therapist.city ?? '',
     experience:      therapist.years_experience ?? 0,
-    fee:             therapist.fee_per_session ?? 0,
+    fee:             therapist.fee_per_session ?? 0,     // templates use .fee
+    fee_per_session: therapist.fee_per_session ?? 0,
     specialties:     therapist.specialties ?? [],
     languages:       therapist.languages ?? ['English'],
-    sessionDuration: therapist.session_duration_mins ?? 50,
+    sessionDuration: therapist.session_duration_mins ?? 50, // templates use .sessionDuration
+    session_duration_mins: therapist.session_duration_mins ?? 50,
     sessionMode:     therapist.session_mode ?? 'both',
     phone:           therapist.phone ?? '',
     plan:            therapist.plan ?? 'free',
@@ -111,18 +117,7 @@ export default async function LivePreviewPage({
       `}</style>
       <style>{brandStyle}</style>
 
-      <script dangerouslySetInnerHTML={{ __html: `
-        window.addEventListener('message', function(e) {
-          if (e.data && e.data.type === 'PROFILE_CONTENT_UPDATE') {
-            var base = window.location.href
-              .replace(/[?&]pc=[^&]*/g, '')
-              .replace(/&$/, '')
-              .replace(/\\?$/, '');
-            var sep = base.indexOf('?') === -1 ? '?' : '&';
-            window.location.href = base + sep + 'pc=' + encodeURIComponent(JSON.stringify(e.data.profileContent));
-          }
-        });
-      `}} />
+      <PreviewMessageListener />
 
       <div className={isEmbed ? '' : 'pt-8'}>
         {TemplateNode}

@@ -13,6 +13,9 @@ import Carousel from './ClassicTemplate/Carousel'
 import Booking from './ClassicTemplate/Booking'
 import Footer from './ClassicTemplate/Footer'
 import Feedback, { type FeedbackItem } from './ClassicTemplate/Feedback'
+import EditProvider from './edit/EditProvider'
+import EditToggle from './edit/EditToggle'
+import { useEditableTemplate } from './edit/EditContext'
 
 interface ClassicTemplateProps {
   therapist: TherapistProfile
@@ -20,6 +23,8 @@ interface ClassicTemplateProps {
   bookedTimes?: string[]
   feedbacks?: FeedbackItem[]
   hiddenSections?: string[]
+  /** True when the logged-in user viewing this page owns this profile. */
+  isOwner?: boolean
 }
 
 // Hardcoded carousel slide backgrounds/accents (visual only, not editable)
@@ -31,7 +36,16 @@ const SLIDE_STYLES = [
   { bg: 'linear-gradient(135deg, #1f2430 0%, #29303f 60%, #1a1f2a 100%)', accent: '#7a9fc4' },
 ]
 
-export default function ClassicTemplate({ therapist, bookedTimes = [], feedbacks = [], hiddenSections = [] }: ClassicTemplateProps) {
+export default function ClassicTemplate({ therapist, bookedTimes = [], feedbacks = [], hiddenSections = [], isOwner = false }: ClassicTemplateProps) {
+  return (
+    <EditProvider isOwner={isOwner} therapist={therapist}>
+      <ClassicTemplateInner bookedTimes={bookedTimes} feedbacks={feedbacks} hiddenSections={hiddenSections} />
+    </EditProvider>
+  )
+}
+
+function ClassicTemplateInner({ bookedTimes = [], feedbacks = [], hiddenSections = [] }: Omit<ClassicTemplateProps, 'therapist' | 'isOwner'>) {
+  const { draft: therapist } = useEditableTemplate()
   const show = (id: string) => !hiddenSections.includes(id)
   const orderedIds = getOrderedSections('classic', therapist.section_order, hiddenSections).map(s => s.id)
   const days = getNext7Days()
@@ -216,6 +230,7 @@ export default function ClassicTemplate({ therapist, bookedTimes = [], feedbacks
       <style>{globalStyles}</style>
       <Navbar scrolled={scrolled} scrollTo={scrollTo} therapist={therapist} />
       {orderedIds.map(id => sectionEls[id])}
+      <EditToggle />
     </div>
   )
 }

@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuietRoomMotion } from './_motion'
 
 const STEPS = [
@@ -24,11 +24,70 @@ const NODES = [
 export default function Process() {
   const rootRef = useRef<HTMLElement | null>(null)
   const pathRef = useRef<SVGPathElement | null>(null)
+  const wrapRef = useRef<HTMLDivElement | null>(null)
+  const [nodePositions, setNodePositions] = useState(NODES)
+  const [pathD, setPathD] = useState(PATH)
+  const [svgHeight, setSvgHeight] = useState(510)
+
+  // Recompute node Y-positions from the actual rendered step block centers,
+  // so dots always line up with their step regardless of text length/wrap.
+  useEffect(() => {
+    function recompute() {
+      const wrap = wrapRef.current
+      if (!wrap) return
+      const steps = Array.from(wrap.querySelectorAll<HTMLElement>('.qr-pr-step'))
+      if (steps.length === 0) return
+      const wrapTop = wrap.getBoundingClientRect().top
+      const positions = steps.map((step, i) => {
+        const r = step.getBoundingClientRect()
+        const centerY = r.top - wrapTop + r.height / 2
+        return { x: NODES[i].x, y: centerY, side: NODES[i].side }
+      })
+      setNodePositions(positions)
+      const last = steps[steps.length - 1]
+      const lastBottom = last.getBoundingClientRect().bottom - wrapTop
+      setSvgHeight(Math.max(lastBottom + 20, 510))
+
+      // Rebuild a smooth path through the recomputed points.
+      const pts = positions
+      let d = `M${pts[0].x} ${pts[0].y}`
+      for (let i = 1; i < pts.length; i++) {
+        const prev = pts[i - 1]
+        const cur = pts[i]
+        const midY = (prev.y + cur.y) / 2
+        d += ` C${prev.x} ${midY} ${cur.x} ${midY} ${cur.x} ${cur.y}`
+      }
+      setPathD(d)
+    }
+
+    recompute()
+    const id = window.setTimeout(() => {
+      recompute()
+      // The path geometry just changed — re-measure its length so the
+      // scroll-driven draw-in animation uses accurate dash values, and
+      // nudge ScrollTrigger to recalc trigger positions against the new
+      // (possibly taller) section height.
+      requestAnimationFrame(async () => {
+        const path = pathRef.current
+        if (path) {
+          const len = path.getTotalLength()
+          const { gsap } = await import('gsap')
+          gsap.set(path, { strokeDasharray: len })
+        }
+        const { ScrollTrigger } = await import('gsap/ScrollTrigger')
+        ScrollTrigger.refresh()
+      })
+    }, 150) // after fonts/layout settle
+    window.addEventListener('resize', recompute)
+    return () => { window.clearTimeout(id); window.removeEventListener('resize', recompute) }
+  }, [])
 
   useQuietRoomMotion(({ gsap, ScrollTrigger, reduced, narrow }) => {
     const ctx = gsap.context(() => {
       const path = pathRef.current
       if (path) {
+        // Re-measure after the path's `d` has settled to its final,
+        // layout-accurate value (set by the recompute effect above).
         const len = path.getTotalLength()
         gsap.set(path, { strokeDasharray: len, strokeDashoffset: reduced ? 0 : len })
       }
@@ -42,7 +101,7 @@ export default function Process() {
       if (path && !narrow) {
         gsap.to(path, {
           strokeDashoffset: 0, ease: 'none',
-          scrollTrigger: { trigger: rootRef.current, start: 'top 60%', end: 'bottom 80%', scrub: true },
+          scrollTrigger: { trigger: rootRef.current, start: 'top 60%', end: 'bottom bottom', scrub: true },
         })
       } else if (path) {
         gsap.to(path, { strokeDashoffset: 0, duration: 1.2, ease: 'power1.inOut',
@@ -52,22 +111,27 @@ export default function Process() {
       gsap.utils.toArray<HTMLElement>('.qr-pr-step').forEach((step, i) => {
         gsap.from(step, {
           opacity: 0, y: 18, scale: 0.96, duration: 0.5, ease: 'back.out(1.2)',
-          scrollTrigger: { trigger: step, start: 'top 82%', once: true },
+          scrollTrigger: { trigger: step, start: 'top 85%', once: true },
         })
-        gsap.from(`.qr-pr-node[data-i="${i}"]`, {
-          opacity: 0, scale: 0.85, duration: 0.5, ease: 'back.out(1.2)',
-          scrollTrigger: { trigger: step, start: 'top 82%', once: true },
-        })
+        const node = rootRef.current?.querySelector(`.qr-pr-node[data-i="${i}"]`)
+        if (node) {
+          gsap.set(node, { opacity: 0, scale: 0.85, transformOrigin: 'center' })
+          gsap.to(node, {
+            opacity: 1, scale: 1, duration: 0.5, ease: 'back.out(1.2)',
+            scrollTrigger: { trigger: step, start: 'top 85%', once: true },
+          })
+        }
       })
 
-      // The room dims toward dusk across this section — the "going deeper" beat.
+      // The room dims toward dusk early in the section, then holds — avoids
+      // washing out later steps over a long scrub range.
       gsap.to(rootRef.current, {
         backgroundColor: '#2A2330', color: '#F2EEE4', ease: 'none',
-        scrollTrigger: { trigger: rootRef.current, start: 'top 50%', end: 'bottom 50%', scrub: true },
+        scrollTrigger: { trigger: rootRef.current, start: 'top 80%', end: 'top 20%', scrub: true },
       })
       gsap.to('.qr-pr-step h3', {
         color: '#F2EEE4', ease: 'none',
-        scrollTrigger: { trigger: rootRef.current, start: 'top 50%', end: 'bottom 50%', scrub: true },
+        scrollTrigger: { trigger: rootRef.current, start: 'top 80%', end: 'top 20%', scrub: true },
       })
 
       ScrollTrigger.refresh()
@@ -83,8 +147,8 @@ export default function Process() {
         .qr-pr-title { font-family: 'Spectral', serif; font-weight: 300; font-size: clamp(30px,4.4vw,52px);
           letter-spacing: -0.02em; margin: 12px 0 0; }
 
-        .qr-pr-wrap { position: relative; max-width: 760px; margin: 40px auto 0; padding: 0 24px; min-height: 540px; }
-        .qr-pr-svg { position: absolute; left: 50%; top: 0; transform: translateX(-50%); width: 290px; height: 540px;
+        .qr-pr-wrap { position: relative; max-width: 760px; margin: 40px auto 0; padding: 0 24px; }
+        .qr-pr-svg { position: absolute; left: 50%; top: 0; transform: translateX(-50%); width: 290px;
           z-index: 1; pointer-events: none; }
         .qr-pr-thread { fill: none; stroke: var(--qr-moss); stroke-width: 1.6; stroke-linecap: round; opacity: 0.85; }
         .qr-pr-node { fill: var(--qr-honey); }
@@ -112,10 +176,10 @@ export default function Process() {
         <h2 className="qr-pr-title">You won't be walking in blind.</h2>
       </div>
 
-      <div className="qr-pr-wrap">
-        <svg className="qr-pr-svg" viewBox="0 0 290 510" aria-hidden>
-          <path ref={pathRef} className="qr-pr-thread" d={PATH} />
-          {NODES.map((nd, i) => (
+      <div className="qr-pr-wrap" ref={wrapRef} style={{ minHeight: svgHeight + 30 }}>
+        <svg className="qr-pr-svg" viewBox={`0 0 290 ${svgHeight}`} style={{ height: svgHeight }} aria-hidden>
+          <path ref={pathRef} className="qr-pr-thread" d={pathD} />
+          {nodePositions.map((nd, i) => (
             <circle key={i} className="qr-pr-node" data-i={i} cx={nd.x} cy={nd.y} r={5} />
           ))}
         </svg>

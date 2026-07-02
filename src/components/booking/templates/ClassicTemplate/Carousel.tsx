@@ -1,6 +1,8 @@
 'use client'
 
 import { ChevronLeft, ChevronRight, Quote } from 'lucide-react'
+import { useEditableTemplate } from '../edit/EditContext'
+import type { CT1CarouselSlide } from '../templateUtils'
 
 interface CarouselProps {
   slide: any
@@ -13,8 +15,34 @@ interface CarouselProps {
   setCarouselAnim: (a: 'idle' | 'left' | 'right') => void
 }
 
+// ── tiny shared edit-mode input styles (matches Services.tsx) ────────────
+const editInp = `w-full rounded border border-dashed border-[#ff9933] bg-[#fffbf5]/10
+  px-2 py-1 outline-none focus:border-solid focus:ring-2
+  focus:ring-[#ff9933]/30 resize-none placeholder:text-white/40`
+
 export default function Carousel({ slide, slides, carouselIndex, carouselAnim, goPrev, goNext, setCarouselIndex, setCarouselAnim }: CarouselProps) {
+  const { editMode, updateProfileContent } = useEditableTemplate()
   const carouselSlides = slides
+
+  // ── helper to patch the currently-viewed slide in profile_content.classic.carousel ──
+  // Only the editable fields (headline/steps text) are persisted here; visual
+  // styling (bg/accent) is re-merged from SLIDE_STYLES by the parent on read.
+  function patchSlide(patch: Partial<CT1CarouselSlide>) {
+    updateProfileContent(pc => {
+      const existing: CT1CarouselSlide[] = (pc as any)?.classic?.carousel ?? carouselSlides.map((s: any) => ({
+        type: s.type, tag: s.tag, text: s.text, author: s.author, sub: s.sub,
+        headline: s.headline, stats: s.stats, steps: s.steps, quote: s.quote, name: s.name, role: s.role,
+      }))
+      const updated = existing.map((s, j) => j === carouselIndex ? { ...s, ...patch } : s)
+      return { ...pc, classic: { ...((pc as any)?.classic ?? {}), carousel: updated } }
+    })
+  }
+
+  function patchStep(stepIdx: number, patch: Partial<{ t: string; d: string }>) {
+    const steps = ((slide as any).steps ?? []).map((st: any, j: number) => j === stepIdx ? { ...st, ...patch } : st)
+    patchSlide({ steps })
+  }
+
   return (
       <section
         id="carousel"
@@ -75,14 +103,46 @@ export default function Carousel({ slide, slides, carouselIndex, carouselAnim, g
                 {/* PROCESS type */}
                 {slide.type === 'process' && (
                   <div className="ct-slide-process">
-                    <h3 className="ct-slide-process__headline" style={{ color: '#efe7d6' }}>{(slide as any).headline}</h3>
+                    {editMode ? (
+                      <input
+                        value={(slide as any).headline ?? ''}
+                        onChange={e => patchSlide({ headline: e.target.value })}
+                        placeholder="Section headline"
+                        className={`${editInp} ct-slide-process__headline`}
+                        style={{ color: '#efe7d6' }}
+                      />
+                    ) : (
+                      <h3 className="ct-slide-process__headline" style={{ color: '#efe7d6' }}>{(slide as any).headline}</h3>
+                    )}
                     <div className="ct-slide-process__steps">
                       {(slide as any).steps.map((st: any, i: number) => (
                         <div key={i} className="ct-slide-process__step">
                           <span className="ct-slide-process__num" style={{ color: slide.accent }}>{st.n}</span>
-                          <div>
-                            <p className="ct-slide-process__step-title" style={{ color: '#efe7d6' }}>{st.t}</p>
-                            <p className="ct-slide-process__step-desc">{st.d}</p>
+                          <div className="w-full">
+                            {editMode ? (
+                              <>
+                                <input
+                                  value={st.t}
+                                  onChange={e => patchStep(i, { t: e.target.value })}
+                                  placeholder="Step title"
+                                  className={`${editInp} mb-1.5`}
+                                  style={{ color: '#efe7d6' }}
+                                />
+                                <textarea
+                                  rows={2}
+                                  value={st.d}
+                                  onChange={e => patchStep(i, { d: e.target.value })}
+                                  placeholder="Step description"
+                                  className={editInp}
+                                  style={{ color: '#c8b99a' }}
+                                />
+                              </>
+                            ) : (
+                              <>
+                                <p className="ct-slide-process__step-title" style={{ color: '#efe7d6' }}>{st.t}</p>
+                                <p className="ct-slide-process__step-desc">{st.d}</p>
+                              </>
+                            )}
                           </div>
                         </div>
                       ))}

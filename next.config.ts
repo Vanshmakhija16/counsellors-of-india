@@ -1,14 +1,23 @@
 import type { NextConfig } from "next";
 
 
-const nextConfig = {
+const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // eslint: {
-  //   ignoreDuringBuilds: true,
-  // },
-   output: 'standalone',
+  output: 'standalone',
+  async headers() {
+    return [
+      {
+        // Prevent Vercel edge from caching therapist profile pages
+        // so direct URL hits always reach the origin and find the DB record.
+        source: '/:username',
+        headers: [
+          { key: 'Cache-Control', value: 'no-store, must-revalidate' },
+        ],
+      },
+    ]
+  },
 }
 
 export default nextConfig

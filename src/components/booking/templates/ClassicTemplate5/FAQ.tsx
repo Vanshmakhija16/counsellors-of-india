@@ -15,10 +15,10 @@ const FAQS = [
     q: 'How many sessions will I need?',
     a: 'This depends entirely on your goals and the nature of what you are working through. Some find significant relief within 8–12 sessions; others choose to continue for a year or more. We will periodically review progress and adjust our approach together.',
   },
-  {
-    q: 'What is your cancellation policy?',
-    a: 'Please cancel or reschedule at least 48 hours before your session to avoid a charge. I understand life is unpredictable — emergencies are always considered individually.',
-  },
+  // {
+  //   q: 'What is your cancellation policy?',
+  //   a: 'Please cancel or reschedule at least 48 hours before your session to avoid a charge. I understand life is unpredictable — emergencies are always considered individually.',
+  // },
   {
     q: 'Is everything I share confidential?',
     a: 'Absolutely. Confidentiality is both an ethical and legal obligation. The only exceptions are those required by law: imminent risk to yourself or others, or disclosure in cases of child or elder abuse.',

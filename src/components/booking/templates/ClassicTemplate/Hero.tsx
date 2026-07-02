@@ -3,6 +3,8 @@
 import type { RefObject } from 'react'
 import type { TherapistProfile } from '../templateUtils'
 import { getAvailableDays, resolveImage } from '../templateUtils'
+import EditableText from '../edit/EditableText'
+import { useEditableTemplate } from '../edit/EditContext'
 
 interface HeroProps {
   therapist: TherapistProfile
@@ -11,6 +13,7 @@ interface HeroProps {
 }
 
 export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
+  const { editMode } = useEditableTemplate()
   const availableDays = getAvailableDays(therapist.availability, therapist.sessionDuration)
   const nextDay = availableDays.find((d) => d.slots.length > 0) ?? availableDays[0]
 
@@ -54,7 +57,7 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
       className={`relative overflow-hidden bg-[#efe7d6] px-6 lg:px-12 flex items-center transition-all duration-1000 ${
         heroLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}
-      style={{ minHeight: '560px', height: 'clamp(560px, 75vh, 800px)' }}
+      style={{ minHeight: '610px', height: 'clamp(560px, 85vh, 800px)', paddingTop: '5rem' }}
     >
       <div className="relative z-10 mx-auto w-full px-8 max-w-[1180px]">
         <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
@@ -70,16 +73,24 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
                 fontSize: 'clamp(28px, 7vw, 96px)',
               }}
             >
-              <span className="block whitespace-nowrap">
-                {namePrefix && <span className="text-[#b46b50]">{namePrefix} </span>}
-                {nameLead}
-              </span>
-              {nameSurname && <span className="block whitespace-nowrap">{nameSurname}</span>}
+              <EditableText field="name" placeholder="Your full name">
+                {() => (
+                  <>
+                    <span className="block whitespace-nowrap">
+                      {namePrefix && <span className="text-[#b46b50]">{namePrefix} </span>}
+                      {nameLead}
+                    </span>
+                    {nameSurname && <span className="block whitespace-nowrap">{nameSurname}</span>}
+                  </>
+                )}
+              </EditableText>
             </h1>
 
             <div className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 sm:justify-start">
               <span className="text-[12px] font-semibold uppercase tracking-[0.26em] text-[#1f1b16]">
-                {therapist.credentials || 'Psychotherapy Practice'}
+                <EditableText field="credentials" placeholder="Psychotherapy Practice" className="text-[12px]">
+                  {(v) => v || 'Psychotherapy Practice'}
+                </EditableText>
               </span>
               {yearsBadge && (
                 <>
@@ -91,15 +102,21 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
               )}
             </div>
 
-            {tagline && (
+            {(tagline || editMode) && (
               <p
                 className="mx-auto mt-5 max-w-[480px] text-[clamp(16px,2.5vw,19px)] leading-[1.5] text-[#4d433a] sm:mx-0"
                 style={{ fontFamily: 'var(--font-fraunces), serif', fontWeight: 400 }}
               >
-                {taglineHead}
-                <span style={{ fontStyle: 'italic' }} className="text-[#b46b50]">
-                  {taglineTail}
-                </span>
+                <EditableText field="tagline" as="textarea" placeholder="A short line introducing your practice…">
+                  {() => (
+                    <>
+                      {taglineHead}
+                      <span style={{ fontStyle: 'italic' }} className="text-[#b46b50]">
+                        {taglineTail}
+                      </span>
+                    </>
+                  )}
+                </EditableText>
               </p>
             )}
 

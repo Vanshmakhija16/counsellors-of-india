@@ -45,9 +45,28 @@ export default function TemplateLiveSwitcher({
   }
   const [loading, setLoading] = useState(true)
   const iframeRef = useRef<HTMLIFrameElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const iframeWrapRef = useRef<HTMLDivElement>(null)
+  const [containerWidth, setContainerWidth] = useState(0)
 
   const meta = META[active]
   const activeTpl = TEMPLATES.find(t => t.id === active)!
+
+  useEffect(() => {
+    // Measure iframe wrapper width — this is the actual available space
+    const el = iframeWrapRef.current
+    if (!el) return
+    const measure = () => {
+      const w = el.getBoundingClientRect().width
+      if (w > 0) setContainerWidth(w)
+    }
+    // Measure immediately + after paint
+    measure()
+    requestAnimationFrame(measure)
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
 
   useEffect(() => {
     if (!controlledActive) setInternalActive(selectedTemplate)
@@ -88,10 +107,10 @@ export default function TemplateLiveSwitcher({
   }
 
   return (
-    <div className="rounded-2xl border border-[#e8e4df] overflow-hidden bg-white">
-      {/* ── Tabs ── */}
+    <div ref={containerRef} className="rounded-2xl border border-[#e8e4df] overflow-hidden bg-white flex">
+      {/* ── Left sidebar tabs ── */}
       {!hideTabs && (
-        <div className="flex flex-wrap gap-2 p-3 border-b border-[#ede9e4] bg-[#fafaf9]">
+        <div className="flex flex-col gap-1 p-2 border-r border-[#ede9e4] bg-[#fafaf9] w-36 shrink-0">
           {TEMPLATES.map((t, i) => {
             const on = active === t.id
             const committed = t.id === committedTemplate
@@ -99,19 +118,24 @@ export default function TemplateLiveSwitcher({
               <button
                 key={t.id}
                 onClick={() => setActive(t.id)}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold border transition"
+                className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-xs font-semibold border transition text-left w-full"
                 style={on
                   ? { background: brandColor, borderColor: brandColor, color: '#fff' }
-                  : { borderColor: '#e8e4df', color: '#6b7280', background: '#fff' }}
+                  : { borderColor: 'transparent', color: '#6b7280', background: 'transparent' }}
               >
-                <span className="opacity-70">{String(i + 1).padStart(2, '0')}</span>
-                {t.name}
+                <span className="flex items-center gap-2">
+                  <span className="opacity-50 text-[10px]">{String(i + 1).padStart(2, '0')}</span>
+                  {t.name}
+                </span>
                 {committed && <Check size={11} className={on ? 'text-white' : 'text-emerald-500'} />}
               </button>
             )
           })}
         </div>
       )}
+
+      {/* ── Right: chrome + iframe + action bar ── */}
+      <div className="flex flex-col flex-1 min-w-0">
 
       {/* ── Browser chrome ── */}
       <div className="px-4 py-2.5 bg-[#f5f5f5] border-b border-[#e8e4df] flex items-center gap-2">
@@ -129,28 +153,34 @@ export default function TemplateLiveSwitcher({
       </div>
 
       {/* ── iframe viewport ── */}
-      <div className="relative bg-white overflow-hidden" style={{ height: frameHeight }}>
-        {loading && (
+      <div ref={iframeWrapRef} className="relative bg-white overflow-hidden" style={{ height: frameHeight }}>
+        {(loading || containerWidth === 0) && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white pointer-events-none">
             <span className="w-6 h-6 rounded-full border-2 border-[#e8e4df] border-t-[#a3b8b4] animate-spin" />
           </div>
         )}
 
-        <iframe
-          ref={iframeRef}
-          key={active}
-          src={buildSrc(active)}
-          title={`${activeTpl.name} preview`}
-          onLoad={() => setLoading(false)}
-          scrolling="no"
-          style={{
-            width: '100%',
-            height: '100%',
-            border: 'none',
-            display: 'block',
-            overflow: 'hidden',
-          }}
-        />
+        {containerWidth > 0 && (
+          <div className="absolute top-0 left-0 overflow-hidden" style={{ width: containerWidth, height: frameHeight }}>
+            <iframe
+              ref={iframeRef}
+              key={active}
+              src={buildSrc(active)}
+              title={`${activeTpl.name} preview`}
+              onLoad={() => setLoading(false)}
+              scrolling="no"
+              style={{
+                width: 1280,
+                height: Math.ceil(frameHeight / (containerWidth / 1280)),
+                border: 'none',
+                display: 'block',
+                transformOrigin: 'top left',
+                transform: `scale(${containerWidth / 1280})`,
+                pointerEvents: 'none',
+              }}
+            />
+          </div>
+        )}
 
         {/* prev/next arrows */}
         {!hideArrows && (
@@ -215,6 +245,7 @@ export default function TemplateLiveSwitcher({
           </div>
         </div>
       )}
+      </div>
     </div>
   )
 }

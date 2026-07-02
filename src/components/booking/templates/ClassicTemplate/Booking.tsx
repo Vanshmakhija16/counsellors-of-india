@@ -5,7 +5,15 @@ import { Clock, Video, Shield, ArrowLeft, Calendar, X } from 'lucide-react'
 import type { TherapistProfile } from '../templateUtils'
 import { getAvailableDays, slotToISO } from '../templateUtils'
 import type { ServiceItem } from './Services'
-import { useRazorpay } from '@/lib/useRazorpay'
+import { useBooking } from '@/lib/useBooking'
+
+// ── Temporary: send to WhatsApp instead of API/payment ──────────────────
+const USE_WHATSAPP = true
+function openWhatsApp(therapist: TherapistProfile, name: string, slot: string, date: string) {
+  const num = (therapist.whatsapp ?? therapist.phone ?? '').replace(/\D/g, '')
+  const msg = `Hi, I'd like to book a session.%0AName: ${encodeURIComponent(name)}%0ADate & Time: ${encodeURIComponent(date + ', ' + slot)}%0AService Duration: ${therapist.sessionDuration ?? 50} mins`
+  window.open(`https://wa.me/${num}?text=${msg}`, '_blank')
+}
 
 interface BookingProps {
   therapist: TherapistProfile
@@ -14,9 +22,20 @@ interface BookingProps {
   onClearService?: () => void
 }
 
-export default function Booking({ therapist, bookedTimes = [], selectedService, onClearService }: BookingProps) {
+export default function Booking({ therapist, bookedTimes: initialBookedTimes = [], selectedService, onClearService }: BookingProps) {
   const [mounted, setMounted] = useState(false)
-  useEffect(() => { setMounted(true) }, [])
+  const [bookedTimes, setBookedTimes] = useState<string[]>(initialBookedTimes)
+  const [slotsLoading, setSlotsLoading] = useState(true)
+
+  useEffect(() => {
+    setMounted(true)
+    if (!therapist.id) { setSlotsLoading(false); return }
+    fetch(`/api/booked-slots?therapist_id=${encodeURIComponent(therapist.id)}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.bookedTimes) setBookedTimes(d.bookedTimes) })
+      .catch(() => {})
+      .finally(() => setSlotsLoading(false))
+  }, [therapist.id])
 
   const availableDays = useMemo(
     () => getAvailableDays(therapist.availability, therapist.sessionDuration, 14, bookedTimes),
@@ -30,98 +49,59 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
   const [clientEmail, setClientEmail] = useState('')
   const [clientPhone, setClientPhone] = useState('')
   const [bookingError, setBookingError] = useState('')
-  const [bookingLoading, setBookingLoading] = useState(false)
   const [booked, setBooked] = useState(false)
 
-  const { openRazorpay } = useRazorpay()
+  const { book, loading: bookingLoading } = useBooking({
+    onSuccess: () => setBooked(true),
+    onError:   (msg) => setBookingError(msg),
+    onSlotsRefresh: (fresh) => {
+      setBookedTimes(fresh)
+      // Clear the selected slot — it just got taken
+      setSelectedSlot(null)
+      setSelectedSlotIso(null)
+    },
+  })
 
   if (!mounted) return null
+  if (slotsLoading) return (
+    <section id="contact" className="relative bg-[#f5ecd6]" style={{ borderTop: '3px solid #b46b50' }}>
+      <div className="mx-auto max-w-[1180px] px-6 py-24 flex items-center justify-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#b46b50] border-t-transparent" />
+      </div>
+    </section>
+  )
 
   const day = availableDays[selectedDayIdx]
   const slotsForDay = availableDays[selectedDayIdx]?.slots
     .map(label => ({ label, isoTime: slotToISO(label, day.dateObj) })) ?? []
 
-  // Price: service-specific → therapist default → nothing
-  const effectivePrice = selectedService?.price ?? therapist.fee
-
-  async function confirmBookingInDB() {
-    const res = await fetch('/api/book', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        therapist_id:  therapist.id,
-        client_name:   clientName,
-        client_email:  clientEmail,
-        client_phone:  clientPhone,
-        scheduled_at:  selectedSlotIso,
-        duration_mins: therapist.sessionDuration,
-        service_name:  selectedService?.title ?? null,
-        service_price: effectivePrice ?? null,
-      }),
-    })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error ?? 'Booking failed. Please try again.')
-    if (data?.whatsapp?.therapist) {
-      window.open(data.whatsapp.therapist, '_blank', 'noopener,noreferrer')
-    }
-    setBooked(true)
-  }
+  const effectivePrice: number | null =
+    selectedService?.price != null
+      ? (typeof selectedService.price === 'number' ? selectedService.price : null)
+      : typeof therapist.fee === 'number' && therapist.fee > 0 ? therapist.fee : 500
 
   async function handleConfirmBooking() {
     if (!selectedSlot || !selectedSlotIso) return
-    if (!clientName.trim() || !clientEmail.trim() || !clientPhone.trim()) {
-      setBookingError('Please enter your name, email and phone number.')
+    if (!clientName.trim() || !clientPhone.trim()) {
+      setBookingError('Please enter your name and phone number.')
       return
     }
-
     setBookingError('')
-
-    // If there is a price, collect payment first
-    if (effectivePrice && effectivePrice > 0) {
-      setBookingLoading(true)
-      await openRazorpay({
-        amount:      effectivePrice,
-        description: selectedService?.title
-          ? `${selectedService.title} with ${therapist.name}`
-          : `Therapy session with ${therapist.name}`,
-        receipt: `book_${therapist.id}_${Date.now()}`,
-        prefill: {
-          name:    clientName,
-          email:   clientEmail,
-          contact: clientPhone,
-        },
-        onSuccess: async (paymentPayload) => {
-          // Verify signature server-side
-          const verifyRes = await fetch('/api/razorpay?action=verify', {
-            method:  'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body:    JSON.stringify(paymentPayload),
-          })
-          const verifyData = await verifyRes.json()
-          if (!verifyRes.ok || !verifyData.verified) {
-            throw new Error('Payment verification failed. Please contact support.')
-          }
-          // Book the session
-          await confirmBookingInDB()
-        },
-        onFailure: (msg) => {
-          setBookingError(msg)
-          setBookingLoading(false)
-        },
-      })
-      setBookingLoading(false)
-    } else {
-      // No price — book directly
-      try {
-        setBookingLoading(true)
-        setBookingError('')
-        await confirmBookingInDB()
-      } catch (e: any) {
-        setBookingError(e?.message ?? 'Something went wrong. Please try again.')
-      } finally {
-        setBookingLoading(false)
-      }
+    if (USE_WHATSAPP) {
+      openWhatsApp(therapist, clientName, selectedSlot, day?.fullLabel ?? '')
+      setBooked(true)
+      return
     }
+    await book({
+      therapist_id:  therapist.id!,
+      client_name:   clientName,
+      client_email:  clientEmail,
+      client_phone:  clientPhone,
+      scheduled_at:  selectedSlotIso,
+      duration_mins: therapist.sessionDuration,
+      service_name:  selectedService?.title ?? null,
+      service_price: effectivePrice,
+    })
   }
 
   if (availableDays.length === 0) {
@@ -147,7 +127,6 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
 
       <div className="relative z-10 mx-auto max-w-[1180px] px-4 pt-20 pb-32 sm:px-6 lg:px-12 lg:pt-24 lg:pb-44">
         <div className="mb-10 flex items-center gap-3">
-          
           <p className="text-[11px] font-medium uppercase tracking-[0.30em] text-[#6b6056]"> Book A Session</p>
         </div>
 
@@ -167,7 +146,6 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
                 Select a date and time that feels comfortable.
               </p>
 
-              {/* Selected service pill */}
               {selectedService && (
                 <div className="mt-6 flex items-center justify-between rounded-2xl border border-[#b46b50]/50 bg-[#efe7d6] px-4 py-3">
                   <div>
@@ -175,16 +153,15 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
                     <p className="mt-0.5 text-[14px] font-semibold text-[#1a1a18]" style={{ fontFamily: 'var(--font-fraunces), serif' }}>
                       {selectedService.title}
                     </p>
-                    {selectedService.price != null && (
+                    {effectivePrice != null && effectivePrice > 0 && (
                       <p className="mt-0.5 text-[13px] text-[#6b6056]">
-                        ₹{selectedService.price.toLocaleString('en-IN')} / session
+                        ₹{effectivePrice.toLocaleString('en-IN')} / session
                       </p>
                     )}
                   </div>
                   <button
                     onClick={onClearService}
                     className="ml-3 flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-[#b46b50]/40 text-[#6b6056] transition hover:bg-[#b46b50] hover:text-white"
-                    title="Clear selection"
                   >
                     <X size={12} />
                   </button>
@@ -205,11 +182,10 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
                   <p className="text-[13.5px] font-medium text-[#6b6056]">{label}</p>
                 </div>
               ))}
-              {/* Payment badge */}
-              {effectivePrice && effectivePrice > 0 && (
+              {effectivePrice != null && effectivePrice > 0 && (
                 <div className="mt-2 flex items-center gap-2 rounded-xl border border-[#b46b50]/30 bg-[#efe7d6] px-4 py-2.5">
                   <span className="text-[18px]">🔒</span>
-                  <p className="text-[12px] text-[#6b6056]">Secure payment via Razorpay before booking is confirmed</p>
+                  <p className="text-[12px] text-[#6b6056]">Secure payment via PayU before booking is confirmed</p>
                 </div>
               )}
             </div>
@@ -226,7 +202,7 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
                 </h3>
                 <p className="mt-2 text-[13px] text-[#6b6056]">{day?.fullLabel} · {selectedSlot}</p>
                 <p className="mt-3 text-[12px] text-[#6b6056]">
-                  Confirmation email sent to{' '}
+                  Confirmation sent to{' '}
                   <span className="font-semibold text-[#1a1a18]">{clientEmail}</span>
                 </p>
               </div>
@@ -275,7 +251,6 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
                 <button disabled className="mt-7 flex w-full cursor-not-allowed items-center justify-center gap-2.5 rounded-xl bg-[#b46b50]/70 py-4 text-[11px] font-bold uppercase tracking-[0.28em] text-[#f5ecd6]/80">
                   Select a Time Slot
                 </button>
-                {/* <p className="mt-3 text-center text-[10.5px] text-[#6b6056]">Free · 24h before session</p> */}
               </>
 
             ) : (
@@ -288,7 +263,6 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
                   <ArrowLeft size={12} /> Change date or time
                 </button>
 
-                {/* Session summary card */}
                 <div className="rounded-2xl border border-[#b46b50] bg-[#f5ecd6] px-5 py-4">
                   <p className="text-[10px] font-semibold uppercase tracking-[0.3em] text-[#6b6056]">Selected session</p>
                   <div className="mt-2 flex items-center gap-3">
@@ -305,8 +279,7 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
                     </div>
                   </div>
 
-                  {/* Service + price line */}
-                  {effectivePrice != null && (
+                  {effectivePrice != null && effectivePrice > 0 && (
                     <div className="mt-3 flex items-center justify-between border-t border-[#e8dfc8] pt-3">
                       <span className="text-[12px] text-[#6b6056]">
                         {selectedService ? selectedService.title : 'Session fee'}
@@ -320,18 +293,15 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
 
                 <p className="mb-3 mt-7 text-[10px] font-semibold uppercase tracking-[0.3em] text-[#6b6056]">Your Details</p>
                 <div className="space-y-3">
-                  <input
-                    type="text" placeholder="Full name" value={clientName}
+                  <input type="text" placeholder="Full name" value={clientName}
                     onChange={e => setClientName(e.target.value)} autoComplete="name"
                     className="h-11 w-full rounded-full border border-[#b46b50] bg-[#f5ecd6] px-5 text-[13px] text-[#1a1a18] placeholder-[#6b6056]/70 outline-none transition focus:border-[#1a1a18] focus:bg-white"
                   />
-                  <input
-                    type="email" placeholder="Email address" value={clientEmail}
+                  <input type="email" placeholder="Email address" value={clientEmail}
                     onChange={e => setClientEmail(e.target.value)} autoComplete="email"
                     className="h-11 w-full rounded-full border border-[#b46b50] bg-[#f5ecd6] px-5 text-[13px] text-[#1a1a18] placeholder-[#6b6056]/70 outline-none transition focus:border-[#1a1a18] focus:bg-white"
                   />
-                  <input
-                    type="tel" placeholder="Phone number" value={clientPhone}
+                  <input type="tel" placeholder="Phone number" value={clientPhone}
                     onChange={e => setClientPhone(e.target.value)} autoComplete="tel"
                     className="h-11 w-full rounded-full border border-[#b46b50] bg-[#f5ecd6] px-5 text-[13px] text-[#1a1a18] placeholder-[#6b6056]/70 outline-none transition focus:border-[#1a1a18] focus:bg-white"
                   />
@@ -345,15 +315,10 @@ export default function Booking({ therapist, bookedTimes = [], selectedService, 
                 >
                   {bookingLoading
                     ? 'Processing…'
-                    : effectivePrice && effectivePrice > 0
+                    : effectivePrice != null && effectivePrice > 0
                       ? `Pay ₹${effectivePrice.toLocaleString('en-IN')} & Book`
                       : 'Confirm Booking'}
                 </button>
-                {/* <p className="mt-3 text-center text-[10.5px] text-[#6b6056]">
-                  {effectivePrice && effectivePrice > 0
-                    ? '🔒 Secure payment · Free cancellation 24h before session'
-                    : 'Free cancellation · 24h before session'}
-                </p> */}
               </>
             )}
           </div>

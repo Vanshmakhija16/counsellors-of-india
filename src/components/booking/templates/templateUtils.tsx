@@ -33,7 +33,7 @@ export function getInitials(name: string): string {
 export interface EditableService {
   name: string
   desc: string
-  price?: number
+  price?: string
   tag?: string
   kind?: string
   code?: string
@@ -61,9 +61,15 @@ export interface CT1CarouselSlide {
   role?: string
 }
 
+export interface CT1SocialLink {
+  name: string
+  url: string
+}
+
 export interface CT1Content {
   services?: EditableService[]
   carousel?: CT1CarouselSlide[]
+  socials?: CT1SocialLink[]
 }
 
 // ── CT2 (Editorial) ───────────────────────────────────────────────────────
@@ -274,6 +280,73 @@ export function slotToISO(slotLabel: string, dateObj: Date): string {
   const slotDate = new Date(dateObj); slotDate.setHours(hours, minutes, 0, 0); return slotDate.toISOString()
 }
 
+// ── Month-aware availability (for calendar-grid pickers) ─────────────────────
+// Unlike getAvailableDays (a flat lookahead list used by the day-strip
+// pickers), this answers "for this specific calendar month, which dates
+// have at least one open slot?" — the question a month-grid calendar needs
+// to grey out / highlight the right cells. Returns one entry per day in the
+// month (1..daysInMonth), each carrying its slot list (empty if none).
+
+export interface MonthDayAvailability {
+  date: number
+  dateObj: Date
+  isoDate: string
+  dayOfWeek: number // 0=Sun..6=Sat
+  isPast: boolean
+  slots: string[]
+}
+
+export function getAvailabilityForMonth(
+  availability: AvailabilityData | null | undefined,
+  durationMin: number,
+  year: number,
+  month: number, // 0-indexed, matches JS Date — 0=Jan
+  bookedISO: string[] = [],
+): MonthDayAvailability[] {
+  const bookedSet = new Set(bookedISO.map(t => new Date(t).toISOString()))
+  const cutoff    = Date.now() + MIN_ADVANCE_HOURS * 60 * 60 * 1000
+
+  const buffer = availability?.buffer ?? 0
+  const exceptions = availability?.exceptions ?? []
+  const daysInMonth = new Date(year, month + 1, 0).getDate()
+
+  const results: MonthDayAvailability[] = []
+
+  for (let date = 1; date <= daysInMonth; date++) {
+    const d = new Date(year, month, date); d.setHours(0, 0, 0, 0)
+    const dayName = DAY_NAMES[d.getDay()]
+    const isoDate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    const isPast = d.getTime() < new Date().setHours(0, 0, 0, 0)
+
+    let rawSlots: string[] = []
+    const exception = exceptions.find(e => e.date === isoDate)
+
+    if (exception) {
+      if (exception.type !== 'off') {
+        rawSlots = generateSlotsFromRanges(exception.ranges ?? [], availability?.duration ?? durationMin, buffer)
+      }
+    } else if (availability?.schedule) {
+      const ds = availability.schedule[dayName]
+      if (ds?.enabled && ds.ranges.length > 0) {
+        rawSlots = generateSlotsFromRanges(ds.ranges, availability.duration ?? durationMin, buffer)
+      }
+    } else if (!isPast) {
+      rawSlots = generateSlotsFromDuration(durationMin)
+    }
+
+    const slots = isPast ? [] : rawSlots.filter(label => {
+      const iso = slotToISO(label, d)
+      if (bookedSet.has(new Date(iso).toISOString())) return false
+      if (new Date(iso).getTime() < cutoff)            return false
+      return true
+    })
+
+    results.push({ date, dateObj: d, isoDate, dayOfWeek: d.getDay(), isPast, slots })
+  }
+
+  return results
+}
+
 export function getNext7Days() {
   const days = []
   for (let i = 0; i < 7; i++) {
@@ -302,7 +375,7 @@ export const SAMPLE_THERAPIST: TherapistProfile = {
 // Default content per template
 // ═══════════════════════════════════════════════════════════════════════════
 
-export const DEFAULT_CT1_CONTENT: Required<CT1Content> = {
+export const DEFAULT_CT1_CONTENT: Required<CT1Content> & { socials: CT1SocialLink[] } = {
   services: [
     { code: 'S/01', name: 'Counselling Psychology', kind: 'Individual Therapy', desc: 'One-to-one psychotherapy for adults navigating anxiety, depression, self-worth, identity, burnout, and life transitions — grounded in CBT, ACT, and somatic work.', forWhom: ['Anxiety', 'Burnout', 'Self-Esteem', 'Life Transitions'] },
     { code: 'S/02', name: 'Relationship Counselling', kind: 'Couple & Partners', desc: 'Structured sessions for couple and partners working through communication breakdowns, attachment patterns, conflict, intimacy, and rebuilding trust.', forWhom: ['Couple', 'Communication', 'Attachment', 'Trust'] },
@@ -310,11 +383,12 @@ export const DEFAULT_CT1_CONTENT: Required<CT1Content> = {
     { code: 'S/04', name: 'Career & Identity', kind: 'Personal Direction', desc: 'Reflective psychotherapy for professionals questioning purpose, identity, or major career inflection points — clarity-focused and non-prescriptive.', forWhom: ['Direction', 'Meaning', 'Purpose', 'Mid-Career'] },
   ],
   carousel: [
-    { type: 'quote', tag: 'Guiding Philosophy', text: '"The curious paradox is that when I accept myself just as I am, then I can change."', author: '— Carl Rogers', sub: 'On becoming a person' },
-    { type: 'stats', tag: 'By The Numbers', headline: 'Proven Results', stats: [{ val: '94%', label: 'Report reduced anxiety after 8 sessions' }, { val: '87%', label: 'Clients return for continued growth' }, { val: '500+', label: 'Sessions delivered' }] },
-    { type: 'process', tag: 'The Process', headline: 'How We Work Together', steps: [{ n: '01', t: 'Free Consultation', d: 'A 20-min call to understand your needs and answer your questions.' }, { n: '02', t: 'Tailored Plan', d: 'We co-create a therapy approach matched to your goals.' }, { n: '03', t: 'Weekly Sessions', d: 'Consistent, focused 50-minute sessions online or in-person.' }] },
-    { type: 'testimonial', tag: 'Client Stories', quote: '"I came in feeling completely lost. Six months later I have language for my feelings, tools for hard days, and a relationship with myself I never thought possible."', name: 'Karan M.', role: 'Client — 2024' },
+    { type: 'quote', tag: 'Guiding Philosophy', text: '"The curious paradox is that when I accept myself just as I am, then I can change."', author: '- Carl Rogers' },
+    // { type: 'stats', tag: 'By The Numbers', headline: 'Proven Results', stats: [{ val: '94%', label: 'Report reduced anxiety after 8 sessions' }, { val: '87%', label: 'Clients return for continued growth' }, { val: '500+', label: 'Sessions delivered' }] },
+    { type: 'process', tag: 'The Process', headline: 'How We Work Together', steps: [{ n: '01', t: 'Free Consultation', d: 'A 15 min call to understand your needs and answer your questions.' }, { n: '02', t: 'Tailored Plan', d: 'We co-create a therapy approach matched to your goals.' }, { n: '03', t: 'Weekly Sessions', d: 'Consistent, focused 50-minute sessions online or in-person.' }] },
+    // { type: 'testimonial', tag: 'Client Stories', quote: '"I came in feeling completely lost. Six months later I have language for my feelings, tools for hard days, and a relationship with myself I never thought possible."', name: 'Karan M.', role: 'Client — 2024' },
   ],
+  socials: [],
 }
 
 export const DEFAULT_CT2_CONTENT: Required<CT2Content> = {
@@ -368,12 +442,12 @@ export const DEFAULT_CT4_CONTENT = {
   },
   ticker: { items: ['Licensed Practitioner', 'Confidential Sessions', 'Evidence-Based Practice', 'Online & In-Person', 'RCI Accredited', 'Integrative Approach', 'First Session Diagnostic', 'Free Cancellation 48h'] },
   services: [
-    { name: 'Individual Psychotherapy', desc: 'One-on-one sessions tailored to your unique history, needs, and goals. Evidence-based modalities in a confidential, non-judgmental space.', price: 1500 },
-    { name: 'Couple Therapy',           desc: 'Restoring connection, communication, and mutual understanding between partners — from conflict navigation to deeper intimacy.', price: 2000 },
-    { name: 'Anxiety & Stress',         desc: 'Cognitive, somatic, and mindfulness-based tools to break cycles of rumination, worry, and overwhelm.', price: 1500 },
-    { name: 'Grief & Loss',             desc: 'Compassionate support through bereavement, major life transitions, and the complex terrain of what it means to lose.', price: 1200 },
-    { name: 'Identity & Self-Esteem',   desc: 'Deepening self-awareness and cultivating an authentic, grounded sense of self — free from self-criticism and comparison.', price: 1200 },
-    { name: 'Burnout & Recovery',       desc: 'Rebuilding energy, boundaries, and meaning for high-achieving individuals navigating chronic professional exhaustion.', price: 1800 },
+    { name: 'Individual Psychotherapy', desc: 'One-on-one sessions tailored to your unique history, needs, and goals. Evidence-based modalities in a confidential, non-judgmental space.', price: '1500' },
+    { name: 'Couple Therapy',           desc: 'Restoring connection, communication, and mutual understanding between partners — from conflict navigation to deeper intimacy.', price: '2000' },
+    { name: 'Anxiety & Stress',         desc: 'Cognitive, somatic, and mindfulness-based tools to break cycles of rumination, worry, and overwhelm.', price: '1500' },
+    { name: 'Grief & Loss',             desc: 'Compassionate support through bereavement, major life transitions, and the complex terrain of what it means to lose.', price: '1200' },
+    { name: 'Identity & Self-Esteem',   desc: 'Deepening self-awareness and cultivating an authentic, grounded sense of self — free from self-criticism and comparison.', price: '1200' },
+    { name: 'Burnout & Recovery',       desc: 'Rebuilding energy, boundaries, and meaning for high-achieving individuals navigating chronic professional exhaustion.', price: '1800' },
   ] as EditableService[],
   faq: [
     { q: 'How is the first session structured?', a: 'The first session (typically 60 minutes) is primarily an intake — I want to understand your history, what has brought you here, and what you hope to gain from our work together. By the end, we will have co-created a loose roadmap for our sessions.' },
@@ -413,6 +487,7 @@ export function resolveCT1Content(saved?: CT1Content): Required<CT1Content> {
   return {
     services: Array.isArray(saved?.services) ? saved!.services : DEFAULT_CT1_CONTENT.services,
     carousel: Array.isArray(saved?.carousel) ? saved!.carousel : DEFAULT_CT1_CONTENT.carousel,
+    socials:  Array.isArray(saved?.socials)  ? saved!.socials  : [],
   }
 }
 
