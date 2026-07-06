@@ -17,9 +17,10 @@ function openWhatsApp(therapist: TherapistProfile, name: string, slot: string, d
 interface BookingProps {
   therapist: TherapistProfile
   bookedTimes?: string[]
+  bookingLimitReached?: boolean
 }
 
-export default function Booking({ therapist, bookedTimes: initialBookedTimes = [] }: BookingProps) {
+export default function Booking({ therapist, bookedTimes: initialBookedTimes = [], bookingLimitReached = false }: BookingProps) {
   const [mounted, setMounted] = useState(false)
   const [bookedTimes, setBookedTimes] = useState<string[]>(initialBookedTimes)
   const [slotsLoading, setSlotsLoading] = useState(true)
@@ -48,10 +49,14 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
   const [clientPhone, setClientPhone] = useState('')
   const [bookingError, setBookingError] = useState('')
   const [booked, setBooked] = useState(false)
+  const [limitReached, setLimitReached] = useState(false)
 
   const { book, loading: bookingLoading } = useBooking({
     onSuccess: () => setBooked(true),
-    onError:   (msg) => setBookingError(msg),
+    onError:   (msg) => {
+      if (msg === 'NO_SLOTS_AVAILABLE') { setLimitReached(true); return }
+      setBookingError(msg)
+    },
     onSlotsRefresh: (fresh) => {
       setBookedTimes(fresh)
       setSelectedSlot(null)
@@ -70,6 +75,17 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
     <section id="book" className="px-6 lg:px-10 py-28 lg:py-36" style={{ background: 'var(--ink-0)' }}>
       <div className="mx-auto max-w-[1080px] flex items-center justify-center py-20">
         <Loader2 size={28} className="animate-spin" style={{ color: 'var(--gold)' }} />
+      </div>
+    </section>
+  )
+
+  if (availableDays.length === 0 || bookingLimitReached || limitReached) return (
+    <section id="book" className="px-6 lg:px-10 py-28 lg:py-36" style={{ background: 'var(--ink-0)' }}>
+      <div className="mx-auto max-w-[1080px] text-center py-20">
+        <h2 className="ct2-serif text-3xl" style={{ color: 'var(--bone)' }}>No available slots.</h2>
+        <p className="mt-4" style={{ color: 'var(--mute)', maxWidth: '40ch', margin: '1rem auto 0' }}>
+          New session times open next month. Please reach out directly to schedule.
+        </p>
       </div>
     </section>
   )

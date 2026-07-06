@@ -214,7 +214,7 @@ export default function PatientsListPage() {
                       <p className="text-xs text-[#6b7280] mt-0.5 truncate">
                         {(() => {
                           const age = calculateAge(p.dob)
-                          return age !== null ? `${age} yrs` : 'Age —'
+                          return age !== null ? `${age} yrs` : 'Age -'
                         })()}
                         {p.gender ? ` · ${p.gender}` : ''}
                         {p.phone ? ` · ${p.phone}` : p.email ? ` · ${p.email}` : ''}

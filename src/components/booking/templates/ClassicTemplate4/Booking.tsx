@@ -19,6 +19,7 @@ interface BookingProps {
   bookedTimes?: string[]
   selectedService?: EditableService | null
   onClearService?: () => void
+  bookingLimitReached?: boolean
 }
 
 function SpecRow({ k, v, highlight }: { k: string; v: string; highlight?: boolean }) {
@@ -71,10 +72,14 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
   const [clientPhone, setClientPhone]         = useState('')
   const [bookingError, setBookingError]       = useState('')
   const [booked, setBooked]                   = useState(false)
+  const [limitReached, setLimitReached]       = useState(false)
 
   const { book, loading: bookingLoading } = useBooking({
     onSuccess: () => setBooked(true),
-    onError:   (msg) => setBookingError(msg),
+    onError:   (msg) => {
+      if (msg === 'NO_SLOTS_AVAILABLE') { setLimitReached(true); return }
+      setBookingError(msg)
+    },
     onSlotsRefresh: (fresh) => {
       setBookedTimes(fresh)
       setSelectedSlot(null)
@@ -185,8 +190,8 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                 <div style={{ marginBottom: '1.8rem' }}>
                   <span className="ct4-eyebrow" style={{ display: 'block', marginBottom: '0.9rem' }}>Select a Day</span>
                   <div className="ct4-rule-gold" style={{ marginBottom: '1rem' }} />
-                  {availableDays.length === 0 ? (
-                    <p style={{ fontSize: 14, color: 'var(--silver)', fontWeight: 300, fontStyle: 'italic' }}>No availability found. Please check back later.</p>
+                  {availableDays.length === 0 || limitReached ? (
+                    <p style={{ fontSize: 14, color: 'var(--silver)', fontWeight: 300, fontStyle: 'italic' }}>No available slots. New times open next month.</p>
                   ) : (
                     <div className="ct4-day-chips">
                       {availableDays.slice(0, 10).map((d, i) => (
@@ -203,7 +208,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                 <div style={{ marginBottom: '1.8rem' }}>
                   <span className="ct4-eyebrow" style={{ display: 'block', marginBottom: '0.9rem' }}>Select a Time</span>
                   <div className="ct4-rule-gold" style={{ marginBottom: '1rem' }} />
-                  {slotsForDay.length === 0 ? (
+                  {slotsForDay.length === 0 || limitReached ? (
                     <p style={{ fontSize: 14, color: 'var(--silver)', fontWeight: 300, fontStyle: 'italic' }}>No remaining availability today.</p>
                   ) : (
                     <div className="ct4-time-chips">
@@ -218,7 +223,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                 </div>
 
                 {/* Contact form */}
-                {selectedSlot && (
+                {selectedSlot && !limitReached && (
                   <div style={{ borderTop: '0.5px solid var(--border)', paddingTop: '1.8rem', animation: 'ct4-fade-up 0.5s ease both' }}>
                     <span className="ct4-eyebrow" style={{ display: 'block', marginBottom: '0.9rem' }}>Your Details</span>
                     <div className="ct4-rule-gold" style={{ marginBottom: '0.5rem' }} />

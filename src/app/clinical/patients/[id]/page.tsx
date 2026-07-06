@@ -270,7 +270,7 @@ function Row({ label, value }: { label: string; value: string | null | undefined
     <div className="flex items-start justify-between gap-3">
       <span className="text-xs uppercase tracking-wide text-[#9ca3af] pt-0.5">{label}</span>
       <span className="text-sm text-[#1c1c1e] text-right break-words max-w-[200px] capitalize">
-        {value && value.length > 0 ? value : <span className="text-[#9ca3af]">—</span>}
+        {value && value.length > 0 ? value : <span className="text-[#9ca3af]">-</span>}
       </span>
     </div>
   )

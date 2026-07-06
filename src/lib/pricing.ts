@@ -10,8 +10,8 @@ export const PLAN_RANK: Record<string, number> = {
 }
 
 const DEFAULT_DEV_PLAN_PRICES: Record<string, number> = {
-  starter: 999,
-  growth: 999,
+  starter: 1499,
+  // growth: 999,
   pro: 2499,
 }
 

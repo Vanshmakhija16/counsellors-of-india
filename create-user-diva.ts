@@ -46,7 +46,7 @@ async function main() {
 
   if (profileError) {
     console.error('❌ Profile creation failed:', profileError.message)
-    console.log('ℹ️  Auth user was created (id:', userId, ') — delete it from Supabase dashboard if needed.')
+    console.log('ℹ️  Auth user was created (id:', userId, '), delete it from Supabase dashboard if needed.')
     process.exit(1)
   }
 

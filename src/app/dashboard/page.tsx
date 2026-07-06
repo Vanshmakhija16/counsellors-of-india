@@ -7,7 +7,7 @@ import { Fraunces } from 'next/font/google'
 import {
   Calendar, Clock, ExternalLink, Copy,
   CheckCircle, ArrowRight, Sparkles,
-  Palette, Globe, Share2, ChevronRight,
+  Palette, Globe, Share2, ChevronRight, AlertTriangle,
 } from 'lucide-react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
@@ -59,6 +59,7 @@ export default function DashboardPage() {
   const [showWizard,     setShowWizard]     = useState(false)
   const [wizardChecked,  setWizardChecked]  = useState(false)
   const [justPublished,  setJustPublished]  = useState(false)
+  const [bookingLimit,   setBookingLimit]   = useState<{ reached: boolean; used: number; limit: number } | null>(null)
 
   // ── Auto-open wizard if setup not done ──────────────────────────
   useEffect(() => {
@@ -101,6 +102,29 @@ export default function DashboardPage() {
       }
     }
     load()
+  }, [therapist])
+
+  // ── Monthly booking-limit status (Starter plan) ─────────────────────────
+  useEffect(() => {
+    if (!therapist) return
+    const planKey = ((therapist as any).plan ?? 'starter').toLowerCase()
+    if (planKey === 'pro') { setBookingLimit(null); return }
+    const LIMIT = 10
+    async function loadLimit() {
+      const now = new Date()
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+      const monthEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString()
+      const { count } = await supabase
+        .from('appointments')
+        .select('id', { count: 'exact', head: true })
+        .eq('therapist_id', therapist!.id)
+        .gte('created_at', monthStart)
+        .lt('created_at', monthEnd)
+        .not('status', 'in', '("cancelled","payment_failed","expired")')
+      const used = count ?? 0
+      setBookingLimit({ reached: used >= LIMIT, used, limit: LIMIT })
+    }
+    loadLimit()
   }, [therapist])
 
   function copyLink() {
@@ -213,6 +237,21 @@ export default function DashboardPage() {
             className="text-xs text-emerald-600 font-semibold shrink-0">
             Dismiss
           </button>
+        </div>
+      )}
+
+      {/* ── Monthly booking-limit reached banner (Starter plan) ── */}
+      {bookingLimit?.reached && (
+        <div className="flex items-start gap-3 px-4 py-3 rounded-xl border border-amber-200 bg-amber-50 text-sm text-amber-900">
+          <AlertTriangle size={16} className="shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <p className="font-semibold">
+              This therapist has reached their monthly booking limit of 10 sessions on the Starter plan. Please contact them directly to book.
+            </p>
+            <p className="text-xs mt-1 text-amber-700">
+              New online bookings are paused until next month. Upgrade to Pro for unlimited bookings.
+            </p>
+          </div>
         </div>
       )}
 

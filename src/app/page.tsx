@@ -25,7 +25,7 @@ const quotes = [
 
 
 /* ─────────────────────────────────────────────────────────────────
-   COUNSELLORS OF INDIA  —  Premium homepage
+   COUNSELLORS OF INDIA  -  Premium homepage
    Selling points (in order of focus):
    1. Find a therapist (directory + rotating profiles)
    2. List your practice (5 templates, beautiful by default)
@@ -179,7 +179,7 @@ const PLANS_DATA = [
     id: 'starter',
     name: 'Starter',
     tagline: 'Get started quickly',
-    price: '₹1499',
+    price: '₹1,499',
     period: '/ year',
     hi: false,
     recommended: false,
@@ -188,7 +188,7 @@ const PLANS_DATA = [
       'Custom domain',
       'Online Appointment Booking',
       'Payment Collection',
-      'Email confirmations',
+      '📧 Booking confirmation on email',
       'Client Dashboard',
       'Shareable profile link',
       'Up to 10 bookings per month',
@@ -200,7 +200,7 @@ const PLANS_DATA = [
     id: 'pro',
     name: 'PRO',
     tagline: 'Best for growing practices',
-    price: '₹2499',
+    price: '₹2,499',
     period: '/ year',
     hi: true,
     recommended: true,
@@ -210,7 +210,8 @@ const PLANS_DATA = [
       'Online appointment booking',
       'Payment collection',
       'Client dashboard',
-      'Email confirmations',
+      '📧 Booking confirmation on email',
+      '💬 Booking confirmation on WhatsApp',
       'Shareable profile link',
       'Unlimited bookings',
       'Featured Therapist Badge',
@@ -313,7 +314,7 @@ function SkeletonCard() {
 }
 
 /* ─────────────────────────────────────────────────────────────────
-   HERO TEMPLATE PEEK — reuses the real t2 thumbnail, scaled to fit
+   HERO TEMPLATE PEEK - reuses the real t2 thumbnail, scaled to fit
 ───────────────────────────────────────────────────────────────── */
 function HeroTemplatePeek() {
   const ref = useRef<HTMLDivElement>(null)
@@ -340,10 +341,10 @@ function HeroTemplatePeek() {
 }
 
 /* ─────────────────────────────────────────────────────────────────
-   TEMPLATE CAROUSEL — full-width slide with browser chrome
+   TEMPLATE CAROUSEL - full-width slide with browser chrome
 ───────────────────────────────────────────────────────────────── */
 /* ─────────────────────────────────────────────────────────────────
-   TEMPLATE SHOWCASE v3 — Two-column editorial layout
+   TEMPLATE SHOWCASE v3 - Two-column editorial layout
 ───────────────────────────────────────────────────────────────── */
 const TMPL_ACCENTS = ['#b46b50','#c9a35a','#3D7A6A','#D4AF37','#2D4A32']
 
@@ -355,11 +356,11 @@ const SHOWCASE_TMPLS = [
   ...TMPLS.filter(t => t.id !== 't3'),
 ]
 
-/* Live "experience the template" section — embeds the real template site in
+/* Live "experience the template" section - embeds the real template site in
    an iframe (80vh × 80vw) so visitors feel exactly what they'll get after
    payment. Defaults to template 4 (Premium Black). */
 /* Giant wordmark revealed with a smooth "shutter" as you scroll to the very
-   bottom — hidden by default, opens upward as the section enters view. */
+   bottom - hidden by default, opens upward as the section enters view. */
 function BigWordmark() {
   const ref = useRef<HTMLElement | null>(null)
 
@@ -386,20 +387,20 @@ function BigWordmark() {
   return (
     <section ref={ref} className="bigmark" aria-label="Counsellors of India">
       <div className="bigmark-inner">
-        {/* <span className="bigmark-eyebrow">Built in India — for India</span> */}
+        {/* <span className="bigmark-eyebrow">Built in India - for India</span> */}
         <h2 className="bigmark-word">Counsellors of India</h2>
       </div>
-      {/* <p className="bigmark-copy">© {new Date().getFullYear()} Counsellors of India — A calm home for every practice.</p> */}
+      {/* <p className="bigmark-copy">© {new Date().getFullYear()} Counsellors of India - A calm home for every practice.</p> */}
     </section>
   )
 }
 
 /* White section with the saffron wordmark hanging from a rod, swaying gently. */
-/* Mini UI mockups for the four "How it works" steps. Pure CSS/markup —
+/* Mini UI mockups for the four "How it works" steps. Pure CSS/markup -
    each is a little browser window showing the real screen the step refers to:
    1) sign-up page  2) build-your-profile form  3) dashboard + shareable link
    4) appointments list. They scale to fill the card. */
-/* ─── HOW IT WORKS — connected vertical timeline ───────────────────
+/* ─── HOW IT WORKS - connected vertical timeline ───────────────────
    A single elegant spine with 4 numbered nodes. The connector "draws"
    (fills with gold) as the section scrolls through the viewport, and each
    step rises in as its node passes the mid-line. Calm, editorial, premium.
@@ -527,7 +528,7 @@ function StepMock({ step }: { step: number }) {
     <div className="smock">
       <div className="smock-body">
 
-        {/* STEP 1 — the REAL sign-up page, embedded live + scaled to fit */}
+        {/* STEP 1 - the REAL sign-up page, embedded live + scaled to fit */}
         {step === 0 && (
           <div className="smk-live">
             <iframe
@@ -544,7 +545,7 @@ function StepMock({ step }: { step: number }) {
           </div>
         )}
 
-        {/* STEP 2 — Build your profile (desktop: sidebar + form) */}
+        {/* STEP 2 - Build your profile (desktop: sidebar + form) */}
         {step === 1 && (
           <div className="smk-app">
             <aside className="smk-side">
@@ -568,7 +569,7 @@ function StepMock({ step }: { step: number }) {
                 </div>
               </div>
 
-              {/* identity row — avatar in context */}
+              {/* identity row - avatar in context */}
               <div className="smk-idrow">
                 <div className="smk-avatar lg"><span className="smk-usr" /></div>
                 <div className="smk-grid2 smk-idrow-fields">
@@ -606,7 +607,7 @@ function StepMock({ step }: { step: number }) {
           </div>
         )}
 
-        {/* STEP 3 — Dashboard + share link (desktop) */}
+        {/* STEP 3 - Dashboard + share link (desktop) */}
         {step === 2 && (
           <div className="smk-app">
             <aside className="smk-side">
@@ -647,7 +648,7 @@ function StepMock({ step }: { step: number }) {
           </div>
         )}
 
-        {/* STEP 4 — Appointments (desktop) */}
+        {/* STEP 4 - Appointments (desktop) */}
         {step === 3 && (
           <div className="smk-app">
             <aside className="smk-side">
@@ -669,10 +670,10 @@ function StepMock({ step }: { step: number }) {
                 <span className="smk-pill-today">Today · 3</span>
               </div>
               {[
-                { i: 'AM', n: 'Aarav Mehta', t: 'Today — 4:00 PM ✓ Anxiety', g: 'a', s: 'ok' },
-                { i: 'SK', n: 'Sara Khan', t: 'Tomorrow — 11:30 AM — Couples', g: 'b', s: 'wait' },
-                { i: 'RV', n: 'Rohan Verma', t: 'Fri — 6:00 PM — Grief', g: 'c', s: 'ok' },
-                { i: 'IN', n: 'Isha Nair', t: 'Fri — 7:30 PM — Burnout', g: 'b', s: 'ok' },
+                { i: 'AM', n: 'Aarav Mehta', t: 'Today - 4:00 PM ✓ Anxiety', g: 'a', s: 'ok' },
+                { i: 'SK', n: 'Sara Khan', t: 'Tomorrow - 11:30 AM - Couples', g: 'b', s: 'wait' },
+                { i: 'RV', n: 'Rohan Verma', t: 'Fri - 6:00 PM - Grief', g: 'c', s: 'ok' },
+                { i: 'IN', n: 'Isha Nair', t: 'Fri - 7:30 PM - Burnout', g: 'b', s: 'ok' },
               ].map((a) => (
                 <div key={a.n} className="smk-appt">
                   <span className={`smk-ini g-${a.g}`}>{a.i}</span>
@@ -840,7 +841,7 @@ function LiveTemplateExperience() {
 
       <div className="texp-layout" style={{display:'flex',alignItems:'stretch'}}>
 
-        {/* LEFT — vertical template sidebar */}
+        {/* LEFT - vertical template sidebar */}
         <div
           ref={sidebarRef}
           role="tablist"
@@ -868,7 +869,7 @@ function LiveTemplateExperience() {
           ))}
         </div>
 
-        {/* RIGHT — iframe stage */}
+        {/* RIGHT - iframe stage */}
         <div className="texp-stage" style={{flex:1,minWidth:0}}>
           <div className="texp-window">
             <div className="texp-chrome">
@@ -1188,7 +1189,7 @@ function DemoForm({ templateId, previewHref, activeName }:
           rows={2}
           value={form.bio ?? ''}
           onChange={e => update({ bio: e.target.value })}
-          placeholder="A calm, trusted space for healing — specialising in anxiety, relationships, and life transitions."
+          placeholder="A calm, trusted space for healing - specialising in anxiety, relationships, and life transitions."
         />
       </label>
 
@@ -1383,10 +1384,10 @@ function PreviewModal({ t, onClose }:{ t:typeof TMPLS[0]; onClose:()=>void }) {
 }
 
 /* ─────────────────────────────────────────────────────────────────
-   FAQ ITEM — calm accordion row
+   FAQ ITEM - calm accordion row
 ───────────────────────────────────────────────────────────────── */
 /* ────────────────────────────────────────────────────────────────
-   HERO PRODUCT PEEK — a real, scaled template preview shown directly
+   HERO PRODUCT PEEK - a real, scaled template preview shown directly
    under the hero CTAs, inside a small browser-chrome frame. Gives
    visitors visual proof of the product in the very first viewport
    instead of asking them to scroll three sections to believe it.
@@ -1451,7 +1452,7 @@ function FaqItem({ q, a, idx }: { q: string; a: string; idx: number }) {
 
 
 /* ─────────────────────────────────────────────────────────────────
-   SITE FOOTER — premium editorial footer, sits above <FooterReveal/>
+   SITE FOOTER - premium editorial footer, sits above <FooterReveal/>
 ───────────────────────────────────────────────────────────────── */
 const FOOTER_COLS = [
   {
@@ -1547,7 +1548,7 @@ function SiteFooter() {
             <div className="pfoot-news-h">Get practice-growth tips</div>
             <p className="pfoot-news-s">One short email a month. No spam, unsubscribe anytime.</p>
             {sent ? (
-              <div className="pfoot-news-thanks">You're on the list — thank you!</div>
+              <div className="pfoot-news-thanks">You're on the list - thank you!</div>
             ) : (
               <div className="pfoot-news-row">
                 <input
@@ -1688,7 +1689,7 @@ export default function Home() {
         easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
         wheelMultiplier: 1.15,
         touchMultiplier: 1.6,
-        syncTouch: false, // let touch devices scroll natively — JS smoothing on touch feels laggy
+        syncTouch: false, // let touch devices scroll natively - JS smoothing on touch feels laggy
       })
       let rafId = 0
       const raf = (time: number) => { lenis.raf(time); rafId = requestAnimationFrame(raf) }
@@ -1705,7 +1706,7 @@ export default function Home() {
   const [search,setSearch]=useState('')
   const [filter,setFilter]=useState('All')
 
-  // Magnetic hover tilt for therapist cards — the card tilts toward the
+  // Magnetic hover tilt for therapist cards - the card tilts toward the
   // cursor position (small 3D perspective) and eases back flat on leave.
   function handleCardTiltMove(e: React.MouseEvent<HTMLAnchorElement>) {
     const card = e.currentTarget
@@ -2027,7 +2028,7 @@ export default function Home() {
                         </svg>
                       </div>
                       <div className="td-empty-t">No therapists match your filters.</div>
-                      <div className="td-empty-s">Try a different city or specialty — our network is growing every week.</div>
+                      <div className="td-empty-s">Try a different city or specialty - our network is growing every week.</div>
                       <button type="button" className="td-empty-reset" onClick={()=>{setSearch('');setFilter('All')}}>Reset filters</button>
                     </div>
                   )

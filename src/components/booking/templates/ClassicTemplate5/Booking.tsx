@@ -60,10 +60,14 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
   const [clientPhone, setClientPhone]         = useState('')
   const [bookingError, setBookingError]       = useState('')
   const [booked, setBooked]                   = useState(false)
+  const [limitReached, setLimitReached]       = useState(false)
 
   const { book, loading: bookingLoading } = useBooking({
     onSuccess: () => setBooked(true),
-    onError:   (msg) => setBookingError(msg),
+    onError:   (msg) => {
+      if (msg === 'NO_SLOTS_AVAILABLE') { setLimitReached(true); return }
+      setBookingError(msg)
+    },
     onSlotsRefresh: (fresh) => {
       setBookedTimes(fresh)
       setSelectedSlot(null)
@@ -157,8 +161,8 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                 <div style={{ marginBottom: '1.8rem' }}>
                   <span className="ct5-booking-step-label">Step 1 — Choose a Day</span>
                   <div className="ct5-booking-step-divider" />
-                  {availableDays.length === 0 ? (
-                    <p style={{ fontSize: 13, color: 'var(--warm-gray)', fontWeight: 300, fontStyle: 'italic' }}>No upcoming availability. Please reach out directly.</p>
+                  {availableDays.length === 0 || limitReached ? (
+                    <p style={{ fontSize: 13, color: 'var(--warm-gray)', fontWeight: 300, fontStyle: 'italic' }}>No available slots. New times open next month.</p>
                   ) : (
                     <div className="ct5-day-chips">
                       {availableDays.slice(0, 10).map((d, i) => (
@@ -172,6 +176,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                 </div>
 
                 {/* Step 2 */}
+                {!limitReached && (
                 <div>
                   <span className="ct5-booking-step-label">Step 2 — Choose a Time</span>
                   <div className="ct5-booking-step-divider" />
@@ -188,6 +193,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                     </div>
                   )}
                 </div>
+                )}
               </>
             ) : (
               <div style={{ animation: 'ct5-fade-up 0.5s ease both' }}>

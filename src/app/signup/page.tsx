@@ -494,7 +494,7 @@ with the design and details you chose. </p> </div>
       <label className="block text-sm font-bold mb-1.5" style={{ color: '#1F1C18' }}>
         Choose your public web address
       </label>
-      <p className="text-xs text-[#7A7166] mb-2.5">This is the link you'll share with clients — pick it carefully.</p>
+      <p className="text-xs text-[#7A7166] mb-2.5">This is the link you'll share with clients, pick it carefully.</p>
 
       <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-2">
         <div

@@ -77,7 +77,7 @@ async function main() {
     console.log('      Username     :', profile.username)
     console.log('      Email        :', profile.email)
     console.log('      Plan         :', profile.highest_plan)
-    console.log('      Auth ID match:', authUser ? (profile.id === authUser.id ? '✅ Yes' : '❌ No — mismatch!') : '⚠️  Cannot check (no auth user)')
+    console.log('      Auth ID match:', authUser ? (profile.id === authUser.id ? '✅ Yes' : '❌ No mismatch!') : '⚠️  Cannot check (no auth user)')
   }
 
   console.log('')
@@ -104,7 +104,7 @@ async function main() {
         console.log('   ✅ Password reset! Try logging in again.')
       }
     } else {
-      console.log('   ⚠️  Cannot reset — no auth user found.')
+      console.log('   ⚠️  Cannot reset, no auth user found.')
     }
   } else {
     console.log('   ✅ Sign in successful!')

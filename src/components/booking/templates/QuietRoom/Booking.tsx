@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { TherapistProfile } from '../templateUtils'
 import { slotToISO, type MonthDayAvailability } from '../templateUtils'
 import { Check, Loader2, Sun, Sunset, Moon, ChevronLeft } from 'lucide-react'
-import { useRazorpay } from '@/lib/useRazorpay'
+import { useBooking } from '@/lib/useBooking'
 
 // ── Temporary: send to WhatsApp instead of API/payment ──────────────────
 const USE_WHATSAPP = true
@@ -38,11 +38,12 @@ function groupSlotsByPeriod(slots: { label: string; iso: string }[]) {
   ].filter(g => g.slots.length > 0)
 }
 
-export default function Booking({ therapist, bookedTimes = [] }: BookingProps) {
+export default function Booking({ therapist, bookedTimes: initialBookedTimes = [] }: BookingProps) {
   const rootRef = useRef<HTMLElement | null>(null)
   const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
 
+  const [bookedTimes, setBookedTimes] = useState<string[]>(initialBookedTimes)
   const [selectedDate, setSelectedDate]     = useState<Date | null>(null)
   const [selectedDay, setSelectedDay]       = useState<MonthDayAvailability | null>(null)
   const [selectedSlot, setSelectedSlot]     = useState<string | null>(null)
@@ -51,10 +52,23 @@ export default function Booking({ therapist, bookedTimes = [] }: BookingProps) {
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
   const [booked, setBooked]   = useState(false)
+  const [limitReached, setLimitReached] = useState(false)
 
-  const { openRazorpay } = useRazorpay()
+  const { book, loading } = useBooking({
+    onSuccess: () => setBooked(true),
+    onError:   (msg) => {
+      if (msg === 'NO_SLOTS_AVAILABLE') { setLimitReached(true); return }
+      setError(msg)
+    },
+    onSlotsRefresh: (fresh) => {
+      setBookedTimes(fresh)
+      setSelectedDay(null)
+      setSelectedDate(null)
+      setSelectedSlot(null)
+      setSelectedSlotIso(null)
+    },
+  })
 
   const slots = useMemo(() =>
     selectedDay ? selectedDay.slots.map(label => ({ label, iso: slotToISO(label, selectedDay.dateObj) })) : [],
@@ -91,19 +105,6 @@ export default function Booking({ therapist, bookedTimes = [] }: BookingProps) {
 
   if (!mounted) return null
 
-  async function doBooking() {
-    const res = await fetch('/api/book', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        therapist_id: therapist.id, client_name: name, client_email: email, client_phone: phone,
-        scheduled_at: selectedSlotIso, duration_mins: therapist.sessionDuration, service_price: therapist.fee ?? null,
-      }),
-    })
-    const data = await res.json()
-    if (!res.ok) throw new Error(data.error ?? 'Booking failed. Please try again.')
-    setBooked(true)
-  }
-
   async function handleConfirm() {
     if (!selectedSlotIso) { setError('Please choose a time.'); return }
     if (!name.trim() || !phone.trim()) { setError('Please complete name and phone.'); return }
@@ -114,28 +115,15 @@ export default function Booking({ therapist, bookedTimes = [] }: BookingProps) {
       setBooked(true)
       return
     }
-    if (therapist.fee && therapist.fee > 0) {
-      setLoading(true)
-      await openRazorpay({
-        amount: therapist.fee, description: `Therapy session with ${therapist.name}`,
-        receipt: `book_${therapist.id}_${Date.now()}`,
-        prefill: { name, email, contact: phone },
-        onSuccess: async (payload) => {
-          const v = await fetch('/api/razorpay?action=verify', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
-          })
-          const vd = await v.json()
-          if (!v.ok || !vd.verified) throw new Error('Payment verification failed.')
-          await doBooking()
-        },
-        onFailure: (msg) => { setError(msg); setLoading(false) },
-      })
-      setLoading(false)
-    } else {
-      try { setLoading(true); await doBooking() }
-      catch (e) { setError(e instanceof Error ? e.message : 'Network error. Please try again.') }
-      finally { setLoading(false) }
-    }
+    await book({
+      therapist_id:  therapist.id!,
+      client_name:   name,
+      client_email:  email,
+      client_phone:  phone,
+      scheduled_at:  selectedSlotIso,
+      duration_mins: therapist.sessionDuration,
+      service_price: typeof therapist.fee === 'number' && therapist.fee > 0 ? therapist.fee : 500,
+    })
   }
 
   // ── chosen date label for the slots header ──────────────────────────────
@@ -293,6 +281,13 @@ export default function Booking({ therapist, bookedTimes = [] }: BookingProps) {
             <div className="qr-bk-done-ring"><Check size={26} style={{ color: 'var(--qr-honey)' }} /></div>
             <h3>You&rsquo;re booked.</h3>
             <p>A confirmation is on its way to your inbox. Take a breath — the hard part is done.</p>
+          </div>
+        </div>
+      ) : limitReached ? (
+        <div style={{ position: 'relative', zIndex: 2, maxWidth: 900, margin: '0 auto', padding: '0 clamp(16px,4vw,40px)' }}>
+          <div className="qr-bk-done">
+            <h3>No available slots.</h3>
+            <p>New session times open next month. Please reach out directly to schedule.</p>
           </div>
         </div>
       ) : (

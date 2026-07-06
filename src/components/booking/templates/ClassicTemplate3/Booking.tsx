@@ -19,6 +19,7 @@ interface BookingProps {
   bookedTimes?: string[]
   selectedService?: EditableService | null
   onClearService?: () => void
+  bookingLimitReached?: boolean
 }
 
 function Spec({ k, v, highlight }: { k: string; v: string; highlight?: boolean }) {
@@ -32,7 +33,7 @@ function Spec({ k, v, highlight }: { k: string; v: string; highlight?: boolean }
   )
 }
 
-export default function Booking({ therapist, bookedTimes: initialBookedTimes = [], selectedService, onClearService }: BookingProps) {
+export default function Booking({ therapist, bookedTimes: initialBookedTimes = [], selectedService, onClearService, bookingLimitReached = false }: BookingProps) {
   const sectionRef = useRef<HTMLElement | null>(null)
   const [mounted, setMounted] = useState(false)
   const [bookedTimes, setBookedTimes] = useState<string[]>(initialBookedTimes)
@@ -75,10 +76,14 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
   const [clientPhone, setClientPhone]         = useState('')
   const [bookingError, setBookingError]       = useState('')
   const [booked, setBooked]                   = useState(false)
+  const [limitReached, setLimitReached]       = useState(false)
 
   const { book, loading: bookingLoading } = useBooking({
     onSuccess: () => setBooked(true),
-    onError:   (msg) => setBookingError(msg),
+    onError:   (msg) => {
+      if (msg === 'NO_SLOTS_AVAILABLE') { setLimitReached(true); return }
+      setBookingError(msg)
+    },
     onSlotsRefresh: (fresh) => {
       setBookedTimes(fresh)
       setSelectedSlot(null)
@@ -221,9 +226,9 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                 <div style={{ marginBottom: '1.8rem' }}>
                   <span className="ct3-eyebrow" style={{ display: 'block', marginBottom: '0.9rem' }}>Select a day</span>
                   <div style={{ height: 1, background: 'var(--rule)', marginBottom: '1rem' }} />
-                  {availableDays.length === 0 ? (
+                  {availableDays.length === 0 || bookingLimitReached || limitReached ? (
                     <p className="ct3-serif" style={{ fontSize: 14, color: 'var(--ink-3)' }}>
-                      No availability found. Contact directly to schedule.
+                      No available slots. New times open next month.
                     </p>
                   ) : (
                     <div className="ct3-chips">

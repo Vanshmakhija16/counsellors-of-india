@@ -59,12 +59,45 @@ export async function POST(req: NextRequest) {
 
     const { data: therapist, error: therapistErr } = await supabase
       .from('therapists')
-      .select('id, full_name, fee_per_session, session_duration_mins, profile_content, template_id')
+      .select('id, full_name, fee_per_session, session_duration_mins, profile_content, template_id, plan')
       .eq('id', therapist_id)
       .single()
 
     if (therapistErr || !therapist) {
       return NextResponse.json({ error: 'Therapist not found.' }, { status: 404 })
+    }
+
+    // ── Monthly booking limit enforcement ──────────────────────────────
+    // Starter plan: max 10 confirmed bookings per calendar month.
+    // Pro plan: unlimited.
+    const PLAN_LIMITS: Record<string, number> = { starter: 10, pro: Infinity }
+    const planKey = (therapist.plan ?? 'starter').toLowerCase()
+    const limit   = PLAN_LIMITS[planKey] ?? 10
+
+    if (limit !== Infinity) {
+      const now        = new Date()
+      const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+      const monthEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString()
+
+      const { count } = await supabase
+        .from('appointments')
+        .select('id', { count: 'exact', head: true })
+        .eq('therapist_id', therapist_id)
+        .gte('created_at', monthStart)
+        .lt('created_at', monthEnd)
+        .not('status', 'in', '("cancelled","payment_failed","expired")')
+
+      if ((count ?? 0) >= limit) {
+        return NextResponse.json(
+          {
+            error: `This therapist has reached their ${limit}-booking monthly limit on the Starter plan. They need to upgrade to Pro for unlimited bookings.`,
+            code:  'BOOKING_LIMIT_REACHED',
+            limit,
+            used:  count ?? 0,
+          },
+          { status: 429 }
+        )
+      }
     }
 
     const resolved = resolveBookingPrice(therapist, service_name, duration_mins)
@@ -151,12 +184,93 @@ export async function POST(req: NextRequest) {
     const appointmentId = (appointment as { id: string }).id
     const effectivePrice = resolved.priceInr
 
-    // ── Free booking — confirm immediately ───────────────────────────────
+    // ── Free booking — confirm immediately + send emails ─────────────────
     if (!effectivePrice || effectivePrice <= 0) {
       await supabase
         .from('appointments')
         .update({ status: 'upcoming', txnid: null, hold_until: null })
         .eq('id', appointmentId)
+
+      // Fetch therapist email for notifications
+      const { data: th } = await supabase
+        .from('therapists')
+        .select('full_name, email')
+        .eq('id', therapist_id)
+        .single()
+
+      const sessionDate   = new Date(normalizedAt)
+      const formattedDate = sessionDate.toLocaleDateString('en-IN', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+      })
+      const formattedTime = sessionDate.toLocaleTimeString('en-IN', {
+        hour: '2-digit', minute: '2-digit',
+      })
+      const therapistName = th?.full_name ?? 'Your Therapist'
+      const durationMins  = resolved.durationMins
+
+      function escapeHtml(s: string) {
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+          .replace(/"/g,'&quot;').replace(/'/g,'&#39;')
+      }
+
+      // Send emails non-blocking so they never break the booking response
+      ;(async () => {
+        try {
+          const nodemailer = await import('nodemailer')
+          const transporter = nodemailer.default.createTransport({
+            host:   process.env.SMTP_HOST,
+            port:   Number(process.env.SMTP_PORT),
+            secure: process.env.SMTP_SECURE === 'true',
+            auth:   { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+          })
+          const FROM = process.env.SMTP_FROM || 'Counsellors of India <support@counsellorsofindia.com>'
+
+          // Client email
+          await transporter.sendMail({
+            from:    FROM,
+            to:      client_email,
+            subject: `Session confirmed with ${therapistName}`,
+            html: `
+<html><body style="font-family:sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px">
+  <h2 style="color:#1a1a18">Session Confirmed ✓</h2>
+  <p>Hi ${escapeHtml(client_name)},</p>
+  <p>Your session with <strong>${escapeHtml(therapistName)}</strong> has been booked.</p>
+  ${resolved.serviceName ? `<p><strong>Service:</strong> ${escapeHtml(resolved.serviceName)}</p>` : ''}
+  <p><strong>Date:</strong> ${escapeHtml(formattedDate)}</p>
+  <p><strong>Time:</strong> ${escapeHtml(formattedTime)}</p>
+  <p><strong>Duration:</strong> ${durationMins} minutes</p>
+  <p style="color:#FF9933"><strong>This session is complimentary — no payment required.</strong></p>
+  <p style="margin-top:24px;color:#666">The meeting link will be shared the day before your session.</p>
+  <p style="margin-top:24px">— Counsellors of India</p>
+</body></html>`,
+          })
+
+          // Therapist email
+          if (th?.email) {
+            await transporter.sendMail({
+              from:    FROM,
+              to:      th.email,
+              subject: `New booking from ${client_name}`,
+              html: `
+<html><body style="font-family:sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px">
+  <h2 style="color:#1a1a18">New Booking</h2>
+  <p>Hi ${escapeHtml(therapistName)},</p>
+  <p>A session has been booked (no payment required).</p>
+  <p><strong>Client:</strong> ${escapeHtml(client_name)}</p>
+  <p><strong>Email:</strong> ${escapeHtml(client_email)}</p>
+  <p><strong>Phone:</strong> ${escapeHtml(client_phone || 'Not provided')}</p>
+  ${resolved.serviceName ? `<p><strong>Service:</strong> ${escapeHtml(resolved.serviceName)}</p>` : ''}
+  <p><strong>Date:</strong> ${escapeHtml(formattedDate)}</p>
+  <p><strong>Time:</strong> ${escapeHtml(formattedTime)}</p>
+  <p><strong>Duration:</strong> ${durationMins} minutes</p>
+</body></html>`,
+            })
+          }
+        } catch (e) {
+          console.error('[booking/hold] email failed:', e)
+        }
+      })()
+
       return NextResponse.json({ free: true, appointment_id: appointmentId })
     }
 

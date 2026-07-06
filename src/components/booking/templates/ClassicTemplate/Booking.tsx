@@ -20,9 +20,10 @@ interface BookingProps {
   bookedTimes?: string[]
   selectedService?: ServiceItem | null
   onClearService?: () => void
+  bookingLimitReached?: boolean
 }
 
-export default function Booking({ therapist, bookedTimes: initialBookedTimes = [], selectedService, onClearService }: BookingProps) {
+export default function Booking({ therapist, bookedTimes: initialBookedTimes = [], selectedService, onClearService, bookingLimitReached = false }: BookingProps) {
   const [mounted, setMounted] = useState(false)
   const [bookedTimes, setBookedTimes] = useState<string[]>(initialBookedTimes)
   const [slotsLoading, setSlotsLoading] = useState(true)
@@ -50,10 +51,14 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
   const [clientPhone, setClientPhone] = useState('')
   const [bookingError, setBookingError] = useState('')
   const [booked, setBooked] = useState(false)
+  const [limitReached, setLimitReached] = useState(false)
 
   const { book, loading: bookingLoading } = useBooking({
     onSuccess: () => setBooked(true),
-    onError:   (msg) => setBookingError(msg),
+    onError:   (msg) => {
+      if (msg === 'NO_SLOTS_AVAILABLE') { setLimitReached(true); return }
+      setBookingError(msg)
+    },
     onSlotsRefresh: (fresh) => {
       setBookedTimes(fresh)
       // Clear the selected slot — it just got taken
@@ -104,16 +109,16 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
     })
   }
 
-  if (availableDays.length === 0) {
+  if (availableDays.length === 0 || bookingLimitReached || limitReached) {
     return (
       <section id="contact" className="relative bg-[#f5ecd6]" style={{ borderTop: '3px solid #b46b50' }}>
         <div className="mx-auto max-w-[1180px] px-6 py-24 text-center lg:px-12">
           <p className="text-[11px] font-medium uppercase tracking-[0.30em] text-[#6b6056]">06 — Book A Session</p>
           <h2 className="mt-6 text-[40px] leading-[1.05] tracking-[-0.03em] text-[#1a1a18] lg:text-[56px]" style={{ fontFamily: 'var(--font-fraunces), serif' }}>
-            Currently fully booked.
+            No available slots.
           </h2>
           <p className="mx-auto mt-6 max-w-[420px] text-[14.5px] leading-[1.85] text-[#6b6056]">
-            New session times open weekly. Please reach out by email and we'll share the next opening.
+            New session times open next month. Please reach out by email and we’ll share the next opening.
           </p>
         </div>
       </section>

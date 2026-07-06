@@ -66,6 +66,12 @@ export function useBooking({ onSuccess, onError, onSlotsRefresh }: UseBookingOpt
           }
         }
 
+        // On 429 (monthly booking limit reached), treat as no slots available
+        if (res.status === 429 && data.code === 'BOOKING_LIMIT_REACHED') {
+          onError?.('NO_SLOTS_AVAILABLE')
+          return
+        }
+
         onError?.(data.error ?? 'Something went wrong. Please try again.')
         return
       }
