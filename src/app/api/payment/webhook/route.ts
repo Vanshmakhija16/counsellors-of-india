@@ -8,9 +8,9 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import crypto from 'crypto'
 import { createServiceSupabaseClient } from '@/lib/supabase-server'
 import { decrypt } from '@/lib/encryption'
+import { verifyRazorpaySignature } from '@/lib/razorpay'
 
 // ── Types ─────────────────────────────────────────────────────────────
 interface RazorpayWebhookEvent {
@@ -107,12 +107,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ received: true })
     }
 
-    const expectedSignature = crypto
-      .createHmac('sha256', keySecret)
-      .update(rawBody)
-      .digest('hex')
-
-    if (expectedSignature !== razorpaySignature) {
+    if (!verifyRazorpaySignature(rawBody, razorpaySignature, keySecret)) {
       console.error('[webhook] Signature mismatch for order:', orderId)
       return NextResponse.json({ error: 'Signature verification failed' }, { status: 400 })
     }

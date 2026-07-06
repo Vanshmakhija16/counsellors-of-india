@@ -12,7 +12,7 @@ import LivePreview from '@/components/appearance/LivePreview'
 import TemplatePreviewModal from '@/components/appearance/TemplatePreviewModal'
 import TemplateLiveSwitcher from '@/components/appearance/TemplateLiveSwitcher'
 import DraggableDock from '@/components/appearance/DraggableDock'
-import { Save, Lock, Check, AlertCircle, Sparkles, Pencil, LayoutList, X, GripVertical, ArrowLeft, ChevronLeft, ChevronRight, Image as ImageIcon, ChevronUp, ChevronDown } from 'lucide-react'
+import { Save, Lock, Check, AlertCircle, Sparkles, Pencil, LayoutList, X, GripVertical, ArrowLeft, ChevronLeft, ChevronRight, Image as ImageIcon, ChevronUp, ChevronDown, Globe } from 'lucide-react'
 import type { ProfileContent, CT1Content, CT2Content, CT3Content, CT4Content, CT5Content } from '@/components/booking/templates/templateUtils'
 import dynamic from 'next/dynamic'
 
@@ -79,6 +79,13 @@ export default function AppearancePage() {
   const [lockedTemplate,   setLockedTemplate]   = useState<TemplateId | null>(null)
   const [committedTemplate,setCommittedTemplate]= useState<TemplateId>('classic')
   const [templateLockedUntil, setTemplateLockedUntil] = useState<string | null>(null)
+  const [showEditHint,     setShowEditHint]     = useState(false)
+
+  useEffect(() => {
+    // Show the edit hint on first visit only
+    const seen = localStorage.getItem('coi_edit_hint_seen')
+    if (!seen) setShowEditHint(true)
+  }, [])
 
   useEffect(() => {
     async function load() {
@@ -103,6 +110,11 @@ export default function AppearancePage() {
     }
     load()
   }, [])
+
+  function dismissHint() {
+    setShowEditHint(false)
+    localStorage.setItem('coi_edit_hint_seen', '1')
+  }
 
   // Step through templates with prev/next arrows (wraps around).
   const activeIndex = TEMPLATES.findIndex(t => t.id === previewTemplate)
@@ -265,39 +277,103 @@ export default function AppearancePage() {
 
   return (
     <div className="min-h-screen bg-[#f9f8f6]">
-      {/* ── Header ──────────────────────────────────────────────────────────── */}
+      {/* ── Header — persistent action bar ────────────────────────── */}
       <div
         data-dock-bounds
-        className="sticky top-0 z-30 bg-white border-b border-[#ede9e4] px-4 sm:px-8 py-4 flex items-center justify-between gap-3"
+        className="sticky top-0 z-30 bg-white border-b border-[#ede9e4] px-4 sm:px-6 py-3 flex items-center justify-between gap-3"
       >
-        <div>
-          <h1 className="text-xl font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-cormorant), serif' }}>
-            Your Website
-          </h1>
-          <p className="text-xs text-[#9ca3af] mt-0.5">Pick a design, edit your content, then apply</p>
+        {/* Left — title + template stepper */}
+        <div className="flex items-center gap-3 min-w-0">
+          <div className="hidden sm:block">
+            <h1 className="text-base font-semibold text-[#1c1c1e] leading-tight">
+              Your Website
+            </h1>
+            <p className="text-[11px] text-[#9ca3af] mt-0.5">
+              {TEMPLATES.find(t => t.id === previewTemplate)?.name ?? 'Template'}
+            </p>
+          </div>
+
+          <div className="hidden sm:block w-px h-7 bg-[#ede9e4] shrink-0" />
+
+          {/* Template prev / next */}
+          <div className="flex items-center gap-1">
+            <span className="text-[11px] text-[#9ca3af] mr-0.5 hidden md:inline tabular-nums">
+              {activeIndex + 1}/{TEMPLATES.length}
+            </span>
+            <button
+              type="button"
+              aria-label="Previous template"
+              onClick={() => stepTemplate(-1)}
+              className="h-8 w-8 rounded-lg border border-[#e8e4df] bg-white flex items-center justify-center text-[#6b7280] hover:bg-[#fff7ee] hover:border-[#FF9933] hover:text-[#C46800] transition"
+            >
+              <ChevronLeft size={16} />
+            </button>
+            <button
+              type="button"
+              aria-label="Next template"
+              onClick={() => stepTemplate(1)}
+              className="h-8 w-8 rounded-lg border border-[#e8e4df] bg-white flex items-center justify-center text-[#6b7280] hover:bg-[#fff7ee] hover:border-[#FF9933] hover:text-[#C46800] transition"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
 
-        {/* Template prev / next arrows */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs text-[#9ca3af] mr-1 hidden sm:inline">
-            {activeIndex + 1} / {TEMPLATES.length}
-          </span>
-          <button
-            type="button"
-            aria-label="Previous template"
-            onClick={() => stepTemplate(-1)}
-            className="h-9 w-9 rounded-xl border border-[#e8e4df] bg-white flex items-center justify-center text-[#1c1c1e] hover:bg-[#fff7ee] hover:border-[#FF9933] hover:text-[#C46800] transition"
+        {/* Right — the three primary actions, always visible */}
+        <div className="flex items-center gap-2 shrink-0">
+
+          {/* 1. Edit content — goes to the merged Profile & Content page */}
+          <Link
+            href="/dashboard/profile"
+            onClick={dismissHint}
+            className="relative flex items-center gap-2 h-9 px-4 rounded-xl text-sm font-semibold border transition"
+            style={{ background: '#fff', borderColor: '#e8e4df', color: '#1c1c1e' }}
           >
-            <ChevronLeft size={18} />
-          </button>
-          <button
-            type="button"
-            aria-label="Next template"
-            onClick={() => stepTemplate(1)}
-            className="h-9 w-9 rounded-xl border border-[#e8e4df] bg-white flex items-center justify-center text-[#1c1c1e] hover:bg-[#fff7ee] hover:border-[#FF9933] hover:text-[#C46800] transition"
+            <Pencil size={14} />
+            <span className="hidden sm:inline">Edit content</span>
+          </Link>
+
+          {/* 2. Try demo — secondary, opens in new tab */}
+          <a
+            href={`/try?t=${TEMPLATE_TPARAM[previewTemplate]}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hidden sm:flex items-center gap-2 h-9 px-4 rounded-xl text-sm font-semibold border border-[#e8e4df] text-[#6b7280] bg-white hover:bg-[#f5f4f1] transition"
           >
-            <ChevronRight size={18} />
+            <Globe size={14} />
+            Preview
+          </a>
+
+          {/* 3. Publish — primary, most important action */}
+          <button
+            onClick={() => {
+              if (isTemplateLocked && previewTemplate !== committedTemplate) {
+                setLockedTemplate(previewTemplate)
+                return
+              }
+              setConfirmOpen(true)
+            }}
+            disabled={saving}
+            className="flex items-center gap-2 h-9 px-5 rounded-xl text-sm font-bold transition disabled:opacity-60"
+            style={saved
+              ? { background: '#16a34a', color: '#fff' }
+              : { background: BRAND, color: '#fff' }}
+          >
+            {saving ? (
+              <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+            ) : saved ? (
+              <Check size={14} />
+            ) : (
+              <Save size={14} />
+            )}
+            <span className="hidden sm:inline">
+              {saved ? 'Published!' : 'Publish to my site'}
+            </span>
+            <span className="sm:hidden">
+              {saved ? '✓' : 'Publish'}
+            </span>
           </button>
+
         </div>
       </div>
 
@@ -595,63 +671,7 @@ export default function AppearancePage() {
         </div>
       </aside>
 
-      {/* ── Draggable dock ── */}
-      <DraggableDock storageKey="appearance-dock-pos" defaultTop={16}>
-        <div className="flex items-center gap-1 rounded-2xl bg-white shadow-xl border border-[#ede9e4] p-1.5">
-          <span
-            data-drag-handle
-            title="Drag to move"
-            className="h-10 w-7 flex items-center justify-center text-[#c4bdb2] cursor-grab active:cursor-grabbing rounded-lg hover:bg-[#f5f4f1]"
-          >
-            <GripVertical size={16} />
-          </span>
-
-          <button
-            onClick={() => setEditOpen(o => { if (!o) setEditMode('choose'); return !o })}
-            className="flex items-center gap-2 h-10 px-4 rounded-xl text-sm font-semibold border transition hover:bg-[#fff7ee] hover:border-[#FF9933] hover:text-[#C46800]"
-            style={{ background: '#fff', borderColor: '#e8e4df', color: editOpen ? '#6b7280' : '#1c1c1e' }}
-          >
-            {editOpen ? <X size={15} /> : <Pencil size={15} />}
-            {editOpen ? 'Close' : 'Edit'}
-          </button>
-
-          <button
-            onClick={() => {
-              if (isTemplateLocked && previewTemplate !== committedTemplate) {
-                setLockedTemplate(previewTemplate)
-                return
-              }
-              setConfirmOpen(true)
-            }}
-            disabled={saving}
-            className={`flex items-center gap-2 h-10 px-5 rounded-xl text-sm font-bold transition disabled:opacity-60 border ${
-              saved ? '' : 'hover:bg-[#fff7ee] hover:border-[#FF9933] hover:text-[#C46800]'
-            }`}
-            style={saved
-              ? { background: '#16a34a', borderColor: '#16a34a', color: '#ffffff' }
-              : { background: '#fff', borderColor: '#e8e4df', color: '#1c1c1e' }}
-          >
-            {saving ? (
-              <span className="w-4 h-4 border-2 border-[#1c1c1e]/30 border-t-[#1c1c1e] rounded-full animate-spin" />
-            ) : saved ? (
-              <Check size={16} />
-            ) : (
-              <Save size={16} />
-            )}
-            {saved ? 'Applied!' : 'Apply'}
-          </button>
-
-          <a
-            href={`/try?t=${TEMPLATE_TPARAM[previewTemplate]}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 h-10 px-4 rounded-xl text-sm font-bold transition hover:opacity-90 hover:shadow-md"
-            style={{ background: BRAND, borderColor: BRAND, color: '#ffffff' }}
-          >
-            <Sparkles size={15} /> Try demo
-          </a>
-        </div>
-      </DraggableDock>
+      {/* DraggableDock removed — actions moved to persistent header bar */}
 
       {previewOpen     && <LivePreview profile={previewProfile} onClose={() => setPreviewOpen(false)} />}
       {templatePreview && <TemplatePreviewModal templateId={templatePreview} onClose={() => setTemplatePreview(null)} />}

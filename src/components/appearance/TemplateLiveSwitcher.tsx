@@ -110,24 +110,34 @@ export default function TemplateLiveSwitcher({
     <div ref={containerRef} className="rounded-2xl border border-[#e8e4df] overflow-hidden bg-white flex">
       {/* ── Left sidebar tabs ── */}
       {!hideTabs && (
-        <div className="flex flex-col gap-1 p-2 border-r border-[#ede9e4] bg-[#fafaf9] w-36 shrink-0">
+        <div className="flex flex-col gap-1 p-2 border-r border-[#ede9e4] bg-[#fafaf9] w-44 shrink-0">
           {TEMPLATES.map((t, i) => {
             const on = active === t.id
+            const selected = t.id === selectedTemplate
             const committed = t.id === committedTemplate
             return (
               <button
                 key={t.id}
                 onClick={() => setActive(t.id)}
-                className="flex items-center justify-between gap-2 px-3 py-2 rounded-lg text-xs font-semibold border transition text-left w-full"
+                className="flex min-h-12 items-center justify-between gap-2 rounded-lg border px-3 py-2 text-left text-xs font-semibold transition w-full"
                 style={on
-                  ? { background: brandColor, borderColor: brandColor, color: '#fff' }
-                  : { borderColor: 'transparent', color: '#6b7280', background: 'transparent' }}
+                  ? { background: brandColor, borderColor: brandColor, color: '#fff', boxShadow: '0 8px 18px rgba(255,153,51,0.22)' }
+                  : selected
+                    ? { borderColor: '#86d3a5', color: '#166534', background: '#ecfdf3', boxShadow: 'inset 3px 0 0 #16a34a' }
+                    : { borderColor: 'transparent', color: '#6b7280', background: 'transparent' }}
               >
-                <span className="flex items-center gap-2">
-                  <span className="opacity-50 text-[10px]">{String(i + 1).padStart(2, '0')}</span>
-                  {t.name}
+                <span className="min-w-0">
+                  <span className="flex items-center gap-2">
+                    <span className="opacity-50 text-[10px]">{String(i + 1).padStart(2, '0')}</span>
+                    <span className="truncate">{t.name}</span>
+                  </span>
+                  {selected && (
+                    <span className={`mt-1 inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ${on ? 'bg-white/20 text-white' : 'bg-white text-emerald-700'}`}>
+                      Selected
+                    </span>
+                  )}
                 </span>
-                {committed && <Check size={11} className={on ? 'text-white' : 'text-emerald-500'} />}
+                {committed && <Check size={12} className={on ? 'text-white' : 'text-emerald-600'} />}
               </button>
             )
           })}
@@ -136,6 +146,46 @@ export default function TemplateLiveSwitcher({
 
       {/* ── Right: chrome + iframe + action bar ── */}
       <div className="flex flex-col flex-1 min-w-0">
+
+      {/* ── Action bar ── */}
+      {!hideActionBar && (
+        <div className="flex items-center justify-between gap-3 px-4 py-3 border-b border-[#ede9e4] bg-white flex-wrap">
+          <div>
+            <p className="text-sm font-semibold text-[#1c1c1e]">{activeTpl.name}</p>
+            <p className="text-[11px] text-[#9ca3af]">{activeTpl.style}</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {canSelect ? (
+              <button
+                type="button"
+                onClick={() => onSelect(active)}
+                disabled={isCurrentSelection}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white transition hover:opacity-90 disabled:cursor-default disabled:opacity-70"
+                style={{ background: isCurrentSelection ? '#16a34a' : brandColor }}
+              >
+                {isCurrentSelection ? <Check size={13} /> : <Sparkles size={13} />}
+                {isCurrentSelection ? 'Applied' : 'Apply'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => onLockedAttempt(active)}
+                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border border-[#d9c7aa] bg-[#fff8ed] text-[#7c5a2f]"
+              >
+                <Lock size={13} /> Locked
+              </button>
+            )}
+            <a
+              href={`/try?t=${meta.t}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#e8e4df] text-xs font-semibold text-[#6b7280] hover:text-[#1c1c1e] hover:border-[#a3b8b4] transition"
+            >
+              <Sparkles size={13} /> Preview
+            </a>
+          </div>
+        </div>
+      )}
 
       {/* ── Browser chrome ── */}
       <div className="px-4 py-2.5 bg-[#f5f5f5] border-b border-[#e8e4df] flex items-center gap-2">
@@ -204,47 +254,6 @@ export default function TemplateLiveSwitcher({
           </>
         )}
       </div>
-
-      {/* ── Action bar ── */}
-      {!hideActionBar && (
-        <div className="flex items-center justify-between gap-3 px-4 py-3 border-t border-[#ede9e4] bg-white flex-wrap">
-          <div>
-            <p className="text-sm font-semibold text-[#1c1c1e]">{activeTpl.name}</p>
-            <p className="text-[11px] text-[#9ca3af]">{activeTpl.style}</p>
-          </div>
-          <div className="flex items-center gap-2">
-            <a
-              href={`/try?t=${meta.t}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[#e8e4df] text-xs font-semibold text-[#6b7280] hover:text-[#1c1c1e] hover:border-[#a3b8b4] transition"
-            >
-              <Sparkles size={13} /> Try demo
-            </a>
-            {isCurrentSelection ? (
-              <span className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white"
-                style={{ background: brandColor }}>
-                <Check size={13} /> Selected
-              </span>
-            ) : canSelect ? (
-              <button
-                onClick={() => onSelect(active)}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold text-white transition hover:opacity-90"
-                style={{ background: brandColor }}
-              >
-                Select this template
-              </button>
-            ) : (
-              <button
-                onClick={() => onLockedAttempt(active)}
-                className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold border border-[#d9c7aa] bg-[#fff8ed] text-[#7c5a2f]"
-              >
-                <Lock size={13} /> Locked until {lockDateLabel}
-              </button>
-            )}
-          </div>
-        </div>
-      )}
       </div>
     </div>
   )

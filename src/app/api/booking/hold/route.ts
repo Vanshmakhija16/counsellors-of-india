@@ -10,7 +10,7 @@
  *
  * Body:
  *   therapist_id, client_name, client_email, client_phone,
- *   scheduled_at, duration_mins, service_name?, service_price?
+ *   scheduled_at, duration_mins, service_name?
  *
  * Returns (paid):   { action, fields, appointment_id }
  * Returns (free):   { free: true, appointment_id }
@@ -26,15 +26,20 @@ import {
   generateTxnId,
   formatAmount,
 } from '@/lib/payu'
+import { resolveBookingPrice } from '@/lib/pricing'
+import { rateLimit } from '@/lib/rate-limit'
 
 const HOLD_MINUTES = 15
 
 export async function POST(req: NextRequest) {
   try {
+    const limited = rateLimit(req, { keyPrefix: 'booking-hold', limit: 20, windowMs: 10 * 60 * 1000 })
+    if (limited) return limited
+
     const body = await req.json()
     const {
       therapist_id, client_name, client_email, client_phone,
-      scheduled_at, duration_mins, service_name, service_price,
+      scheduled_at, duration_mins, service_name,
     } = body
 
     // ── Validate ─────────────────────────────────────────────────────────
@@ -51,6 +56,24 @@ export async function POST(req: NextRequest) {
     }
 
     const supabase = createServiceSupabaseClient()
+
+    const { data: therapist, error: therapistErr } = await supabase
+      .from('therapists')
+      .select('id, full_name, fee_per_session, session_duration_mins, profile_content, template_id')
+      .eq('id', therapist_id)
+      .single()
+
+    if (therapistErr || !therapist) {
+      return NextResponse.json({ error: 'Therapist not found.' }, { status: 404 })
+    }
+
+    const resolved = resolveBookingPrice(therapist, service_name, duration_mins)
+    if (resolved.priceInr == null) {
+      return NextResponse.json(
+        { error: 'This therapist has not configured a payable or free session price.' },
+        { status: 422 },
+      )
+    }
 
     // ── Expire stale holds before checking availability ───────────────────
     await supabase
@@ -106,11 +129,11 @@ export async function POST(req: NextRequest) {
         therapist_id, patient_id: patientId,
         client_name, client_email, client_phone,
         scheduled_at: normalizedAt,
-        duration_mins: duration_mins ?? 50,
+        duration_mins: resolved.durationMins,
         status: 'pending_payment',
         txnid, hold_until: holdUntil,
-        ...(service_name          ? { service_name }  : {}),
-        ...(service_price != null ? { service_price } : {}),
+        ...(resolved.serviceName       ? { service_name: resolved.serviceName } : {}),
+        ...(resolved.priceInr != null  ? { service_price: resolved.priceInr } : {}),
       })
       .select('id')
       .single()
@@ -126,7 +149,7 @@ export async function POST(req: NextRequest) {
     }
 
     const appointmentId = (appointment as { id: string }).id
-    const effectivePrice = typeof service_price === 'number' ? service_price : null
+    const effectivePrice = resolved.priceInr
 
     // ── Free booking — confirm immediately ───────────────────────────────
     if (!effectivePrice || effectivePrice <= 0) {
@@ -139,9 +162,6 @@ export async function POST(req: NextRequest) {
 
     // ── Build PayU form ───────────────────────────────────────────────────
     assertPayuConfigured()
-
-    const { data: therapist } = await supabase
-      .from('therapists').select('full_name').eq('id', therapist_id).single()
 
     const amount      = formatAmount(effectivePrice)
     const productinfo = service_name

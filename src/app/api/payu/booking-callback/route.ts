@@ -107,9 +107,28 @@ export async function POST(req: NextRequest) {
       return redirect(req, `/booking/failure?reason=appointment_not_found`)
     }
 
+    if (appt.therapist_id !== udf2) {
+      console.error('[payu/booking-callback] therapist mismatch', {
+        appointmentId,
+        callbackTherapistId: udf2,
+        appointmentTherapistId: appt.therapist_id,
+      })
+      return redirect(req, `/booking/failure?reason=appointment_mismatch`)
+    }
+
     if (appt.status === 'upcoming') {
       // Already processed (duplicate callback) — just redirect to success
       return redirect(req, `/booking/success?id=${appointmentId}`)
+    }
+
+    const expectedAmount = Number(appt.service_price).toFixed(2)
+    if (!Number.isFinite(Number(appt.service_price)) || Number(amount).toFixed(2) !== expectedAmount) {
+      console.error('[payu/booking-callback] amount mismatch', {
+        appointmentId,
+        amount,
+        expectedAmount,
+      })
+      return redirect(req, `/booking/failure?reason=amount_mismatch&txnid=${encodeURIComponent(txnid)}`)
     }
 
     // ── 4. Confirm the appointment ────────────────────────────────────────
@@ -117,6 +136,7 @@ export async function POST(req: NextRequest) {
       .from('appointments')
       .update({
         status:        'upcoming',
+        payment_status:'paid',
         payu_id:       mihpayid,
         txnid:         null,
         hold_until:    null,

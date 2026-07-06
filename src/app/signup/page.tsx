@@ -8,7 +8,8 @@ import AuthLayout from '@/components/layout/AuthLayout'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import { loadDemo, clearDemo, type DemoProfile } from '@/lib/demoSession'
-import { Camera, User, CheckCircle, XCircle, Loader, Sparkles } from 'lucide-react'
+import JourneyProgress from '@/components/journey/JourneyProgress'
+import { CheckCircle, XCircle, Loader, Sparkles } from 'lucide-react'
 import { Eye, EyeOff } from 'lucide-react'
 
 const PREFIXES = ['Dr.', 'Prof.', 'Mr.', 'Ms.', 'Mrs.', 'None']
@@ -35,8 +36,6 @@ function SignupForm() {
   const [username, setUsername]   = useState('')
   const [email, setEmail]         = useState('')
   const [password, setPassword]   = useState('')
-  const [photoFile, setPhotoFile] = useState<File | null>(null)
-  const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [phone, setPhone]         = useState('')
   const [error, setError]         = useState('')
   const [loading, setLoading]     = useState(false)
@@ -55,7 +54,6 @@ function SignupForm() {
       if (match) { setPrefix(match); setFullName(d.full_name.slice(match.length + 1)) }
       else { setFullName(d.full_name) }
     }
-    if (d.photo_url && !photoPreview) setPhotoPreview(d.photo_url)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fromDemo])
 
@@ -116,13 +114,6 @@ function SignupForm() {
     setOtp(pasted)
     setOtpError('')
     otpBoxRefs.current[Math.min(pasted.length, OTP_LEN - 1)]?.focus()
-  }
-
-  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0]
-    if (!file) return
-    setPhotoFile(file)
-    setPhotoPreview(URL.createObjectURL(file))
   }
 
   function handleUsernameChange(val: string) {
@@ -280,22 +271,10 @@ function SignupForm() {
     await finishSignup(data.user.id)
   }
 
-  // Shared: upload photo, write the therapist profile, redirect to pricing.
+  // Shared: write the therapist profile, redirect to pricing.
+  // Photo is collected once, later, in SetupWizard — not duplicated here.
   async function finishSignup(userId: string) {
     const displayName = prefix === 'None' ? fullName : `${prefix} ${fullName}`
-
-    let photo_url = null
-    if (photoFile) {
-      const ext  = photoFile.name.split('.').pop()
-      const path = `${userId}/profile.${ext}`
-      const { error: uploadError } = await supabase.storage
-        .from('avatars')
-        .upload(path, photoFile, { upsert: true })
-      if (!uploadError) {
-        const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path)
-        photo_url = urlData.publicUrl
-      }
-    }
 
     // Carry the demo's design + details into the real profile so the site
     // they built on /try becomes their actual starting point.
@@ -315,7 +294,6 @@ function SignupForm() {
       email,
       username,
       phone:               phone.replace(/\s/g, '') || null,
-      photo_url,
       plan:                'none',
       is_active:           true,
       is_profile_complete: false,
@@ -338,7 +316,7 @@ return (
 
 <AuthLayout title="Create your free account">
 
-
+<JourneyProgress current="account" className="max-w-[420px]" />
 
    <div
    className="
@@ -363,6 +341,9 @@ with the design and details you chose. </p> </div>
 {step === 'otp' ? (
   /* ── OTP verification view ── */
   <form onSubmit={handleVerifyOtp} className="space-y-5">
+    <p className="text-center text-[10px] font-bold uppercase tracking-widest" style={{ color: '#FF9933' }}>
+      Step 2 of 2
+    </p>
     <div className="text-center">
       <h3 className="text-lg font-semibold text-[#1F1C18]">Verify your email</h3>
       <p className="text-sm text-[#6E685F] mt-1">
@@ -429,37 +410,9 @@ with the design and details you chose. </p> </div>
 ) : (
   <form onSubmit={handleSendOtp} className="space-y-5">
 
-    {/* Photo */}
-    <div className="flex flex-col items-center gap-3 pb-4">
-      <label className="cursor-pointer group">
-        <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-[#FBF3E6] border-2 border-[#F3D9B0] overflow-hidden flex items-center justify-center relative">
-          {photoPreview ? (
-            <img
-              src={photoPreview}
-              alt="Preview"
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            <User size={28} className="text-[#E0A85C]" />
-          )}
-
-          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition flex items-center justify-center">
-            <Camera size={18} className="text-white" />
-          </div>
-        </div>
-
-        <input
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={handlePhotoChange}
-        />
-      </label>
-
-      <p className="text-xs text-[#6b7280]">
-        {photoPreview ? 'Photo selected ✓' : 'Upload profile photo'}
-      </p>
-    </div>
+    <p className="text-center text-[10px] font-bold uppercase tracking-widest" style={{ color: '#FF9933' }}>
+      Step 1 of 2
+    </p>
 
     {/* Full Name */}
     <div>
@@ -535,11 +488,13 @@ with the design and details you chose. </p> </div>
       </div>
     </div>
 
-    {/* Username */}
-    <div>
-      <label className="block text-sm font-medium text-[#6b7280] mb-1.5">
-        Your profile URL
+    {/* Username — called out with a highlighted card since this is their
+        permanent public identity, not just another form field */}
+    <div className="p-4 rounded-xl" style={{ background: 'rgba(255,153,51,0.05)', border: '1px solid rgba(255,153,51,0.25)' }}>
+      <label className="block text-sm font-bold mb-1.5" style={{ color: '#1F1C18' }}>
+        Choose your public web address
       </label>
+      <p className="text-xs text-[#7A7166] mb-2.5">This is the link you'll share with clients — pick it carefully.</p>
 
       <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-2">
         <div
@@ -708,9 +663,20 @@ with the design and details you chose. </p> </div>
       )}
     </button>
   </div>
-  <p className="text-xs text-[#6b7280] mt-1.5">
-    At least 8 characters, with an uppercase &amp; lowercase letter, a number, and a symbol.
-  </p>
+  <div className="mt-2 space-y-1">
+    {[
+      { label: 'At least 8 characters',   pass: password.length >= 8 },
+      { label: 'One uppercase letter',    pass: /[A-Z]/.test(password) },
+      { label: 'One lowercase letter',    pass: /[a-z]/.test(password) },
+      { label: 'One number',              pass: /[0-9]/.test(password) },
+      { label: 'One symbol (e.g. !@#$%)', pass: /[!@#$%^&*()_+\-=[\]{};':"|<>?,./`~]/.test(password) },
+    ].map(rule => (
+      <p key={rule.label} className="text-xs flex items-center gap-1.5" style={{ color: rule.pass ? '#22c55e' : '#9ca3af' }}>
+        {rule.pass ? <CheckCircle size={11} /> : <span className="inline-block w-[11px] h-[11px] rounded-full border" style={{ borderColor: '#D9CFC4' }} />}
+        {rule.label}
+      </p>
+    ))}
+  </div>
 </div>
 
     {error && (

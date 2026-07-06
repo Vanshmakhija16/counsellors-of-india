@@ -3,6 +3,7 @@
 import { Suspense, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
+import JourneyProgress from '@/components/journey/JourneyProgress'
 
 const REDIRECT_AFTER_MS = 4000
 
@@ -22,7 +23,8 @@ function PaymentSuccess() {
   }, [router])
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-[#F6F3EE] px-4 py-16">
+    <main className="min-h-screen flex flex-col items-center justify-center bg-[#F6F3EE] px-4 py-16">
+      <JourneyProgress current="payment" className="max-w-[420px]" />
       <div className="w-full max-w-md rounded-2xl border border-[#e8e1d6] bg-white p-8 text-center shadow-sm">
         <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-[#f5f5e8] text-[#ff9933]">
           <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
@@ -33,14 +35,17 @@ function PaymentSuccess() {
         <p className="mt-3 text-sm leading-relaxed text-[#6b6056]">
           You&apos;re now on the <span className="font-semibold text-[#1c1c1e]">{planLabel} plan</span>.
         </p>
+        <p className="mt-2 text-sm leading-relaxed text-[#6b6056]">
+          Next: let&apos;s build your website — takes about 5 minutes.
+        </p>
         <p className="mt-4 text-xs text-[#9ca3af]">
-          Redirecting to your dashboard in {seconds}s&hellip;
+          Taking you there in {seconds}s&hellip;
         </p>
         <Link
           href="/dashboard"
           className="mt-7 inline-flex h-11 w-full items-center justify-center rounded-lg bg-[#FF9933] px-6 text-sm font-semibold text-white transition hover:bg-[#f08a1f]"
         >
-          Go to dashboard now
+          Start building my site
         </Link>
       </div>
     </main>

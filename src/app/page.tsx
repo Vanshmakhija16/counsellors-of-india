@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import FaqRevealEffect from "@/components/landing/FaqRevealEffect";
 import FooterReveal from '@/components/landing/FooterReveal'
 import { loadDemo, saveDemo, emptyDemo, type DemoProfile } from '@/lib/demoSession'
+import { Check, Crown, ArrowRight } from 'lucide-react'
 import './page.css'
 
 
@@ -808,6 +809,26 @@ function LiveTemplateExperience() {
     ? 'texp-frame tablet'
     : 'texp-frame desktop'
 
+  // Each tab animates in individually as it scrolls into view (both directions)
+  const sidebarRef = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const tabs = sidebarRef.current?.querySelectorAll('.texp-tab')
+    if (!tabs || !tabs.length) return
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          // small per-tab delay so they stagger rather than pop in together
+          const i = Number((e.target as HTMLElement).style.getPropertyValue('--i') || 0)
+          setTimeout(() => e.target.classList.add('tab-in'), i * 60)
+        } else {
+          e.target.classList.remove('tab-in')
+        }
+      })
+    }, { threshold: 0.3 })
+    tabs.forEach(el => obs.observe(el))
+    return () => obs.disconnect()
+  }, [])
+
   return (
     <section id="experience" className="texp">
       <div className="texp-head">
@@ -821,6 +842,7 @@ function LiveTemplateExperience() {
 
         {/* LEFT — vertical template sidebar */}
         <div
+          ref={sidebarRef}
           role="tablist"
           aria-label="Choose a template to experience"
           className="texp-sidebar"
@@ -833,6 +855,7 @@ function LiveTemplateExperience() {
               role="tab"
               aria-selected={active === i}
               className={`texp-tab ${active === i ? 'on' : ''}`}
+              style={{ ['--i' as string]: i }}
               onClick={() => { if (i !== active) { setLoading(true); setActive(i) } }}
             >
               <span className="texp-tab-num">{String(t.n).padStart(2,'0')}</span>
@@ -1428,6 +1451,162 @@ function FaqItem({ q, a, idx }: { q: string; a: string; idx: number }) {
 
 
 /* ─────────────────────────────────────────────────────────────────
+   SITE FOOTER — premium editorial footer, sits above <FooterReveal/>
+───────────────────────────────────────────────────────────────── */
+const FOOTER_COLS = [
+  {
+    h: 'Platform',
+    links: [
+      { l: 'Templates', href: '#experience' },
+      { l: 'Try Demo', href: '#templates' },
+      { l: 'Pricing', href: '#pricing' },
+      { l: 'Therapist Directory', href: '#therapists' },
+      { l: 'List Your Practice', href: '/signup' },
+    ],
+  },
+  {
+    h: 'Company',
+    links: [
+      { l: 'About Us', href: '#' },
+      { l: 'Blog', href: '#' },
+      { l: 'Careers', href: '#' },
+      { l: 'Contact', href: 'mailto:hello@counsellorsofindia.com' },
+    ],
+  },
+  {
+    h: 'Support',
+    links: [
+      { l: 'Help Center', href: '#' },
+      { l: 'FAQs', href: '#faq' },
+      { l: 'Therapist Guidelines', href: '#' },
+      { l: 'Community', href: '#' },
+    ],
+  },
+  {
+    h: 'Legal',
+    links: [
+      { l: 'Terms of Service', href: '#' },
+      { l: 'Privacy Policy', href: '#' },
+      { l: 'Refund Policy', href: '#' },
+      { l: 'Cookie Policy', href: '#' },
+    ],
+  },
+]
+
+const FOOTER_SOCIALS = [
+  { name: 'Instagram', href: '#', icon: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="3.6"/><circle cx="17.2" cy="6.8" r="1"/></svg>
+  )},
+  { name: 'LinkedIn', href: '#', icon: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4.5h.01M3.5 8h3v12h-3z"/><path d="M9.5 20V8h3v1.8c.7-1.2 2-2.1 3.8-2.1 2.8 0 4.7 1.9 4.7 5.3V20h-3v-6.6c0-1.6-.6-2.7-2.1-2.7-1.4 0-2.4 1-2.4 2.7V20z"/></svg>
+  )},
+  { name: 'X', href: '#', icon: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4l16 16M20 4L4 20"/></svg>
+  )},
+  { name: 'Email', href: 'mailto:hello@counsellorsofindia.com', icon: (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7 8 6 8-6"/></svg>
+  )},
+]
+
+function SiteFooter() {
+  const [email, setEmail] = useState('')
+  const [sent, setSent] = useState(false)
+
+  function onSubscribe(e: React.FormEvent) {
+    e.preventDefault()
+    if (!email.trim()) return
+    setSent(true)
+    setEmail('')
+  }
+
+  return (
+    <footer className="pfoot" aria-label="Site footer">
+      <div className="pfoot-glow" aria-hidden="true" />
+      <div className="pfoot-inner">
+
+        {/* top: brand + newsletter */}
+        <div className="pfoot-top">
+          <div className="pfoot-brand">
+            <Link href="/" className="pfoot-logo">
+              <img src="/coi.png" alt="" className="pfoot-logo-img" />
+              <span>Counsellors<br/>of India</span>
+            </Link>
+            <p className="pfoot-tag">
+              A calm, trusted home for every counselling practice in India, websites, bookings, and payments in one place.
+            </p>
+            <div className="pfoot-socials">
+              {FOOTER_SOCIALS.map(s => (
+                <a key={s.name} href={s.href} aria-label={s.name} className="pfoot-social">
+                  {s.icon}
+                </a>
+              ))}
+            </div>
+          </div>
+
+          <form className="pfoot-news" onSubmit={onSubscribe}>
+            <div className="pfoot-news-h">Get practice-growth tips</div>
+            <p className="pfoot-news-s">One short email a month. No spam, unsubscribe anytime.</p>
+            {sent ? (
+              <div className="pfoot-news-thanks">You're on the list — thank you!</div>
+            ) : (
+              <div className="pfoot-news-row">
+                <input
+                  type="email"
+                  required
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  className="pfoot-news-input"
+                  aria-label="Email address"
+                />
+                <button type="submit" className="pfoot-news-btn">
+                  Subscribe
+                </button>
+              </div>
+            )}
+          </form>
+        </div>
+
+        <div className="pfoot-rule" />
+
+        {/* link columns */}
+        <div className="pfoot-cols">
+          {FOOTER_COLS.map(col => (
+            <div key={col.h} className="pfoot-col">
+              <div className="pfoot-col-h">{col.h}</div>
+              <ul className="pfoot-col-list">
+                {col.links.map(link => (
+                  <li key={link.l}>
+                    <a href={link.href}>{link.l}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        <div className="pfoot-rule" />
+
+        {/* bottom bar */}
+        <div className="pfoot-bottom">
+          <div className="pfoot-bottom-l">
+            <span>© {new Date().getFullYear()} Counsellors of India. All rights reserved.</span>
+            <span className="pfoot-bottom-sep" />
+            <span>Made with care in India</span>
+          </div>
+          <div className="pfoot-badges">
+            <span className="pfoot-badge">🔒 Secured Payments</span>
+            <span className="pfoot-badge">Razorpay</span>
+            <span className="pfoot-badge">UPI · Cards · Netbanking</span>
+          </div>
+        </div>
+
+      </div>
+    </footer>
+  )
+}
+
+/* ─────────────────────────────────────────────────────────────────
    MAIN PAGE
 ───────────────────────────────────────────────────────────────── */
 export default function Home() {
@@ -1436,7 +1615,7 @@ export default function Home() {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
-    const id = setInterval(() => setIndex(i => (i + 1) % headlines.length), 3500)
+    const id = setInterval(() => setIndex(i => (i + 1) % headlines.length), 1000)
     return () => clearInterval(id)
   }, [])
 
@@ -1475,6 +1654,25 @@ export default function Home() {
     return ()=>obs.disconnect()
   })
 
+  // Pricing cards & therapist cards: unlike the general .rv reveal above
+  // (which only ever adds 'on' and never removes it, so it plays once),
+  // these should replay their entrance animation every time they cross
+  // into/out of view, in either scroll direction. Cards are observed
+  // individually (not the grid container) so row 2 only animates once it's
+  // actually scrolled into view, instead of firing together with row 1.
+  useEffect(()=>{
+    const els = document.querySelectorAll('.price-anim-left, .price-anim-right, .td-card.rv')
+    if(!els.length) return
+    const obs = new IntersectionObserver(entries=>{
+      entries.forEach(e=>{
+        if(e.isIntersecting) e.target.classList.add('on')
+        else e.target.classList.remove('on')
+      })
+    }, { threshold: .15 })
+    els.forEach(el=>obs.observe(el))
+    return ()=>obs.disconnect()
+  })
+
   useEffect(() => {
     if (typeof window === 'undefined') return
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
@@ -1506,6 +1704,24 @@ export default function Home() {
   const [loading,setLoading]=useState(true)
   const [search,setSearch]=useState('')
   const [filter,setFilter]=useState('All')
+
+  // Magnetic hover tilt for therapist cards — the card tilts toward the
+  // cursor position (small 3D perspective) and eases back flat on leave.
+  function handleCardTiltMove(e: React.MouseEvent<HTMLAnchorElement>) {
+    const card = e.currentTarget
+    const rect = card.getBoundingClientRect()
+    const px = (e.clientX - rect.left) / rect.width - 0.5
+    const py = (e.clientY - rect.top) / rect.height - 0.5
+    const rotateY = px * 9
+    const rotateX = -py * 9
+    card.style.transition = 'transform .12s ease-out'
+    card.style.transform = `perspective(900px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) translateY(-4px) scale(1.015)`
+  }
+  function handleCardTiltLeave(e: React.MouseEvent<HTMLAnchorElement>) {
+    const card = e.currentTarget
+    card.style.transition = 'transform .45s cubic-bezier(.22,.87,.36,1)'
+    card.style.transform = ''
+  }
 
 
 
@@ -1567,7 +1783,7 @@ export default function Home() {
   <span className="nav-mobile-title">Counsellors of India</span>
 
   <div className="nav-mid">
-    <a href="#hero" className="nav-a">Home</a>
+    {/* <a href="#hero" className="nav-a">Home</a> */}
     <a href="#experience" className="nav-a">Templates</a>
         <a href="#templates" className="nav-a">Demo</a>
 
@@ -1578,9 +1794,9 @@ export default function Home() {
   </div>
 
   <div className="nav-r">
-    <Link href="/login" className="btn btn-light">
+    {/* <Link href="/login" className="btn btn-light">
       Sign in
-    </Link>
+    </Link> */}
 
     <Link href="/signup" className="btn btn-dark">
       List your practice
@@ -1631,9 +1847,9 @@ export default function Home() {
 
     <div className="sidebar-links">
 
-      <a href="#hero">
+      {/* <a href="#hero">
         Home
-      </a>
+      </a> */}
 
      <a href="#templates">
         Demo
@@ -1657,9 +1873,9 @@ export default function Home() {
         Pricing
       </a>
 
-      <a href="#faq">
+      {/* <a href="#faq">
         Resources
-      </a>
+      </a> */}
 
     </div>
 
@@ -1671,13 +1887,13 @@ export default function Home() {
       </Link>
     </div>
 
-    <div className="sidebar-footer">
+    {/* <div className="sidebar-footer">
 
       <Link href="/login" className="footer-link">
         Sign in
       </Link>
 
-    </div>
+    </div> */}
 
   </aside>
 </>
@@ -1783,7 +1999,7 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="td-grid rv" style={{transitionDelay:'.12s'}}>
+          <div className="td-grid" style={{transitionDelay:'.12s'}}>
             {loading
               ? Array.from({length:6}).map((_,i)=>(
                   <div key={i} className="td-card td-card-skel">
@@ -1815,7 +2031,7 @@ export default function Home() {
                       <button type="button" className="td-empty-reset" onClick={()=>{setSearch('');setFilter('All')}}>Reset filters</button>
                     </div>
                   )
-                : [...filtered].filter(t => t.username !== 'harsh').slice(0,6).map((t, idx) => {
+                : [...filtered].filter(t => t.username !== 'harsh'  ).slice(0,6).map((t, idx) => {
                     const name = t.full_name || t.name || 'Therapist'
                     const photo = t.photo_url || ''
                     const role = t.title || t.qualification || ''
@@ -1827,7 +2043,7 @@ export default function Home() {
                     const modeLabel = mode==='online'?'Online':mode==='offline'?'In-person':mode==='both'?'Online & In-person':''
                     const init = name.split(' ').filter((w:string)=>!/^(dr|mr|mrs|ms|prof)\.?$/i.test(w)).map((w:string)=>w[0]).slice(0,2).join('').toUpperCase()||'?'
                     return (
-                      <a key={`${t.id||name}-${idx}`} href={t.username?`/${t.username}`:'#'} target={t.username?'_blank':undefined} rel="noopener noreferrer" className="td-card">
+                      <a key={`${t.id||name}-${idx}`} href={t.username?`/${t.username}`:'#'} target={t.username?'_blank':undefined} rel="noopener noreferrer" className="td-card rv" onMouseMove={handleCardTiltMove} onMouseLeave={handleCardTiltLeave}>
                         <div className="td-card-glow" aria-hidden="true"/>
                         <div className="td-card-top">
                           <div className="td-card-av">
@@ -1895,51 +2111,81 @@ export default function Home() {
       {/* ══════════════════════════════════════════════════════════════
           PRICING
       ══════════════════════════════════════════════════════════════ */}
-      <section id="pricing" className="price-section">
+      <section id="pricing" className="price-section" style={{paddingTop:'clamp(1.5rem,3vw,2.5rem)', paddingBottom:'clamp(2rem,4vw,3rem)'}}>
         <div className="price-bg-aura" aria-hidden="true"/>
-        
+
         <div className="price-wrap">
-          <div className="price-head rv">
+          <div className="price-head rv" style={{marginBottom:'2.5rem'}}>
             <h2 className="price-h">See our <em>Plans</em></h2>
           </div>
 
-          <div className="price-grid rv" style={{transitionDelay:'.08s'}}>
-            {PLANS_DATA.map(p=>(
-              <div key={p.id} className={`price-card ${p.hi?'price-card-hi':''} ${p.recommended?'price-card-recommended':''}`}>
-                {p.hi && <div className="price-card-accent" aria-hidden="true"/>}
-                {p.recommended && <div className="price-card-badge">Recommended</div>}
-                <div className="price-card-name">{p.name}</div>
-                <div className="price-card-tagline">{p.tagline}</div>
-                <div className="price-card-price">
-                  <span className="price-card-price-n">{p.price}</span>
-                  <span className="price-card-price-p">{p.period}</span>
-                </div>
-                <Link href="/signup" className={`price-card-cta ${p.ctaStyle==='filled'?'price-card-cta-p':'price-card-cta-g'}`}>
-                  {p.cta}
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <line x1="5" y1="12" x2="19" y2="12"/>
-                    <polyline points="12 5 19 12 12 19"/>
-                  </svg>
-                </Link>
-                <div className="price-card-divider"/>
-                <ul className="price-card-feats">
-                  {p.feats.map(f=>(
-                    <li key={f}>
-                      <span className="price-card-check" aria-hidden="true">
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-                          <polyline points="20 6 9 17 4 12"/>
-                        </svg>
-                      </span>
-                      <span>{f}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
+          <div className="mx-auto w-full max-w-[760px]">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 xl:gap-10 ">
+              {PLANS_DATA.map((p, i) => (
+                <div
+                  key={p.id}
+                  className={`
+                    rv ${i === 0 ? 'price-anim-left' : 'price-anim-right'}
+                    relative flex flex-col h-full rounded-[18px] bg-white p-5 transition-all duration-300
+                    ${p.hi
+                      ? 'border border-[#FF9933] shadow-[0_14px_36px_rgba(255,153,51,0.14)] lg:scale-[1.02]'
+                      : 'border border-[#ECE5D9] shadow-sm hover:shadow-lg hover:border-[#FF9933]/30'}
+                  `}
+                >
+                  {p.recommended && (
+                    <div className="absolute left-1/2 -translate-x-1/2 -top-3 px-3.5 py-1 rounded-full text-[11px] font-semibold bg-[#FF9933] text-white shadow-md whitespace-nowrap">
+                      Most Popular
+                    </div>
+                  )}
 
-          <p className="price-foot rv" style={{transitionDelay:'.14s'}}>
-          </p>
+                  <div className="mb-4">
+                    <div className="flex items-center gap-1.5">
+                      {p.id === 'pro' && <Crown size={14} className="text-[#FF9933]" />}
+                      <h3
+                        className="text-base text-[#1F1C18]"
+                        style={{ fontFamily: "'Fraunces','Instrument Serif',serif", fontWeight: 500 }}
+                      >
+                        {p.name}
+                      </h3>
+                    </div>
+
+                    <div className="mt-2 flex items-end gap-1">
+                      <span
+                        className="text-2xl font-semibold tracking-tight text-[#1F1C18]"
+                        style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
+                      >
+                        {p.price}
+                      </span>
+                      <span className="text-[11px] text-gray-400 mb-0.5">{p.period}</span>
+                    </div>
+
+                    <p className="mt-1.5 text-[11.5px] text-[#6E685F] leading-snug">{p.tagline}</p>
+                  </div>
+
+                  <Link
+                    href="/signup"
+                    className={`h-8 rounded-lg inline-flex items-center justify-center gap-1.5 text-[11.5px] font-medium transition ${
+                      p.ctaStyle === 'filled'
+                        ? 'bg-[#FF9933] hover:bg-[#E07A12] text-white'
+                        : 'border border-[#ECE5D9] text-[#1F1C18] hover:border-[#FF9933] hover:text-[#FF9933]'
+                    }`}
+                  >
+                    {p.cta}
+                    <ArrowRight size={11} />
+                  </Link>
+
+                  <ul className="mt-4 mb-0 flex-1 space-y-1.5">
+                    {p.feats.map((f) => (
+                      <li key={f} className="flex items-start gap-2">
+                        <Check size={11} className="mt-0.5 shrink-0 text-[#FF9933]" />
+                        <span className="text-[11.5px] leading-snug text-[#3D3A33]">{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 
@@ -1994,6 +2240,8 @@ export default function Home() {
 
   
       </section>
+
+      {/* <SiteFooter /> */}
 
       <FooterReveal />
 

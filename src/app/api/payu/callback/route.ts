@@ -15,8 +15,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceSupabaseClient } from '@/lib/supabase-server'
 import { verifyResponseHash } from '@/lib/payu'
-
-const PLAN_RANK: Record<string, number> = { free: 0, starter: 1, pro: 2 }
+import { getPlanPriceInr, highestPlan, normalizePlan } from '@/lib/pricing'
 
 function redirect(req: NextRequest, path: string) {
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? req.nextUrl.origin
@@ -66,9 +65,15 @@ export async function POST(req: NextRequest) {
     }
 
     const therapistId = udf1
-    const plan = udf2
-    if (!therapistId || !(plan in PLAN_RANK)) {
+    const plan = normalizePlan(udf2)
+    if (!therapistId || !plan || plan === 'growth') {
       return redirect(req, `/payment/failure?reason=bad_plan&txnid=${encodeURIComponent(txnid)}`)
+    }
+
+    const expectedAmount = getPlanPriceInr(plan).toFixed(2)
+    if (Number(amount).toFixed(2) !== expectedAmount) {
+      console.error('[payu/callback] amount mismatch:', { txnid, plan, amount, expectedAmount })
+      return redirect(req, `/payment/failure?reason=amount_mismatch&txnid=${encodeURIComponent(txnid)}`)
     }
 
     const db = createServiceSupabaseClient()
@@ -77,18 +82,16 @@ export async function POST(req: NextRequest) {
     //    applied, don't re-apply — just send the user to success.
     const { data: existing } = await db
       .from('therapists')
-      .select('plan, highest_plan')
+      .select('plan, highest_plan, plan_payment_id')
       .eq('id', therapistId)
       .single()
 
-    if (existing?.plan === mihpayid) {
+    if (existing?.plan_payment_id === mihpayid) {
       return redirect(req, `/payment/success?plan=${encodeURIComponent(plan)}&txnid=${encodeURIComponent(txnid)}`)
     }
 
     // highest_plan is a ratchet — never lower it.
-    const existingHighest = (existing?.highest_plan as string) ?? 'free'
-    const newHighest =
-      PLAN_RANK[plan] > (PLAN_RANK[existingHighest] ?? 0) ? plan : existingHighest
+    const newHighest = highestPlan(existing?.highest_plan as string | null | undefined, plan)
 
     // 4) Apply upgrade (with graceful fallbacks if optional columns are absent).
     let updErr: { code?: string; message?: string } | null = null

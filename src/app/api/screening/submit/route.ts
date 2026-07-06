@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { rateLimit } from '@/lib/rate-limit'
 
 /**
  * Public route — called by unauthenticated patients completing a screening invite.
@@ -12,6 +13,9 @@ import { createServerClient } from '@supabase/ssr'
  */
 export async function POST(req: NextRequest) {
   try {
+    const limited = rateLimit(req, { keyPrefix: 'screening-submit', limit: 30, windowMs: 10 * 60 * 1000 })
+    if (limited) return limited
+
     const { token, responses, notes } = await req.json()
     if (!token || !Array.isArray(responses)) {
       return NextResponse.json({ error: 'token and responses required' }, { status: 400 })

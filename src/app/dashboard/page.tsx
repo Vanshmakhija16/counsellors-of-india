@@ -3,23 +3,86 @@
 import { useTherapist } from '@/lib/useTherapist'
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase'
+import { Fraunces } from 'next/font/google'
 import {
-  Calendar, Users, Clock,
-  ExternalLink, Copy, CheckCircle,
-  AlertCircle, ArrowRight, Palette, Sparkles,
+  Calendar, Clock, ExternalLink, Copy,
+  CheckCircle, ArrowRight, Sparkles,
+  Palette, Globe, Share2, ChevronRight,
 } from 'lucide-react'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 
+const SetupWizard = dynamic(
+  () => import('@/components/dashboard/SetupWizard'),
+  { ssr: false }
+)
+
+const fraunces = Fraunces({
+  subsets: ['latin'],
+  weight: ['400', '500', '600'],
+  style: ['normal', 'italic'],
+  variable: '--font-fraunces',
+})
+
+// ── Design tokens ─────────────────────────────────────────────────
+const SAFFRON      = '#FF9933'
+const SAFFRON_DEEP = '#C2650A'
+const INK          = '#171412'
+const MUTED        = '#766c62'
+const BORDER       = 'rgba(31,26,20,0.08)'
+const SUCCESS      = '#1F7A54'
+const INFO         = '#3E5C82'
+
+// ── Helpers ───────────────────────────────────────────────────────
+function initials(name: string) {
+  return name.trim().split(/\s+/).filter(Boolean)
+    .filter(p => !/^(dr|mr|mrs|ms|miss|mx|prof)\.?$/i.test(p))
+    .slice(0, 2).map(p => p[0]?.toUpperCase()).join('') || '?'
+}
+
+function inferState(therapist: any): 'no-template' | 'no-content' | 'unpublished' | 'live' {
+  if (!therapist) return 'no-template'
+  if (therapist.setup_complete) return 'live'
+  if (therapist.is_profile_complete) return 'unpublished'
+  if (therapist.full_name && therapist.bio) return 'no-content'
+  return 'no-template'
+}
+
+// ── Main ──────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const { therapist, loading } = useTherapist()
   const supabase = createClient()
-  const [appointments, setAppointments] = useState<any[]>([])
-  const [copied, setCopied] = useState(false)
-  const [stats, setStats] = useState({ total: 0, pending: 0, today: 0 })
 
+  const [appointments, setAppointments] = useState<any[]>([])
+  const [stats, setStats]   = useState({ total: 0, today: 0, pending: 0 })
+  const [copied, setCopied] = useState(false)
+  const [showWizard,     setShowWizard]     = useState(false)
+  const [wizardChecked,  setWizardChecked]  = useState(false)
+  const [justPublished,  setJustPublished]  = useState(false)
+
+  // ── Auto-open wizard if setup not done ──────────────────────────
   useEffect(() => {
     if (!therapist) return
-    async function fetchAppointments() {
+    const localDone = localStorage.getItem(`coi_setup_done_${therapist.id}`)
+    if (localDone) { setWizardChecked(true); return }
+    if (!(therapist as any).setup_complete) setShowWizard(true)
+    setWizardChecked(true)
+  }, [therapist])
+
+  // ── Just-published celebration (one-time) ───────────────────────
+  useEffect(() => {
+    if (!therapist) return
+    const key = `coi_just_published_${therapist.id}`
+    if (localStorage.getItem(key)) {
+      setJustPublished(true)
+      localStorage.removeItem(key)
+    }
+  }, [therapist])
+
+  // ── Appointments ────────────────────────────────────────────────
+  useEffect(() => {
+    if (!therapist) return
+    async function load() {
       const { data } = await supabase
         .from('appointments')
         .select('*')
@@ -32,12 +95,12 @@ export default function DashboardPage() {
         const today = new Date().toDateString()
         setStats({
           total:   data.length,
-          pending: data.filter(a => a.status === 'rescheduled').length,
           today:   data.filter(a => new Date(a.scheduled_at).toDateString() === today).length,
+          pending: data.filter(a => a.status === 'rescheduled').length,
         })
       }
     }
-    fetchAppointments()
+    load()
   }, [therapist])
 
   function copyLink() {
@@ -47,257 +110,259 @@ export default function DashboardPage() {
     setTimeout(() => setCopied(false), 2000)
   }
 
-  if (loading) return (
-    <div className="flex items-center justify-center min-h-64" style={{ background: '#FFFCF8' }}>
-      <div
-        className="w-6 h-6 rounded-full border-2 animate-spin"
-        style={{ borderColor: '#FF9933', borderTopColor: 'transparent' }}
-      />
+  async function shareLink() {
+    if (!therapist) return
+    const url = `${window.location.origin}/${therapist.username}`
+    if (navigator.share) {
+      try { await navigator.share({ title: 'My booking page', url }) } catch { /* cancelled */ }
+    } else { copyLink() }
+  }
+
+  // ── Loading ──────────────────────────────────────────────────────
+  if (loading || !wizardChecked) return (
+    <div className="flex items-center justify-center min-h-64">
+      <div className="w-6 h-6 rounded-full border-2 animate-spin"
+        style={{ borderColor: SAFFRON, borderTopColor: 'transparent' }} />
     </div>
   )
 
-  const profileComplete = therapist?.is_profile_complete
+  // ── Setup wizard ─────────────────────────────────────────────────
+  if (showWizard && therapist) {
+    return (
+      <SetupWizard
+        therapistId={therapist.id}
+        username={therapist.username ?? ''}
+        existingName={therapist.full_name ?? ''}
+        existingPhoto={(therapist as any).photo_url ?? ''}
+        existingBio={therapist.bio ?? ''}
+        existingFee={String((therapist as any).fee_per_session ?? '')}
+        onComplete={() => setShowWizard(false)}
+      />
+    )
+  }
 
-  // Greeting
-  const hour = new Date().getHours()
-  const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
-
-  // Drop any honorific (Dr/Mr/Mrs/Ms/Prof…) and show just the first name.
+  // ── Derived values ───────────────────────────────────────────────
+  const state     = inferState(therapist)
+  const setupDone = state === 'live'
+  const hour      = new Date().getHours()
+  const greeting  = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
   const nameParts = (therapist?.full_name ?? '').trim().split(/\s+/).filter(Boolean)
   const firstName = nameParts.length > 1 &&
-    /^(dr|mr|mrs|ms|miss|mx|prof|professor|sir|madam)\.?$/i.test(nameParts[0])
-    ? nameParts[1]
-    : (nameParts[0] ?? '')
+    /^(dr|mr|mrs|ms|miss|mx|prof)\.?$/i.test(nameParts[0])
+    ? nameParts[1] : (nameParts[0] ?? '')
+  const publicUrl = therapist?.username
+    ? `counsellorsofindia.com/${therapist.username}`
+    : null
+  const hasBookings = stats.total > 0
+
+  // ── State-aware next action ──────────────────────────────────────
+  const nextAction = {
+    'no-template': {
+      label: 'Choose your template',
+      desc:  'Pick how your booking page looks — takes 30 seconds.',
+      href:  '/dashboard/appearance',
+      cta:   'Choose template',
+      icon:  Palette,
+    },
+    'no-content': {
+      label: 'Add your content',
+      desc:  'Fill in your name, photo, bio and fee so clients know who you are.',
+      href:  '/dashboard/profile',
+      cta:   'Add your info',
+      icon:  Sparkles,
+    },
+    'unpublished': {
+      label: 'Publish your site',
+      desc:  "Everything looks good — hit publish and you'll be live instantly.",
+      href:  '/dashboard/appearance',
+      cta:   'Publish now',
+      icon:  Globe,
+    },
+    'live': {
+      label: 'Your site is live',
+      desc:  'Share your link below to start getting bookings.',
+      href:  null,
+      cta:   null,
+      icon:  CheckCircle,
+    },
+  }[state]
 
   return (
-    <div
-      className="min-h-full px-5 sm:px-8 py-8 max-w-5xl"
-      style={{ fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif" }}
-    >
+    <div className={`w-full space-y-5 ${fraunces.variable}`}
+      style={{ fontFamily: "'Plus Jakarta Sans','Inter',system-ui,sans-serif" }}>
 
-      {/* ── Welcome ────────────────────────────────────────────── */}
-      <div className="mb-8">
-        <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: '#FF9933' }}>
+      {/* ── Greeting ── */}
+      <div>
+        <p className="text-xs font-bold uppercase tracking-widest mb-1"
+          style={{ color: SAFFRON_DEEP }}>
           {greeting}
         </p>
-        <h1 className="text-3xl font-bold" style={{ color: '#1F1A14', letterSpacing: '-0.02em' }}>
-          {firstName} <span style={{ color: '#46403A', fontWeight: 500 }}></span>
+        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight"
+          style={{ fontFamily: 'var(--font-fraunces),Georgia,serif', color: INK }}>
+          {firstName ? `${firstName}.` : 'Your dashboard.'}
         </h1>
       </div>
 
-      {/* ── Profile incomplete warning ─────────────────────────── */}
-      {!profileComplete && (
-        <div
-          className="mb-6 p-4 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-          style={{
-            background: 'rgba(255,153,51,0.07)',
-            border: '1px solid rgba(255,153,51,0.28)',
-          }}
-        >
-          <div className="flex items-center gap-3">
-            <AlertCircle size={17} style={{ color: '#E07A12', flexShrink: 0 }} />
-            <div>
-              <p className="text-sm font-semibold" style={{ color: '#1F1A14' }}>
-                Complete your profile
-              </p>
-              <p className="text-xs mt-0.5" style={{ color: '#7A7166' }}>
-                Your public page won't be visible until your profile is complete
-              </p>
-            </div>
+      {/* ── Just-published banner ── */}
+      {justPublished && (
+        <div className="flex items-center justify-between gap-3 px-4 py-3 rounded-xl border border-emerald-200 bg-emerald-50 text-sm text-emerald-800">
+          <div className="flex items-center gap-2 font-semibold">
+            <CheckCircle size={16} /> Your website is live — share it to get your first booking!
           </div>
-          <Link
-            href="/onboarding"
-            className="flex items-center gap-1.5 text-xs font-semibold transition"
-            style={{ color: '#E07A12' }}
-          >
-            Complete now <ArrowRight size={13} />
-          </Link>
+          <button onClick={() => setJustPublished(false)}
+            className="text-xs text-emerald-600 font-semibold shrink-0">
+            Dismiss
+          </button>
         </div>
       )}
 
-      {/* ── Booking link banner ────────────────────────────────── */}
-      <div
-        className="mb-8 p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4"
-        style={{
-          background: 'linear-gradient(135deg, #1F1A14 0%, #2e2519 100%)',
-          border: '1px solid rgba(255,153,51,0.18)',
-        }}
-      >
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: '#FF9933' }}>
-            Your booking link
-          </p>
-          <p className="text-sm font-medium break-all" style={{ color: '#FDF5EC' }}>
-            counsellorsofindia.com/<span style={{ color: '#FF9933' }}>{therapist?.username}</span>
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={copyLink}
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition"
-            style={{
-              background: 'rgba(255,153,51,0.12)',
-              color: '#FF9933',
-              border: '1px solid rgba(255,153,51,0.28)',
-            }}
-          >
-            {copied ? <><CheckCircle size={13} /> Copied!</> : <><Copy size={13} /> Copy</>}
-          </button>
-          <Link
-            href={`/${therapist?.username}`}
-            target="_blank"
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold transition"
-            style={{ background: '#FF9933', color: '#1F1A14' }}
-          >
-            <ExternalLink size={13} /> View page
-          </Link>
-        </div>
-      </div>
+      {/* ── TOP SECTION: next action + public link ── */}
+      <div className="grid gap-4 lg:grid-cols-[1fr_340px]">
 
-      {/* ── Customize your website ─────────────────────────────── */}
-      <Link
-        href="/dashboard/appearance"
-        className="group mb-8 p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition hover:shadow-md"
-        style={{
-          background: '#ffffff',
-          border: '1px solid rgba(255,153,51,0.30)',
-        }}
-      >
-        <div className="flex items-center gap-4">
-          {/* <div
-            className="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0"
-            style={{ background: 'rgba(255,153,51,0.10)' }}
-          >
-            <Palette size={22} style={{ color: '#FF9933' }} />
-          </div> */}
+        {/* Next action card */}
+
+        {/* Public link card */}
+        <div className="rounded-2xl border border-[#ded8ce] bg-white p-5 flex flex-col gap-4">
           <div>
-            <p className="text-sm font-bold flex items-center gap-1.5" style={{ color: '#1F1A14' }}>
-              Design your website
-              <Sparkles size={14} style={{ color: '#FF9933' }} />
+            <p className="text-xs font-bold uppercase tracking-widest mb-2"
+              style={{ color: MUTED }}>
+              Your booking link
             </p>
-            <p className="text-xs mt-0.5" style={{ color: '#7A7166' }}>
-              Pick a template, preview it live, and edit your text & photos, all in one place.
-            </p>
+            {publicUrl ? (
+              <p className="text-sm font-bold break-all" style={{ color: SAFFRON_DEEP }}>
+                {publicUrl}
+              </p>
+            ) : (
+              <p className="text-sm" style={{ color: MUTED }}>
+                Publish your site to get a public link
+              </p>
+            )}
+          </div>
+
+          {publicUrl && (
+            <div className="flex flex-wrap gap-2">
+              <button onClick={copyLink}
+                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border text-xs font-semibold transition"
+                style={{ borderColor: BORDER, color: INK }}>
+                {copied ? <><CheckCircle size={13} /> Copied!</> : <><Copy size={13} /> Copy</>}
+              </button>
+              <button onClick={shareLink}
+                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border text-xs font-semibold transition"
+                style={{ borderColor: BORDER, color: INK }}>
+                <Share2 size={13} /> Share
+              </button>
+              <a href={`/${therapist?.username}`} target="_blank" rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 h-9 px-3 rounded-xl text-xs font-bold text-white transition hover:brightness-95"
+                style={{ background: INK }}>
+                <ExternalLink size={13} /> View site
+              </a>
+            </div>
+          )}
+
+          {/* Quick links */}
+          <div className="border-t pt-4 space-y-1" style={{ borderColor: BORDER }}>
+            <p className="text-[10px] font-bold uppercase tracking-widest mb-2"
+              style={{ color: MUTED }}>Quick actions</p>
+            {[
+              { label: 'Edit website content', href: '/dashboard/appearance', icon: Palette },
+              { label: 'Set availaibility ', href: '/dashboard/availability', icon: Clock },
+              { label: 'View all bookings', href: '/dashboard/appointments', icon: Calendar },
+            ].map(({ label, href, icon: Icon }) => (
+              <Link key={href} href={href}
+                className="flex items-center justify-between gap-2 px-2 py-2 rounded-lg text-sm font-semibold transition hover:bg-[#f6f2ec]"
+                style={{ color: '#342e28' }}>
+                <span className="flex items-center gap-2">
+                  <Icon size={14} style={{ color: SAFFRON }} /> {label}
+                </span>
+                <ChevronRight size={14} style={{ color: '#b0a89e' }} />
+              </Link>
+            ))}
           </div>
         </div>
-        <span
-          className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-bold shrink-0 transition group-hover:gap-2.5"
-          style={{ background: '#FF9933', color: '#1F1A14' }}
-        >
-          Customize <ArrowRight size={14} />
-        </span>
-      </Link>
-
-      {/* ── Stats ─────────────────────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        {[
-          {
-            icon: Calendar,
-            label: 'Total bookings',
-            value: stats.total,
-            accent: '#FF9933',
-            bg: 'rgba(255,153,51,0.08)',
-          },
-          {
-            icon: Clock,
-            label: "Today's sessions",
-            value: stats.today,
-            accent: '#2d7a5a',
-            bg: 'rgba(45,122,90,0.08)',
-          },
-          {
-            icon: Users,
-            label: 'Rescheduled',
-            value: stats.pending,
-            accent: '#4a6fa5',
-            bg: 'rgba(74,111,165,0.08)',
-          },
-        ].map(stat => (
-          <div
-            key={stat.label}
-            className="rounded-2xl p-5"
-            style={{ background: '#ffffff', border: '1px solid rgba(31,26,20,0.08)' }}
-          >
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center mb-4"
-              style={{ background: stat.bg }}
-            >
-              <stat.icon size={17} style={{ color: stat.accent }} />
-            </div>
-            <p className="text-3xl font-bold mb-1" style={{ color: '#1F1A14', letterSpacing: '-0.03em' }}>
-              {stat.value}
-            </p>
-            <p className="text-xs font-medium" style={{ color: '#7A7166' }}>
-              {stat.label}
-            </p>
-          </div>
-        ))}
       </div>
 
-      {/* ── Upcoming appointments ─────────────────────────────── */}
-      <div
-        className="rounded-2xl overflow-hidden"
-        style={{ background: '#ffffff', border: '1px solid rgba(31,26,20,0.08)' }}
-      >
-        <div
-          className="px-5 sm:px-6 py-4 flex items-center justify-between gap-2"
-          style={{ borderBottom: '1px solid rgba(31,26,20,0.07)' }}
-        >
-          <h2 className="text-sm font-bold" style={{ color: '#1F1A14' }}>
-            Upcoming appointments
-          </h2>
-          <Link
-            href="/dashboard/appointments"
+      {/* ── Stats — only when there's real data ── */}
+      {hasBookings && (
+        <div className="grid gap-4 sm:grid-cols-3">
+          {[
+            { label: 'Upcoming bookings', value: stats.total,   color: INFO    },
+            { label: "Today's sessions",  value: stats.today,   color: SUCCESS },
+            { label: 'Rescheduled',       value: stats.pending, color: SAFFRON_DEEP },
+          ].map(({ label, value, color }) => (
+            <div key={label} className="rounded-2xl border border-[#ded8ce] bg-white p-5">
+              <p className="text-3xl font-bold tabular-nums tracking-tight" style={{ color: INK }}>
+                {value}
+              </p>
+              <p className="text-sm mt-1" style={{ color: MUTED }}>{label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── Bookings pipeline ── */}
+      <div className="rounded-2xl border border-[#ded8ce] bg-white overflow-hidden">
+        <div className="flex items-center justify-between gap-2 px-5 py-4 border-b"
+          style={{ borderColor: BORDER }}>
+          <h2 className="text-sm font-bold" style={{ color: INK }}>Upcoming appointments</h2>
+          <Link href="/dashboard/appointments"
             className="text-xs font-semibold transition"
-            style={{ color: '#E07A12' }}
-          >
+            style={{ color: SAFFRON_DEEP }}>
             View all →
           </Link>
         </div>
 
         {appointments.length === 0 ? (
-          <div className="px-6 py-14 text-center">
-            <div
-              className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
-              style={{ background: 'rgba(255,153,51,0.07)' }}
-            >
-              <Calendar size={22} style={{ color: '#FF9933' }} />
+          <div className="px-6 py-12 text-center">
+            <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-4"
+              style={{ background: `${SAFFRON}10` }}>
+              <Calendar size={22} style={{ color: SAFFRON }} />
             </div>
-            <p className="text-sm font-semibold mb-1" style={{ color: '#1F1A14' }}>
-              No appointments yet
-            </p>
-            <p className="text-xs" style={{ color: '#7A7166' }}>
+            <p className="text-sm font-semibold mb-1" style={{ color: INK }}>No appointments yet</p>
+            <p className="text-xs mb-4" style={{ color: MUTED }}>
               Share your booking link to get your first client
             </p>
+            <div className="flex items-center justify-center gap-2 flex-wrap">
+              <Link href="/dashboard/availability"
+                className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl text-xs font-bold text-white"
+                style={{ background: INK }}>
+                <Clock size={13} /> Set hours first
+              </Link>
+              {publicUrl && (
+                <button onClick={copyLink}
+                  className="inline-flex items-center gap-1.5 h-9 px-4 rounded-xl border text-xs font-semibold transition"
+                  style={{ borderColor: BORDER, color: INK }}>
+                  <Copy size={13} /> Copy my link
+                </button>
+              )}
+            </div>
           </div>
         ) : (
           <div>
             {appointments.map((apt, i) => (
-              <div
-                key={apt.id}
-                className="px-5 sm:px-6 py-4 flex items-center justify-between gap-3"
-                style={i < appointments.length - 1 ? { borderBottom: '1px solid rgba(31,26,20,0.06)' } : {}}
-              >
-                <div>
-                  <p className="text-sm font-semibold" style={{ color: '#1F1A14' }}>
+              <div key={apt.id}
+                className="flex items-center gap-3 px-5 py-4"
+                style={i < appointments.length - 1 ? { borderBottom: `1px solid ${BORDER}` } : {}}>
+                <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 text-xs font-bold"
+                  style={{ background: `${SAFFRON}15`, color: SAFFRON_DEEP }}>
+                  {initials(apt.client_name ?? '?')}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate" style={{ color: INK }}>
                     {apt.client_name}
                   </p>
-                  <p className="text-xs mt-0.5" style={{ color: '#7A7166' }}>
+                  <p className="text-xs mt-0.5" style={{ color: MUTED }}>
                     {new Date(apt.scheduled_at).toLocaleDateString('en-IN', {
                       weekday: 'short', day: 'numeric', month: 'short',
                       hour: '2-digit', minute: '2-digit',
                     })}
                   </p>
                 </div>
-                <span
-                  className="text-xs font-semibold px-3 py-1 rounded-full"
+                <span className="text-xs font-semibold px-3 py-1 rounded-full shrink-0"
                   style={apt.status === 'upcoming'
-                    ? { background: 'rgba(255,153,51,0.10)', color: '#C46800' }
+                    ? { background: `${SAFFRON}15`, color: SAFFRON_DEEP }
                     : apt.status === 'rescheduled'
-                    ? { background: 'rgba(74,111,165,0.10)', color: '#4a6fa5' }
-                    : { background: 'rgba(45,122,90,0.10)', color: '#2d7a5a' }
-                  }
-                >
+                    ? { background: 'rgba(62,92,130,0.10)', color: INFO }
+                    : { background: 'rgba(31,122,84,0.10)', color: SUCCESS }}>
                   {apt.status}
                 </span>
               </div>
@@ -305,7 +370,6 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
-
     </div>
   )
 }

@@ -4,56 +4,88 @@ import { useEffect, useState, useRef } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import {
-  LayoutDashboard, Calendar, Settings, LogOut,
-  Clock, Palette, ClipboardList, CreditCard,
-  ChevronDown, ExternalLink, User, Zap,
+  LayoutDashboard, Calendar, LogOut,
+  Clock, User,
+  ExternalLink, X, Menu,
+  CreditCard, FileText, ChevronDown,
 } from 'lucide-react'
-import Logo from '../ui/Logo'
 import { createClient } from '@/lib/supabase'
 
-const navItems = [
-  { label: 'Dashboard',    href: '/dashboard',              icon: LayoutDashboard, match: 'exact'  as const },
-  { label: 'Templates',    href: '/dashboard/appearance',   icon: Palette,         match: 'exact'  as const },
-  { label: 'Profile',      href: '/dashboard/settings',     icon: Settings,        match: 'exact'  as const },
-  { label: 'Availability', href: '/dashboard/availability', icon: Clock,           match: 'exact'  as const },
-  { label: 'Appointments', href: '/dashboard/appointments', icon: Calendar,        match: 'exact'  as const },
-  { label: 'My Clients',   href: '/clinical/patients',      icon: ClipboardList,   match: 'prefix' as const },
+const NAV_MAIN = [
+  { label: 'Dashboard',       href: '/dashboard',              icon: LayoutDashboard, match: 'exact'  as const },
+  // 'Templates' used to be its own top-level nav item pointing straight at
+  // /dashboard/appearance. That duplicated the "Template & Design" and
+  // "Page Layout" tabs already inside Website Content, and having template
+  // editing live in two disconnected places was confusing. The appearance
+  // page still exists (linked from the Template tab as "live preview &
+  // switcher" for people who want it) — it's just no longer a separate
+  // top-level destination.
+  // { label: 'Templates',    href: '/dashboard/appearance',   icon: Palette,         match: 'exact'  as const },
+  { label: 'Website Content', href: '/dashboard/profile',      icon: User,            match: 'prefix' as const },
+  { label: 'Bookings',        href: '/dashboard/appointments', icon: Calendar,        match: 'prefix' as const },
+  { label: 'Availability',    href: '/dashboard/availability', icon: Clock,           match: 'prefix' as const },
 ]
 
+const NAV_BOTTOM = [
+  { label: 'Payments', href: '/dashboard/payments',  icon: CreditCard, match: 'prefix' as const },
+  // { label: 'Notes',    href: '/dashboard/notes',     icon: FileText,   match: 'prefix' as const },
+  // { label: 'Settings', href: '/dashboard/settings',  icon: Settings,   match: 'prefix' as const },
+]
+
+const SAFFRON = '#FF9933'
+const INK     = '#1a1614'
 const NO_NAV_PREFIXES = ['/dashboard/appearance/live-preview']
 
-export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-  const pathname  = usePathname()
-  const router    = useRouter()
-  const supabase  = createClient()
+function SideLink({
+  label, href, active, icon: Icon, onClick,
+}: {
+  label: string; href: string; active: boolean
+  icon: React.ElementType; onClick?: () => void
+}) {
+  return (
+    <Link
+      href={href}
+      onClick={onClick}
+      className="flex items-center gap-3.5 px-4 py-3 text-[15px] font-semibold transition-colors duration-150 rounded-lg"
+      style={active
+        ? { color: SAFFRON, background: 'rgba(255,153,51,0.07)' }
+        : { color: '#6b6560' }
+      }
+    >
+      <Icon
+        size={17}
+        strokeWidth={active ? 2.2 : 1.8}
+        style={{ flexShrink: 0, color: active ? SAFFRON : '#a09890' }}
+      />
+      {label}
+    </Link>
+  )
+}
 
-  const [gate,        setGate]        = useState<'checking' | 'ok'>('checking')
-  const [profileOpen, setProfileOpen] = useState(false)
-  const [therapist,   setTherapist]   = useState<{
-    full_name?: string; username?: string; plan?: string
-  } | null>(null)
+export default function DashboardLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname()
+  const router   = useRouter()
+  const supabase = createClient()
+
+  const [gate,       setGate]       = useState<'checking' | 'ok'>('checking')
+  const [therapist,  setTherapist]  = useState<{ full_name?: string; username?: string; plan?: string } | null>(null)
+  const [mobileOpen, setMobileOpen] = useState(false)
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const profileBtnRef = useRef<HTMLButtonElement>(null)
 
   const noNav = NO_NAV_PREFIXES.some(p => pathname.startsWith(p))
 
-  /* ── Auth gate ─────────────────────────────────────────────────── */
   useEffect(() => {
     let alive = true
     ;(async () => {
-      const { data: { user }, error: userErr } = await supabase.auth.getUser()
-      console.log('[DEBUG dashboard-gate] getUser', { userId: user?.id, userErr })
+      const { data: { user } } = await supabase.auth.getUser()
       if (!alive) return
       if (!user) { router.replace('/login?redirect=' + encodeURIComponent(pathname)); return }
-      const { data, error: planErr } = await supabase
-        .from('therapists')
-        .select('plan, full_name, username')
-        .eq('id', user.id)
-        .maybeSingle()
-      console.log('[DEBUG dashboard-gate] plan query', { data, planErr })
+      const { data } = await supabase.from('therapists').select('plan, full_name, username').eq('id', user.id).maybeSingle()
       if (!alive) return
       const plan    = data?.plan
       const hasPlan = !!plan && !['none', 'free', ''].includes(plan)
-      console.log('[DEBUG dashboard-gate] result', { plan, hasPlan })
       if (hasPlan) { setTherapist(data); setGate('ok') }
       else router.replace('/pricing?redirect=' + encodeURIComponent(pathname))
     })()
@@ -61,17 +93,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  /* ── Close dropdown on outside click ──────────────────────────── */
-  useEffect(() => {
-    function handle(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node))
-        setProfileOpen(false)
-    }
-    document.addEventListener('mousedown', handle)
-    return () => document.removeEventListener('mousedown', handle)
-  }, [])
+  useEffect(() => { setMobileOpen(false); setProfileMenuOpen(false) }, [pathname])
 
-  useEffect(() => { setProfileOpen(false) }, [pathname])
+  useEffect(() => {
+    if (!profileMenuOpen) return
+    function handleClickOutside(e: MouseEvent) {
+      const target = e.target as Node
+      if (dropdownRef.current?.contains(target)) return
+      if (profileBtnRef.current?.contains(target)) return
+      setProfileMenuOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [profileMenuOpen])
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -84,233 +118,188 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       : pathname === href
   }
 
-  /* ── Loading spinner ───────────────────────────────────────────── */
   if (gate === 'checking') return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#FFFCF8' }}>
-      <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin"
-        style={{ borderColor: '#FF9933', borderTopColor: 'transparent' }} />
+    <div className="min-h-screen flex items-center justify-center" style={{ background: '#fff' }}>
+      <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"
+        style={{ borderColor: SAFFRON, borderTopColor: 'transparent' }} />
     </div>
   )
 
   if (noNav) return <>{children}</>
 
-  /* ── Derived display values ────────────────────────────────────── */
-  const firstName = therapist?.full_name?.trim().split(/\s+/)[0] ?? 'Account'
-  const initials  = therapist?.full_name
-    ? therapist.full_name.trim().split(/\s+/).map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
+  const firstName = therapist?.full_name?.trim().split(/\s+/)
+    .filter(p => !/^(dr|mr|mrs|ms|miss|mx|prof)\.?$/i.test(p))[0] ?? 'Account'
+  const initials = therapist?.full_name
+    ? therapist.full_name.trim().split(/\s+/)
+        .filter((p: string) => !/^(dr|mr|mrs|ms)\.?$/i.test(p))
+        .map((w: string) => w[0]?.toUpperCase()).slice(0, 2).join('')
     : '?'
-  const planLabel = ({ growth: 'Growth', pro: 'Pro' } as Record<string, string>)[therapist?.plan ?? ''] ?? 'Starter'
+  const planLabel = ({ growth: 'Growth', pro: 'Pro', starter: 'Starter' } as Record<string, string>)[therapist?.plan ?? ''] ?? 'Starter'
   const isPro     = ['growth', 'pro'].includes(therapist?.plan ?? '')
+
+  const SidebarContent = ({ onClose }: { onClose?: () => void }) => (
+    <div className="flex flex-col h-full bg-white">
+
+      {/* Brand */}
+      <div className="px-5 pt-7 pb-5">
+        {onClose && (
+          <button onClick={onClose} className="float-right p-1 text-[#bbb] hover:text-[#555] transition">
+            <X size={16} />
+          </button>
+        )}
+        <p className="text-[19px] font-black tracking-tight leading-tight" style={{ color: INK }}>
+          Dashboard
+        </p>
+        <p className="text-[12px] mt-0.5" style={{ color: '#9a9188' }}>
+          Manage your practice
+        </p>
+      </div>
+
+      {/* Main nav */}
+      <nav className="flex-1 overflow-y-auto px-2 pb-2" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+        <div className="space-y-0.5">
+          {NAV_MAIN.map(item => (
+            <SideLink
+              key={item.href}
+              {...item}
+              active={isActive(item.href, item.match)}
+              onClick={onClose}
+            />
+          ))}
+        </div>
+
+        <div className="mt-1 space-y-0.5">
+          {NAV_BOTTOM.map(item => (
+            <SideLink
+              key={item.href}
+              {...item}
+              active={isActive(item.href, item.match)}
+              onClick={onClose}
+            />
+          ))}
+          {therapist?.username && (
+            <a
+              href={`/${therapist.username}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={onClose}
+              className="flex items-center gap-3.5 px-4 py-3 text-[15px] font-semibold transition-colors duration-150 rounded-lg"
+              style={{ color: '#6b6560' }}
+            >
+              <ExternalLink size={17} strokeWidth={1.8} style={{ flexShrink: 0, color: '#a09890' }} />
+              View live site
+            </a>
+          )}
+        </div>
+      </nav>
+
+      {/* Profile + logout — click the profile row to reveal actions */}
+      <div className="relative border-t px-4 py-4" style={{ borderColor: '#f0ece6' }}>
+        <button
+          ref={profileBtnRef}
+          onClick={() => setProfileMenuOpen(o => !o)}
+          aria-expanded={profileMenuOpen}
+          className="flex items-center gap-3 w-full rounded-lg -mx-1.5 px-1.5 py-1 text-left transition hover:bg-[#f7f4f0]"
+        >
+          <span
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[12px] font-bold text-white"
+            style={{ background: 'linear-gradient(135deg,#FF9933,#C2650A)' }}
+          >
+            {initials}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[13px] font-bold truncate" style={{ color: INK }}>{firstName}</p>
+            <p className="text-[11px]" style={{ color: '#9a9188' }}>{planLabel} plan</p>
+          </div>
+          {!isPro ? (
+            <Link
+              href="/pricing"
+              onClick={e => e.stopPropagation()}
+              className="shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white transition hover:brightness-95"
+              style={{ background: SAFFRON }}
+            >
+              Upgrade
+            </Link>
+          ) : (
+            <ChevronDown
+              size={15}
+              className="shrink-0 transition-transform"
+              style={{ color: '#a09890', transform: profileMenuOpen ? 'rotate(180deg)' : 'none' }}
+            />
+          )}
+        </button>
+
+        {profileMenuOpen && (
+          <div
+            ref={dropdownRef}
+            className="absolute left-4 right-4 bottom-[calc(100%-4px)] mb-1 space-y-0.5 rounded-lg border bg-white p-1.5 shadow-lg"
+            style={{ borderColor: '#ede8e2' }}
+          >
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-3 w-full px-2 py-2 rounded-lg text-[13px] font-semibold text-left transition hover:bg-red-50 text-red-600"
+            >
+              <LogOut size={15} style={{ color: '#f87171' }} /> Log out
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  )
 
   return (
     <div
-      className="min-h-screen flex flex-col"
-      style={{ background: '#FFFCF8', fontFamily: "'Plus Jakarta Sans','Inter',system-ui,sans-serif" }}
+      className="min-h-screen flex"
+      style={{ background: '#f7f4f0', fontFamily: "'Plus Jakarta Sans','Inter',system-ui,sans-serif" }}
     >
-      {/* ════════════════════════════════════════════════════════════
-          NAVBAR
-      ════════════════════════════════════════════════════════════ */}
-      <header
-        className="sticky top-0 z-40 w-full"
-        style={{
-          background:   'rgba(255,255,255,0.92)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          borderBottom: '1px solid rgba(31,26,20,0.07)',
-        }}
+      {/* Desktop sidebar */}
+      <aside
+        className="hidden lg:block fixed top-0 left-0 h-screen w-[260px] z-30 border-r"
+        style={{ borderColor: '#ede8e2' }}
       >
-        {/* Inner row — same max-width as page content */}
-        <div className="mx-auto flex items-center h-16 px-5 sm:px-8 max-w-6xl gap-5">
+        <SidebarContent />
+      </aside>
 
-          {/* Logo */}
-          <Link href="/dashboard" className="shrink-0">
-            <Logo size="sm" />
-          </Link>
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/30 lg:hidden"
+            onClick={() => setMobileOpen(false)}
+          />
+          <aside
+            className="fixed top-0 left-0 h-screen w-[260px] z-50 lg:hidden border-r"
+            style={{ borderColor: '#ede8e2' }}
+          >
+            <SidebarContent onClose={() => setMobileOpen(false)} />
+          </aside>
+        </>
+      )}
 
-          {/* Divider */}
-          <div className="hidden sm:block w-px h-5 shrink-0" style={{ background: 'rgba(31,26,20,0.10)' }} />
+      {/* Main content */}
+      <div className="flex flex-col flex-1 min-w-0 lg:pl-[260px]">
 
-          {/* ── Nav links ─────────────────────────────────────── */}
-          <nav className="flex-1 flex items-center gap-0.5 overflow-x-auto scrollbar-none min-w-0">
-            {navItems.map(({ label, href, icon: Icon, match }) => {
-              const active = isActive(href, match)
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className="relative flex items-center gap-2 px-3 h-10 rounded-xl text-[13px] font-semibold whitespace-nowrap transition-all duration-150 shrink-0 group"
-                  style={active
-                    ? { background: 'rgba(255,153,51,0.10)', color: '#C46800' }
-                    : { color: '#6b6560' }
-                  }
-                >
-                  <Icon
-                    size={14}
-                    strokeWidth={active ? 2.3 : 1.9}
-                    style={{ flexShrink: 0 }}
-                  />
-                  <span className="hidden sm:inline">{label}</span>
+        {/* Mobile top bar */}
+        <header
+          className="lg:hidden sticky top-0 z-30 flex items-center gap-3 px-4 h-14 bg-white border-b"
+          style={{ borderColor: '#ede8e2' }}
+        >
+          <button
+            onClick={() => setMobileOpen(true)}
+            className="p-1.5 rounded-lg transition hover:bg-[#f7f4f0]"
+            style={{ color: '#555' }}
+          >
+            <Menu size={20} />
+          </button>
+          <p className="text-[14px] font-black" style={{ color: INK }}>Dashboard</p>
+        </header>
 
-                  {/* Active underline dot */}
-                  {active && (
-                    <span
-                      className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full"
-                      style={{ background: '#FF9933' }}
-                    />
-                  )}
-                </Link>
-              )
-            })}
-          </nav>
-
-          {/* ── Right cluster ─────────────────────────────────── */}
-          <div className="flex items-center gap-2 shrink-0 ml-auto">
-
-            {/* View live site — desktop */}
-            {therapist?.username && (
-              <a
-                href={`/${therapist.username}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="hidden md:flex items-center gap-1.5 h-9 px-3.5 rounded-xl text-[12px] font-semibold transition-all duration-150 hover:bg-[#f5f3f0]"
-                style={{ color: '#7A7166', border: '1px solid rgba(31,26,20,0.09)' }}
-              >
-                <ExternalLink size={12} />
-                My site
-              </a>
-            )}
-
-            {/* Upgrade — only shown for non-pro users */}
-            {!isPro && (
-              <Link
-                href="/pricing"
-                className="hidden sm:flex items-center gap-1.5 h-9 px-3.5 rounded-xl text-[12px] font-bold transition-all duration-150 hover:brightness-95"
-                style={{
-                  background: 'rgba(255,153,51,0.09)',
-                  color:      '#C46800',
-                  border:     '1px solid rgba(255,153,51,0.22)',
-                }}
-              >
-                <Zap size={12} />
-                Upgrade
-              </Link>
-            )}
-
-            {/* ── Profile pill / dropdown ──────────────────────── */}
-            <div className="relative" ref={dropdownRef}>
-              <button
-                onClick={() => setProfileOpen(o => !o)}
-                className="flex items-center gap-2.5 h-10 pl-1.5 pr-3 rounded-xl transition-all duration-150"
-                style={{
-                  border:     '1px solid rgba(31,26,20,0.09)',
-                  background: profileOpen ? '#FDF5EC' : 'rgba(255,255,255,0.8)',
-                }}
-              >
-                {/* Avatar circle */}
-                <span
-                  className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-bold text-white shrink-0 select-none"
-                  style={{ background: 'linear-gradient(135deg,#FF9933,#E07A12)' }}
-                >
-                  {initials}
-                </span>
-
-                {/* Name */}
-                <span className="hidden sm:block text-[13px] font-semibold max-w-[72px] truncate" style={{ color: '#2d2926' }}>
-                  {firstName}
-                </span>
-
-                <ChevronDown
-                  size={13}
-                  className="transition-transform duration-200"
-                  style={{ color: '#B3A998', transform: profileOpen ? 'rotate(180deg)' : 'rotate(0deg)' }}
-                />
-              </button>
-
-              {/* ── Dropdown ──────────────────────────────────── */}
-              {profileOpen && (
-                <div
-                  className="absolute right-0 top-full mt-2 w-56 rounded-2xl overflow-hidden shadow-2xl"
-                  style={{
-                    background:  '#fff',
-                    border:      '1px solid rgba(31,26,20,0.08)',
-                    boxShadow:   '0 8px 32px rgba(31,26,20,0.12), 0 2px 8px rgba(31,26,20,0.06)',
-                  }}
-                >
-                  {/* Identity block */}
-                  <div className="px-4 py-3.5" style={{ borderBottom: '1px solid rgba(31,26,20,0.07)' }}>
-                    <p className="text-[13px] font-bold truncate" style={{ color: '#1c1c1e' }}>
-                      {therapist?.full_name ?? 'Your account'}
-                    </p>
-                    <span
-                      className="inline-flex items-center gap-1 mt-1.5 text-[10px] font-bold px-2 py-0.5 rounded-full"
-                      style={{ background: 'rgba(255,153,51,0.12)', color: '#C46800' }}
-                    >
-                      {planLabel} plan
-                    </span>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="p-1.5 space-y-px">
-                    {[
-                      { label: 'Edit profile', href: '/dashboard/settings', icon: User },
-                      ...(therapist?.username
-                        ? [{ label: 'View my site', href: `/${therapist.username}`, icon: ExternalLink, external: true }]
-                        : []),
-                      ...(!isPro ? [{ label: 'Upgrade plan', href: '/pricing', icon: Zap }] : []),
-                      ...(!isPro ? [] : []),
-                    ].map(item => (
-                      item.external ? (
-                        <a
-                          key={item.label}
-                          href={item.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-colors hover:bg-[#FDF5EC] w-full"
-                          style={{ color: '#46403A' }}
-                        >
-                          <item.icon size={14} style={{ color: '#B3A998' }} />
-                          {item.label}
-                        </a>
-                      ) : (
-                        <Link
-                          key={item.label}
-                          href={item.href}
-                          className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-colors hover:bg-[#FDF5EC] w-full"
-                          style={{ color: '#46403A' }}
-                        >
-                          <item.icon size={14} style={{ color: '#B3A998' }} />
-                          {item.label}
-                        </Link>
-                      )
-                    ))}
-                  </div>
-
-                  {/* Logout — red, separated */}
-                  <div className="p-1.5" style={{ borderTop: '1px solid rgba(31,26,20,0.07)' }}>
-                    <button
-                      onClick={handleLogout}
-                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium w-full text-left transition-colors hover:bg-red-50"
-                      style={{ color: '#b91c1c' }}
-                    >
-                      <LogOut size={14} style={{ color: '#b91c1c' }} />
-                      Log out
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
+        <main className="flex-1 overflow-y-auto">
+          <div className="mx-auto max-w-5xl px-5 sm:px-8 py-8">
+            {children}
           </div>
-        </div>
-      </header>
-
-      {/* ════════════════════════════════════════════════════════════
-          PAGE CONTENT — centred, max-width matches navbar
-      ════════════════════════════════════════════════════════════ */}
-      <main className="flex-1 w-full">
-        <div className="mx-auto max-w-6xl px-5 sm:px-8 py-8">
-          {children}
-        </div>
-      </main>
+        </main>
+      </div>
     </div>
   )
 }

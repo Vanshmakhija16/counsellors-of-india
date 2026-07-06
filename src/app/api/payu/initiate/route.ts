@@ -12,6 +12,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { getPlanPriceInr, normalizePlan } from '@/lib/pricing'
 import {
   PAYU_KEY,
   PAYU_BASE_URL,
@@ -22,14 +23,14 @@ import {
 } from '@/lib/payu'
 
 // Server-authoritative pricing — never trust an amount sent from the client.
-const PLAN_PRICE: Record<string, number> = { starter: 1499, pro: 2499 }
 
 export async function POST(req: NextRequest) {
   try {
     assertPayuConfigured()
 
-    const { plan } = (await req.json()) as { plan?: string }
-    if (!plan || !(plan in PLAN_PRICE)) {
+    const { plan: rawPlan } = (await req.json()) as { plan?: string }
+    const plan = normalizePlan(rawPlan)
+    if (!plan || plan === 'growth') {
       return NextResponse.json({ error: 'Invalid or missing plan.' }, { status: 400 })
     }
 
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const amount = formatAmount(PLAN_PRICE[plan])
+    const amount = formatAmount(getPlanPriceInr(plan))
     const txnid = generateTxnId('plan')
     const productinfo = `COI ${plan.charAt(0).toUpperCase() + plan.slice(1)} Plan`
     const firstname = (user.user_metadata?.full_name as string)?.split(' ')[0] || 'Member'

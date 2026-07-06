@@ -12,7 +12,7 @@
   /* Warm saffron-tinted surface scale (near-white, brand undertone). Keeps
      text crisp while the page reads warm; saffron lives in the accents. */
   --surf-1:#FFFCF8;   /* warm white   — Hero, Templates, How-it-works, FAQ */
-  --surf-2:#FDF5EC;   /* saffron cream— Therapists, Try Demo, Pricing      */
+  --surf-2:#FFFCF8;   /* saffron cream— Therapists, Try Demo, Pricing      */
   --surf-dark:#14110C;/* warm anchor  — Footer only                        */
   /* Text colours tuned for clean contrast on the saffron-tint surfaces */
   --ink:#1F1A14;      /* warm near-black — headings/primary text  */
@@ -1485,8 +1485,21 @@ max-width:none;
 .nav .btn{height:40px;border-radius:999px;font-size:13px;font-weight:500;letter-spacing:-.005em}
 .nav .btn-line{background:transparent;color:var(--ink2);border:1px solid transparent}
 .nav .btn-line:hover{color:var(--ink);background:rgba(19,20,15,.05);border-color:transparent}
-.nav .btn-dark{background:transparent;color:#ff9933;border:1px solid var(--wn-saffron,#FF9933);box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 6px 18px -6px rgba(255,153,51,.55)}
-.nav .btn-dark:hover{background:var(--wn-saffron-deep,#E07A12); color:white ; transform:translateY(-1px);box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 10px 24px -8px rgba(255,153,51,.55)}
+.nav .btn-dark{
+  position:relative;overflow:hidden;z-index:0;
+  background:transparent;color:#ff9933;border:1px solid var(--wn-saffron,#FF9933);
+  box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 6px 18px -6px rgba(255,153,51,.55);
+}
+.nav .btn-dark::before{
+  content:'';
+  position:absolute;inset:0;
+  background:#FF9933;
+  transform:scaleY(0);transform-origin:bottom;
+  transition:transform 0.35s cubic-bezier(0.22,0.87,0.36,1);
+  z-index:-1;
+}
+.nav .btn-dark:hover::before{transform:scaleY(1);}
+.nav .btn-dark:hover{color:white;transform:translateY(-1px);box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 10px 24px -8px rgba(255,153,51,.55);}
 @media(max-width:980px){.nav .nav-mid,.nav .nav-r{display:none}}
 
 
@@ -2890,7 +2903,7 @@ padding:
   background:rgba(255,153,51,.14);
   color:#a75a08;
   text-transform:uppercase;
-  font-weight:700;
+  font-weight:100;
   letter-spacing:.16em;
   font-size:.8rem;
   margin-bottom:1.4rem;
@@ -2899,7 +2912,7 @@ padding:
   font-family:var(--display);
   font-size:clamp(3.5rem,7vw,6rem);
   line-height:1.06;
-  font-weight:700;
+  font-weight:100;
   letter-spacing:-.03em;
   margin:0;
   color:#17130d;
@@ -2927,7 +2940,7 @@ padding:
   color:#ff9933;
   opacity:1;
   transition:opacity .3s ease;
-  font-weight:700;
+  font-weight:100;
 }
 .hero-main-title-rotating.fade-out{
   opacity:0;
@@ -2936,7 +2949,7 @@ padding:
   margin:2rem 0 0;
   font-family:var(--sans);
   color:#080808;
-  max-width:42rem;
+  max-width:28rem;
   font-size:1.05rem;
   line-height:1.75;
 }
@@ -4592,6 +4605,40 @@ padding:
 .rv{opacity:0;transform:translateY(16px);transition:opacity .7s cubic-bezier(.22,.87,.36,1),transform .7s cubic-bezier(.22,.87,.36,1)}
 .rv.on{opacity:1;transform:none}
 
+/* Pricing cards — slide in from opposite sides on scroll reveal */
+.price-anim-left{
+  opacity:0;
+  transform:translateX(-70px);
+  transition:opacity .8s cubic-bezier(.22,.87,.36,1), transform .8s cubic-bezier(.22,.87,.36,1);
+}
+.price-anim-left.on{
+  opacity:1;
+  transform:none;
+}
+.price-anim-right{
+  opacity:0;
+  transform:translateX(70px);
+  transition:opacity .8s cubic-bezier(.22,.87,.36,1) .12s, transform .8s cubic-bezier(.22,.87,.36,1) .12s;
+}
+.price-anim-right.on{
+  opacity:1;
+  transform:none;
+}
+@media(prefers-reduced-motion:reduce){
+  .price-anim-left, .price-anim-right{transition:none;transform:none;opacity:1}
+}
+@media(max-width:1023px){
+  /* On single-column mobile/tablet layouts, both cards stack — slide both up
+     instead of sideways so the second card doesn't feel like it's arriving
+     from off-screen underneath the first. */
+  .price-anim-left, .price-anim-right{
+    transform:translateY(28px);
+  }
+  .price-anim-left.on, .price-anim-right.on{
+    transform:none;
+  }
+}
+
 /* ═══════════════════════════════════════════════════════════════
    PREMIUM SCROLL ANIMATIONS — additive layer
 ═══════════════════════════════════════════════════════════════ */
@@ -4653,6 +4700,19 @@ padding:
 .td-grid.rv.on > *:nth-child(5), .tgrid.rv.on > *:nth-child(5), .how-grid.rv.on > *:nth-child(5), .faq-list.rv.on > *:nth-child(5){transition-delay:.28s}
 .td-grid.rv.on > *:nth-child(6), .tgrid.rv.on > *:nth-child(6), .how-grid.rv.on > *:nth-child(6), .faq-list.rv.on > *:nth-child(6){transition-delay:.34s}
 .td-grid.rv.on > *:nth-child(n+7), .faq-list.rv.on > *:nth-child(n+7){transition-delay:.40s}
+
+/* Therapist grid specifically: wider per-card spacing so each card visibly
+   pops in one at a time (reading order, left-to-right/top-to-bottom) instead
+   of the whole row appearing to arrive together. Overrides the shared
+   increments above (later in the cascade = higher specificity wins via order
+   + equal selector weight since both are single-class + nth-child). */
+.td-grid.rv.on > *:nth-child(1){transition-delay:.05s}
+.td-grid.rv.on > *:nth-child(2){transition-delay:.18s}
+.td-grid.rv.on > *:nth-child(3){transition-delay:.31s}
+.td-grid.rv.on > *:nth-child(4){transition-delay:.44s}
+.td-grid.rv.on > *:nth-child(5){transition-delay:.57s}
+.td-grid.rv.on > *:nth-child(6){transition-delay:.70s}
+.td-grid.rv.on > *:nth-child(n+7){transition-delay:.83s}
 
 /* Depth-on-hover for cards — gentle lift, no shadow blow-out */
 .td-card, .price-card, .how-card, .tcard{
@@ -6265,7 +6325,7 @@ padding:
   position:relative;
   z-index:1;
   padding: clamp(2rem, 5vh, 3.5rem) 0 0;
-  background: transparent;
+  background: #fffcf8;
 }
 .texp-glow{
   position:absolute;inset:0;pointer-events:none;z-index:0;
@@ -6274,8 +6334,8 @@ padding:
     radial-gradient(ellipse 50% 45% at 12% 90%, rgba(255,217,176,.14) 0%, transparent 65%);
 }
 .texp-head{
-  position:relative;z-index:2;text-align:left;max-width:1180px;
-  margin:0 auto 6rem clamp(1.4rem, 3vh, 2.4rem);
+  position:relative;z-index:2;text-align:center;max-width:1180px;
+  margin:0 auto 6rem auto;
   padding:0 clamp(1.5rem, 5vw, 3rem);
 }
 .texp-eyebrow{
@@ -6286,7 +6346,11 @@ padding:
   background:rgba(255,153,51,.08);border:1px solid rgba(255,153,51,.2);
   margin-bottom:var(--s-3);
 }
-.texp-eyebrow::before,.texp-eyebrow::after{ content:none; }
+.tshow::before{ content:none !important; }
+/* Remove bottom-breath from texp so it doesn't stack with tshow::before */
+.texp::after{ content:none !important; }
+/* Force tshow background to match texp so no visible seam */
+.tshow{ background:#fffcf8 !important; }
 .texp-h{
   margin:0;font-family:var(--display);
   font-size:clamp(30px,4vw,52px);font-weight:450;line-height:1.08;
@@ -7740,7 +7804,9 @@ section#experience.texp {
   padding: 20px 16px;
   min-width: 210px;
   flex-shrink: 0;
-  border-right: 1px solid rgba(31,26,20,.07);
+  background: #fff;
+  border-radius: 18px;
+  border: 1px solid rgba(31,26,20,.07);
 }
 .texp-sidebar-label {
   font-size: 10px;
@@ -7763,20 +7829,31 @@ section#experience.texp {
   padding: 12px 14px;
   cursor: pointer;
   background: transparent;
-  transition: background .22s ease, border-color .22s ease, box-shadow .22s ease, transform .22s ease;
+  transition: background .22s ease, border-color .22s ease, box-shadow .22s ease, transform .22s ease, opacity .38s ease;
   position: relative;
   overflow: hidden;
+  opacity: 0;
+  transform: translateX(-18px);
 }
-.texp-tab:hover {
+.texp-tab.tab-in {
+  opacity: 1;
+  transform: translateX(0);
+}
+.texp-tab.tab-in:hover {
   background: rgba(255,153,51,.06);
   border-color: rgba(255,153,51,.18);
   transform: translateX(3px);
 }
-.texp-tab.on {
+.texp-tab.tab-in.on {
   background: linear-gradient(135deg, #FF9933 0%, #E07A12 100%);
   border-color: transparent;
   box-shadow: 0 8px 24px -8px rgba(255,153,51,.55), 0 1px 0 rgba(255,255,255,.2) inset;
   transform: translateX(3px);
+}
+.texp-tab:focus{ outline: none; }
+.texp-tab:focus-visible{
+  outline: 2px solid var(--wn-saffron, #FF9933);
+  outline-offset: 2px;
 }
 
 /* Number badge */
@@ -7805,11 +7882,20 @@ section#experience.texp {
   gap: 2px;
 }
 .texp-tab-name {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  max-width: 100%;
   font-size: 13px;
   font-weight: 600;
   color: var(--ink2);
   letter-spacing: -.01em;
   line-height: 1.25;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
   transition: color .22s;
   white-space: nowrap;
   overflow: hidden;
@@ -7817,6 +7903,9 @@ section#experience.texp {
 }
 .texp-tab.on .texp-tab-name {
   color: #fff;
+  background: rgba(0,0,0,.16);
+  border-color: rgba(255,255,255,.35);
+  box-shadow: none;
 }
 .texp-tab-desc {
   font-size: 10.5px;
@@ -8227,4 +8316,176 @@ section#experience.texp {
   .hero-h[style]{max-width:100% !important;text-align:center !important}
   .hero2-features{justify-content:center}
   .hero-bn-ctas[style]{justify-content:center !important}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PREMIUM SITE FOOTER (.pfoot) — sits above <FooterReveal/>
+═══════════════════════════════════════════════════════════════ */
+.pfoot{
+  position: relative;
+  z-index: 5;
+  background: var(--surf-dark, #14110C);
+  color: rgba(255,255,255,.72);
+  overflow: hidden;
+  padding: clamp(3.5rem, 7vw, 5.5rem) clamp(1.5rem, 5vw, 3rem) clamp(2rem, 4vw, 2.6rem);
+}
+.pfoot-glow{
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 55% 45% at 12% 0%, rgba(255,153,51,.10) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 40% at 92% 100%, rgba(255,153,51,.06) 0%, transparent 65%);
+}
+.pfoot-inner{
+  position: relative; z-index: 2;
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+/* ── top: brand + newsletter ── */
+.pfoot-top{
+  display: grid;
+  grid-template-columns: minmax(0,1.15fr) minmax(300px, 0.85fr);
+  gap: clamp(2rem, 5vw, 4rem);
+  align-items: start;
+}
+.pfoot-brand{ max-width: 380px; }
+.pfoot-logo{
+  display: inline-flex; align-items: center; gap: 12px;
+  text-decoration: none; color: #fff;
+  font-family: var(--display); font-size: 15px; font-weight: 500;
+  letter-spacing: -.01em; line-height: 1.15;
+}
+.pfoot-logo-img{ height: 40px; width: auto; object-fit: contain; flex-shrink: 0; }
+.pfoot-tag{
+  margin: 1.1rem 0 0;
+  font-family: var(--sans); font-size: 13.5px; font-weight: 300; line-height: 1.7;
+  color: rgba(255,255,255,.5);
+  max-width: 36ch;
+}
+.pfoot-socials{ display: flex; gap: 10px; margin-top: 1.4rem; }
+.pfoot-social{
+  width: 36px; height: 36px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.1);
+  color: rgba(255,255,255,.65);
+  transition: all .25s ease;
+}
+.pfoot-social:hover{
+  background: var(--wn-saffron, #FF9933);
+  border-color: var(--wn-saffron, #FF9933);
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+.pfoot-news{
+  background: rgba(255,255,255,.04);
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 18px;
+  padding: 1.5rem 1.6rem;
+}
+.pfoot-news-h{
+  font-family: var(--display); font-size: 16px; font-weight: 500;
+  color: #fff; letter-spacing: -.012em;
+}
+.pfoot-news-s{
+  margin: 6px 0 0;
+  font-family: var(--sans); font-size: 12.5px; font-weight: 300;
+  color: rgba(255,255,255,.45); line-height: 1.55;
+}
+.pfoot-news-row{ display: flex; gap: 8px; margin-top: 1rem; }
+.pfoot-news-input{
+  flex: 1; min-width: 0;
+  height: 42px; padding: 0 14px; border-radius: 10px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.12);
+  color: #fff; font-family: var(--sans); font-size: 13px;
+  outline: none; transition: border-color .2s, background .2s;
+}
+.pfoot-news-input::placeholder{ color: rgba(255,255,255,.32); }
+.pfoot-news-input:focus{ border-color: var(--wn-saffron, #FF9933); background: rgba(255,255,255,.09); }
+.pfoot-news-btn{
+  height: 42px; padding: 0 18px; border-radius: 10px; border: none; cursor: pointer;
+  background: var(--wn-saffron, #FF9933); color: #fff;
+  font-family: var(--sans); font-size: 13px; font-weight: 600; letter-spacing: -.005em;
+  white-space: nowrap; flex-shrink: 0;
+  transition: background .2s ease, transform .2s ease;
+}
+.pfoot-news-btn:hover{ background: var(--wn-saffron-deep, #E07A12); transform: translateY(-1px); }
+.pfoot-news-thanks{
+  margin-top: 1rem; font-family: var(--sans); font-size: 13px; font-weight: 500;
+  color: #FFD9B0;
+}
+
+.pfoot-rule{ height: 1px; background: rgba(255,255,255,.08); margin: clamp(2rem,4vw,3rem) 0; }
+
+/* ── link columns ── */
+.pfoot-cols{
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2rem;
+}
+@media(max-width: 760px){
+  .pfoot-cols{ grid-template-columns: repeat(2, 1fr); gap: 1.8rem 1.5rem; }
+}
+.pfoot-col-h{
+  font-family: var(--sans); font-size: 11.5px; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: rgba(255,255,255,.4); margin-bottom: 1rem;
+}
+.pfoot-col-list{ list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .7rem; }
+.pfoot-col-list a{
+  font-family: var(--sans); font-size: 13.5px; font-weight: 400;
+  color: rgba(255,255,255,.65); text-decoration: none;
+  transition: color .2s ease;
+}
+.pfoot-col-list a:hover{ color: var(--wn-saffron, #FF9933); }
+
+/* ── bottom bar ── */
+.pfoot-bottom{
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 1rem;
+}
+.pfoot-bottom-l{
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  font-family: var(--sans); font-size: 12.5px; font-weight: 400;
+  color: rgba(255,255,255,.4);
+}
+.pfoot-bottom-sep{ width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,.3); }
+.pfoot-badges{ display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pfoot-badge{
+  font-family: var(--sans); font-size: 11px; font-weight: 500;
+  color: rgba(255,255,255,.55);
+  padding: 6px 12px; border-radius: 999px;
+  background: rgba(255,255,255,.05);
+  border: 1px solid rgba(255,255,255,.1);
+  white-space: nowrap;
+}
+
+@media(max-width: 900px){
+  .pfoot-top{ grid-template-columns: 1fr; gap: 2rem; }
+  .pfoot-brand{ max-width: none; }
+}
+@media(max-width: 480px){
+  .pfoot-news-row{ flex-direction: column; }
+  .pfoot-news-btn{ width: 100%; }
+  .pfoot-bottom{ flex-direction: column; align-items: flex-start; }
+}
+
+/* ── LiveTemplateExperience sidebar: name/desc reveal on scroll ──
+   Each .texp-tab starts slightly offset + faded, and animates in once it
+   crosses into view; scrolling away and back replays it (toggled via JS
+   adding/removing .seen), matching the therapist/pricing card pattern. */
+.texp-tab-rv{
+  opacity: 0;
+  transform: translateX(-18px);
+  transition: opacity .55s cubic-bezier(.22,.87,.36,1), transform .55s cubic-bezier(.22,.87,.36,1);
+  transition-delay: calc(var(--i, 0) * .08s);
+}
+.texp-tab-rv.seen{
+  opacity: 1;
+  transform: none;
+}
+@media(prefers-reduced-motion: reduce){
+  .texp-tab-rv{ transition: none; opacity: 1; transform: none; }
 }

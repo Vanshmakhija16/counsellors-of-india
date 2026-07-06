@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase'
 import Button from '@/components/ui/Button'
 import { Check, Lock, Zap, ArrowRight, ShieldCheck, Crown, X } from 'lucide-react'
 import { startPayuPlanCheckout } from '@/lib/payu-client'
+import JourneyProgress from '@/components/journey/JourneyProgress'
 
 const PLAN_PRICE: Record<string, number> = { starter: 1499, pro: 2499 }
 const PLAN_RANK:  Record<string, number> = { starter: 1,    pro: 2   }
@@ -220,6 +221,13 @@ const highest =
       </button>
 
       <div className="max-w-5xl mx-auto">
+
+        {/* Only show the account→plan→payment→build strip for users still in
+            the initial signup journey — not for existing users upgrading
+            from inside the dashboard/appearance settings. */}
+        {(!currentPlan || currentPlan === 'free') && (
+          <JourneyProgress current="plan" className="max-w-[420px]" />
+        )}
 
         {/* Header */}
         <div className="text-center mb-12">

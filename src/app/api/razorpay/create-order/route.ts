@@ -1,44 +1,44 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { getPlanPriceInr, normalizePlan } from '@/lib/pricing'
+import { createServerSupabaseClient } from '@/lib/supabase-server'
 
-// ─────────────────────────────────────────────────────────────────────────────
-// POST /api/razorpay/create-order
-// Body : { amount: number (INR), currency?: string, receipt?: string }
-// Returns: Razorpay order object { id, amount, currency, ... }
-// ─────────────────────────────────────────────────────────────────────────────
-
-const RAZORPAY_KEY_ID     = process.env.RAZORPAY_KEY_ID     ?? ''
+const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID ?? process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? ''
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET ?? ''
 
 export async function POST(req: NextRequest) {
   try {
-    const { amount, currency = 'INR', receipt } = await req.json()
+    const { plan: rawPlan, currency = 'INR', receipt } = await req.json()
+    const plan = normalizePlan(rawPlan)
 
-    if (!amount || typeof amount !== 'number' || amount <= 0) {
-      return NextResponse.json({ error: 'Invalid amount' }, { status: 400 })
+    if (!plan || plan === 'growth') {
+      return NextResponse.json({ error: 'Invalid or missing plan.' }, { status: 400 })
     }
 
     if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
       return NextResponse.json(
-        { error: 'Razorpay keys not configured. Add RAZORPAY_KEY_ID and RAZORPAY_KEY_SECRET to .env.local' },
-        { status: 500 }
+        { error: 'Razorpay keys not configured.' },
+        { status: 500 },
       )
     }
 
-    // Razorpay expects amount in paise (1 INR = 100 paise)
-    const amountInPaise = Math.round(amount * 100)
+    const supabase = await createServerSupabaseClient()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
 
     const auth = Buffer.from(`${RAZORPAY_KEY_ID}:${RAZORPAY_KEY_SECRET}`).toString('base64')
-
     const response = await fetch('https://api.razorpay.com/v1/orders', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization:  `Basic ${auth}`,
+        Authorization: `Basic ${auth}`,
       },
       body: JSON.stringify({
-        amount:   amountInPaise,
+        amount: Math.round(getPlanPriceInr(plan) * 100),
         currency,
-        receipt:  receipt ?? `rcpt_${Date.now()}`,
+        receipt: (receipt ?? `rcpt_${Date.now()}`).slice(0, 40),
+        notes: { plan, therapist_id: user.id },
       }),
     })
 
@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
       console.error('[razorpay/create-order] error:', order)
       return NextResponse.json(
         { error: order?.error?.description ?? 'Failed to create Razorpay order' },
-        { status: 502 }
+        { status: 502 },
       )
     }
 

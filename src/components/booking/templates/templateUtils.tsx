@@ -440,7 +440,7 @@ export const DEFAULT_CT4_CONTENT = {
       { quote: "There is no timestamp on trauma. There isn't a formula that you follow to heal.", quote_author: 'Tom Zuba' },
     ] as CT4HeroQuote[],
   },
-  ticker: { items: ['Licensed Practitioner', 'Confidential Sessions', 'Evidence-Based Practice', 'Online & In-Person', 'RCI Accredited', 'Integrative Approach', 'First Session Diagnostic', 'Free Cancellation 48h'] },
+  ticker: { items: ['Licensed Practitioner', 'Confidential Sessions', 'Evidence-Based Practice', 'Online & In-Person', 'RCI Accredited', 'Integrative Approach', 'First Session Diagnostic'] },
   services: [
     { name: 'Individual Psychotherapy', desc: 'One-on-one sessions tailored to your unique history, needs, and goals. Evidence-based modalities in a confidential, non-judgmental space.', price: '1500' },
     { name: 'Couple Therapy',           desc: 'Restoring connection, communication, and mutual understanding between partners — from conflict navigation to deeper intimacy.', price: '2000' },

@@ -1,5 +1,34 @@
 'use client'
 
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+
+// ─────────────────────────────────────────────────────────────────────────
+// This page is disabled. It was a duplicate, orphaned onboarding flow —
+// nothing in the app links to /onboarding anymore. The real flow is:
+//   signup → /pricing → payment → /dashboard (auto-launches SetupWizard)
+// SetupWizard (src/components/dashboard/SetupWizard) is the single source
+// of truth for template + profile + publish. Keeping the old flow live in
+// parallel is what made "setting up the site" confusing — two different
+// wizards with two different visual languages could both be reached.
+//
+// Left commented out below (not deleted) in case any fields from
+// Step2Practice/Step3Availability (specialties, languages, years_experience,
+// session_mode, availability slots) still need to be folded into SetupWizard
+// later — SetupWizard currently only collects name/photo/bio/fee/services.
+// ─────────────────────────────────────────────────────────────────────────
+
+export default function OnboardingPage() {
+  const router = useRouter()
+
+  useEffect(() => {
+    router.replace('/dashboard')
+  }, [router])
+
+  return null
+}
+
+/*
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
@@ -223,3 +252,4 @@ export default function OnboardingPage() {
     </main>
   )
 }
+*/
