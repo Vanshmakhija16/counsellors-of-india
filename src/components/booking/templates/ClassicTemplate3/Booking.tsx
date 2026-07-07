@@ -7,7 +7,7 @@ import { getAvailableDays, slotToISO } from '../templateUtils'
 import { useBooking } from '@/lib/useBooking'
 
 // ── Temporary: send to WhatsApp instead of API/payment ──────────────────
-const USE_WHATSAPP = true
+const USE_WHATSAPP = false
 function openWhatsApp(therapist: TherapistProfile, name: string, slot: string, date: string) {
   const num = (therapist.whatsapp ?? therapist.phone ?? '').replace(/\D/g, '')
   const msg = `Hi, I'd like to book a session.%0AName: ${encodeURIComponent(name)}%0ADate & Time: ${encodeURIComponent(date + ', ' + slot)}%0AService Duration: ${therapist.sessionDuration ?? 50} mins`
@@ -179,23 +179,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                 <Spec k="Duration"     v={`${therapist.sessionDuration ?? 50} minutes`} />
                 <Spec k="Format"       v="Online · In-person" />
                 <Spec k="Confirmation" v="Instant via email" />
-                {effectivePrice != null && effectivePrice > 0 && (
-                  <Spec k="Payment" v="🔒 Secure via PayU" highlight />
-                )}
               </dl>
-
-              {effectivePrice != null && effectivePrice > 0 && selectedService && (
-                <p style={{
-                  marginTop: '1rem', fontFamily: "'DM Sans', sans-serif",
-                  fontSize: 12, color: 'var(--ink-3)', lineHeight: 1.6,
-                }}>
-                  You will be charged{' '}
-                  <span style={{ color: 'var(--gold)', fontWeight: 500 }}>
-                    ₹ {effectivePrice.toLocaleString()}
-                  </span>{' '}
-                  for {selectedService.name} via PayU before booking is confirmed.
-                </p>
-              )}
             </div>
           </div>
 
@@ -301,8 +285,6 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                     >
                       {bookingLoading ? (
                         <><Loader2 size={13} className="animate-spin" /> Processing…</>
-                      ) : effectivePrice != null && effectivePrice > 0 ? (
-                        <>Pay ₹{effectivePrice.toLocaleString()} & Confirm →</>
                       ) : (
                         <>Confirm reservation →</>
                       )}

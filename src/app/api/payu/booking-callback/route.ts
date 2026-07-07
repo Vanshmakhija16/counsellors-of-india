@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
     // ── 6. Fetch therapist details for comms ─────────────────────────────
     const { data: therapist } = await db
       .from('therapists')
-      .select('full_name, email, phone')
+      .select('full_name, email, phone, meet_link')
       .eq('id', appt.therapist_id)
       .single()
 
@@ -191,8 +191,10 @@ export async function POST(req: NextRequest) {
   <p><strong>Time:</strong> ${escapeHtml(formattedTime)}</p>
   <p><strong>Duration:</strong> ${durationMins} minutes</p>
   ${servicePrice != null ? `<p><strong>Amount paid:</strong> ₹${Number(servicePrice).toLocaleString('en-IN')}</p>` : ''}
-  <p style="margin-top:24px;color:#666">The meeting link will be shared the day before your session.</p>
-  <p style="margin-top:24px">— Counsellors of India</p>
+  ${therapist?.meet_link
+    ? `<p style="margin-top:16px"><strong>Meeting link:</strong> <a href="${escapeHtml(therapist.meet_link)}">${escapeHtml(therapist.meet_link)}</a></p>`
+    : `<p style="margin-top:24px;color:#666">The meeting link will be shared before your session.</p>`}
+  <p style="margin-top:24px">Team Counsellors of India</p>
 </body></html>`,
       })
     } catch (e) { console.error('[booking-callback] client email failed:', e) }
@@ -217,6 +219,10 @@ export async function POST(req: NextRequest) {
   <p><strong>Time:</strong> ${escapeHtml(formattedTime)}</p>
   <p><strong>Duration:</strong> ${durationMins} minutes</p>
   ${servicePrice != null ? `<p><strong>Amount:</strong> ₹${Number(servicePrice).toLocaleString('en-IN')} (via PayU · ${escapeHtml(mihpayid)})</p>` : ''}
+  ${therapist.meet_link
+    ? `<p style="margin-top:16px"><strong>Your meeting link:</strong> <a href="${escapeHtml(therapist.meet_link)}">${escapeHtml(therapist.meet_link)}</a></p>`
+    : `<p style="margin-top:16px;color:#666">You haven't set a meeting link yet — add one in your dashboard under Practice details so it's included automatically next time.</p>`}
+  <p style="margin-top:24px">Team Counsellors of India</p>
 </body></html>`,
         })
       } catch (e) { console.error('[booking-callback] therapist email failed:', e) }

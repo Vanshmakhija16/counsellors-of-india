@@ -31,6 +31,13 @@ import { rateLimit } from '@/lib/rate-limit'
 
 const HOLD_MINUTES = 15
 
+// 🔒 Payments are temporarily disabled platform-wide: money currently settles
+// to Counsellors of India's own PayU merchant account, not the therapist's.
+// Until therapist-level payment collection is built, every booking is
+// confirmed immediately (no charge) and both parties get an email.
+// Flip this back to true once therapist-direct payouts are live.
+const PAYMENTS_ENABLED = false
+
 export async function POST(req: NextRequest) {
   try {
     const limited = rateLimit(req, { keyPrefix: 'booking-hold', limit: 20, windowMs: 10 * 60 * 1000 })
@@ -185,16 +192,16 @@ export async function POST(req: NextRequest) {
     const effectivePrice = resolved.priceInr
 
     // ── Free booking — confirm immediately + send emails ─────────────────
-    if (!effectivePrice || effectivePrice <= 0) {
+    if (!PAYMENTS_ENABLED || !effectivePrice || effectivePrice <= 0) {
       await supabase
         .from('appointments')
         .update({ status: 'upcoming', txnid: null, hold_until: null })
         .eq('id', appointmentId)
 
-      // Fetch therapist email for notifications
+      // Fetch therapist email + meeting link for notifications
       const { data: th } = await supabase
         .from('therapists')
-        .select('full_name, email')
+        .select('full_name, email, meet_link')
         .eq('id', therapist_id)
         .single()
 
@@ -239,8 +246,9 @@ export async function POST(req: NextRequest) {
   <p><strong>Date:</strong> ${escapeHtml(formattedDate)}</p>
   <p><strong>Time:</strong> ${escapeHtml(formattedTime)}</p>
   <p><strong>Duration:</strong> ${durationMins} minutes</p>
-  <p style="color:#FF9933"><strong>This session is complimentary — no payment required.</strong></p>
-  <p style="margin-top:24px;color:#666">The meeting link will be shared the day before your session.</p>
+  ${th?.meet_link
+    ? `<p style="margin-top:16px"><strong>Meeting link:</strong> <a href="${escapeHtml(th.meet_link)}">${escapeHtml(th.meet_link)}</a></p>`
+    : `<p style="margin-top:24px;color:#666">The meeting link will be shared before your session.</p>`}
   <p style="margin-top:24px">— Counsellors of India</p>
 </body></html>`,
           })

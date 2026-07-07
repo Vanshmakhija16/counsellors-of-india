@@ -240,6 +240,12 @@ export default function Hero({
   const sectionRef = useRef<HTMLElement | null>(null)
   const contentRef = useRef<HTMLDivElement | null>(null)
   const [photoHeight, setPhotoHeight] = useState<number | null>(null)
+  // Height-matching (photo card ↔ text column) is a desktop-only trick for
+  // the side-by-side layout. Below 900px the hero stacks (photo on top,
+  // full-width text below), so matching the card's height to the now-wrapped
+  // text column produced a mismatched/oversized card with empty space under
+  // the image. On mobile we let the CSS-defined fixed heights govern instead.
+  const [isDesktop, setIsDesktop] = useState(false)
 
   const scrollY = useScrollY()
 
@@ -251,17 +257,30 @@ export default function Hero({
     }
   }, [heroRef])
 
-  // Match photo height to content column height
+  // Track the same breakpoint the CSS uses (.ct3-hero stacks at max-width: 900px)
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 901px)')
+    const update = () => setIsDesktop(mq.matches)
+    update()
+    mq.addEventListener('change', update)
+    return () => mq.removeEventListener('change', update)
+  }, [])
+
+  // Match photo height to content column height — desktop only
   useEffect(() => {
     const el = contentRef.current
     if (!el) return
+    if (!isDesktop) {
+      setPhotoHeight(null)
+      return
+    }
     const ro = new ResizeObserver(() => {
       setPhotoHeight(el.getBoundingClientRect().height + 43)
     })
     ro.observe(el)
     setPhotoHeight(el.getBoundingClientRect().height + 43)
     return () => ro.disconnect()
-  }, [])
+  }, [isDesktop])
 
   const firstName = getFirstName(therapist.name ?? '')
 

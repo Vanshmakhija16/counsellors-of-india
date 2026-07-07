@@ -7,7 +7,7 @@ import { getAvailableDays, slotToISO } from '../templateUtils'
 import { useBooking } from '@/lib/useBooking'
 
 // ── Temporary: send to WhatsApp instead of API/payment ──────────────────
-const USE_WHATSAPP = true
+const USE_WHATSAPP = false
 function openWhatsApp(therapist: TherapistProfile, name: string, slot: string, date: string) {
   const num = (therapist.whatsapp ?? therapist.phone ?? '').replace(/\D/g, '')
   const msg = `Hi, I'd like to book a session.%0AName: ${encodeURIComponent(name)}%0ADate & Time: ${encodeURIComponent(date + ', ' + slot)}%0AService Duration: ${therapist.sessionDuration ?? 50} mins`

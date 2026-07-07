@@ -19,7 +19,7 @@ import {
   User, Briefcase, Camera, CheckCircle, Clock, ExternalLink, Globe2,
   IndianRupee, Languages, Link as LinkIcon, MapPin, Phone, Save, ShieldCheck,
   Sparkles, Lock, Check, AlertCircle, GripVertical, ChevronUp, ChevronDown,
-  CalendarClock, Palette, ListChecks,
+  CalendarClock, Palette, ListChecks, Video,
 } from 'lucide-react'
 
 const CT1ContentEditor = dynamic(() => import('@/components/appearance/CT1ContentEditor'), { ssr: false })
@@ -131,7 +131,7 @@ export default function ProfilePage() {
     full_name: '', title: '', bio: '', city: '', phone: '',
     fee_per_session: '', session_duration_mins: '50', years_experience: '',
     session_mode: 'both', specialties: [] as string[], languages: ['English'] as string[],
-    instagram: '', linkedin: '', whatsapp: '', website: '',
+    instagram: '', linkedin: '', whatsapp: '', website: '', meet_link: '',
   })
   const [stateName, setStateName] = useState('')
   const [cityName, setCityName] = useState('')
@@ -191,7 +191,7 @@ export default function ProfilePage() {
           session_mode: data.session_mode ?? 'both',
           specialties: data.specialties ?? [], languages: data.languages ?? ['English'],
           instagram: data.instagram ?? '', linkedin: data.linkedin ?? '',
-          whatsapp: data.whatsapp ?? '', website: data.website ?? '',
+          whatsapp: data.whatsapp ?? '', website: data.website ?? '', meet_link: data.meet_link ?? '',
         })
         setPhotoPreview(data.photo_url ?? null)
         const { dial, number } = splitPhone(data.phone ?? '')
@@ -281,6 +281,7 @@ export default function ProfilePage() {
         session_mode: form.session_mode, specialties: form.specialties, languages: form.languages,
         instagram: form.instagram || null, linkedin: form.linkedin || null,
         whatsapp: form.whatsapp || null, website: form.website || null,
+        meet_link: form.meet_link || null,
         photo_url, is_profile_complete: true,
       }).eq('id', userId)
       if (updateError) throw updateError
@@ -558,6 +559,13 @@ export default function ProfilePage() {
                   <option value="offline">In-person only</option>
                   <option value="both">Both</option>
                 </select>
+              </label>
+              <label className="space-y-1.5 md:col-span-2">
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[#8b8278]"><Video size={12} /> Meeting link</span>
+                <input value={form.meet_link} onChange={e => setForm({ ...form, meet_link: e.target.value })}
+                  placeholder="https://meet.google.com/xxx-xxxx-xxx or your Zoom link"
+                  className="h-11 w-full rounded-lg border border-[#ded8ce] bg-[#fffdfb] px-4 text-sm text-[#171412] outline-none transition placeholder:text-[#aaa197] focus:border-[#171412]" />
+                <p className="text-xs text-[#9a9188]">This link is included in the booking confirmation email sent to your client. Leave blank if you'll share it separately.</p>
               </label>
             </div>
           </section>
