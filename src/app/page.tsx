@@ -810,19 +810,30 @@ function LiveTemplateExperience() {
     ? 'texp-frame tablet'
     : 'texp-frame desktop'
 
-  // Each tab animates in individually as it scrolls into view (both directions)
+  // Each tab animates in individually as it scrolls into view. Tracked in
+  // React state (not raw classList) so 'tab-in' survives re-renders: React
+  // owns the className string on this button, and toggling classes directly
+  // via the DOM gets silently wiped out whenever `active` changes, because
+  // React recomputes and overwrites the whole class attribute for any tab
+  // whose `on` status just changed — that's what was making a tab's name
+  // vanish the instant you picked a different template.
   const sidebarRef = useRef<HTMLDivElement>(null)
+  const [tabsIn, setTabsIn] = useState<boolean[]>(() => EXP.map(() => false))
   useEffect(() => {
     const tabs = sidebarRef.current?.querySelectorAll('.texp-tab')
     if (!tabs || !tabs.length) return
     const obs = new IntersectionObserver(entries => {
       entries.forEach(e => {
         if (e.isIntersecting) {
-          // small per-tab delay so they stagger rather than pop in together
           const i = Number((e.target as HTMLElement).style.getPropertyValue('--i') || 0)
-          setTimeout(() => e.target.classList.add('tab-in'), i * 60)
-        } else {
-          e.target.classList.remove('tab-in')
+          setTimeout(() => {
+            setTabsIn(prev => {
+              if (prev[i]) return prev
+              const next = [...prev]
+              next[i] = true
+              return next
+            })
+          }, i * 60)
         }
       })
     }, { threshold: 0.3 })
@@ -855,7 +866,7 @@ function LiveTemplateExperience() {
               type="button"
               role="tab"
               aria-selected={active === i}
-              className={`texp-tab ${active === i ? 'on' : ''}`}
+              className={`texp-tab ${tabsIn[i] ? 'tab-in' : ''} ${active === i ? 'on' : ''}`}
               style={{ ['--i' as string]: i }}
               onClick={() => { if (i !== active) { setLoading(true); setActive(i) } }}
             >
