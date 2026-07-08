@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import FaqRevealEffect from "@/components/landing/FaqRevealEffect";
 import FooterReveal from '@/components/landing/FooterReveal'
 import { loadDemo, saveDemo, emptyDemo, type DemoProfile } from '@/lib/demoSession'
+import { normalizeSpecialtyKey, titleCaseLabel } from '@/lib/specialties'
 import { Check, Crown, ArrowRight } from 'lucide-react'
 import './page.css'
 
@@ -172,7 +173,8 @@ const AVP=[
   {bg:'#EEEBE6',t:'#13140F'},{bg:'#EAE7E2',t:'#3a3a30'},
 ]
 
-const FILTERS = ['All','Anxiety','Depression','Trauma','Relationships','Burnout','Career','Online','In-person']
+// ── Specialty normalization helpers now live in @/lib/specialties, shared
+// with the dashboard profile form so both sides agree on the same rules.
 
 const PLANS_DATA = [
   {
@@ -188,7 +190,7 @@ const PLANS_DATA = [
       'Custom domain',
       'Online Appointment Booking',
       'Payment Collection',
-      '📧 Booking confirmation on email',
+      'Booking confirmation on email',
       'Client Dashboard',
       'Shareable profile link',
       'Up to 10 bookings per month',
@@ -210,8 +212,8 @@ const PLANS_DATA = [
       'Online appointment booking',
       'Payment collection',
       'Client dashboard',
-      '📧 Booking confirmation on email',
-      '💬 Booking confirmation on WhatsApp',
+      'Booking confirmation on email',
+      'Booking confirmation on WhatsApp',
       'Shareable profile link',
       'Unlimited bookings',
       'Featured Therapist Badge',
@@ -760,30 +762,51 @@ function LiveTemplateExperience() {
     mobile:  4200,
   }
   const frameWrapRef = useRef<HTMLDivElement>(null)
+  const stageRef = useRef<HTMLDivElement>(null)
   const iframeElRef  = useRef<HTMLIFrameElement>(null)
   const [scale, setScale] = useState(1)
+  // Exact pixel width the outer window frame should be so it hugs the
+  // scaled content with no leftover side gaps. 'auto' -> desktop = 100%.
+  const [frameOuterWidth, setFrameOuterWidth] = useState<number | 'auto'>('auto')
 
   useEffect(() => {
     function measure() {
       const el = frameWrapRef.current
-      if (!el) return
+      const stageEl = stageRef.current
+      if (!el || !stageEl) return
       const cs = getComputedStyle(el)
-      const padX = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight)
       const padY = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom)
-      const aw = el.clientWidth - padX
       const ah = el.clientHeight - padY
+      // IMPORTANT: measure available width from the outer, unaffected
+      // .texp-stage container — NOT from frameWrapRef itself. frameWrapRef
+      // lives inside .texp-window, whose width WE set from this very
+      // measurement, so reading its width back would create a feedback
+      // loop (each resize shrinks it further, forever). .texp-stage's width
+      // is driven by the sidebar + flex layout only, so it's stable.
+      const aw = stageEl.clientWidth
       if (aw <= 0 || ah <= 0) return
       const dw = DESIGN_W[device]
       if (device === 'desktop') {
         const s = aw / dw
         setScale(s)
+        setFrameOuterWidth('auto')
       } else {
-        const s = ah / VIEWPORT_H[device]
+        // height-driven scale normally, but on a real small screen (e.g. a
+        // phone in portrait) picking "tablet" could compute a scale whose
+        // resulting width is wider than what's actually available (aw) —
+        // that's what caused the frame to clash/overflow. Clamp the scale
+        // itself to whichever constraint is tighter (height OR width), so
+        // the whole frame + its content always fits inside its container.
+        const sByHeight = ah / VIEWPORT_H[device]
+        const sByWidth  = aw / dw
+        const s = Math.min(sByHeight, sByWidth)
         setScale(s)
+        setFrameOuterWidth(Math.round(dw * s))
       }
     }
     measure()
     const ro = new ResizeObserver(measure)
+    if (stageRef.current) ro.observe(stageRef.current)
     if (frameWrapRef.current) ro.observe(frameWrapRef.current)
     window.addEventListener('resize', measure)
     return () => { ro.disconnect(); window.removeEventListener('resize', measure) }
@@ -850,7 +873,7 @@ function LiveTemplateExperience() {
         <div style={{marginBottom:'32px'}} />
       </div>
 
-      <div className="texp-layout" style={{display:'flex',alignItems:'stretch'}}>
+      <div className="texp-layout" style={{display:'flex',alignItems:'flex-start'}}>
 
         {/* LEFT - vertical template sidebar */}
         <div
@@ -881,11 +904,20 @@ function LiveTemplateExperience() {
         </div>
 
         {/* RIGHT - iframe stage */}
-        <div className="texp-stage" style={{flex:1,minWidth:0}}>
-          <div className="texp-window">
+        <div className="texp-stage" ref={stageRef} style={{flex:1,minWidth:0}}>
+          <div
+            className="texp-window"
+            style={{
+              width: frameOuterWidth === 'auto' ? '100%' : `${frameOuterWidth}px`,
+              margin: '0 auto',
+              transition: 'width .35s cubic-bezier(.22,.87,.36,1)',
+            }}
+          >
             <div className="texp-chrome">
               <span className="texp-chrome-dot" /><span className="texp-chrome-dot" /><span className="texp-chrome-dot" />
-              <span className="texp-chrome-url">counsellorsofindia.com/<em>yourName</em> </span>
+              {device !== 'mobile' && (
+                <span className="texp-chrome-url">counsellorsofindia.com/<em>yourName</em> </span>
+              )}
               <div className="texp-devices" role="group" aria-label="Preview device">
                 {(['mobile', 'tablet', 'desktop'] as const).map((d) => (
                   <button
@@ -901,7 +933,9 @@ function LiveTemplateExperience() {
                   </button>
                 ))}
               </div>
-              <span className="texp-chrome-live"><span className="texp-chrome-live-dot" />Live demo</span>
+              {device !== 'mobile' && (
+                <span className="texp-chrome-live"><span className="texp-chrome-live-dot" />Live demo</span>
+              )}
             </div>
             <div ref={frameWrapRef} className={`texp-frame-wrap is-${device}`}>
               {loading && (
@@ -1437,7 +1471,7 @@ function HeroProductPeek() {
 }
 
 function FaqItem({ q, a, idx }: { q: string; a: string; idx: number }) {
-  const [open, setOpen] = useState(idx === 0)
+  const [open, setOpen] = useState(false)
   return (
     <div className={`faq-item ${open ? 'open' : ''}`}>
       <button
@@ -1715,7 +1749,7 @@ export default function Home() {
   const [therapists,setTherapists]=useState<any[]>([])
   const [loading,setLoading]=useState(true)
   const [search,setSearch]=useState('')
-  const [filter,setFilter]=useState('All')
+  const [filter,setFilter]=useState('all') // 'all' | normalized specialty key | 'online' | 'in-person'
 
   // Magnetic hover tilt for therapist cards - the card tilts toward the
   // cursor position (small 3D perspective) and eases back flat on leave.
@@ -1754,11 +1788,48 @@ export default function Home() {
     let list = therapists
     const q = search.trim().toLowerCase()
     if(q) list=list.filter(t=>[t.full_name,t.title,t.city,...(t.specialties??[])].join(' ').toLowerCase().includes(q))
-    if(filter==='Online') list=list.filter(t=>t.session_mode==='online'||t.session_mode==='both')
-    else if(filter==='In-person') list=list.filter(t=>t.session_mode==='offline'||t.session_mode==='both')
-    else if(filter!=='All') list=list.filter(t=>(t.specialties??[]).some((s:string)=>s.toLowerCase().includes(filter.toLowerCase())))
+    if(filter==='online') list=list.filter(t=>t.session_mode==='online'||t.session_mode==='both')
+    else if(filter==='in-person') list=list.filter(t=>t.session_mode==='offline'||t.session_mode==='both')
+    else if(filter!=='all') list=list.filter(t=>(t.specialties??[]).some((s:string)=>normalizeSpecialtyKey(s)===filter))
     return list
   },[therapists,search,filter])
+
+  // Dynamic filter chips: derived from whatever specialties therapists have
+  // actually entered, deduplicated by normalized key (so "Anxiety", "anxiety ",
+  // "ANXIETY" all collapse into one chip), sorted by how common each is, and
+  // labelled with a clean Title Case + live count. "Online"/"In-person" stay
+  // as separate mode-based chips since they filter a different field.
+  const dynamicFilters = useMemo(() => {
+    const counts = new Map<string, { label: string; count: number }>()
+
+    therapists.forEach(t => {
+      ;(t.specialties ?? []).forEach((raw: string) => {
+        if (!raw || !raw.trim()) return
+        const key = normalizeSpecialtyKey(raw)
+        const existing = counts.get(key)
+        if (existing) existing.count += 1
+        else counts.set(key, { label: titleCaseLabel(raw), count: 1 })
+      })
+    })
+
+    const specialtyChips = [...counts.entries()]
+      .map(([key, v]) => ({ key, label: v.label, count: v.count }))
+      .sort((a, b) => b.count - a.count)
+
+    const onlineCount = therapists.filter(t => t.session_mode === 'online' || t.session_mode === 'both').length
+    const inPersonCount = therapists.filter(t => t.session_mode === 'offline' || t.session_mode === 'both').length
+
+    const modeChips = [
+      ...(onlineCount > 0 ? [{ key: 'online', label: 'Online', count: onlineCount }] : []),
+      ...(inPersonCount > 0 ? [{ key: 'in-person', label: 'In-person', count: inPersonCount }] : []),
+    ]
+
+    return [
+      { key: 'all', label: 'All', count: therapists.length },
+      ...specialtyChips,
+      ...modeChips,
+    ]
+  }, [therapists])
 
   const marqueeProfiles = useMemo(()=>{
     if(therapists.length>=6) return therapists
@@ -1993,20 +2064,20 @@ export default function Home() {
                 <line x1="21" y1="21" x2="16.65" y2="16.65"/>
               </svg>
               <input
-                placeholder="Search by name, city, or specialty—"
+                placeholder="Search by name, city, specialty..."
                 value={search}
                 onChange={e=>setSearch(e.target.value)}
                 aria-label="Search therapists"
               />
             </div>
             <div className="td-chips">
-              {FILTERS.map(f=>(
+              {dynamicFilters.map(f=>(
                 <button
-                  key={f}
+                  key={f.key}
                   type="button"
-                  className={`td-chip ${filter===f?'on':''}`}
-                  onClick={()=>setFilter(f)}
-                >{f}</button>
+                  className={`td-chip ${filter===f.key?'on':''}`}
+                  onClick={()=>setFilter(f.key)}
+                >{f.label}</button>
               ))}
             </div>
           </div>
@@ -2040,7 +2111,7 @@ export default function Home() {
                       </div>
                       <div className="td-empty-t">No therapists match your filters.</div>
                       <div className="td-empty-s">Try a different city or specialty - our network is growing every week.</div>
-                      <button type="button" className="td-empty-reset" onClick={()=>{setSearch('');setFilter('All')}}>Reset filters</button>
+                      <button type="button" className="td-empty-reset" onClick={()=>{setSearch('');setFilter('all')}}>Reset filters</button>
                     </div>
                   )
                 : [...filtered].filter(t => t.username !== 'harsh'  ).slice(0,6).map((t, idx) => {

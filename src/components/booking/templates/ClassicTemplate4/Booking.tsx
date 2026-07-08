@@ -102,6 +102,9 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
     return typeof therapist.fee === 'number' && therapist.fee > 0 ? therapist.fee : 500
   })()
 
+  const effectiveDuration = selectedService?.duration_mins ?? therapist.sessionDuration ?? 50
+  const slotsBlocked = Math.max(1, Math.ceil(effectiveDuration / (therapist.sessionDuration ?? 50)))
+
   async function handleConfirm() {
     if (!selectedSlot || !selectedSlotIso) return
     if (!clientName.trim() || !clientPhone.trim()) {
@@ -120,7 +123,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
       client_email:  clientEmail,
       client_phone:  clientPhone,
       scheduled_at:  selectedSlotIso,
-      duration_mins: therapist.sessionDuration ?? 50,
+      duration_mins: effectiveDuration,
       service_name:  selectedService?.name ?? null,
       service_price: effectivePrice,
     })
@@ -160,12 +163,17 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
               )}
 
               <dl>
-                <SpecRow k="Duration"     v={`${therapist.sessionDuration ?? 50} Minutes`} />
+                <SpecRow k="Duration"     v={`${effectiveDuration} Minutes`} />
                 <SpecRow k="Investment"   v={effectivePrice ? `₹ ${effectivePrice.toLocaleString()}` : '—'} highlight={selectedService?.price != null} />
                 <SpecRow k="Format"       v="Online · In-Person" />
                 <SpecRow k="Confirmation" v="Immediate via WhatsApp" />
                 <SpecRow k="Payment"      v="🔒 Secure via PayU" />
               </dl>
+              {slotsBlocked > 1 && (
+                <p style={{ marginTop: 14, fontSize: 11.5, color: 'var(--silver)', lineHeight: 1.6, letterSpacing: '0.02em' }}>
+                  This service spans {slotsBlocked} consecutive slots — the time right after your chosen slot will be reserved too.
+                </p>
+              )}
             </div>
           </div>
 

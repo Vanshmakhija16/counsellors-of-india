@@ -38,6 +38,7 @@ export interface EditableService {
   kind?: string
   code?: string
   forWhom?: string[]
+  duration_mins?: number
 }
 
 export interface EditableFAQ {

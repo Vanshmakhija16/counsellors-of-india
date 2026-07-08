@@ -90,6 +90,11 @@ export default function CT5ContentEditor({ value, onChange, saveButton }: Props)
                   <input value={svc.tag ?? ''} onChange={e => update({ tag: e.target.value })}
                     placeholder="e.g. Core Service" className={inp} />
                 </Field>
+                <Field label="Duration (min) — blank for default">
+                  <input type="number" min={5} max={360} value={svc.duration_mins ?? ''}
+                    onChange={e => update({ duration_mins: e.target.value === '' ? undefined : Number(e.target.value) })}
+                    placeholder="50" className={inp} />
+                </Field>
               </div>
               <div>
                 <Field label="Description">

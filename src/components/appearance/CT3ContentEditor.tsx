@@ -61,6 +61,18 @@ export default function CT3ContentEditor({ value, onChange, saveButton }: Props)
                   <input value={svc.kind ?? ''} onChange={e => update({ kind: e.target.value })}
                     placeholder="e.g. One-to-one · weekly" className={inp} />
                 </Field>
+                <div className="grid grid-cols-2 gap-2">
+                  <Field label="Price (₹) — blank for default">
+                    <input type="number" min={0} value={svc.price ?? ''}
+                      onChange={e => update({ price: e.target.value === '' ? undefined : e.target.value })}
+                      placeholder="1500" className={inp} />
+                  </Field>
+                  <Field label="Duration (min) — blank for default">
+                    <input type="number" min={5} max={360} value={svc.duration_mins ?? ''}
+                      onChange={e => update({ duration_mins: e.target.value === '' ? undefined : Number(e.target.value) })}
+                      placeholder="50" className={inp} />
+                  </Field>
+                </div>
                 <Field label="Tags (comma-separated)">
                   <input value={(svc.forWhom ?? []).join(', ')}
                     onChange={e => update({ forWhom: e.target.value.split(',').map(t => t.trim()).filter(Boolean) })}

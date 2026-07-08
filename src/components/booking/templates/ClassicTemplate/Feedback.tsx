@@ -82,7 +82,7 @@ export default function Feedback({ feedbacks }: FeedbackProps) {
           <div className="flex flex-col items-start gap-3 lg:items-end">
             <div className="flex items-baseline gap-2">
               <span
-                className="text-[40px] leading-none tracking-[-0.02em] text-[#1a1a18] lg:text-[48px]"
+                className="text-[40px] leading-none tracking-[-0.02em] text-[#ffffff] lg:text-[48px]"
                 style={{ fontFamily: 'var(--font-fraunces), serif' }}
               >
                 {avg.toFixed(1)}

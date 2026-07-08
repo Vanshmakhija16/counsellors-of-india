@@ -6,10 +6,14 @@ import type { TherapistProfile, EditableService } from '../templateUtils'
 import { getAvailableDays, slotToISO } from '../templateUtils'
 import { useBooking } from '@/lib/useBooking'
 
-// ── Temporary: send to WhatsApp instead of API/payment ──────────────────
-const USE_WHATSAPP = false
+// ── Client's own WhatsApp opens with a pre-filled message to the
+// therapist when they click Book — in ADDITION to the normal booking flow
+// (API call, slot lock, confirmation email + WhatsApp API notification),
+// not instead of it. Flipped on for Template 3 only, for now.
+const USE_WHATSAPP = true
 function openWhatsApp(therapist: TherapistProfile, name: string, slot: string, date: string) {
   const num = (therapist.whatsapp ?? therapist.phone ?? '').replace(/\D/g, '')
+  if (!num) return // no number on file — don't open a broken wa.me link
   const msg = `Hi, I'd like to book a session.%0AName: ${encodeURIComponent(name)}%0ADate & Time: ${encodeURIComponent(date + ', ' + slot)}%0AService Duration: ${therapist.sessionDuration ?? 50} mins`
   window.open(`https://wa.me/${num}?text=${msg}`, '_blank')
 }
@@ -99,6 +103,9 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
     return typeof therapist.fee === 'number' && therapist.fee > 0 ? therapist.fee : 500
   })()
 
+  const effectiveDuration = selectedService?.duration_mins ?? therapist.sessionDuration ?? 50
+  const slotsBlocked = Math.max(1, Math.ceil(effectiveDuration / (therapist.sessionDuration ?? 50)))
+
   const day = availableDays[selectedDayIdx]
   const slotsForDay = useMemo(() => {
     if (!day) return []
@@ -116,8 +123,6 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
     setBookingError('')
     if (USE_WHATSAPP) {
       openWhatsApp(therapist, clientName, selectedSlot, day?.fullLabel ?? '')
-      setBooked(true)
-      return
     }
     await book({
       therapist_id:  therapist.id!,
@@ -125,7 +130,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
       client_email:  clientEmail,
       client_phone:  clientPhone,
       scheduled_at:  selectedSlotIso,
-      duration_mins: therapist.sessionDuration ?? 50,
+      duration_mins: effectiveDuration,
       service_name:  selectedService?.name ?? null,
       service_price: effectivePrice,
     })
@@ -176,10 +181,15 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
               )}
 
               <dl>
-                <Spec k="Duration"     v={`${therapist.sessionDuration ?? 50} minutes`} />
+                <Spec k="Duration"     v={`${effectiveDuration} minutes`} />
                 <Spec k="Format"       v="Online · In-person" />
                 <Spec k="Confirmation" v="Instant via email" />
               </dl>
+              {slotsBlocked > 1 && (
+                <p style={{ marginTop: 12, fontFamily: "'DM Mono', monospace", fontSize: 10.5, color: 'var(--ink-3)', lineHeight: 1.6 }}>
+                  This service spans {slotsBlocked} consecutive slots — the time right after your chosen slot will be reserved too.
+                </p>
+              )}
             </div>
           </div>
 

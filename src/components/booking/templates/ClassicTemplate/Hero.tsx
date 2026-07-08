@@ -21,9 +21,6 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
     document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  const yearsBadge =
-    (therapist.experience ?? 0) > 0 ? `EST. ${new Date().getFullYear() - (therapist.experience ?? 0)}` : null
-
   const rawNameParts = (therapist.name ?? '').trim().split(/\s+/).filter(Boolean)
   const hasHonorific = /^(dr|mr|mrs|ms|prof)\.?$/i.test(rawNameParts[0] ?? '')
   const namePrefix = hasHonorific ? rawNameParts[0] : ''
@@ -36,75 +33,101 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
   const taglineHead = tagline.slice(0, splitPoint)
   const taglineTail = tagline.slice(splitPoint)
 
-  const metaItems: React.ReactNode[] = []
-  if (therapist.fee) {
-    metaItems.push(
-      <span key="fee">
-        <span className="font-semibold">₹{therapist.fee.toLocaleString('en-IN')}</span>
-        <span className="ml-1">/ {therapist.sessionDuration} min</span>
-      </span>
-    )
-  }
-  if (therapist.location) metaItems.push(<span key="loc">{therapist.location}</span>)
-  if (therapist.languages && therapist.languages.length > 0) {
-    metaItems.push(<span key="lang">{therapist.languages.join(', ')}</span>)
-  }
+  // Split credentials on | · or , — each segment rendered as its own pill
+  // so a dangling dot can never appear at the start of a wrapped line.
+  const credentialParts = (therapist.credentials || '')
+    .split(/[|·,]/)
+    .map(s => s.trim())
+    .filter(Boolean)
+  if (credentialParts.length === 0 && !editMode) credentialParts.push('Psychotherapy Practice')
 
   return (
     <section
       id="home"
       ref={heroRef}
-      className={`relative overflow-hidden bg-[#efe7d6] px-6 lg:px-12 flex items-center transition-all duration-1000 ${
+      className={`relative overflow-hidden bg-[#efe7d6] transition-all duration-1000 pt-24 lg:pt-36 ${
         heroLoaded ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'
       }`}
-      style={{ minHeight: '610px', height: 'clamp(560px, 85vh, 800px)', paddingTop: '5rem' }}
+      style={{ paddingBottom: '4.5rem' }}
     >
-      <div className="relative z-10 mx-auto w-full px-8 max-w-[1180px]">
-        <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
+      <div className="relative z-10 mx-auto w-full px-8 sm:px-14 max-w-[1180px]">
+        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-[1.1fr_0.9fr] lg:gap-16">
 
+          {/* ── RIGHT — circular portrait (shows first on mobile) ─── */}
+          <div className="order-1 flex justify-center lg:order-2 lg:justify-end">
+            <div className="relative">
+              {/* Subtle ring on desktop only */}
+              <div
+                className="pointer-events-none absolute -inset-4 hidden lg:block"
+                style={{ border: '1px solid rgba(26,26,24,0.10)', borderRadius: '9999px' }}
+              />
+              <div
+                className="relative overflow-hidden bg-[#d8c9b0] shadow-[0_30px_80px_-30px_rgba(26,26,24,0.35)]"
+                style={{
+                  borderRadius: '9999px',
+                  /* FIX 7: wider on mobile — 80vw so the photo feels premium,
+                     not a small thumbnail floating in a lot of dead space */
+                  width: 'clamp(240px, 78vw, 400px)',
+                  height: 'clamp(240px, 78vw, 400px)',
+                }}
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={resolveImage(therapist.image)}
+                  alt={therapist.name}
+                  className="h-full w-full object-cover"
+                  style={{ objectPosition: 'center 25%' }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* ── LEFT — text content ──────────────────────────────── */}
           <div
-            className="order-2 text-center sm:text-left lg:order-1"
+            className="order-2 text-center lg:text-left lg:order-1"
             style={{ fontFamily: 'var(--font-dm-sans), sans-serif' }}
           >
+
+            {/* Name — single line on mobile, first name / surname stacked on desktop */}
             <h1
-              className="font-light leading-[0.92] tracking-[-0.04em] text-[#1f1b16]"
+              className="font-light leading-[0.92] tracking-[-0.04em] text-[#1f1b16] whitespace-nowrap overflow-hidden text-ellipsis lg:whitespace-normal lg:overflow-visible"
               style={{
                 fontFamily: 'var(--font-fraunces), serif',
-                fontSize: 'clamp(28px, 7vw, 96px)',
+                fontSize: 'clamp(22px, 6vw, 96px)',
               }}
             >
               <EditableText field="name" placeholder="Your full name">
                 {() => (
                   <>
-                    <span className="block whitespace-nowrap">
+                    <span className="lg:block">
                       {namePrefix && <span className="text-[#b46b50]">{namePrefix} </span>}
                       {nameLead}
+                      <span className="lg:hidden">{nameSurname ? ` ${nameSurname}` : ''}</span>
                     </span>
-                    {nameSurname && <span className="block whitespace-nowrap">{nameSurname}</span>}
+                    {nameSurname && <span className="hidden lg:block">{nameSurname}</span>}
                   </>
                 )}
               </EditableText>
             </h1>
 
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-1.5 sm:justify-start">
-              <span className="text-[12px] font-semibold uppercase tracking-[0.26em] text-[#1f1b16]">
-                <EditableText field="credentials" placeholder="Psychotherapy Practice" className="text-[12px]">
-                  {(v) => v || 'Psychotherapy Practice'}
-                </EditableText>
-              </span>
-              {yearsBadge && (
-                <>
-                  <span className="h-[3px] w-[3px] rounded-full bg-[#6f6555]" />
-                  <span className="text-[12px] font-medium uppercase tracking-[0.18em] text-[#6f6555]">
-                    {yearsBadge}
+            {/* FIX 1 + 3: Credentials — each part is a self-contained inline-flex
+                chip with its own leading dot, so wrapping never produces a
+                dangling dot at the start of a new line. Reduced px to px-3. */}
+            <div className="mt-4 flex flex-wrap justify-center lg:justify-start gap-x-0 gap-y-2">
+              {credentialParts.map((part, i) => (
+                <span key={i} className="inline-flex items-center gap-x-2 mr-3">
+                  <span className="h-[5px] w-[5px] rounded-full bg-[#b46b50] opacity-60 shrink-0" />
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#1f1b16]">
+                    {part}
                   </span>
-                </>
-              )}
+                </span>
+              ))}
             </div>
 
+            {/* Tagline */}
             {(tagline || editMode) && (
               <p
-                className="mx-auto mt-5 max-w-[480px] text-[clamp(16px,2.5vw,19px)] leading-[1.5] text-[#4d433a] sm:mx-0"
+                className="mt-5 max-w-[480px] text-[clamp(15px,2.2vw,18px)] leading-[1.55] text-[#4d433a]"
                 style={{ fontFamily: 'var(--font-fraunces), serif', fontWeight: 400 }}
               >
                 <EditableText field="tagline" as="textarea" placeholder="A short line introducing your practice…">
@@ -120,75 +143,64 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
               </p>
             )}
 
-            {nextDay && nextDay.slots.length > 0 && (
-              <p className="mt-3 flex items-center justify-center whitespace-nowrap text-[11px] font-medium uppercase tracking-[0.2em] text-[#6f6555] sm:justify-start">
-                <span className="relative mr-2.5 inline-flex h-1.5 w-1.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#b46b50] opacity-60" />
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#b46b50]" />
-                </span>
-                Next opening ·{' '}
-                <span className="text-[15px] font-semibold normal-case tracking-normal text-[#b46b50]">
-                  {nextDay.label.toLowerCase() === 'today' ? 'Today' : nextDay.label}
-                  {' · '}
-                  {nextDay.slots[0]}
-                </span>
-              </p>
-            )}
+            {/* Next opening + meta info — grouped so every line shares the same left edge */}
+            <div className="mt-5 flex flex-col items-center lg:items-start">
+              <div className="flex flex-col items-start gap-y-1.5">
+                {nextDay && nextDay.slots.length > 0 && (
+                  <p className="flex items-center gap-x-2 text-[11px] font-medium uppercase tracking-[0.2em] text-[#6f6555]">
+                    <span className="relative inline-flex h-1.5 w-1.5 shrink-0">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#b46b50] opacity-60" />
+                      <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#b46b50]" />
+                    </span>
+                    <span>Next opening</span>
+                    <span className="text-[#6f6555] opacity-40">·</span>
+                    <span className="text-[14px] font-semibold normal-case tracking-normal text-[#b46b50]">
+                      {nextDay.label.toLowerCase() === 'today' ? 'Today' : nextDay.label}
+                      {' · '}
+                      {nextDay.slots[0]}
+                    </span>
+                  </p>
+                )}
 
-            {metaItems.length > 0 && (
-              <div className="mt-3 flex flex-wrap items-center justify-start gap-x-4 gap-y-2 text-left text-[15px] font-semibold text-[#b46b50]">
-                {metaItems.map((item, i) => (
-                  <span key={i} className="flex items-center gap-x-4">
-                    {i > 0 && <span className="h-[3px] w-[3px] rounded-full bg-[#b46b50]" />}
-                    {item}
-                  </span>
-                ))}
+                {therapist.fee && (
+                  <p className="text-[15px] font-semibold text-[#b46b50]">
+                    ₹{therapist.fee.toLocaleString('en-IN')}
+                    <span className="font-normal"> / {therapist.sessionDuration} min</span>
+                  </p>
+                )}
+                {therapist.location && (
+                  <p className="flex items-center gap-x-2 text-[13px] text-[#b46b50]">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#b46b50] opacity-60" />
+                    {therapist.location}
+                  </p>
+                )}
+                {therapist.languages && therapist.languages.length > 0 && (
+                  <p className="flex items-center gap-x-2 text-[13px] text-[#b46b50]">
+                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#b46b50] opacity-60" />
+                    {therapist.languages.join(', ')}
+                  </p>
+                )}
               </div>
-            )}
+            </div>
 
-            <div className="mt-5 flex flex-wrap items-center justify-center gap-x-7 gap-y-4 sm:justify-start">
+            {/* FIX 4 + 6: Full-width CTA stacked on mobile, side by side on desktop */}
+            <div className="mt-7 flex flex-col items-center lg:flex-row lg:items-center gap-y-5 lg:gap-x-6">
               <button
                 onClick={scrollToContact}
-                className="group flex h-[52px] items-center gap-3 rounded-full bg-[#1f1b16] px-9 text-[12.5px] font-semibold tracking-[0.03em] text-[#efe7d6] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#000] hover:shadow-[0_18px_36px_-12px_rgba(31,27,22,0.5)]"
+                className="group flex w-full sm:w-auto h-[52px] items-center justify-center gap-3 rounded-full bg-[#1f1b16] px-9 text-[12.5px] font-semibold tracking-[0.03em] text-[#efe7d6] transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#000] hover:shadow-[0_18px_36px_-12px_rgba(31,27,22,0.5)]"
               >
                 Begin the conversation
                 <span className="text-[15px] transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5">↗</span>
               </button>
               <button
                 onClick={() => document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })}
-                className="text-[12.5px] font-semibold tracking-[0.03em] text-[#4d433a] underline-offset-[6px] transition-colors duration-300 hover:text-[#b46b50] hover:underline"
+                className="w-full lg:w-auto text-center text-[12.5px] font-semibold tracking-[0.03em] text-[#4d433a] underline-offset-[6px] transition-colors duration-300 hover:text-[#b46b50] hover:underline"
               >
                 Read the philosophy
               </button>
             </div>
-          </div>
 
-          {/* RIGHT — circular portrait */}
-          <div className="order-1 flex justify-center lg:order-2 lg:justify-end">
-            <div className="relative">
-              <div
-                className="pointer-events-none absolute -inset-4 hidden lg:block"
-                style={{ border: '1px solid rgba(26,26,24,0.10)', borderRadius: '9999px' }}
-              />
-              <div
-                className="relative overflow-hidden bg-[#d8c9b0] shadow-[0_30px_80px_-30px_rgba(26,26,24,0.35)]"
-                style={{
-                  borderRadius: '9999px',
-                  width: 'clamp(260px, 30vw, 400px)',
-                  height: 'clamp(260px, 30vw, 400px)',
-                }}
-              >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={resolveImage(therapist.image)}
-                  alt={therapist.name}
-                  className="h-full w-full object-cover"
-                  style={{ objectPosition: 'center 25%' }}
-                />
-              </div>
-            </div>
           </div>
-
         </div>
       </div>
     </section>

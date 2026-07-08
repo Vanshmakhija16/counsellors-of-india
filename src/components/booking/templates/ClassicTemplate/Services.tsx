@@ -12,6 +12,7 @@ export interface ServiceItem {
   desc: string
   forWhom: string[]
   price?: string
+  duration_mins?: number
 }
 
 interface ServicesProps {
@@ -21,6 +22,7 @@ interface ServicesProps {
   svcCanNext: boolean
   scrollSvc: (dir: 1 | -1) => void
   defaultFee?: number
+  defaultDurationMins?: number
   onBookService?: (service: ServiceItem) => void
 }
 
@@ -30,7 +32,7 @@ const editInp = `w-full rounded border border-dashed border-[#ff9933] bg-[#fffbf
   focus:ring-[#ff9933]/30 resize-none placeholder:text-[#9a8f80]`
 
 export default function Services({
-  services, svcTrackRef, svcCanPrev, svcCanNext, scrollSvc, defaultFee, onBookService,
+  services, svcTrackRef, svcCanPrev, svcCanNext, scrollSvc, defaultFee, defaultDurationMins, onBookService,
 }: ServicesProps) {
   const { editMode, updateProfileContent } = useEditableTemplate()
 
@@ -64,6 +66,11 @@ export default function Services({
       return { ...pc, classic: { ...((pc as any)?.classic ?? {}), services: updated } }
     })
   }
+
+  // Only scroll/show arrows once there are enough cards that they wouldn't
+  // all comfortably fit in one row — otherwise center them as a static row.
+  const totalCards = services.length + (editMode ? 1 : 0)
+  const needsScroll = totalCards > 3
 
   return (
     <section
@@ -100,34 +107,40 @@ export default function Services({
 
         {/* Carousel */}
         <div className="relative mt-12">
-          <>
-            <button
-              type="button" onClick={() => scrollSvc(-1)} disabled={!svcCanPrev}
-              className={[
-                'absolute left-0 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border transition-all duration-300 lg:flex',
-                svcCanPrev
-                  ? 'border-[#e8dfc8] bg-[#efe7d6] text-[#1a1a18] hover:-translate-x-1 hover:border-[#b46b50]'
-                  : 'cursor-not-allowed border-[#e8dfc8] bg-[#efe7d6] text-[#6b6056]',
-              ].join(' ')}
-            >
-              <ChevronLeft size={18} strokeWidth={1.5} />
-            </button>
-            <button
-              type="button" onClick={() => scrollSvc(1)} disabled={!svcCanNext}
-              className={[
-                'absolute right-0 top-1/2 z-20 hidden h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border transition-all duration-300 lg:flex',
-                svcCanNext
-                  ? 'border-[#e8dfc8] bg-[#efe7d6] text-[#1a1a18] hover:translate-x-1 hover:border-[#b46b50]'
-                  : 'cursor-not-allowed border-[#e8dfc8] bg-[#efe7d6] text-[#6b6056]',
-              ].join(' ')}
-            >
-              <ChevronRight size={18} strokeWidth={1.5} />
-            </button>
-          </>
+          {needsScroll && (
+            <>
+              <button
+                type="button" onClick={() => scrollSvc(-1)} disabled={!svcCanPrev}
+                className={[
+                  'absolute -left-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border transition-all duration-300 sm:-left-5 lg:-left-6 lg:h-12 lg:w-12',
+                  svcCanPrev
+                    ? 'border-[#e8dfc8] bg-[#efe7d6] text-[#1a1a18] hover:-translate-x-1 hover:border-[#b46b50]'
+                    : 'cursor-not-allowed border-[#e8dfc8] bg-[#efe7d6] text-[#6b6056] opacity-40',
+                ].join(' ')}
+              >
+                <ChevronLeft size={16} strokeWidth={1.5} />
+              </button>
+              <button
+                type="button" onClick={() => scrollSvc(1)} disabled={!svcCanNext}
+                className={[
+                  'absolute -right-4 top-1/2 z-20 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full border transition-all duration-300 sm:-right-5 lg:-right-6 lg:h-12 lg:w-12',
+                  svcCanNext
+                    ? 'border-[#e8dfc8] bg-[#efe7d6] text-[#1a1a18] hover:translate-x-1 hover:border-[#b46b50]'
+                    : 'cursor-not-allowed border-[#e8dfc8] bg-[#efe7d6] text-[#6b6056] opacity-40',
+                ].join(' ')}
+              >
+                <ChevronRight size={16} strokeWidth={1.5} />
+              </button>
+            </>
+          )}
 
           <div
             ref={svcTrackRef}
-            className="flex gap-5 pb-2 pt-2 snap-x snap-mandatory overflow-x-auto scroll-smooth no-scrollbar"
+            className={
+              needsScroll
+                ? 'flex gap-5 pb-2 pt-2 snap-x snap-mandatory overflow-x-auto scroll-smooth no-scrollbar'
+                : 'flex flex-wrap justify-center gap-5 pb-2 pt-2'
+            }
           >
             {services.map((s, i) => {
               const price = s.price ?? (defaultFee ? String(defaultFee) : undefined)
@@ -220,34 +233,53 @@ export default function Services({
                   {/* Price + Book Now */}
                   <div className="mt-8 border-t border-[#e8dfc8] pt-5">
                     {editMode ? (
-                      <div className="mb-4">
-                        <label className="block text-[10px] uppercase tracking-widest text-[#9ca3af] font-semibold mb-1">Price (₹) — leave blank for default</label>
-                        <div className="relative">
-                          <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm text-[#9ca3af]">₹</span>
+                      <div className="mb-4 grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-widest text-[#9ca3af] font-semibold mb-1">Price (₹) — blank for default</label>
+                          <div className="relative">
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm text-[#9ca3af]">₹</span>
+                            <input
+                              type="number"
+                              min={0}
+                              value={s.price ?? ''}
+                              onChange={e => patchService(i, { price: e.target.value === '' ? undefined : e.target.value })}
+                              className={`${editInp} pl-6 text-[15px] font-semibold text-[#1a1a18]`}
+                              placeholder={defaultFee ? String(defaultFee) : '1500'}
+                            />
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-[10px] uppercase tracking-widest text-[#9ca3af] font-semibold mb-1">Duration (min) — blank for default</label>
                           <input
                             type="number"
-                            min={0}
-                            value={s.price ?? ''}
-                            onChange={e => patchService(i, { price: e.target.value === '' ? undefined : e.target.value })}
-                            className={`${editInp} pl-6 text-[15px] font-semibold text-[#1a1a18]`}
-                            placeholder={defaultFee ? String(defaultFee) : '1500'}
+                            min={5}
+                            max={360}
+                            value={s.duration_mins ?? ''}
+                            onChange={e => patchService(i, { duration_mins: e.target.value === '' ? undefined : Number(e.target.value) })}
+                            className={`${editInp} text-[15px] font-semibold text-[#1a1a18]`}
+                            placeholder={String(defaultDurationMins ?? 50)}
                           />
                         </div>
                       </div>
                     ) : (
-                      price != null && (
-                        <div className="mb-4 flex items-baseline gap-1.5">
-                          <span
-                            className="text-[22px] font-semibold leading-none tracking-tight text-[#1a1a18]"
-                            style={{ fontFamily: 'var(--font-fraunces), serif' }}
-                          >
-                            {/^\d+$/.test(price) ? `₹${Number(price).toLocaleString('en-IN')}` : price}
-                          </span>
-                          {/^\d+$/.test(price) && (
-                            <span className="text-[11px] uppercase tracking-[0.2em] text-[#6b6056]">/ session</span>
-                          )}
-                        </div>
-                      )
+                      <div className="mb-4 flex items-baseline justify-between">
+                        {price != null && (
+                          <div className="flex items-baseline gap-1.5">
+                            <span
+                              className="text-[22px] font-semibold leading-none tracking-tight text-[#1a1a18]"
+                              style={{ fontFamily: 'var(--font-fraunces), serif' }}
+                            >
+                              {/^\d+$/.test(price) ? `₹${Number(price).toLocaleString('en-IN')}` : price}
+                            </span>
+                            {/^\d+$/.test(price) && (
+                              <span className="text-[11px] uppercase tracking-[0.2em] text-[#6b6056]">/ session</span>
+                            )}
+                          </div>
+                        )}
+                        <span className="text-[11px] font-medium text-[#6b6056]">
+                          {s.duration_mins ?? defaultDurationMins ?? 50} min
+                        </span>
+                      </div>
                     )}
 
                     {!editMode && (

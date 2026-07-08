@@ -6269,17 +6269,31 @@ padding:
 }
 .tshow-textarea { resize: vertical; line-height: 1.55; }
 .tshow-form-cta {
-  margin-top: 2px;
+  margin-top: 4px;
+  width: 100%;
   display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-  height: 40px; border-radius: 50px; border: none; cursor: pointer;
-  font-family: var(--sans); font-size: 13.5px; font-weight: 700; color: #fff;
-  background: black;
-  /* background: var(--wn-saffron, #FF9933); */
-  box-shadow: 0 8px 22px -6px rgba(255,153,51,.55);
-  transition: transform .2s, background .2s, opacity .2s;
+  height: 48px; border-radius: 50px; border: none; cursor: pointer;
+  font-family: var(--sans); font-size: 14px; font-weight: 700; letter-spacing: -.005em; color: #fff;
+  background: linear-gradient(175deg, #FFB347 0%, var(--wn-saffron, #FF9933) 45%, var(--wn-saffron-deep, #E07A12) 100%);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.3) inset,
+    0 10px 26px -8px rgba(255,153,51,.6);
+  transition: transform .25s cubic-bezier(.22,.87,.36,1), box-shadow .25s ease, background .25s ease, opacity .2s ease;
 }
-.tshow-form-cta:hover:not(:disabled) { background: var(--wn-saffron-deep, #E07A12); transform: translateY(-1px); }
-.tshow-form-cta:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; }
+.tshow-form-cta svg { transition: transform .25s cubic-bezier(.22,.87,.36,1); }
+.tshow-form-cta:hover:not(:disabled) {
+  background: linear-gradient(175deg, #FFB347 0%, var(--wn-saffron-deep, #E07A12) 60%, #C9660D 100%);
+  transform: translateY(-2px);
+  box-shadow:
+    0 1px 0 rgba(255,255,255,.3) inset,
+    0 16px 34px -8px rgba(255,153,51,.68);
+}
+.tshow-form-cta:hover:not(:disabled) svg { transform: translateX(3px); }
+.tshow-form-cta:active:not(:disabled) { transform: translateY(0); }
+.tshow-form-cta:disabled {
+  background: #E5E0D7; color: #A89F94;
+  opacity: 1; cursor: not-allowed; box-shadow: none;
+}
 .tshow-form-hint { margin: -4px 0 0; font-size: 11px; color: var(--ink3); text-align: center; }
 
 /* ── "Preparing your website" first-time overlay ── */
@@ -6416,7 +6430,6 @@ padding:
   overflow:hidden;
   background:#fff;
   border:1px solid var(--border);
-  box-shadow:var(--shadow-lg);
 }
 .texp-window .texp-chrome{ flex:none; }   /* chrome bar = natural height */
 .texp-chrome{
@@ -6481,6 +6494,13 @@ padding:
   background:var(--surf-1);
   overflow-y:auto;
   overflow-x:hidden;
+  /* Hide the scrollbar track for a cleaner phone/tablet-frame look — the
+     wrapper still scrolls normally, only the visual scrollbar is removed. */
+  scrollbar-width:none;           /* Firefox */
+  -ms-overflow-style:none;        /* old Edge/IE */
+}
+.texp-frame-wrap::-webkit-scrollbar{
+  display:none;                   /* Chrome, Safari, new Edge */
 }
 
 /* sized to the scaled hero footprint (set inline); holds the scaled iframe */
@@ -7803,7 +7823,8 @@ section#experience.texp {
   gap: 20px;
 }
 @media (max-width: 860px) {
-  .texp-layout { flex-direction: column; }
+  .texp-layout { flex-direction: column; max-width: 85%; margin: 0 auto; }
+  .texp-stage { width: calc(100% - 16px); max-width: calc(100% - 16px); margin: 0 16px 0 0; }
 }
 @media (max-width: 720px) {
   .texp-head { margin-bottom: 1.75rem; }

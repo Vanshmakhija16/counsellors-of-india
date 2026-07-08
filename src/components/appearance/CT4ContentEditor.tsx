@@ -164,6 +164,11 @@ export default function CT4ContentEditor({ value, onChange, saveButton }: Props)
                       placeholder="e.g. 2000" className={`${inp} pl-7`} />
                   </div>
                 </Field>
+                <Field label="Duration (min) - blank uses default">
+                  <input type="number" min={5} max={360} value={svc.duration_mins ?? ''}
+                    onChange={e => update({ duration_mins: e.target.value === '' ? undefined : Number(e.target.value) })}
+                    placeholder="e.g. 60" className={inp} />
+                </Field>
               </div>
               <div>
                 <Field label="Description">

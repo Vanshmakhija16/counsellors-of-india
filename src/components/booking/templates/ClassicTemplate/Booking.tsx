@@ -85,6 +85,13 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
       ? (typeof selectedService.price === 'number' ? selectedService.price : null)
       : typeof therapist.fee === 'number' && therapist.fee > 0 ? therapist.fee : 500
 
+  // A service can run longer than the therapist's fixed grid slot size
+  // (e.g. a 60-min service on a 50-min grid). effectiveDuration is what the
+  // client actually gets; slotsBlocked is how many consecutive calendar
+  // slots that reserves so no other client can book into the overlap.
+  const effectiveDuration = selectedService?.duration_mins ?? therapist.sessionDuration
+  const slotsBlocked = Math.max(1, Math.ceil(effectiveDuration / therapist.sessionDuration))
+
   async function handleConfirmBooking() {
     if (!selectedSlot || !selectedSlotIso) return
     if (!clientName.trim() || !clientPhone.trim()) {
@@ -103,7 +110,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
       client_email:  clientEmail,
       client_phone:  clientPhone,
       scheduled_at:  selectedSlotIso,
-      duration_mins: therapist.sessionDuration,
+      duration_mins: effectiveDuration,
       service_name:  selectedService?.title ?? null,
       service_price: effectivePrice,
     })
@@ -177,7 +184,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
             <div className="mt-10 space-y-4 lg:mt-0">
               {[
                 { Icon: Video,  label: 'Online via Google Meet / Zoom' },
-                { Icon: Clock,  label: `${therapist.sessionDuration} minute sessions` },
+                { Icon: Clock,  label: `${effectiveDuration} minute sessions` },
                 { Icon: Shield, label: 'Private & confidential' },
               ].map(({ Icon, label }) => (
                 <div key={label} className="flex items-center gap-3">
@@ -207,7 +214,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                 </h3>
                 <p className="mt-2 text-[13px] text-[#6b6056]">{day?.fullLabel} · {selectedSlot}</p>
                 <p className="mt-3 text-[12px] text-[#6b6056]">
-                  Confirmation sent to{' '}
+                  An email has been sent to{' '}
                   <span className="font-semibold text-[#1a1a18]">{clientEmail}</span>
                 </p>
               </div>
@@ -279,7 +286,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                         {day?.fullLabel}
                       </p>
                       <p className="text-[12.5px] font-medium text-[#6b6056]">
-                        {selectedSlot} · {therapist.sessionDuration} min
+                        {selectedSlot} · {effectiveDuration} min
                       </p>
                     </div>
                   </div>
@@ -293,6 +300,12 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                         ₹{effectivePrice.toLocaleString('en-IN')}
                       </span>
                     </div>
+                  )}
+
+                  {slotsBlocked > 1 && (
+                    <p className="mt-3 border-t border-[#e8dfc8] pt-3 text-[11.5px] text-[#6b6056]">
+                      This {effectiveDuration}-minute session spans {slotsBlocked} consecutive slots on the calendar — the time right after {selectedSlot} will be reserved too, so nothing else can be booked into it.
+                    </p>
                   )}
                 </div>
 

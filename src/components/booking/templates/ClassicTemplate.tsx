@@ -64,6 +64,7 @@ function ClassicTemplateInner({ bookedTimes = [], feedbacks = [], hiddenSections
     desc:    s.desc,
     forWhom: s.forWhom ?? [],
     price:   s.price,
+    duration_mins: s.duration_mins,
   }))
 
   // Map CT1 carousel slides → the shape Carousel expects, merging visual styles
@@ -199,6 +200,7 @@ function ClassicTemplateInner({ bookedTimes = [], feedbacks = [], hiddenSections
         svcCanNext={svcCanNext}
         scrollSvc={scrollSvc}
         defaultFee={therapist.fee}
+        defaultDurationMins={therapist.sessionDuration}
         onBookService={handleBookService}
       />
     ),

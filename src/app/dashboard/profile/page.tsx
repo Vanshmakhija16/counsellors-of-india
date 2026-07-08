@@ -14,6 +14,7 @@ import {
 import AvailabilitySettings from '@/components/dashboard/AvailabilitySettings'
 import FeedbackManager from '@/components/dashboard/FeedbackManager'
 import TemplateLiveSwitcher from '@/components/appearance/TemplateLiveSwitcher'
+import { addNormalizedUnique } from '@/lib/specialties'
 import type { ProfileContent, CT1Content, CT2Content, CT3Content, CT4Content, CT5Content } from '@/components/booking/templates/templateUtils'
 import {
   User, Briefcase, Camera, CheckCircle, Clock, ExternalLink, Globe2,
@@ -227,12 +228,12 @@ export default function ProfilePage() {
 
   function addCustomSpecialty() {
     const v = customSpecialty.trim(); if (!v) return
-    setForm(prev => prev.specialties.includes(v) ? prev : { ...prev, specialties: [...prev.specialties, v] })
+    setForm(prev => ({ ...prev, specialties: addNormalizedUnique(prev.specialties, v) }))
     setCustomSpecialty('')
   }
   function addCustomLanguage() {
     const v = customLanguage.trim(); if (!v) return
-    setForm(prev => prev.languages.includes(v) ? prev : { ...prev, languages: [...prev.languages, v] })
+    setForm(prev => ({ ...prev, languages: addNormalizedUnique(prev.languages, v) }))
     setCustomLanguage('')
   }
 

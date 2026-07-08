@@ -889,7 +889,7 @@ export const ct3Styles = `
   .ct3-root {
     --nav-h: 60px;
     /* Tighter but still balanced gutter on phones — equal left & right */
-    --gutter: clamp(1.15rem, 5.5vw, 1.6rem);
+    --gutter: clamp(1.4rem, 6vw, 1.8rem);
   }
 
   /* Section rhythm tightens so content isn't lost in whitespace */
@@ -995,5 +995,27 @@ export const ct3Styles = `
 @media (hover: none) and (pointer: coarse) {
   .ct3-nav-link, .ct3-drawer-link, .ct3-btn-primary, .ct3-btn-secondary,
   .ct3-nav-cta, .ct3-nav-brand { min-height: 44px; }
+}
+
+/* ── Centre the hero copy under the photo on tablet & mobile ──
+   Below the stack breakpoint the photo sits above the text column, so the
+   text should read as centred under it rather than staying left-aligned
+   (which only made sense next to the photo in the desktop side-by-side
+   layout). Placed last so it wins the cascade over earlier same-breakpoint
+   rules without needing to touch them. */
+@media (max-width: 900px) {
+  .ct3-hero-photo-wrap { justify-content: center; }
+  .ct3-hero-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    margin: 0 auto;
+  }
+  .ct3-hero-content .ct3-eyebrow { text-align: center; }
+  .ct3-hero-title { text-align: center; }
+  .ct3-hero-subtitle { text-align: center; margin-left: auto; margin-right: auto; }
+  .ct3-hero-meta { justify-content: center; }
+  .ct3-hero-actions { justify-content: center; }
 }
   `

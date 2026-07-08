@@ -54,6 +54,12 @@ export interface ResolvedBookingPrice {
   priceInr: number | null
   durationMins: number
   priceSource: 'service' | 'therapist_fee' | 'missing'
+  /** The service's own session length (e.g. 30/45/60 min), independent of the therapist's grid slot size. */
+  serviceDurationMins: number
+  /** The therapist's fixed grid slot size (e.g. 50 min) — used to space out the calendar and compute slotsBlocked. */
+  sessionDurationMins: number
+  /** How many consecutive therapist grid slots this booking occupies: ceil(serviceDurationMins / sessionDurationMins). */
+  slotsBlocked: number
 }
 
 export function resolveBookingPrice(
@@ -64,19 +70,34 @@ export function resolveBookingPrice(
   const serviceName = typeof requestedServiceName === 'string' && requestedServiceName.trim()
     ? requestedServiceName.trim()
     : null
-  const durationMins = resolveDuration(requestedDurationMins, therapist.session_duration_mins)
+
+  // The therapist's fixed calendar grid size — e.g. 50 min. This never
+  // changes per-service; it's what the slot picker is spaced by.
+  const sessionDurationMins = resolveDuration(undefined, therapist.session_duration_mins)
 
   const service = serviceName
     ? findConfiguredService(therapist.profile_content, therapist.template_id, serviceName)
     : null
+
+  // The service's own session length. Falls back to whatever the client's
+  // request explicitly asked for, then to the therapist's grid size.
+  const serviceOwnDuration = Number(service?.duration_mins)
+  const serviceDurationMins = Number.isFinite(serviceOwnDuration) && serviceOwnDuration > 0 && serviceOwnDuration <= 360
+    ? Math.round(serviceOwnDuration)
+    : resolveDuration(requestedDurationMins, therapist.session_duration_mins)
+
+  const slotsBlocked = Math.max(1, Math.ceil(serviceDurationMins / sessionDurationMins))
 
   const servicePrice = parsePrice(service?.price)
   if (servicePrice != null) {
     return {
       serviceName: readString(service?.name) ?? serviceName,
       priceInr: servicePrice,
-      durationMins,
+      durationMins: serviceDurationMins,
       priceSource: 'service',
+      serviceDurationMins,
+      sessionDurationMins,
+      slotsBlocked,
     }
   }
 
@@ -84,8 +105,11 @@ export function resolveBookingPrice(
   return {
     serviceName,
     priceInr: fallbackPrice,
-    durationMins,
+    durationMins: serviceDurationMins,
     priceSource: fallbackPrice == null ? 'missing' : 'therapist_fee',
+    serviceDurationMins,
+    sessionDurationMins,
+    slotsBlocked,
   }
 }
 

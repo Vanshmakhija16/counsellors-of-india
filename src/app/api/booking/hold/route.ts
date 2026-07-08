@@ -27,7 +27,7 @@ import {
   formatAmount,
 } from '@/lib/payu'
 import { resolveBookingPrice } from '@/lib/pricing'
-import { rateLimit } from '@/lib/rate-limit'
+import { sendBookingConfirmation, sendTherapistBookingAlert } from '@/lib/whatsapp'
 
 const HOLD_MINUTES = 15
 
@@ -40,9 +40,6 @@ const PAYMENTS_ENABLED = false
 
 export async function POST(req: NextRequest) {
   try {
-    const limited = rateLimit(req, { keyPrefix: 'booking-hold', limit: 20, windowMs: 10 * 60 * 1000 })
-    if (limited) return limited
-
     const body = await req.json()
     const {
       therapist_id, client_name, client_email, client_phone,
@@ -122,16 +119,38 @@ export async function POST(req: NextRequest) {
       .eq('status', 'pending_payment')
       .lt('hold_until', new Date().toISOString())
 
-    // ── Double-booking check ──────────────────────────────────────────────
-    const { data: existing } = await supabase
-      .from('appointments')
-      .select('id')
-      .eq('therapist_id', therapist_id)
-      .eq('scheduled_at', normalizedAt)
-      .not('status', 'in', '("cancelled","payment_failed","expired")')
-      .maybeSingle()
+    // ── Multi-slot double-booking check ────────────────────────────────────
+    // A service can occupy more than one of the therapist's fixed grid
+    // slots (e.g. a 60-min service on a 50-min grid blocks 2 consecutive
+    // slots). We compute the full ISO time range this new booking would
+    // occupy, then check it against every existing appointment's own
+    // occupied range (which may also span multiple slots) for overlap —
+    // not just an exact scheduled_at match.
+    const sessionDurationMs = resolved.sessionDurationMins * 60 * 1000
+    const newStart = new Date(normalizedAt).getTime()
+    const newEnd   = newStart + resolved.slotsBlocked * sessionDurationMs
 
-    if (existing) {
+    // Widen the lookup window generously (+/- 6 hours) so we catch any
+    // existing multi-slot appointment whose range might overlap ours.
+    const windowStart = new Date(newStart - 6 * 60 * 60 * 1000).toISOString()
+    const windowEnd   = new Date(newEnd   + 6 * 60 * 60 * 1000).toISOString()
+
+    const { data: nearbyAppointments } = await supabase
+      .from('appointments')
+      .select('scheduled_at, slots_blocked')
+      .eq('therapist_id', therapist_id)
+      .not('status', 'in', '("cancelled","payment_failed","expired")')
+      .gte('scheduled_at', windowStart)
+      .lte('scheduled_at', windowEnd)
+
+    const overlaps = (nearbyAppointments ?? []).some(a => {
+      const existingStart = new Date(a.scheduled_at).getTime()
+      const existingSlots = a.slots_blocked ?? 1
+      const existingEnd   = existingStart + existingSlots * sessionDurationMs
+      return newStart < existingEnd && existingStart < newEnd
+    })
+
+    if (overlaps) {
       return NextResponse.json(
         { error: 'This slot was just taken. Please choose another time.' },
         { status: 409 }
@@ -170,6 +189,7 @@ export async function POST(req: NextRequest) {
         client_name, client_email, client_phone,
         scheduled_at: normalizedAt,
         duration_mins: resolved.durationMins,
+        slots_blocked: resolved.slotsBlocked,
         status: 'pending_payment',
         txnid, hold_until: holdUntil,
         ...(resolved.serviceName       ? { service_name: resolved.serviceName } : {}),
@@ -198,10 +218,10 @@ export async function POST(req: NextRequest) {
         .update({ status: 'upcoming', txnid: null, hold_until: null })
         .eq('id', appointmentId)
 
-      // Fetch therapist email + meeting link for notifications
+      // Fetch therapist email + phone + meeting link for notifications
       const { data: th } = await supabase
         .from('therapists')
-        .select('full_name, email, meet_link')
+        .select('full_name, email, meet_link, phone, whatsapp')
         .eq('id', therapist_id)
         .single()
 
@@ -236,19 +256,19 @@ export async function POST(req: NextRequest) {
           await transporter.sendMail({
             from:    FROM,
             to:      client_email,
-            subject: `Session confirmed with ${therapistName}`,
+            subject: `Your booking request with ${therapistName} has been sent`,
             html: `
 <html><body style="font-family:sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px">
-  <h2 style="color:#1a1a18">Session Confirmed ✓</h2>
+  <h2 style="color:#1a1a18">Request Sent ✓</h2>
   <p>Hi ${escapeHtml(client_name)},</p>
-  <p>Your session with <strong>${escapeHtml(therapistName)}</strong> has been booked.</p>
+  <p>Your booking request with <strong>${escapeHtml(therapistName)}</strong> has been sent. They will connect with you shortly to confirm your session.</p>
   ${resolved.serviceName ? `<p><strong>Service:</strong> ${escapeHtml(resolved.serviceName)}</p>` : ''}
-  <p><strong>Date:</strong> ${escapeHtml(formattedDate)}</p>
-  <p><strong>Time:</strong> ${escapeHtml(formattedTime)}</p>
+  <p><strong>Requested date:</strong> ${escapeHtml(formattedDate)}</p>
+  <p><strong>Requested time:</strong> ${escapeHtml(formattedTime)}</p>
   <p><strong>Duration:</strong> ${durationMins} minutes</p>
   ${th?.meet_link
     ? `<p style="margin-top:16px"><strong>Meeting link:</strong> <a href="${escapeHtml(th.meet_link)}">${escapeHtml(th.meet_link)}</a></p>`
-    : `<p style="margin-top:24px;color:#666">The meeting link will be shared before your session.</p>`}
+    : `<p style="margin-top:24px;color:#666">The meeting link will be shared once your session is confirmed.</p>`}
   <p style="margin-top:24px">— Counsellors of India</p>
 </body></html>`,
           })
@@ -258,24 +278,55 @@ export async function POST(req: NextRequest) {
             await transporter.sendMail({
               from:    FROM,
               to:      th.email,
-              subject: `New booking from ${client_name}`,
+              subject: `New booking request from ${client_name}`,
               html: `
 <html><body style="font-family:sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px">
-  <h2 style="color:#1a1a18">New Booking</h2>
+  <h2 style="color:#1a1a18">New Booking Request</h2>
   <p>Hi ${escapeHtml(therapistName)},</p>
-  <p>A session has been booked (no payment required).</p>
+  <p>A client would like to book a session with you. Please review the details below and connect with them soon to confirm.</p>
   <p><strong>Client:</strong> ${escapeHtml(client_name)}</p>
   <p><strong>Email:</strong> ${escapeHtml(client_email)}</p>
   <p><strong>Phone:</strong> ${escapeHtml(client_phone || 'Not provided')}</p>
   ${resolved.serviceName ? `<p><strong>Service:</strong> ${escapeHtml(resolved.serviceName)}</p>` : ''}
-  <p><strong>Date:</strong> ${escapeHtml(formattedDate)}</p>
-  <p><strong>Time:</strong> ${escapeHtml(formattedTime)}</p>
+  <p><strong>Requested date:</strong> ${escapeHtml(formattedDate)}</p>
+  <p><strong>Requested time:</strong> ${escapeHtml(formattedTime)}</p>
   <p><strong>Duration:</strong> ${durationMins} minutes</p>
 </body></html>`,
             })
           }
         } catch (e) {
           console.error('[booking/hold] email failed:', e)
+        }
+
+        // WhatsApp notifications — same fire-and-forget pattern as emails above,
+        // so a WhatsApp/GetGabs failure never breaks the booking response.
+        try {
+          if (client_phone) {
+            await sendBookingConfirmation(client_phone, {
+              employeeName: client_name,
+              doctorName:   therapistName,
+              date:         formattedDate,
+              time:         formattedTime,
+              meetLink:     th?.meet_link || undefined,
+            })
+          }
+        } catch (e) {
+          console.error('[booking/hold] client WhatsApp failed:', e)
+        }
+
+        try {
+          const therapistPhone = th?.whatsapp || th?.phone
+          if (therapistPhone) {
+            await sendTherapistBookingAlert(therapistPhone, {
+              therapistName,
+              clientName: client_name,
+              date:       formattedDate,
+              time:       formattedTime,
+              clientPhone: client_phone || undefined,
+            })
+          }
+        } catch (e) {
+          console.error('[booking/hold] therapist WhatsApp failed:', e)
         }
       })()
 
