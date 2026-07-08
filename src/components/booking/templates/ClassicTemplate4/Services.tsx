@@ -63,6 +63,11 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
                     </span>
                     <span className="ct4-svc-price-label">per session</span>
                   </div>
+                  <div className="ct4-svc-duration-badge">
+                    <span className="ct4-svc-duration-amount">
+                      {svc.duration_mins ?? therapist.sessionDuration ?? 50} min
+                    </span>
+                  </div>
                   {isCustomPrice && defaultFee && svc.price !== defaultFee && (
                     <span className="ct4-svc-price-diff">
                       {svc.price! > defaultFee ? '↑' : '↓'} vs standard
@@ -137,6 +142,25 @@ const svcStyles = `
     letter-spacing: 0.18em;
     color: var(--gold-muted, #b8922a);
     font-weight: 400;
+  }
+
+  /* Duration badge — quiet, secondary pill next to price */
+  .ct4-svc-duration-badge {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.04);
+    border: 0.5px solid var(--border, rgba(255,255,255,0.12));
+    border-radius: 3px;
+    padding: 0.35rem 0.75rem;
+  }
+  .ct4-svc-duration-amount {
+    font-family: var(--font-mono, monospace);
+    font-size: 11px;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--silver);
+    opacity: 0.75;
   }
 
   /* ↑↓ vs standard label */

@@ -36,6 +36,8 @@ export default function ClassicTemplate2({ therapist, bookedTimes = [], hiddenSe
     kind:    s.kind ?? '',
     desc:    s.desc,
     forWhom: s.forWhom ?? [],
+    price:   s.price,
+    duration_mins: s.duration_mins,
   }))
 
   useEffect(() => {
@@ -65,7 +67,7 @@ export default function ClassicTemplate2({ therapist, bookedTimes = [], hiddenSe
         switch (id) {
           case 'hero':     return <Hero     key={id} therapist={therapist} heroLoaded={heroLoaded} heroRef={heroRef} />
           case 'about':    return <About    key={id} therapist={therapist} />
-          case 'services': return <Services key={id} services={services} />
+          case 'services': return <Services key={id} services={services} defaultDurationMins={therapist.sessionDuration} />
           case 'insights': return <Insights key={id} insights={ct2.insights} />
           case 'booking':  return <Booking  key={id} therapist={therapist} bookedTimes={bookedTimes} />
           case 'faq':      return <FAQ      key={id} faqs={ct2.faq} />

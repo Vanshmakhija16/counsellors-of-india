@@ -49,7 +49,7 @@ export async function generateMetadata({
 
   // CSV row 10: dynamic alt → "{Full Name} – {Specialty} therapist in {City}, India | Counsellors of India"
   const imageAlt   = `${name} – ${specialty} therapist in ${city}, India | Counsellors of India`
-  const pageTitle  = `${name} – ${title} in ${city} | Counsellors of India`
+  const pageTitle  = `${name} | ${title} in ${city} | Counsellors of India`
   const description = therapist.bio
     ? therapist.bio.slice(0, 155)
     : `Book a session with ${name}, ${title} in ${city}. Online therapy & counselling on Counsellors of India.`

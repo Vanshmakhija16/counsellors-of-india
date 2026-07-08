@@ -2,20 +2,17 @@
 
 import { useEffect, useRef } from 'react'
 import type { TherapistProfile } from '../templateUtils'
+import { resolveCT5Content } from '../templateUtils'
 
 interface ServicesProps { therapist: TherapistProfile }
 
-const DEFAULT_SERVICES = [
-  { name: 'Individual Therapy',    desc: 'One-on-one sessions tailored entirely to your unique needs, challenges, and goals.',      tag: 'Core Service' },
-  { name: 'Anxiety & Stress',      desc: 'Learn to recognise patterns, regulate responses, and build sustainable calm in your life.', tag: 'Speciality'    },
-  { name: 'Depression Support',    desc: 'Compassionate, structured support to help you rediscover energy, purpose, and connection.', tag: 'Speciality'    },
-  { name: 'Relationship Therapy',  desc: 'Improving communication, resolving conflicts, and deepening intimacy in your relationships.', tag: 'Couple & Ind.' },
-  { name: 'Grief & Loss',          desc: 'A gentle, non-judgemental space to process loss and find a path forward at your own pace.', tag: 'Speciality'    },
-  { name: 'Life Transitions',      desc: 'Career changes, relocation, identity shifts — navigating change with clarity and resilience.', tag: 'Coaching'     },
-]
-
 export default function Services({ therapist }: ServicesProps) {
   const sectionRef = useRef<HTMLElement | null>(null)
+
+  const ct5 = resolveCT5Content(therapist.profile_content?.classic5)
+  const services = ct5.services
+  const defaultFee = therapist.fee
+  const defaultDuration = therapist.sessionDuration ?? 50
 
   useEffect(() => {
     const section = sectionRef.current
@@ -49,14 +46,37 @@ export default function Services({ therapist }: ServicesProps) {
         </div>
 
         <div className="ct5-services-grid ct5-reveal" style={{ transitionDelay: '0.12s' }}>
-          {DEFAULT_SERVICES.map((s, i) => (
-            <div key={i} className="ct5-service-card">
-              <span className="ct5-service-num">0{i + 1}</span>
-              <h3 className="ct5-service-name">{s.name}</h3>
-              <p className="ct5-service-desc">{s.desc}</p>
-              <span className="ct5-service-tag">{s.tag}</span>
-            </div>
-          ))}
+          {services.map((s, i) => {
+            const price = s.price != null ? Number(s.price) : defaultFee
+            const duration = s.duration_mins ?? defaultDuration
+            return (
+              <div key={i} className="ct5-service-card">
+                <span className="ct5-service-num">0{i + 1}</span>
+                <h3 className="ct5-service-name">{s.name}</h3>
+                <p className="ct5-service-desc">{s.desc}</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: '1.2rem' }}>
+                  {s.tag && <span className="ct5-service-tag">{s.tag}</span>}
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      padding: '5px 12px',
+                      borderRadius: 999,
+                      border: '1px solid var(--border)',
+                      fontSize: 10,
+                      fontWeight: 600,
+                      letterSpacing: '0.06em',
+                      textTransform: 'uppercase',
+                      color: 'var(--warm-gray)',
+                    }}
+                  >
+                    {duration} min{price != null ? ` · ₹${price.toLocaleString('en-IN')}` : ''}
+                  </span>
+                </div>
+              </div>
+            )
+          })}
         </div>
 
         {/* Specialty chips from therapist data */}

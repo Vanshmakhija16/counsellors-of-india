@@ -6,13 +6,16 @@ export interface ServiceItem {
   kind: string
   desc: string
   forWhom: string[]
+  price?: string
+  duration_mins?: number
 }
 
 interface Props {
   services: ServiceItem[]
+  defaultDurationMins?: number
 }
 
-export default function Services({ services }: Props) {
+export default function Services({ services, defaultDurationMins }: Props) {
   return (
     <section
       id="services"
@@ -72,7 +75,7 @@ export default function Services({ services }: Props) {
                 {s.desc}
               </p>
 
-              <div className="flex flex-wrap gap-2 mt-7">
+              <div className="flex flex-wrap items-center gap-2 mt-7">
                 {s.forWhom.map((w) => (
                   <span
                     key={w}
@@ -87,6 +90,20 @@ export default function Services({ services }: Props) {
                     {w}
                   </span>
                 ))}
+              </div>
+
+              <div
+                className="ct2-mono"
+                style={{
+                  marginTop: 18,
+                  paddingTop: 14,
+                  borderTop: '1px solid var(--ink-3)',
+                  fontSize: 11,
+                  letterSpacing: '0.1em',
+                  color: 'var(--gold)',
+                }}
+              >
+                {(s.duration_mins ?? defaultDurationMins ?? 50)} MIN SESSION
               </div>
             </article>
           ))}

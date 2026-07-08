@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
 
   title: {
-    default: 'Counsellors of India – Website Builder for Indian Therapists',
+    default: 'Counsellors of India | Website Builder for Indian Therapists',
     template: '%s | Counsellors of India',
   },
 
@@ -43,7 +43,7 @@ export const metadata: Metadata = {
     type: 'website',
     url: BASE_URL,
     siteName: 'Counsellors of India',
-    title: 'Counsellors of India – Website Builder for Indian Therapists',
+    title: 'Counsellors of India | Website Builder for Indian Therapists',
     description:
       'Counsellors of India – therapist website builder showing profile, booking and Razorpay payments.',
     images: [
@@ -60,7 +60,7 @@ export const metadata: Metadata = {
   twitter: {
     card: 'summary_large_image',
     site: '@counsellorsin',
-    title: 'Counsellors of India – Website Builder for Indian Therapists',
+    title: 'Counsellors of India | Website Builder for Indian Therapists',
     description:
       'Start getting therapy clients online. Build your website, take bookings & collect payments in under 10 minutes.',
     images: [

@@ -382,7 +382,7 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
                         {svc?.price != null ? (
                           <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                             <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 7.5, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ink-4)' }}>
-                              Per session
+                              Per session · {svc?.duration_mins ?? therapist.sessionDuration ?? 50} min
                             </span>
                             <span style={{
                               fontFamily: "'Fraunces', serif",
@@ -394,7 +394,22 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
                               ₹{svc.price.toLocaleString()}
                             </span>
                           </div>
-                        ) : <div />}
+                        ) : (
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                            <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 7.5, letterSpacing: '0.2em', textTransform: 'uppercase', color: 'var(--ink-4)' }}>
+                              Session length
+                            </span>
+                            <span style={{
+                              fontFamily: "'Fraunces', serif",
+                              fontSize:   isActive ? (isMobile ? 17 : 20) : (isMobile ? 14 : 16),
+                              fontWeight: 500,
+                              color:      isActive ? 'var(--sage)' : 'var(--ink-3)',
+                              transition: 'all 0.42s ease',
+                            }}>
+                              {svc?.duration_mins ?? therapist.sessionDuration ?? 50} min
+                            </span>
+                          </div>
+                        )}
 
                         {isActive ? (
                           <button

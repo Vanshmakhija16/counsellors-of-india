@@ -60,14 +60,16 @@ export default function EditProvider({ isOwner, therapist, children }: EditProvi
 
   const setEditMode = useCallback((v: boolean) => {
     setEditModeState(v)
-    // Turning edit mode off without saving discards any unsaved draft —
-    // matches the "Save changes" button being the only persistence path.
-    if (!v) {
+    // Only discard-and-reset when leaving edit mode with *unsaved* changes.
+    // If the user already clicked "Save changes", `therapist` (the prop from
+    // the initial page load) is stale, so resetting to it here would wipe
+    // the just-saved edits back off the screen even though the DB is correct.
+    if (!v && dirty) {
       setDraft(therapist)
       setDirty(false)
       setSaveError(null)
     }
-  }, [therapist])
+  }, [therapist, dirty])
 
   const discard = useCallback(() => {
     setDraft(therapist)
