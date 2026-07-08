@@ -27,7 +27,7 @@ export const metadata: Metadata = {
 
   // xlsx Sheet 2, homepage description (exact)
   description:
-    'Start getting therapy clients online. Build your website, take bookings & collect payments in under 10 minutes. Join 500+ Indian counsellors.',
+    'Start getting therapy clients online. Build your website, take bookings & collect payments in under 10 minutes.',
 
   keywords: [
     'therapist website builder India',
