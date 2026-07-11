@@ -134,8 +134,7 @@ export default function TemplateThumbnail({ id, accent, bg, color }: {
     </div>
   )
 
-  // classic5
-  return (
+  if (id === 'classic5') return (
     <div className="w-full h-full flex flex-col" style={{ background: bg }}>
       <div className="flex items-center justify-between px-3 py-2" style={{ borderBottom: `1px solid ${accent}25` }}>
         <div className="w-5 h-5 border text-[8px] italic flex items-center justify-center" style={{ borderColor: accent, color: accent }}>S</div>
@@ -168,4 +167,56 @@ export default function TemplateThumbnail({ id, accent, bg, color }: {
       </div>
     </div>
   )
+
+  // classic6 — "The Quiet Room": dusk ink-plum field, a soft honey window-glow,
+  // and an italic serif opener — echoes the dusk-to-daylight hero.
+  if (id === 'classic6') return (
+    <div className="w-full h-full flex flex-col relative overflow-hidden" style={{ background: bg }}>
+      <div
+        className="absolute rounded-full"
+        style={{
+          width: 90, height: 90, top: -20, right: -20,
+          background: `radial-gradient(circle, ${accent}35, transparent 70%)`,
+          filter: 'blur(6px)',
+        }}
+      />
+      <div className="flex items-center justify-between px-3 py-2 relative z-10" style={{ borderBottom: `1px solid ${accent}25` }}>
+        <div className="w-12 h-1.5 rounded-full" style={{ background: '#F2EEE4', opacity: 0.5 }} />
+        <div className="flex gap-1">
+          {[0,1,2].map(i => <div key={i} className="w-3 h-1 rounded" style={{ background: accent, opacity: 0.5 }} />)}
+        </div>
+      </div>
+      <div className="flex-1 px-3 pt-3 relative z-10">
+        <div className="text-[6px] tracking-widest mb-1.5" style={{ color: accent }}>&mdash; A NOTE, BEFORE WE BEGIN</div>
+        <div className="w-full h-3 rounded mb-1 italic" style={{ background: '#F2EEE4', opacity: 0.9 }} />
+        <div className="w-3/4 h-3 rounded mb-2 italic" style={{ background: accent, opacity: 0.75 }} />
+        <div className="w-full h-1 rounded mb-1 opacity-40" style={{ background: '#F2EEE4' }} />
+        <div className="w-3/5 h-1 rounded opacity-40" style={{ background: '#F2EEE4' }} />
+      </div>
+      <div className="px-3 pb-2.5 flex items-center gap-2 relative z-10">
+        <div className="w-9 h-9 rounded-full flex-shrink-0" style={{ background: '#F2EEE4', opacity: 0.95 }} />
+        <div className="h-5 flex-1 rounded" style={{ background: `${accent}25`, border: `1px solid ${accent}50` }} />
+      </div>
+    </div>
+  )
+
+  // classic7 — "The Atrium": the arrival ritual is the whole idea, so the
+  // thumbnail shows the counter mid-count rather than the hero underneath —
+  // this is the one thing that should make someone stop scrolling the picker.
+  if (id === 'classic7') return (
+    <div className="w-full h-full flex flex-col items-center justify-center relative overflow-hidden" style={{ background: bg }}>
+      <span className="absolute" style={{ top: 6, left: 7, fontSize: 8, color: accent, opacity: 0.55, fontFamily: 'monospace' }}>+</span>
+      <span className="absolute" style={{ top: 6, right: 7, fontSize: 8, color: accent, opacity: 0.55, fontFamily: 'monospace' }}>+</span>
+      <span className="absolute" style={{ bottom: 6, left: 7, fontSize: 8, color: accent, opacity: 0.55, fontFamily: 'monospace' }}>+</span>
+      <span className="absolute" style={{ bottom: 6, right: 7, fontSize: 8, color: accent, opacity: 0.55, fontFamily: 'monospace' }}>+</span>
+
+      <div className="text-[6px] tracking-[0.3em] mb-1" style={{ color: accent, fontFamily: 'monospace' }}>SETTLING IN</div>
+      <div className="text-2xl font-semibold tabular-nums" style={{ color: '#F6F1E7', fontFamily: 'monospace', letterSpacing: '-0.02em' }}>074</div>
+      <div className="w-16 h-px mt-2 relative overflow-hidden" style={{ background: 'rgba(246,241,231,0.15)' }}>
+        <div className="h-full absolute left-0 top-0" style={{ width: '74%', background: accent }} />
+      </div>
+    </div>
+  )
+
+  return null
 }

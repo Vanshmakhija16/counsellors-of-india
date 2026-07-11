@@ -21,8 +21,8 @@ import {
 } from 'lucide-react'
 
 const TPARAM_TO_TEMPLATE: Record<string, TemplateId> = {
-  t1: 'classic', t2: 'classic2', t3: 'classic3', t4: 'classic4', t5: 'classic5', t6: 'classic6',
-  classic: 'classic', classic2: 'classic2', classic3: 'classic3', classic4: 'classic4', classic5: 'classic5', classic6: 'classic6',
+  t1: 'classic', t2: 'classic2', t3: 'classic3', t4: 'classic4', t5: 'classic5', t6: 'classic6', t7: 'classic7',
+  classic: 'classic', classic2: 'classic2', classic3: 'classic3', classic4: 'classic4', classic5: 'classic5', classic6: 'classic6', classic7: 'classic7',
 }
 
 export default function TryDemoPage() {

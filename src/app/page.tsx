@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import FaqRevealEffect from "@/components/landing/FaqRevealEffect";
 import FooterReveal from '@/components/landing/FooterReveal'
+import SiteFooter from '@/components/layout/SiteFooter'
 import { loadDemo, saveDemo, emptyDemo, type DemoProfile } from '@/lib/demoSession'
 import { normalizeSpecialtyKey, titleCaseLabel } from '@/lib/specialties'
 import { Check, Crown, ArrowRight } from 'lucide-react'
@@ -267,7 +268,7 @@ function TherapistCard({ t }: { t: any }) {
             </div>
           )}
         </div>
-        {fee && (
+        {fee != null && fee > 0 && (
           <div className="tc-fee-block">
             <div className="tc-fee">₹{fee.toLocaleString('en-IN')}</div>
             <div className="tc-fee-lbl">/ session</div>
@@ -804,21 +805,58 @@ function LiveTemplateExperience() {
         setFrameOuterWidth(Math.round(dw * s))
       }
     }
-    measure()
-    const ro = new ResizeObserver(measure)
+    // Debounced so a window resize/drag (which fires this ResizeObserver on
+    // every tick, sometimes dozens of times a second) only recomputes scale
+    // once things have settled for ~80ms, instead of on every tick.
+    let debounceTimer: ReturnType<typeof setTimeout> | null = null
+    function scheduleMeasure() {
+      if (debounceTimer) clearTimeout(debounceTimer)
+      debounceTimer = setTimeout(measure, 80)
+    }
+    measure() // immediate first pass — no debounce delay on mount/device change
+    const ro = new ResizeObserver(scheduleMeasure)
     if (stageRef.current) ro.observe(stageRef.current)
     if (frameWrapRef.current) ro.observe(frameWrapRef.current)
-    window.addEventListener('resize', measure)
-    return () => { ro.disconnect(); window.removeEventListener('resize', measure) }
+    // No separate window 'resize' listener: the ResizeObserver on stageRef
+    // already fires whenever a window resize changes stage's width, so a
+    // second window-level listener was just duplicating every pass.
+    return () => { ro.disconnect(); if (debounceTimer) clearTimeout(debounceTimer) }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [device])
 
   const previewUrl = `/preview/classic${cur.n}?embed=1`
 
+  // Lazy-load: the iframe only gets a src once this section is near the
+  // viewport, so the heavy embedded preview site (its own JS/CSS/fonts)
+  // doesn't load during initial page load before a visitor has scrolled
+  // anywhere near it. Once true it stays true (no need to unload again).
+  const sectionRef = useRef<HTMLElement>(null)
+  const [shouldLoadFrame, setShouldLoadFrame] = useState(false)
+  useEffect(() => {
+    if (shouldLoadFrame) return
+    const el = sectionRef.current
+    if (!el) return
+    const obs = new IntersectionObserver(
+      entries => {
+        if (entries.some(e => e.isIntersecting)) {
+          setShouldLoadFrame(true)
+          obs.disconnect()
+        }
+      },
+      { rootMargin: '600px 0px' } // start loading a little before it's actually visible
+    )
+    obs.observe(el)
+    return () => obs.disconnect()
+  }, [shouldLoadFrame])
+
   useEffect(() => {
     setLoading(true)
     if (frameWrapRef.current) frameWrapRef.current.scrollTop = 0
-    const t = setTimeout(() => setLoading(false), 1500)
+    // Safety-net only — onLoad (handleIframeLoad) is the real signal that
+    // the preview finished loading. This timeout just guarantees the
+    // spinner doesn't spin forever if onLoad never fires (e.g. a very slow
+    // connection), so it's set generously long rather than a blind average.
+    const t = setTimeout(() => setLoading(false), 8000)
     return () => clearTimeout(t)
   }, [active, device])
 
@@ -864,8 +902,24 @@ function LiveTemplateExperience() {
     return () => obs.disconnect()
   }, [])
 
+  // Debounce rapid tab/device clicks: if someone clicks through templates
+  // or devices fast, only the last selection within the window actually
+  // takes effect, instead of loading and immediately discarding each one.
+  const switchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  function selectTemplate(i: number) {
+    if (i === active) return
+    if (switchTimer.current) clearTimeout(switchTimer.current)
+    switchTimer.current = setTimeout(() => { setLoading(true); setActive(i) }, 150)
+  }
+  function selectDevice(d: 'mobile' | 'tablet' | 'desktop') {
+    userPickedDevice.current = true
+    if (d === device) return
+    if (switchTimer.current) clearTimeout(switchTimer.current)
+    switchTimer.current = setTimeout(() => { setLoading(true); setDevice(d) }, 150)
+  }
+
   return (
-    <section id="experience" className="texp">
+    <section id="experience" className="texp" ref={sectionRef}>
       <div className="texp-head">
         <h2 className="texp-h">Explore <em>Templates</em> 
           {/* ,<em>your way</em> */}
@@ -891,7 +945,7 @@ function LiveTemplateExperience() {
               aria-selected={active === i}
               className={`texp-tab ${tabsIn[i] ? 'tab-in' : ''} ${active === i ? 'on' : ''}`}
               style={{ ['--i' as string]: i }}
-              onClick={() => { if (i !== active) { setLoading(true); setActive(i) } }}
+              onClick={() => selectTemplate(i)}
             >
               <span className="texp-tab-num">{String(t.n).padStart(2,'0')}</span>
               <span className="texp-tab-body">
@@ -927,7 +981,7 @@ function LiveTemplateExperience() {
                     aria-pressed={device === d}
                     aria-label={`Preview ${d}`}
                     title={d.charAt(0).toUpperCase() + d.slice(1)}
-                    onClick={() => { userPickedDevice.current = true; if (d !== device) { setLoading(true); setDevice(d) } }}
+                    onClick={() => selectDevice(d)}
                   >
                     {d === 'mobile' ? '▯' : d === 'tablet' ? '▭' : '▢'}
                   </button>
@@ -938,7 +992,7 @@ function LiveTemplateExperience() {
               )}
             </div>
             <div ref={frameWrapRef} className={`texp-frame-wrap is-${device}`}>
-              {loading && (
+              {loading && shouldLoadFrame && (
                 <div className="texp-loading">
                   <span className="texp-spin" />
                   <span className="texp-loading-t">Loading {cur.name}…</span>
@@ -951,20 +1005,23 @@ function LiveTemplateExperience() {
                   height: `${FULL_PAGE_H[device] * scale}px`,
                 }}
               >
-                <iframe
-                  ref={iframeElRef}
-                  key={`${cur.id}-${device}`}
-                  className={frameClass}
-                  src={previewUrl}
-                  title={`${cur.name} live preview`}
-                  onLoad={handleIframeLoad}
-                  style={{
-                    width: `${DESIGN_W[device]}px`,
-                    height: `${FULL_PAGE_H[device]}px`,
-                    transform: `scale(${scale})`,
-                    transformOrigin: 'top left',
-                  }}
-                />
+                {shouldLoadFrame && (
+                  <iframe
+                    ref={iframeElRef}
+                    key={cur.id}
+                    className={frameClass}
+                    src={previewUrl}
+                    title={`${cur.name} live preview`}
+                    loading="lazy"
+                    onLoad={handleIframeLoad}
+                    style={{
+                      width: `${DESIGN_W[device]}px`,
+                      height: `${FULL_PAGE_H[device]}px`,
+                      transform: `scale(${scale})`,
+                      transformOrigin: 'top left',
+                    }}
+                  />
+                )}
               </div>
             </div>
           </div>
@@ -1499,158 +1556,9 @@ function FaqItem({ q, a, idx }: { q: string; a: string; idx: number }) {
 /* ─────────────────────────────────────────────────────────────────
    SITE FOOTER - premium editorial footer, sits above <FooterReveal/>
 ───────────────────────────────────────────────────────────────── */
-const FOOTER_COLS = [
-  {
-    h: 'Platform',
-    links: [
-      { l: 'Templates', href: '#experience' },
-      { l: 'Try Demo', href: '#templates' },
-      { l: 'Pricing', href: '#pricing' },
-      { l: 'Therapist Directory', href: '#therapists' },
-      { l: 'List Your Practice', href: '/signup' },
-    ],
-  },
-  {
-    h: 'Company',
-    links: [
-      { l: 'About Us', href: '#' },
-      { l: 'Blog', href: '#' },
-      { l: 'Careers', href: '#' },
-      { l: 'Contact', href: 'mailto:hello@counsellorsofindia.com' },
-    ],
-  },
-  {
-    h: 'Support',
-    links: [
-      { l: 'Help Center', href: '#' },
-      { l: 'FAQs', href: '#faq' },
-      { l: 'Therapist Guidelines', href: '#' },
-      { l: 'Community', href: '#' },
-    ],
-  },
-  {
-    h: 'Legal',
-    links: [
-      { l: 'Terms of Service', href: '#' },
-      { l: 'Privacy Policy', href: '#' },
-      { l: 'Refund Policy', href: '#' },
-      { l: 'Cookie Policy', href: '#' },
-    ],
-  },
-]
-
-const FOOTER_SOCIALS = [
-  { name: 'Instagram', href: '#', icon: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="3.6"/><circle cx="17.2" cy="6.8" r="1"/></svg>
-  )},
-  { name: 'LinkedIn', href: '#', icon: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4.5h.01M3.5 8h3v12h-3z"/><path d="M9.5 20V8h3v1.8c.7-1.2 2-2.1 3.8-2.1 2.8 0 4.7 1.9 4.7 5.3V20h-3v-6.6c0-1.6-.6-2.7-2.1-2.7-1.4 0-2.4 1-2.4 2.7V20z"/></svg>
-  )},
-  { name: 'X', href: '#', icon: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4l16 16M20 4L4 20"/></svg>
-  )},
-  { name: 'Email', href: 'mailto:hello@counsellorsofindia.com', icon: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7 8 6 8-6"/></svg>
-  )},
-]
-
-function SiteFooter() {
-  const [email, setEmail] = useState('')
-  const [sent, setSent] = useState(false)
-
-  function onSubscribe(e: React.FormEvent) {
-    e.preventDefault()
-    if (!email.trim()) return
-    setSent(true)
-    setEmail('')
-  }
-
-  return (
-    <footer className="pfoot" aria-label="Site footer">
-      <div className="pfoot-glow" aria-hidden="true" />
-      <div className="pfoot-inner">
-
-        {/* top: brand + newsletter */}
-        <div className="pfoot-top">
-          <div className="pfoot-brand">
-            <Link href="/" className="pfoot-logo">
-              <img src="/coi.png" alt="" className="pfoot-logo-img" />
-              <span>Counsellors<br/>of India</span>
-            </Link>
-            <p className="pfoot-tag">
-              A calm, trusted home for every counselling practice in India, websites, bookings, and payments in one place.
-            </p>
-            <div className="pfoot-socials">
-              {FOOTER_SOCIALS.map(s => (
-                <a key={s.name} href={s.href} aria-label={s.name} className="pfoot-social">
-                  {s.icon}
-                </a>
-              ))}
-            </div>
-          </div>
-
-          <form className="pfoot-news" onSubmit={onSubscribe}>
-            <div className="pfoot-news-h">Get practice-growth tips</div>
-            <p className="pfoot-news-s">One short email a month. No spam, unsubscribe anytime.</p>
-            {sent ? (
-              <div className="pfoot-news-thanks">You're on the list - thank you!</div>
-            ) : (
-              <div className="pfoot-news-row">
-                <input
-                  type="email"
-                  required
-                  placeholder="you@example.com"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  className="pfoot-news-input"
-                  aria-label="Email address"
-                />
-                <button type="submit" className="pfoot-news-btn">
-                  Subscribe
-                </button>
-              </div>
-            )}
-          </form>
-        </div>
-
-        <div className="pfoot-rule" />
-
-        {/* link columns */}
-        <div className="pfoot-cols">
-          {FOOTER_COLS.map(col => (
-            <div key={col.h} className="pfoot-col">
-              <div className="pfoot-col-h">{col.h}</div>
-              <ul className="pfoot-col-list">
-                {col.links.map(link => (
-                  <li key={link.l}>
-                    <a href={link.href}>{link.l}</a>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-        </div>
-
-        <div className="pfoot-rule" />
-
-        {/* bottom bar */}
-        <div className="pfoot-bottom">
-          <div className="pfoot-bottom-l">
-            <span>© {new Date().getFullYear()} Counsellors of India. All rights reserved.</span>
-            <span className="pfoot-bottom-sep" />
-            <span>Made with care in India</span>
-          </div>
-          <div className="pfoot-badges">
-            <span className="pfoot-badge">🔒 Secured Payments</span>
-            <span className="pfoot-badge">Razorpay</span>
-            <span className="pfoot-badge">UPI · Cards · Netbanking</span>
-          </div>
-        </div>
-
-      </div>
-    </footer>
-  )
-}
+// SiteFooter now lives in @/components/layout/SiteFooter (shared with
+// every standalone marketing page: About, Why Us, Onboarding Guide, Blog,
+// Contact) instead of being defined locally here.
 
 /* ─────────────────────────────────────────────────────────────────
    MAIN PAGE
@@ -1856,7 +1764,8 @@ export default function Home() {
 
 
 {/* ───────────────────────────── NAVBAR ───────────────────────────── */}
-<nav className={`nav ${scrolled ? 'scrolled' : ''}`}>
+<nav className={`nav site-topnav ${scrolled ? 'scrolled' : ''}`}>
+  <div className="nav-inner">
 
   <Link href="/" className="logo">
     <img src="/coi.png" alt="" className="logo-img"/>
@@ -1895,6 +1804,7 @@ export default function Home() {
     <span></span>
   </button>
 
+  </div>
 </nav>
 
 <>
@@ -2031,6 +1941,11 @@ export default function Home() {
             <p className="how-sub" style={{textAlign:'center'}}>
               Four calm steps from sign-up to your first client booking, no website builder, no code, no technical skills.
             </p>
+            <div className="how-proof">
+              <span className="how-proof-chip">No coding required</span>
+              <span className="how-proof-chip">4 simple steps</span>
+              <span className="how-proof-chip">Live the same day</span>
+            </div>
           </div>
 
           <HowTimeline />
@@ -2114,7 +2029,12 @@ export default function Home() {
                       <button type="button" className="td-empty-reset" onClick={()=>{setSearch('');setFilter('all')}}>Reset filters</button>
                     </div>
                   )
-                : [...filtered].filter(t => t.username !== 'harsh'  ).slice(0,6).map((t, idx) => {
+                : [...filtered].filter(t => {
+                    const hidden = ['ayush', 'harsh', 'himangi']
+                    const uname = (t.username || '').toLowerCase()
+                    const fname = (t.full_name || t.name || '').toLowerCase()
+                    return !hidden.some(h => uname === h || uname.includes(h) || fname.includes(h))
+                  }).slice(0,6).map((t, idx) => {
                     const name = t.full_name || t.name || 'Therapist'
                     const photo = t.photo_url || ''
                     const role = t.title || t.qualification || ''
@@ -2168,7 +2088,7 @@ export default function Home() {
                             {exp>0 && modeLabel && <span className="td-card-meta-sep"/>}
                             {modeLabel && <span>{modeLabel}</span>}
                           </div>
-                          {fee && (
+                          {fee != null && fee > 0 && (
                             <div className="td-card-fee">
                               <span className="td-card-fee-n">₹{fee.toLocaleString('en-IN')}</span>
                               <span className="td-card-fee-l">/ session</span>
@@ -2324,7 +2244,7 @@ export default function Home() {
   
       </section>
 
-      {/* <SiteFooter /> */}
+      <SiteFooter />
 
       <FooterReveal />
 

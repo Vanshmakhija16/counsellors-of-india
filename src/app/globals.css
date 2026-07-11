@@ -594,3 +594,44 @@ html, body {
   overflow-x: hidden;   /* safe for x-axis only */
   overflow-y: visible;  /* explicitly keep y unclipped */
 }
+
+/* ─────────────────────────────────────
+   FOOTERREVEAL WORDMARK — letter-by-letter saffron wave on hover.
+   Each letter is its own span carrying --i (its index). On hovering the
+   whole word, every letter runs the same color keyframe, but staggered by
+   --i * 35ms, so the saffron color visibly travels across the word left
+   to right and each letter settles back to white behind it.
+───────────────────────────────────── */
+.fr-letter {
+  display: inline-block;
+  color: rgba(255,255,255,0.92);
+}
+.fr-word:hover .fr-letter {
+  animation: fr-letter-wave 0.7s ease;
+  animation-delay: calc(var(--i) * 35ms);
+}
+@keyframes fr-letter-wave {
+  0%   { color: rgba(255,255,255,0.92); }
+  45%  { color: #FF9933; }
+  100% { color: rgba(255,255,255,0.92); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fr-word:hover .fr-letter { animation: none; }
+}
+
+/* ─────────────────────────────────────
+   TOP NAV VISIBILITY vs FOOTER
+   Any top nav tagged .site-topnav (homepage's <nav class="nav">, and the
+   standalone marketing pages' MarketingHeader) fades out and stops
+   receiving clicks while the site footer (<SiteFooter/>) is in view, so
+   the two never visually overlap. Toggled by an IntersectionObserver in
+   SiteFooter.tsx, which adds/removes 'footer-in-view' on <body>.
+───────────────────────────────────── */
+.site-topnav {
+  transition: opacity .28s ease, transform .28s ease;
+}
+body.footer-in-view .site-topnav {
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+}

@@ -5,7 +5,7 @@ export default function FooterReveal() {
   return (
     <div
       className="relative bottom-0 z-0 h-[50vh] w-full flex flex-col items-center justify-center overflow-hidden"
-      style={{ background: '#0a0a0a' }}
+      style={{ background: 'var(--surf-dark, #14110C)' }}
     >
 
       {/* ── Subtle grid texture ── */}
@@ -20,13 +20,7 @@ export default function FooterReveal() {
         // }}
       />
 
-      {/* ── Radial glow — center ── */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          background: 'radial-gradient(ellipse 70% 50% at 50% 60%, rgba(90,127,122,0.18), transparent)',
-        }}
-      />
+      {/* Radial glow overlay removed — flat solid background now, to match SiteFooter exactly */}
 
       {/* ── Content ── */}
       <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
@@ -41,14 +35,17 @@ export default function FooterReveal() {
 
         {/* Hero type — the big statement */}
         <h2
-          className="font-bold leading-[0.9] tracking-tighter mb-8 select-none"
+          className="font-bold leading-[0.9] tracking-tighter mb-8 select-none fr-word"
           style={{
             fontSize: 'clamp(52px, 7vw, 140px)',
-            color: 'rgba(255,255,255,0.92)',
             letterSpacing: '-0.01em',
           }}
         >
-          Counsellors of India
+          {'Counsellors of India'.split('').map((ch, i) => (
+            <span key={i} className="fr-letter" style={{ ['--i' as string]: i }}>
+              {ch === ' ' ? '\u00A0' : ch}
+            </span>
+          ))}
         </h2>
 
         {/* Sub statement */}

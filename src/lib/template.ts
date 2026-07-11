@@ -1,4 +1,4 @@
-export type TemplateId = 'classic' | 'classic2' | 'classic3' | 'classic4' | 'classic5' | 'classic6'
+export type TemplateId = 'classic' | 'classic2' | 'classic3' | 'classic4' | 'classic5' | 'classic6' | 'classic7'
 export type ColorId   = 'teal' | 'amber' | 'rose' | 'indigo' | 'slate' | 'sage'
 
 export interface TemplateColor {
@@ -124,6 +124,11 @@ export const TEMPLATE_SECTIONS: Record<TemplateId, SectionConfig[]> = {
     { id: 'booking',      label: 'Book Session',  defaultEnabled: true },
     { id: 'footer',       label: 'Footer',        defaultEnabled: true },
   ],
+  // classic7 ('The Atrium') is still being built section by section — only
+  // the hero exists so far. More get appended here as they're designed.
+  classic7: [
+    { id: 'hero', label: 'Hero', defaultEnabled: true },
+  ],
 }
 
 // ─── Templates ────────────────────────────────────────────────────────────────
@@ -193,6 +198,17 @@ export const TEMPLATES: Template[] = [
     accent: '#C79A3D',
     bg: '#2A2330',
     sections: TEMPLATE_SECTIONS.classic6,
+  },
+  {
+    id: 'classic7',
+    name: 'The Atrium',
+    tagline: 'Opens with a counted-in arrival ritual, then ink, brass, and quiet precision',
+    style: 'Ink · Brass · Premium',
+    plan: 'growth',
+    thumbnail: 'classic7',
+    accent: '#BE9552',
+    bg: '#0E1B17',
+    sections: TEMPLATE_SECTIONS.classic7,
   },
 ]
 

@@ -9,6 +9,8 @@ import ClassicTemplate2 from '@/components/booking/templates/ClassicTemplate2'
 import ClassicTemplate3 from '@/components/booking/templates/ClassicTemplate3'
 import ClassicTemplate4 from '@/components/booking/templates/ClassicTemplate4'
 import ClassicTemplate5 from '@/components/booking/templates/ClassicTemplate5'
+import ClassicTemplate6 from '@/components/booking/templates/ClassicTemplate6'
+import ClassicTemplate7 from '@/components/booking/templates/ClassicTemplate7'
 
 interface Props {
   templateId: TemplateId
@@ -23,6 +25,7 @@ const TEMPLATE_NAMES: Record<TemplateId, string> = {
   classic4: 'Premium Black',
   classic5: 'Calm & Natural',
   classic6: 'The Quiet Room',
+  classic7: 'The Atrium',
 }
 
 // Render at this fixed width (a realistic desktop viewport),
@@ -37,6 +40,8 @@ function renderTemplate(id: TemplateId) {
     case 'classic3': return <ClassicTemplate3 therapist={SAMPLE_THERAPIST} />
     case 'classic4': return <ClassicTemplate4 therapist={SAMPLE_THERAPIST} />
     case 'classic5': return <ClassicTemplate5 therapist={SAMPLE_THERAPIST} />
+    case 'classic6': return <ClassicTemplate6 therapist={SAMPLE_THERAPIST} />
+    case 'classic7': return <ClassicTemplate7 therapist={SAMPLE_THERAPIST} />
   }
 }
 

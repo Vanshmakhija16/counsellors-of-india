@@ -9,7 +9,7 @@ interface FAQProps {
 }
 
 export default function FAQ({ therapist }: FAQProps) {
-  const [open, setOpen] = useState<number | null>(0)
+  const [open, setOpen] = useState<number | null>(null)
   const sectionRef = useRef<HTMLElement | null>(null)
   const ct3 = resolveCT3Content(therapist.profile_content?.classic3)
   const faqs = ct3.faq

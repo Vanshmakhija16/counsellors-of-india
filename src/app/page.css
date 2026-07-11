@@ -86,27 +86,28 @@ body,.pg{font-family:var(--sans);background:var(--bg);color:var(--ink);-webkit-f
 .nav-mobile-title{ display:none; } /* hidden on desktop — shown only on mobile/tablet, see media query below */
 .nav{
   position:fixed;
-  top:14px;left:50%;transform:translateX(-50%);
-  width:calc(100% - 32px);max-width:1180px;
-  height:58px;padding:0 10px 0 22px;
+  top:0;left:0;
+  width:100%;max-width:none;
+  height:64px;padding:0 clamp(16px,4vw,40px);
   display:flex;align-items:center;justify-content:space-between;gap:1rem;
   z-index:1000;
-  border-radius:999px;
-  background:rgba(255,252,248,0.82);
-  border:1px solid rgba(230,210,185,0.55);
+  border-radius:0;
+  background:rgba(255,252,248,0.9);
+  border:none;
+  border-bottom:1.5px solid var(--wn-saffron,#FF9933);
   backdrop-filter:blur(18px) saturate(140%);
   -webkit-backdrop-filter:blur(18px) saturate(140%);
-  box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 8px 28px -8px rgba(180,120,50,.10);
+  box-shadow:none;
   transition:background .4s ease,border-color .4s ease,box-shadow .4s ease;
 }
 .nav.scrolled{
-  background:rgba(255,250,244,0.96);
-  border-color:rgba(220,195,160,0.6);
-  box-shadow:0 1px 0 rgba(255,255,255,.95) inset,0 10px 32px -8px rgba(180,120,50,.13);
+  background:rgba(255,250,244,0.98);
+  border-bottom-color:var(--wn-saffron-deep,#E07A12);
+  box-shadow:0 8px 24px -12px rgba(180,120,50,.14);
 }
 .logo{
 font-family: "Times New Roman", Times, serif;font-size:16px;font-weight:900;
-  color:rgba(255,255,255,.95);text-decoration:none;letter-spacing:-.02em;
+  color:var(--ink);text-decoration:none;letter-spacing:-.02em;
   display:flex;align-items:center;gap:10px;flex-shrink:0;
   transition:color .35s ease;
 }
@@ -124,7 +125,7 @@ font-family: "Times New Roman", Times, serif;font-size:16px;font-weight:900;
 @media(max-width:780px){.nav-mid{display:none}}
 .nav-a{
   font-size:13.5px;font-weight:400;
-  color:rgba(255,255,255,.62);
+  color:var(--ink2);
   text-decoration:none;background:none;border:none;cursor:pointer;
   transition:color .2s;letter-spacing:-.003em;
 }
@@ -151,10 +152,10 @@ font-family: "Times New Roman", Times, serif;font-size:16px;font-weight:900;
 }
 .nav.scrolled .btn-line:hover{background:rgba(31,28,24,.05);color:var(--ink);border-color:rgba(31,28,24,.22)}
 .btn-dark{
-  background:transparent;color:#fff;border-color:var(--wn-saffron,#FF9933);
-  box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 8px 20px -6px rgba(255,153,51,.55);
+  background:var(--paper,#fff);color:var(--wn-saffron-deep,#E07A12);border-color:var(--wn-saffron,#FF9933);
+  box-shadow:0 8px 20px -8px rgba(255,153,51,.35);
 }
-.btn-dark:hover{background:var(--wn-saffron-deep,#E07A12);transform:translateY(-1px);box-shadow:0 10px 26px -6px rgba(255,153,51,.5)}
+.btn-dark:hover{background:var(--wn-saffron,#FF9933);color:#fff;transform:translateY(-1px);box-shadow:0 10px 26px -6px rgba(255,153,51,.5)}
 .btn-gold{background:var(--wn-saffron,#FF9933);color:#fff}
 .btn-gold:hover{background:var(--wn-saffron-deep,#E07A12);transform:translateY(-1px);box-shadow:0 10px 26px -6px rgba(255,153,51,.45)}
 .btn-line{background:transparent;color:var(--ink2);border:1px solid var(--border)}
@@ -1368,7 +1369,7 @@ font-family: "Times New Roman", Times, serif;font-size:16px;font-weight:900;
 
 
 
-:root{ --bg: #F6F3EE; --surface: rgba(255,255,255,.65); --text: #1F1C18; --muted: #6E685F; --line: #E7E1D8; --green: #456554; --green-dark: #31493C; } /* ───────────────────────────── NAVBAR ───────────────────────────── */ .nav{ position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; height: 78px; display:flex; align-items:center; justify-content:space-between; padding:0 42px; background: rgba(246,243,238,.78); backdrop-filter: blur(14px); border-bottom:1px solid rgba(231,225,216,.7); } .logo{ display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--text); font-size:15px; font-weight:500; } .logo-dot{ width:8px; height:8px; border-radius:999px; background:var(--green); } .nav-links{ display:flex; align-items:center; gap:38px; } .nav-links a{ text-decoration:none; color:var(--muted); font-size:14px; font-weight:500; transition:.2s ease; } .nav-links a:hover{ color:var(--text); } .nav-actions{ display:flex; align-items:center; gap:12px; } /* ───────────────────────────── BUTTONS ───────────────────────────── */ .btn{ height:44px; padding:0 18px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; font-size:14px; font-weight:500; transition:.2s ease; } .btn-light{ border:1px solid var(--line); background:transparent; color:var(--text); } .btn-light:hover{ background:#EFEAE2; } .btn-dark{ background:var(--green); color:white; } .btn-dark:hover{ background:var(--green-dark); } /* ───────────────────────────── HERO ───────────────────────────── */ 
+:root{ --bg: #F6F3EE; --surface: rgba(255,255,255,.65); --text: #1F1C18; --muted: #6E685F; --line: #E7E1D8; --green: #456554; --green-dark: #31493C; } /* ───────────────────────────── NAVBAR ───────────────────────────── */ .nav-legacy-unused-1{ position: fixed; top: 0; left: 0; width: 100%; z-index: 1000; height: 78px; display:flex; align-items:center; justify-content:space-between; padding:0 42px; background: rgba(246,243,238,.78); backdrop-filter: blur(14px); border-bottom:1px solid rgba(231,225,216,.7); } .logo{ display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--text); font-size:15px; font-weight:500; } .logo-dot{ width:8px; height:8px; border-radius:999px; background:var(--green); } .nav-links{ display:flex; align-items:center; gap:38px; } .nav-links a{ text-decoration:none; color:var(--muted); font-size:14px; font-weight:500; transition:.2s ease; } .nav-links a:hover{ color:var(--text); } .nav-actions{ display:flex; align-items:center; gap:12px; } /* ───────────────────────────── BUTTONS ───────────────────────────── */ .btn{ height:44px; padding:0 18px; border-radius:12px; display:inline-flex; align-items:center; justify-content:center; text-decoration:none; font-size:14px; font-weight:500; transition:.2s ease; } .btn-light{ border:1px solid var(--line); background:transparent; color:var(--text); } .btn-light:hover{ background:#EFEAE2; } .btn-dark{ background:var(--green); color:white; } .btn-dark:hover{ background:var(--green-dark); } /* ───────────────────────────── HERO ───────────────────────────── */ 
 
 
 
@@ -1403,7 +1404,7 @@ font-family: "Times New Roman", Times, serif;font-size:16px;font-weight:900;
    A centred capsule that hovers below the top edge. Frosted blur,
    soft transparency, rounded fully, premium spacing. It deepens a
    touch on scroll. GPU-only transitions. */
-.nav {
+.nav-legacy-unused-2 {
   position: fixed;
   top: 16px;
   /* left: 50%; */
@@ -1446,7 +1447,7 @@ max-width:none;
 
 
   /* background: rgba(251, 249, 244, 2); */
-  background:   rgba(255, 214, 164, 1);
+  background:   rgb(211, 138, 48);
 
 
   border: 1px solid rgba(255,255,255,.65);
@@ -3985,8 +3986,10 @@ padding:
   font-size: clamp(34px, 4.4vw, 56px);
   line-height: 1.08;
   letter-spacing: -.025em;
-  color: white;
-  /* // color: var(--wn-text); */
+  /* FIX: this was `color: white` — leftover from an earlier dark-background
+     version of this section. .how-section's actual background is a light
+     cream gradient, so white text here was nearly invisible. */
+  color: var(--wn-text, #1F1C18);
   font-variation-settings: 'SOFT' 50;
 }
 .how-h em{
@@ -4001,9 +4004,34 @@ padding:
   font-size: 15.5px;
   font-weight: 300;
   line-height: 1.7;
-  /* // color: var(--wn-muted); */
-  color: white;
+  /* FIX: same white-on-light bug as .how-h above. */
+  color: var(--wn-muted, #6E685F);
   letter-spacing: -.003em;
+}
+.how-proof{
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 1.6rem 0 0;
+}
+.how-proof-chip{
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 7px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(31,28,24,.08);
+  background: rgba(255,255,255,.65);
+  font-family: var(--sans);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--wn-text, #1F1C18);
+}
+.how-proof-chip::before{
+  content: '';
+  width: 6px; height: 6px; border-radius: 50%;
+  background: #FF9933;
 }
 .how-grid{
   position: relative;
@@ -6503,9 +6531,20 @@ padding:
   display:none;                   /* Chrome, Safari, new Edge */
 }
 
-/* sized to the scaled hero footprint (set inline); holds the scaled iframe */
+/* sized to the scaled hero footprint (set inline); holds the scaled iframe.
+   content-visibility:auto skips layout/paint work for this box while it's
+   off-screen (mirrors the same trick already used on .td-section etc) —
+   cheap to add, real win since the embedded preview's design height runs
+   3200–4200px. contain-intrinsic-size reserves space so the wrapper's
+   scroll height doesn't jump once it virtualises in. */
+.texp-frame-wrap{
+  content-visibility:auto;
+  contain-intrinsic-size:auto 900px;
+}
 .texp-frame-scaler{
   position:relative;flex:none;overflow:hidden;
+  content-visibility:auto;
+  contain-intrinsic-size:auto 900px;
 }
 .texp-frame{
   border:0;display:block;background:#fff;
@@ -8266,22 +8305,72 @@ section#experience.texp {
   .hero-bn-peek{ margin-top:2.5rem; }
 }
 
-/* ── Navbar — warm frosted ivory glass pill, sits gently on the lighter saffron-tinted hero ── */
+/* ── Navbar — FINAL override, wins over all earlier legacy .nav blocks in this
+   file (there were 3 conflicting ones: an old 78px bar, a floating
+   glassmorphism pill, and a mobile pill). Full-width, flush to the top,
+   saffron underline — no floating capsule, ever, at any breakpoint. ── */
 .nav{
-  background:rgba(255,252,247,0.72) !important;
-  border:1px solid rgba(255,255,255,0.6) !important;
-  box-shadow:0 1px 0 rgba(255,255,255,.7) inset,0 8px 28px -10px rgba(180,120,50,.18) !important;
+  position:fixed !important;
+  top:16px !important; left:50% !important;
+  transform:translateX(-50%) !important;
+  width:85% !important; max-width:85% !important;
+  height:54px !important;
+  padding:0 clamp(16px,4vw,40px) !important;
+  border-radius:999px !important;
+  background:rgba(255,252,247,0.96) !important;
+  border:none !important;
+  border-bottom:none !important;
+  box-shadow:none !important;
   backdrop-filter:blur(18px) saturate(140%) !important;
   -webkit-backdrop-filter:blur(18px) saturate(140%) !important;
+  /* The actual flex row lives on .nav-inner (see below) since that's the
+     real wrapper the JSX renders inside .nav — .nav itself is now just the
+     fixed positioned bar / background. */
+  display:block !important;
+}
+/* The JSX wraps logo + nav-mid + nav-r + menu-btn in a .nav-inner div that
+   had NO styling at all, so it defaulted to a plain block and everything
+   inside stacked vertically instead of sitting in a row. This is the fix. */
+.nav-inner{
+  width:100%;
+  height:100%;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:1rem;
+}
+/* Logo flush to the left edge, links + CTA grouped flush to the right edge. */
+.nav-inner .logo{
+  margin-left:0;
+}
+.nav-inner .nav-r{
+  margin-right:0;
+}
+.nav .nav-mid{
+  position:static !important;
+  left:auto !important;
+  transform:none !important;
+  margin-left:auto !important;
+  margin-right:24px !important;
 }
 .nav.scrolled{
-  background:rgba(255,251,246,0.92) !important;
-  border:1px solid rgba(230,210,185,0.55) !important;
+  background:rgba(255,251,246,0.99) !important;
+  border:none !important;
+  border-bottom:none !important;
+  box-shadow:0 4px 14px -10px rgba(31,26,20,.14) !important;
   backdrop-filter:blur(18px) saturate(140%) !important;
   -webkit-backdrop-filter:blur(18px) saturate(140%) !important;
-  box-shadow:0 1px 0 rgba(255,255,255,.85) inset,0 10px 30px -10px rgba(180,120,50,.16) !important;
+}
+@media (max-width: 980px){
+  .nav{
+    width:92% !important; max-width:92% !important;
+    height:64px !important;
+    padding:0 16px !important;
+  }
 }
 /* dark text reads cleanly on the light ivory pill in both states */
+.nav .btn-dark{ border-radius:20px !important; }
+.nav .logo-img{ height:99px !important; width:auto !important; opacity:1 !important; }
 .nav .logo{ color:var(--ink) !important; }
 .nav .logo-tagline{ color:var(--ink2) !important; }
 .nav .nav-a{ color:var(--ink2) !important; }
@@ -8358,7 +8447,7 @@ section#experience.texp {
   background: var(--surf-dark, #14110C);
   color: rgba(255,255,255,.72);
   overflow: hidden;
-  padding: clamp(3.5rem, 7vw, 5.5rem) clamp(1.5rem, 5vw, 3rem) clamp(2rem, 4vw, 2.6rem);
+  padding: clamp(4.5rem, 9vw, 7rem) calc(var(--section-x, clamp(1.5rem, 6vw, 6rem)) + 2.75rem) clamp(2.6rem, 5vw, 3.4rem);
 }
 .pfoot-glow{
   position: absolute; inset: 0; pointer-events: none; z-index: 0;
@@ -8368,34 +8457,44 @@ section#experience.texp {
 }
 .pfoot-inner{
   position: relative; z-index: 2;
-  max-width: 1180px;
+  max-width: 1360px;
   margin: 0 auto;
 }
 
 /* ── top: brand + newsletter ── */
 .pfoot-top{
-  display: grid;
-  grid-template-columns: minmax(0,1.15fr) minmax(300px, 0.85fr);
-  gap: clamp(2rem, 5vw, 4rem);
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(3rem, 6vw, 5rem);
   align-items: start;
 }
-.pfoot-brand{ max-width: 380px; }
+.pfoot-brand{ flex: 0 1 440px; }
+.pfoot-col{ flex: 0 0 auto; min-width: 130px; }
+.pfoot-col:nth-of-type(2){ margin-left: clamp(1rem, 3vw, 2.5rem); }
+@media(max-width: 900px){
+  .pfoot-top{ gap: 2.4rem 3rem; }
+}
+@media(max-width: 760px){
+  .pfoot-top{ flex-direction: column; gap: 2.4rem; }
+}
+.pfoot-col-news .pfoot-news{ padding: 0; background: none; border: none; border-radius: 0; }
+.pfoot-brand{ max-width: 440px; }
 .pfoot-logo{
-  display: inline-flex; align-items: center; gap: 12px;
+  display: inline-flex; align-items: center; gap: 14px;
   text-decoration: none; color: #fff;
-  font-family: var(--display); font-size: 15px; font-weight: 500;
+  font-family: var(--display); font-size: 17px; font-weight: 500;
   letter-spacing: -.01em; line-height: 1.15;
 }
-.pfoot-logo-img{ height: 40px; width: auto; object-fit: contain; flex-shrink: 0; }
+.pfoot-logo-img{ height: 48px; width: auto; object-fit: contain; flex-shrink: 0; }
 .pfoot-tag{
-  margin: 1.1rem 0 0;
-  font-family: var(--sans); font-size: 13.5px; font-weight: 300; line-height: 1.7;
+  margin: 1.3rem 0 0;
+  font-family: var(--sans); font-size: 14.5px; font-weight: 300; line-height: 1.75;
   color: rgba(255,255,255,.5);
-  max-width: 36ch;
+  max-width: 38ch;
 }
-.pfoot-socials{ display: flex; gap: 10px; margin-top: 1.4rem; }
+.pfoot-socials{ display: flex; gap: 12px; margin-top: 1.6rem; }
 .pfoot-social{
-  width: 36px; height: 36px; border-radius: 50%;
+  width: 42px; height: 42px; border-radius: 50%;
   display: inline-flex; align-items: center; justify-content: center;
   background: rgba(255,255,255,.06);
   border: 1px solid rgba(255,255,255,.1);
@@ -8412,61 +8511,71 @@ section#experience.texp {
 .pfoot-news{
   background: rgba(255,255,255,.04);
   border: 1px solid rgba(255,255,255,.08);
-  border-radius: 18px;
-  padding: 1.5rem 1.6rem;
+  border-radius: 20px;
+  padding: 1.7rem 1.8rem;
 }
 .pfoot-news-h{
-  font-family: var(--display); font-size: 16px; font-weight: 500;
+  font-family: var(--display); font-size: 18px; font-weight: 500;
   color: #fff; letter-spacing: -.012em;
 }
 .pfoot-news-s{
   margin: 6px 0 0;
-  font-family: var(--sans); font-size: 12.5px; font-weight: 300;
+  font-family: var(--sans); font-size: 13.5px; font-weight: 300;
   color: rgba(255,255,255,.45); line-height: 1.55;
 }
-.pfoot-news-row{ display: flex; gap: 8px; margin-top: 1rem; }
+.pfoot-news-row{ display: flex; gap: 10px; margin-top: 1.1rem; }
 .pfoot-news-input{
   flex: 1; min-width: 0;
-  height: 42px; padding: 0 14px; border-radius: 10px;
+  height: 48px; padding: 0 16px; border-radius: 12px;
   background: rgba(255,255,255,.06);
   border: 1px solid rgba(255,255,255,.12);
-  color: #fff; font-family: var(--sans); font-size: 13px;
+  color: #fff; font-family: var(--sans); font-size: 14px;
   outline: none; transition: border-color .2s, background .2s;
 }
 .pfoot-news-input::placeholder{ color: rgba(255,255,255,.32); }
 .pfoot-news-input:focus{ border-color: var(--wn-saffron, #FF9933); background: rgba(255,255,255,.09); }
 .pfoot-news-btn{
-  height: 42px; padding: 0 18px; border-radius: 10px; border: none; cursor: pointer;
+  height: 48px; padding: 0 22px; border-radius: 12px; border: none; cursor: pointer;
   background: var(--wn-saffron, #FF9933); color: #fff;
-  font-family: var(--sans); font-size: 13px; font-weight: 600; letter-spacing: -.005em;
+  font-family: var(--sans); font-size: 14px; font-weight: 600; letter-spacing: -.005em;
   white-space: nowrap; flex-shrink: 0;
   transition: background .2s ease, transform .2s ease;
 }
 .pfoot-news-btn:hover{ background: var(--wn-saffron-deep, #E07A12); transform: translateY(-1px); }
 .pfoot-news-thanks{
-  margin-top: 1rem; font-family: var(--sans); font-size: 13px; font-weight: 500;
+  margin-top: 1.1rem; font-family: var(--sans); font-size: 14px; font-weight: 500;
   color: #FFD9B0;
 }
 
-.pfoot-rule{ height: 1px; background: rgba(255,255,255,.08); margin: clamp(2rem,4vw,3rem) 0; }
+.pfoot-rule{ height: 1px; background: rgba(255,255,255,.08); margin: clamp(2.4rem,5vw,3.6rem) 0; }
 
 /* ── link columns ── */
 .pfoot-cols{
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 2rem;
+  gap: 2.4rem;
+}
+.pfoot-cols-lower{
+  grid-template-columns: minmax(280px,0.9fr) 1fr 1fr;
+  align-items: start;
+}
+.pfoot-cols-lower-solo{
+  grid-template-columns: minmax(320px, 460px);
+  justify-content: start;
 }
 @media(max-width: 760px){
-  .pfoot-cols{ grid-template-columns: repeat(2, 1fr); gap: 1.8rem 1.5rem; }
+  .pfoot-cols{ grid-template-columns: repeat(2, 1fr); gap: 2rem 1.6rem; }
+  .pfoot-cols-lower{ grid-template-columns: 1fr; }
+  .pfoot-cols-lower-solo{ grid-template-columns: 1fr; }
 }
 .pfoot-col-h{
-  font-family: var(--sans); font-size: 11.5px; font-weight: 600;
+  font-family: var(--sans); font-size: 12.5px; font-weight: 600;
   letter-spacing: .12em; text-transform: uppercase;
-  color: rgba(255,255,255,.4); margin-bottom: 1rem;
+  color: rgba(255,255,255,.4); margin-bottom: 1.2rem;
 }
-.pfoot-col-list{ list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .7rem; }
+.pfoot-col-list{ list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .85rem; }
 .pfoot-col-list a{
-  font-family: var(--sans); font-size: 13.5px; font-weight: 400;
+  font-family: var(--sans); font-size: 14.5px; font-weight: 400;
   color: rgba(255,255,255,.65); text-decoration: none;
   transition: color .2s ease;
 }
@@ -8475,26 +8584,26 @@ section#experience.texp {
 /* ── bottom bar ── */
 .pfoot-bottom{
   display: flex; align-items: center; justify-content: space-between;
-  flex-wrap: wrap; gap: 1rem;
+  flex-wrap: wrap; gap: 1.2rem;
+  margin-top: 1rem;
 }
 .pfoot-bottom-l{
-  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  font-family: var(--sans); font-size: 12.5px; font-weight: 400;
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  font-family: var(--sans); font-size: 13.5px; font-weight: 400;
   color: rgba(255,255,255,.4);
 }
 .pfoot-bottom-sep{ width: 3px; height: 3px; border-radius: 50%; background: rgba(255,255,255,.3); }
-.pfoot-badges{ display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pfoot-badges{ display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .pfoot-badge{
-  font-family: var(--sans); font-size: 11px; font-weight: 500;
+  font-family: var(--sans); font-size: 12px; font-weight: 500;
   color: rgba(255,255,255,.55);
-  padding: 6px 12px; border-radius: 999px;
+  padding: 7px 14px; border-radius: 999px;
   background: rgba(255,255,255,.05);
   border: 1px solid rgba(255,255,255,.1);
   white-space: nowrap;
 }
 
 @media(max-width: 900px){
-  .pfoot-top{ grid-template-columns: 1fr; gap: 2rem; }
   .pfoot-brand{ max-width: none; }
 }
 @media(max-width: 480px){
@@ -8520,3 +8629,19 @@ section#experience.texp {
 @media(prefers-reduced-motion: reduce){
   .texp-tab-rv{ transition: none; opacity: 1; transform: none; }
 }
+
+/* ── SiteNav active-link state (marketing pages: About/Why Us/Onboarding
+   Guide/Blog/Contact). Placed last so it wins over the earlier !important
+   .nav-a color rules. Reuses the existing hover underline/color language
+   instead of inventing a new visual treatment. ── */
+.nav .nav-a.on{ color: var(--wn-saffron-deep,#E07A12) !important; }
+.nav .nav-a.on::after{ transform: scaleX(1); }
+.nav.scrolled .nav-a.on{ color: #e98216 !important; }
+
+.sidebar-links a.on{
+  color: #0f172a;
+  background: rgba(255,255,255,0.7);
+  border-color: rgba(255,153,51,.5);
+  box-shadow: 0 12px 28px rgba(255,153,51,.16);
+}
+.sidebar-links a.on::before{ opacity: 1; }

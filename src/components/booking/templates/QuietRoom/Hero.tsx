@@ -1,67 +1,27 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { ArrowDownRight, Clock, Calendar, IndianRupee } from 'lucide-react'
+import { useRef } from 'react'
+import { ArrowDownRight } from 'lucide-react'
 import type { TherapistProfile } from '../templateUtils'
-import { getAvailableDays, slotToISO } from '../templateUtils'
-import { useQuietRoomMotion, prefersReducedMotion } from './_motion'
+import { resolveImage } from '../templateUtils'
+import { useQuietRoomMotion } from './_motion'
 
 interface HeroProps {
   therapist: TherapistProfile
   scrollTo: (id: string) => void
 }
 
-interface NextSlot {
-  dayLabel: string
-  slotLabel: string
-  iso: string
-}
-
-function resolveNextSlot(therapist: TherapistProfile): NextSlot | null {
-  const days = getAvailableDays(therapist.availability, therapist.sessionDuration, 14)
-  const day = days[0]
-  if (!day || day.slots.length === 0) return null
-  const slotLabel = day.slots[0]
-  return { dayLabel: day.label, slotLabel, iso: slotToISO(slotLabel, day.dateObj) }
-}
-
-// Hands are driven by live wall-clock time, so it reads as an actual
-// working clock rather than a static illustration pointing at a future slot.
-function handAngles(now: Date) {
-  const h = now.getHours() % 12
-  const m = now.getMinutes()
-  const s = now.getSeconds()
-  const hourDeg   = h * 30 + m * 0.5
-  const minuteDeg = m * 6 + s * 0.1
-  const secondDeg = s * 6
-  return { hourDeg, minuteDeg, secondDeg }
-}
-
 export default function Hero({ therapist, scrollTo }: HeroProps) {
   const rootRef   = useRef<HTMLElement | null>(null)
   const windowRef = useRef<HTMLDivElement | null>(null)
 
-  const [nextSlot] = useState<NextSlot | null>(() => resolveNextSlot(therapist))
-  const [now, setNow] = useState(() => new Date())
-  const [reducedClock, setReducedClock] = useState(false)
-
   const specialty = therapist.specialties?.[0]?.trim()
   const specialtyList = (therapist.specialties ?? []).slice(0, 3).join(' · ')
-
-  // Tick the clock once a second so it shows the real, current time
-  // (skipped under reduced motion — the face holds at mount time).
-  useEffect(() => {
-    const isReduced = prefersReducedMotion()
-    setReducedClock(isReduced)
-    if (isReduced) return
-    const id = setInterval(() => setNow(new Date()), 1000)
-    return () => clearInterval(id)
-  }, [])
 
   useQuietRoomMotion(({ gsap, ScrollTrigger, reduced, narrow }) => {
     const ctx = gsap.context(() => {
       if (reduced) {
-        gsap.set(['.qr-hero-opener', '.qr-hero-sub', '.qr-hero-actions', '.qr-hero-signoff', '.qr-hero-clockwrap', '.qr-hero-identity'],
+        gsap.set(['.qr-hero-opener', '.qr-hero-sub', '.qr-hero-actions', '.qr-hero-signoff', '.qr-hero-photowrap', '.qr-hero-identity'],
           { opacity: 1, y: 0, scale: 1 })
         return
       }
@@ -73,7 +33,7 @@ export default function Hero({ therapist, scrollTo }: HeroProps) {
         .to('.qr-hero-sub', { opacity: 1, y: 0, duration: 0.8 }, 0.5)
         .to('.qr-hero-actions', { opacity: 1, y: 0, duration: 0.7 }, 0.66)
         .to('.qr-hero-signoff', { opacity: 1, y: 0, duration: 0.6 }, 0.78)
-        .fromTo('.qr-hero-clockwrap', { opacity: 0, scale: 0.92 }, { opacity: 1, scale: 1, duration: 0.9 }, 0.4)
+        .fromTo('.qr-hero-photowrap', { opacity: 0, scale: 0.96 }, { opacity: 1, scale: 1, duration: 0.9 }, 0.4)
 
       const win = windowRef.current
       if (win) {
@@ -104,8 +64,6 @@ export default function Hero({ therapist, scrollTo }: HeroProps) {
     }, rootRef)
     return () => ctx.revert()
   })
-
-  const { hourDeg, minuteDeg, secondDeg } = handAngles(now)
 
   return (
     <section id="home" ref={rootRef} className="qr-dusk qr-hero">
@@ -231,68 +189,21 @@ export default function Hero({ therapist, scrollTo }: HeroProps) {
           opacity: 0;
         }
 
-        /* ── Right: living clock, inside the Window glow ─────────────── */
-        .qr-hero-right { display: flex; align-items: center; justify-content: center; }
-        .qr-hero-clockwrap {
-        // margin-top: [-50px];
+        /* ── Right: therapist portrait ─────────────────────────────── */
+        .qr-hero-right { display: flex; align-items: center; justify-content: center; height: 100%; }
+        .qr-hero-photowrap {
           opacity: 0;
           position: relative;
           width: 100%;
-          max-width: 380px;
-          display: flex; flex-direction: column; align-items: center; gap: 22px;
-          text-align: center;
+          max-width: 420px;
         }
-
-        .qr-hero-clockface {
-          position: relative; width: clamp(190px, 22vw, 240px); height: clamp(190px, 22vw, 240px);
-          border-radius: 50%;
-          background: radial-gradient(circle at 38% 32%, rgba(242,238,228,0.99), rgba(242,238,228,0.94) 70%);
-          box-shadow:
-            0 0 0 1px rgba(242,238,228,0.12),
-            0 30px 70px -20px rgba(199,154,61,0.35),
-            inset 0 0 26px rgba(46,42,38,0.05);
+        .qr-hero-photo {
+          position: relative; width: 100%; aspect-ratio: 4/5;
+          border-radius: 18px; overflow: hidden;
+          background: var(--qr-stone-warm, rgba(242,238,228,0.08));
+          box-shadow: 0 30px 70px -20px rgba(0,0,0,0.4);
         }
-        .qr-hero-clock-tick { position: absolute; left: 50%; top: 5%; width: 1.5px; height: 7px;
-          background: rgba(46,42,38,0.28); transform-origin: 50% 1000%; }
-        .qr-hero-clock-tick.major { height: 11px; width: 2.5px; background: var(--qr-honey); opacity: 0.95; }
-        .qr-hero-clock-hand { position: absolute; left: 50%; bottom: 50%; transform-origin: 50% 100%; border-radius: 4px; }
-        .qr-hero-clock-hand.hour   { width: 5px; height: 25%; margin-left: -2.5px; background: var(--qr-charcoal); }
-        .qr-hero-clock-hand.minute { width: 3.5px; height: 36%; margin-left: -1.75px; background: var(--qr-charcoal); opacity: 0.85; }
-        .qr-hero-clock-hand.second { width: 1.5px; height: 40%; margin-left: -0.75px; background: var(--qr-fig); }
-        .qr-hero-clock-pin { position: absolute; left: 50%; top: 50%; width: 9px; height: 9px;
-          margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: var(--qr-honey); z-index: 3; }
-
-        .qr-hero-clock-kicker {
-          display: flex; align-items: center; gap: 8px;
-          font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 0.1em;
-          text-transform: uppercase; color: var(--qr-honey);
-        }
-        .qr-hero-clock-time {
-          font-family: 'Spectral', serif; font-weight: 300;
-          font-size: clamp(24px, 2.6vw, 30px); line-height: 1.15;
-          color: var(--qr-paper); margin: 0;
-        }
-        .qr-hero-clock-time em { font-style: italic; color: var(--qr-honey); }
-        .qr-hero-clock-none { font-size: 14px; color: rgba(242,238,228,0.6); margin: 0; line-height: 1.5; }
-
-        .qr-hero-clock-meta {
-          display: flex; align-items: center; justify-content: center; gap: 18px; flex-wrap: wrap;
-        }
-        .qr-hero-clock-meta-item {
-          display: flex; align-items: center; gap: 6px;
-          font-family: 'IBM Plex Sans', sans-serif; font-size: 12.5px; color: rgba(242,238,228,0.62);
-        }
-        .qr-hero-clock-meta-item svg { color: var(--qr-honey); flex-shrink: 0; }
-
-        .qr-hero-clock-cta {
-          display: inline-flex; align-items: center; gap: 8px;
-          padding: 13px 24px; border-radius: 12px;
-          border: 1px solid rgba(242,238,228,0.15);
-          background: var(--qr-fig); color: var(--qr-paper); cursor: pointer;
-          font-family: 'IBM Plex Sans', sans-serif; font-size: 13.5px; font-weight: 500;
-          transition: transform 350ms var(--qr-calm-out), box-shadow 350ms var(--qr-calm-out);
-        }
-        .qr-hero-clock-cta:hover { transform: translateY(-2px); box-shadow: 0 14px 30px -10px rgba(139,79,82,0.5); }
+        .qr-hero-photo-img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
         .qr-scrollcue {
           position: absolute; bottom: 28px; left: 50%; transform: translateX(-50%);
@@ -354,52 +265,17 @@ export default function Hero({ therapist, scrollTo }: HeroProps) {
           </div> */}
         </div>
 
-        {/* ── RIGHT: the living clock — the hero's center of gravity ── */}
+        {/* ── RIGHT: therapist portrait ── */}
         <div className="qr-hero-right">
-          <div className="qr-hero-clockwrap">
-            <div className="qr-hero-clock-kicker"><Clock size={11} /> Next available</div>
-
+          <div className="qr-hero-photowrap">
             <div
-              className="qr-hero-clockface"
+              className="qr-hero-photo"
               role="img"
-              aria-label={nextSlot ? `Clock showing next available slot: ${nextSlot.dayLabel}, ${nextSlot.slotLabel}` : 'Clock'}
+              aria-label={therapist.name ? `Photo of ${therapist.name}` : 'Therapist photo'}
             >
-              {Array.from({ length: 12 }).map((_, i) => (
-                <div
-                  key={i}
-                  className={`qr-hero-clock-tick ${i % 3 === 0 ? 'major' : ''}`}
-                  style={{ transform: `rotate(${i * 30}deg)` }}
-                />
-              ))}
-              <div className="qr-hero-clock-hand hour"   style={{ transform: `rotate(${hourDeg}deg)` }} />
-              <div className="qr-hero-clock-hand minute" style={{ transform: `rotate(${minuteDeg}deg)` }} />
-              {!reducedClock && (
-                <div className="qr-hero-clock-hand second" style={{ transform: `rotate(${secondDeg}deg)` }} />
-              )}
-              <div className="qr-hero-clock-pin" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={resolveImage(therapist.image)} alt={therapist.name || 'Therapist'} className="qr-hero-photo-img" />
             </div>
-
-            {nextSlot ? (
-              <p className="qr-hero-clock-time">{nextSlot.dayLabel}, <em>{nextSlot.slotLabel}</em></p>
-            ) : (
-              <p className="qr-hero-clock-none">Reach out to check availability</p>
-            )}
-
-            <div className="qr-hero-clock-meta">
-              <span className="qr-hero-clock-meta-item">
-                <Calendar size={13} />
-                {therapist.sessionDuration ? `${therapist.sessionDuration} min` : '50 min'}
-              </span>
-              <span className="qr-hero-clock-meta-item">
-                <IndianRupee size={13} />
-                {therapist.fee ? `₹${therapist.fee}` : 'Contact for pricing'}
-              </span>
-            </div>
-
-            <button className="qr-hero-clock-cta" onClick={() => scrollTo('book')}>
-              <span>Reserve this slot</span>
-              <ArrowDownRight size={15} />
-            </button>
           </div>
         </div>
 

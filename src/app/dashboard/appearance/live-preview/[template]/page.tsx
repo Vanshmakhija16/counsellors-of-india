@@ -7,6 +7,7 @@ import ClassicTemplate3 from '@/components/booking/templates/ClassicTemplate3'
 import ClassicTemplate4 from '@/components/booking/templates/ClassicTemplate4'
 import ClassicTemplate5 from '@/components/booking/templates/ClassicTemplate5'
 import ClassicTemplate6 from '@/components/booking/templates/ClassicTemplate6'
+import ClassicTemplate7 from '@/components/booking/templates/ClassicTemplate7'
 import PreviewMessageListener from './PreviewMessageListener'
 
 type SearchParams = Promise<{ embed?: string; pc?: string }>
@@ -94,6 +95,7 @@ export default async function LivePreviewPage({
       case 'classic4': return <ClassicTemplate4 therapist={profile} bookedTimes={[]} hiddenSections={hiddenSections} />
       case 'classic5': return <ClassicTemplate5 therapist={profile} bookedTimes={[]} hiddenSections={hiddenSections} />
       case 'classic6': return <ClassicTemplate6 therapist={profile} bookedTimes={[]} hiddenSections={hiddenSections} />
+      case 'classic7': return <ClassicTemplate7 therapist={profile} bookedTimes={[]} hiddenSections={hiddenSections} />
       default:         return <ClassicTemplate  therapist={profile} bookedTimes={[]} feedbacks={[]} hiddenSections={hiddenSections} />
     }
   })()
