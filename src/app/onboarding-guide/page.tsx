@@ -8,7 +8,7 @@ import { ArrowRight } from 'lucide-react'
 export const metadata: Metadata = {
   title: 'Onboarding Guide',
   description:
-    'Go live in 10 minutes — create your account, build your profile, choose a template, and start accepting bookings and payments.',
+    'Go live in 10 minutes - create your account, build your profile, choose a template, and start accepting bookings and payments.',
 }
 
 export default function OnboardingGuidePage() {
@@ -23,7 +23,7 @@ export default function OnboardingGuidePage() {
         <div className="relative mx-auto max-w-2xl text-center">
           <h1
             className="text-4xl leading-[1.12] text-[#1F1C18] sm:text-5xl"
-            style={{ fontFamily: "'Fraunces','Instrument Serif',serif" }}
+            style={{ fontFamily: 'var(--font-jakarta)' }}
           >
             Go live in <span className="text-[#FF9933]">10 minutes.</span>
           </h1>
@@ -44,7 +44,7 @@ export default function OnboardingGuidePage() {
         <div className="mx-auto max-w-3xl rounded-3xl bg-[#1F1C18] p-10 text-center text-white shadow-[0_24px_60px_-24px_rgba(31,28,24,0.45)] sm:p-14">
           <p
             className="mb-6 text-2xl leading-snug sm:text-[28px]"
-            style={{ fontFamily: "'Fraunces','Instrument Serif',serif" }}
+            style={{ fontFamily: 'var(--font-jakarta)' }}
           >
             Ready to see your practice online?
           </p>

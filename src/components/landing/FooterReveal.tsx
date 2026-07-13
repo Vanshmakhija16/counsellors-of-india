@@ -155,7 +155,7 @@ export default function FooterReveal() {
             boxShadow: '0 8px 40px rgba(90,127,122,0.4)',
           }}
         >
-          Claim your profile — it's free
+          Claim your profile 
           <span style={{ fontSize: 16 }}>→</span>
         </a> */}
       </div>

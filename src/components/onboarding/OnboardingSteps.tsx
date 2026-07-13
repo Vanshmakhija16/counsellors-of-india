@@ -158,7 +158,7 @@ export default function OnboardingSteps() {
             </div>
             <h3
               className="mb-5 text-[22px] leading-snug text-[#1F1C18] sm:text-[26px]"
-              style={{ fontFamily: "'Fraunces','Instrument Serif',serif" }}
+              style={{ fontFamily: 'var(--font-jakarta)' }}
             >
               {step.title}
             </h3>

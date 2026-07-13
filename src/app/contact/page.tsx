@@ -43,7 +43,7 @@ export default function ContactPage() {
           <div className="flex flex-col">
             <h1
               className="text-4xl leading-[1.12] text-[#1F1C18] sm:text-5xl"
-              style={{ fontFamily: "'Fraunces','Instrument Serif',serif" }}
+              style={{ fontFamily: 'var(--font-jakarta)' }}
             >
               We&apos;d love to hear from you.
             </h1>

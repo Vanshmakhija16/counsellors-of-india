@@ -42,7 +42,7 @@ export default function ContactForm() {
         </div>
         <h3
           className="mb-2 text-xl text-[#1F1C18]"
-          style={{ fontFamily: "'Fraunces','Instrument Serif',serif" }}
+          style={{ fontFamily: 'var(--font-jakarta)' }}
         >
           Message sent
         </h3>

@@ -9,6 +9,7 @@ const FOOTER_COLS = [
     links: [
       { l: 'Templates', href: '/#experience' },
       { l: 'Try Demo', href: '/#templates' },
+      { l: 'How It Works', href: '/#how' },
       { l: 'Pricing', href: '/#pricing' },
       { l: 'Therapist Directory', href: '/#therapists' },
       { l: 'List Your Practice', href: '/signup' },
@@ -19,6 +20,7 @@ const FOOTER_COLS = [
     links: [
       { l: 'About Us', href: '/about' },
       { l: 'Why Us', href: '/why-us' },
+      { l: 'Onboarding Guide', href: '/onboarding-guide' },
       { l: 'Blog', href: '/blog' },
       { l: 'Contact', href: '/contact' },
     ],

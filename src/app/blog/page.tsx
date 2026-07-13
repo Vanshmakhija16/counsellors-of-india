@@ -22,7 +22,7 @@ export default function BlogPage() {
           </span> */}
           <h1
             className="text-4xl leading-[1.12] text-[#1F1C18] sm:text-5xl"
-            style={{ fontFamily: "'Fraunces','Instrument Serif',serif" }}
+            style={{ fontFamily: 'var(--font-jakarta)' }}
           >
             Practice-growth tips for Indian therapists.
           </h1>
@@ -37,7 +37,7 @@ export default function BlogPage() {
           </div>
           <h2
             className="mb-2 text-[22px] text-[#1F1C18]"
-            style={{ fontFamily: "'Fraunces','Instrument Serif',serif" }}
+            style={{ fontFamily: 'var(--font-jakarta)' }}
           >
             First posts coming soon
           </h2>
