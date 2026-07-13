@@ -1941,11 +1941,7 @@ export default function Home() {
             <p className="how-sub" style={{textAlign:'center'}}>
               Four calm steps from sign-up to your first client booking, no website builder, no code, no technical skills.
             </p>
-            <div className="how-proof">
-              <span className="how-proof-chip">No coding required</span>
-              <span className="how-proof-chip">4 simple steps</span>
-              <span className="how-proof-chip">Live the same day</span>
-            </div>
+
           </div>
 
           <HowTimeline />

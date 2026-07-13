@@ -1,7 +1,31 @@
 // components/landing/FooterReveal.tsx
 'use client'
 
+import { useRef } from 'react'
+
+const WORDMARK = 'Counsellors of India'
+
 export default function FooterReveal() {
+  const wordRef = useRef<HTMLHeadingElement>(null)
+  const touchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // :hover does nothing on touch devices, so a tap re-triggers the same
+  // letter-wave animation via a .fr-touch class instead. Timed to outlast
+  // the last letter's staggered start (--i * 35ms) plus its own 0.7s run,
+  // then removed so the very next tap can fire it again.
+  function onTouch() {
+    const el = wordRef.current
+    if (!el) return
+    if (touchTimer.current) clearTimeout(touchTimer.current)
+    el.classList.remove('fr-touch')
+    // force reflow so re-adding the class restarts the animation even if
+    // the previous run hasn't finished yet
+    void el.offsetWidth
+    el.classList.add('fr-touch')
+    const totalMs = WORDMARK.length * 35 + 700
+    touchTimer.current = setTimeout(() => el.classList.remove('fr-touch'), totalMs)
+  }
+
   return (
     <div
       className="relative bottom-0 z-0 h-[50vh] w-full flex flex-col items-center justify-center overflow-hidden"
@@ -35,13 +59,16 @@ export default function FooterReveal() {
 
         {/* Hero type — the big statement */}
         <h2
+          ref={wordRef}
+          onClick={onTouch}
+          onTouchStart={onTouch}
           className="font-bold leading-[0.9] tracking-tighter mb-8 select-none fr-word"
           style={{
             fontSize: 'clamp(52px, 7vw, 140px)',
             letterSpacing: '-0.01em',
           }}
         >
-          {'Counsellors of India'.split('').map((ch, i) => (
+          {WORDMARK.split('').map((ch, i) => (
             <span key={i} className="fr-letter" style={{ ['--i' as string]: i }}>
               {ch === ' ' ? '\u00A0' : ch}
             </span>

@@ -3,26 +3,17 @@
 import { useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { TherapistProfile } from '../templateUtils'
+import { resolveCT6Content } from '../templateUtils'
 import { useQuietRoomMotion } from './_motion'
 
 interface FAQProps { therapist: TherapistProfile }
-
-interface QA { q: string; a: string }
-
-const DEFAULT_FAQ: QA[] = [
-  { q: 'What if I don’t know what to say?', a: 'That’s completely normal — most people don’t. There’s no script and no wrong way to begin. We start wherever you are, even if that’s “I’m not sure why I’m here.”' },
-  { q: 'Do you offer a first consultation?', a: 'Yes — a short introductory call, with no obligation to continue. It’s simply a chance for both of us to feel out whether we’re the right fit.' },
-  { q: 'Online or in person?', a: 'Both are available. Many clients prefer the flexibility of online sessions; others value the containment of an in-person room. We’ll choose what suits the work.' },
-  { q: 'How long do people usually stay in therapy?', a: 'It varies. Some come for a focused handful of sessions around one theme; others stay for longer, deeper work. We revisit this together every few months — you set the pace.' },
-  { q: 'Is everything I say confidential?', a: 'Yes, within the standard clinical limits (risk of serious harm, or legal requirement). I’ll explain exactly what that means at our first session.' },
-]
 
 export default function FAQ({ therapist }: FAQProps) {
   const rootRef = useRef<HTMLElement | null>(null)
   const [open, setOpen] = useState<number | null>(0)
 
-  const content = (therapist.profile_content as { classic6?: { faq?: QA[] } } | undefined)?.classic6?.faq
-  const items = content?.length ? content : DEFAULT_FAQ
+  const saved = (therapist.profile_content as any)?.classic6
+  const { faq: items } = resolveCT6Content(saved)
 
   useQuietRoomMotion(({ gsap, reduced }) => {
     const ctx = gsap.context(() => {

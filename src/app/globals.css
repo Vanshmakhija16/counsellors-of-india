@@ -606,7 +606,8 @@ html, body {
   display: inline-block;
   color: rgba(255,255,255,0.92);
 }
-.fr-word:hover .fr-letter {
+.fr-word:hover .fr-letter,
+.fr-word.fr-touch .fr-letter {
   animation: fr-letter-wave 0.7s ease;
   animation-delay: calc(var(--i) * 35ms);
 }

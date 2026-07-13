@@ -4,18 +4,39 @@ import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import type { TherapistProfile, Review } from '../templateUtils'
 
-interface TProps { therapist: TherapistProfile }
+// Same shape as ClassicTemplate/Feedback.tsx's FeedbackItem — the real,
+// published rows from the `feedbacks` table (added via the dashboard's
+// Feedback Manager). Kept as a local type so this file doesn't reach across
+// into a sibling template folder just for a type import.
+export interface QRFeedbackItem {
+  id: string
+  client_name: string
+  client_role: string | null
+  rating: number
+  text: string
+  created_at: string
+}
+
+interface TProps { therapist: TherapistProfile; feedbacks?: QRFeedbackItem[] }
 
 const FALLBACK: Review[] = [
   { name: 'A. M.', rating: 5, text: 'I came in feeling completely lost. Six months later I have language for my feelings, tools for hard days, and a relationship with myself I never thought possible.' },
-  { name: 'R. V.', rating: 5, text: 'I was nervous about therapy. Somehow it never once felt like being assessed — just like being genuinely heard, week after week.' },
+  { name: 'R. V.', rating: 5, text: 'I was nervous about therapy. Somehow it never once felt like being assessed, just like being genuinely heard, week after week.' },
   { name: 'S. P.', rating: 5, text: 'Unhurried, honest, and kind. I never felt rushed toward an answer I wasn’t ready for.' },
 ]
 
 const AUTO_MS = 7000
 
-export default function Testimonials({ therapist }: TProps) {
-  const reviews = therapist.reviews?.length ? therapist.reviews : FALLBACK
+export default function Testimonials({ therapist, feedbacks }: TProps) {
+  // Priority: real published client feedback > therapist.reviews (legacy/demo
+  // field, effectively unused in production) > hardcoded fallback quotes.
+  const reviews: Review[] = feedbacks?.length
+    ? feedbacks.map(f => ({
+        name: f.client_role ? `${f.client_name}, ${f.client_role}` : f.client_name,
+        rating: f.rating,
+        text: f.text,
+      }))
+    : therapist.reviews?.length ? therapist.reviews : FALLBACK
   const [i, setI] = useState(0)
   const [paused, setPaused] = useState(false)
   const windowRef = useRef<HTMLDivElement | null>(null)

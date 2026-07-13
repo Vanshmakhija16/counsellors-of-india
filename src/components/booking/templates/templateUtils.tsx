@@ -128,13 +128,43 @@ export interface CT5Content {
 
 // ── Master profile_content shape ──────────────────────────────────────────
 
+export interface CT6ExpertiseItem {
+  label: string
+  blurb: string
+}
+
+export interface CT6ProcessStep {
+  n: string
+  t: string
+  d: string
+}
+
+export interface CT6Reading {
+  category: string
+  title: string
+  excerpt: string
+  read: string
+}
+
+export interface CT6Content {
+  expertise?: CT6ExpertiseItem[]
+  faq?: EditableFAQ[]
+  process?: CT6ProcessStep[]
+  readings?: CT6Reading[]
+}
+
 export interface ProfileContent {
   classic?: CT1Content
   classic2?: CT2Content
   classic3?: CT3Content
   classic4?: CT4Content
   classic5?: CT5Content
+  classic6?: CT6Content
 }
+
+// NOTE: CT6Content is defined further below (after CT6ExpertiseItem); this
+// forward reference works because these are TypeScript interfaces (types are
+// hoisted), not runtime values.
 
 // ── TherapistProfile ──────────────────────────────────────────────────────
 
@@ -522,5 +552,46 @@ export function resolveCT5Content(saved?: CT5Content): Required<CT5Content> {
     ticker:   { items: saved?.ticker?.items ?? DEFAULT_CT5_CONTENT.ticker.items },
     services: Array.isArray(saved?.services) ? saved!.services : DEFAULT_CT5_CONTENT.services,
     faq:      Array.isArray(saved?.faq)      ? saved!.faq      : DEFAULT_CT5_CONTENT.faq,
+  }
+}
+
+export const DEFAULT_CT6_CONTENT: Required<CT6Content> = {
+  expertise: [
+    { label: 'Anxiety & Stress',    blurb: 'For the worry that never quite switches off.' },
+    { label: 'Relationships',       blurb: 'For the patterns that keep repeating with the people you love.' },
+    { label: 'Trauma & EMDR',       blurb: 'For what still lives in the body, processed gently and at your pace.' },
+    { label: 'Grief & Loss',        blurb: 'For losses with and without a name.' },
+    { label: 'Self-Esteem',         blurb: 'For rebuilding a kinder relationship with yourself.' },
+    { label: 'Life Transitions',    blurb: 'For the in-between, when the old map no longer fits.' },
+  ],
+  faq: [
+    { q: 'What if I don\u2019t know what to say?', a: 'That\u2019s completely normal \u2014 most people don\u2019t. There\u2019s no script and no wrong way to begin. We start wherever you are, even if that\u2019s \u201cI\u2019m not sure why I\u2019m here.\u201d' },
+    { q: 'Do you offer a first consultation?', a: 'Yes \u2014 a short introductory call, with no obligation to continue. It\u2019s simply a chance for both of us to feel out whether we\u2019re the right fit.' },
+    { q: 'Online or in person?', a: 'Both are available. Many clients prefer the flexibility of online sessions; others value the containment of an in-person room. We\u2019ll choose what suits the work.' },
+    { q: 'How long do people usually stay in therapy?', a: 'It varies. Some come for a focused handful of sessions around one theme; others stay for longer, deeper work. We revisit this together every few months \u2014 you set the pace.' },
+    { q: 'Is everything I say confidential?', a: 'Yes, within the standard clinical limits (risk of serious harm, or legal requirement). I\u2019ll explain exactly what that means at our first session.' },
+  ],
+  process: [
+    { n: '01', t: 'Reach out',          d: 'A short message or a form. No detail needed \u2014 just the decision to start.' },
+    { n: '02', t: 'First conversation', d: 'A 20-minute call to feel out fit. Honest, no obligation, no script.' },
+    { n: '03', t: 'A plan, together',   d: 'We agree on rhythm and focus. The plan is yours; I just help shape it.' },
+    { n: '04', t: 'Ongoing sessions',   d: '50 minutes, weekly or as suits \u2014 steady, confidential, unhurried.' },
+    { n: '05', t: 'Reflection',         d: 'We revisit where things are every few months. You set the pace throughout.' },
+  ],
+  readings: [
+    { category: 'On anxiety', title: 'The anxiety underneath your productivity', excerpt: 'When ambition is fuelled by avoidance, achievement starts to feel like relief instead of joy.', read: '6 min' },
+    { category: 'On grief', title: 'Grief without a vocabulary', excerpt: 'Some losses don\u2019t arrive with a name \u2014 the friendship that quietly thinned, the self you outgrew.', read: '8 min' },
+    { category: 'On relationships', title: 'Why repair matters more than rupture', excerpt: 'Conflict isn\u2019t the threat to closeness we think it is. Unrepaired conflict is.', read: '5 min' },
+    { category: 'On rest', title: 'Rest is not a reward', excerpt: 'You don\u2019t have to earn the right to stop. A short note on permission.', read: '4 min' },
+    { category: 'On beginnings', title: 'What the first session is actually like', excerpt: 'Demystifying the thing most people quietly dread before they walk in.', read: '7 min' },
+  ],
+}
+
+export function resolveCT6Content(saved?: CT6Content): Required<CT6Content> {
+  return {
+    expertise: Array.isArray(saved?.expertise) ? saved!.expertise : DEFAULT_CT6_CONTENT.expertise,
+    faq:       Array.isArray(saved?.faq)       ? saved!.faq       : DEFAULT_CT6_CONTENT.faq,
+    process:   Array.isArray(saved?.process)   ? saved!.process   : DEFAULT_CT6_CONTENT.process,
+    readings:  Array.isArray(saved?.readings)  ? saved!.readings  : DEFAULT_CT6_CONTENT.readings,
   }
 }

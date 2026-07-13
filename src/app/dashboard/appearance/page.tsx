@@ -13,7 +13,7 @@ import TemplatePreviewModal from '@/components/appearance/TemplatePreviewModal'
 import TemplateLiveSwitcher from '@/components/appearance/TemplateLiveSwitcher'
 import DraggableDock from '@/components/appearance/DraggableDock'
 import { Save, Lock, Check, AlertCircle, Sparkles, Pencil, LayoutList, X, GripVertical, ArrowLeft, ChevronLeft, ChevronRight, Image as ImageIcon, ChevronUp, ChevronDown, Globe } from 'lucide-react'
-import type { ProfileContent, CT1Content, CT2Content, CT3Content, CT4Content, CT5Content } from '@/components/booking/templates/templateUtils'
+import type { ProfileContent, CT1Content, CT2Content, CT3Content, CT4Content, CT5Content, CT6Content } from '@/components/booking/templates/templateUtils'
 import dynamic from 'next/dynamic'
 
 const CT1ContentEditor = dynamic(() => import('../../../components/appearance/CT1ContentEditor'), { ssr: false })
@@ -21,6 +21,7 @@ const CT2ContentEditor = dynamic(() => import('../../../components/appearance/CT
 const CT3ContentEditor = dynamic(() => import('../../../components/appearance/CT3ContentEditor'), { ssr: false })
 const CT4ContentEditor = dynamic(() => import('../../../components/appearance/CT4ContentEditor'), { ssr: false })
 const CT5ContentEditor = dynamic(() => import('../../../components/appearance/CT5ContentEditor'), { ssr: false })
+const CT6ContentEditor = dynamic(() => import('../../../components/appearance/CT6ContentEditor'), { ssr: false })
 
 // template id → /try demo param
 const TEMPLATE_TPARAM: Record<TemplateId, string> = {
@@ -541,6 +542,7 @@ export default function AppearancePage() {
                 {selectedTemplate === 'classic3' && <CT3ContentEditor value={(profileContent as any).classic3 ?? {}} onChange={v => patchContent('classic3', v as CT3Content)} />}
                 {selectedTemplate === 'classic4' && <CT4ContentEditor value={(profileContent as any).classic4 ?? {}} onChange={v => patchContent('classic4', v as CT4Content)} />}
                 {selectedTemplate === 'classic5' && <CT5ContentEditor value={(profileContent as any).classic5 ?? {}} onChange={v => patchContent('classic5', v as CT5Content)} />}
+                {selectedTemplate === 'classic6' && <CT6ContentEditor value={(profileContent as any).classic6 ?? {}} onChange={v => patchContent('classic6', v as CT6Content)} />}
 
                 <button
                   onClick={handleSaveContent}

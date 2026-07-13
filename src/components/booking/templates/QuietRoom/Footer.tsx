@@ -28,7 +28,20 @@ export default function Footer({ therapist, scrollTo }: FooterProps) {
         .qr-ft-link:hover { color: var(--qr-honey); }
         .qr-ft-base { max-width: 1140px; margin: 40px auto 0; padding-top: 22px;
           border-top: 1px solid rgba(242,238,228,0.1); display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
-        .qr-ft-base span { font-size: 11px; color: rgba(242,238,228,0.42); }
+        .qr-ft-base span { font-size: 11px; color: rgba(242,238,228,0.42); flex-shrink: 0; }
+        .qr-ft-brandname {
+          font-size: clamp(9px, 3vw, 11px) !important;
+          white-space: nowrap;
+          word-break: keep-all;
+          overflow-wrap: normal;
+        }
+        @media (max-width: 480px) {
+          .qr-ft-base { flex-direction: column; align-items: flex-start; gap: 6px; }
+          .qr-ft-brandname { font-size: 10px !important; }
+        }
+        @media (max-width: 340px) {
+          .qr-ft-brandname { font-size: 8.5px !important; letter-spacing: 0.04em; }
+        }
       `}</style>
 
       <div className="qr-ft-inner">
@@ -44,7 +57,7 @@ export default function Footer({ therapist, scrollTo }: FooterProps) {
 
       <div className="qr-ft-base qr-mono">
         <span>&copy; {year} {therapist.name}</span>
-        <span>Counsellors of India</span>
+        <span className="qr-ft-brandname">Counsellors of India</span>
       </div>
     </footer>
   )

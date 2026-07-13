@@ -117,6 +117,11 @@ export default function Hero({ therapist, scrollTo }: HeroProps) {
           font-family: 'IBM Plex Sans', sans-serif; font-size: clamp(15px, 1.3vw, 17px);
           color: rgba(242,238,228,0.6); letter-spacing: 0.005em;
         }
+        .qr-hero-identity-title {
+          font-family: 'IBM Plex Sans', sans-serif; font-size: clamp(14px, 1.15vw, 15.5px);
+          font-weight: 400; color: rgba(242,238,228,0.6); letter-spacing: 0.005em;
+          line-height: 1.5; max-width: 42ch;
+        }
 
         .qr-hero-opener {
           opacity: 0;
@@ -226,14 +231,14 @@ export default function Hero({ therapist, scrollTo }: HeroProps) {
 
           {therapist.name && (
             <p className="qr-hero-identity">
-              {therapist.credentials?.trim() && (
-                <span className="qr-hero-identity-role">Sr Psychologist</span>
-                // <span className="qr-hero-identity-role">{therapist.credentials}</span>
-              )}
+              <span className="qr-hero-identity-role">Sr Psychologist</span>
               <span className="qr-hero-identity-name">{therapist.name}</span>
-              {specialtyList && (
-                <span className="qr-hero-identity-specialties">{specialtyList}, Depression, Overthinking</span>
+              {therapist.credentials?.trim() && (
+                <span className="qr-hero-identity-title">{therapist.credentials}</span>
               )}
+              {/* {specialtyList && (
+                <span className="qr-hero-identity-specialties">{specialtyList}, Depression, Overthinking</span>
+              )} */}
             </p>
           )}
 

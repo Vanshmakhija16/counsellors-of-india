@@ -61,9 +61,7 @@ export default function ContactPage() {
                 <div key={title} className="relative flex items-start gap-4">
                   <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#FF9933]/25 bg-white text-[#B4600F] shadow-[0_2px_8px_rgba(255,153,51,0.12)]">
                     <Icon size={16} strokeWidth={1.8} />
-                    <span className="absolute -bottom-1.5 -right-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-[#1F1C18] text-[9px] font-bold text-white ring-2 ring-[#FFFCF8]">
-                      {i + 1}
-                    </span>
+
                   </div>
                   <div className="pt-1">
                     <div className="text-[13.5px] font-semibold text-[#1F1C18]">{title}</div>

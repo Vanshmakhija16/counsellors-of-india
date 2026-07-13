@@ -25,20 +25,20 @@ const FOOTER_COLS = [
   },
 ]
 
-const FOOTER_SOCIALS = [
-  { name: 'Instagram', href: '#', icon: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="3.6"/><circle cx="17.2" cy="6.8" r="1"/></svg>
-  )},
-  { name: 'LinkedIn', href: '#', icon: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4.5h.01M3.5 8h3v12h-3z"/><path d="M9.5 20V8h3v1.8c.7-1.2 2-2.1 3.8-2.1 2.8 0 4.7 1.9 4.7 5.3V20h-3v-6.6c0-1.6-.6-2.7-2.1-2.7-1.4 0-2.4 1-2.4 2.7V20z"/></svg>
-  )},
-  { name: 'X', href: '#', icon: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4l16 16M20 4L4 20"/></svg>
-  )},
-  { name: 'Email', href: 'mailto:hello@counsellorsofindia.com', icon: (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7 8 6 8-6"/></svg>
-  )},
-]
+// const FOOTER_SOCIALS = [
+//   { name: 'Instagram', href: '#', icon: (
+//     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="3.6"/><circle cx="17.2" cy="6.8" r="1"/></svg>
+//   )},
+//   { name: 'LinkedIn', href: '#', icon: (
+//     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4.5h.01M3.5 8h3v12h-3z"/><path d="M9.5 20V8h3v1.8c.7-1.2 2-2.1 3.8-2.1 2.8 0 4.7 1.9 4.7 5.3V20h-3v-6.6c0-1.6-.6-2.7-2.1-2.7-1.4 0-2.4 1-2.4 2.7V20z"/></svg>
+//   )},
+//   { name: 'X', href: '#', icon: (
+//     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4l16 16M20 4L4 20"/></svg>
+//   )},
+//   { name: 'Email', href: 'mailto:hello@counsellorsofindia.com', icon: (
+//     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="5" width="18" height="14" rx="2.5"/><path d="m4 7 8 6 8-6"/></svg>
+//   )},
+// ]
 
 /**
  * The site's real footer — same component used on the homepage. Extracted
@@ -82,13 +82,13 @@ export default function SiteFooter() {
             <p className="pfoot-tag">
               A calm, trusted home for every counselling practice in India, websites, bookings, and payments in one place.
             </p>
-            <div className="pfoot-socials">
+            {/* <div className="pfoot-socials">
               {FOOTER_SOCIALS.map(s => (
                 <a key={s.name} href={s.href} aria-label={s.name} className="pfoot-social">
                   {s.icon}
                 </a>
               ))}
-            </div>
+            </div> */}
           </div>
 
           {FOOTER_COLS.map(col => (
@@ -113,11 +113,11 @@ export default function SiteFooter() {
             <span>© {new Date().getFullYear()} Counsellors of India. All rights reserved.</span>
           
           </div>
-          <div className="pfoot-badges">
-            <span className="pfoot-badge">🔒 Secured Payments</span>
+          {/* <div className="pfoot-badges"> */}
+            {/* <span className="pfoot-badge">🔒 Secured Payments</span> */}
             {/* <span className="pfoot-badge">Razorpay  </span> */}
-            <span className="pfoot-badge">UPI · Cards · Netbanking</span>
-          </div>
+            {/* <span className="pfoot-badge">UPI · Cards · Netbanking</span> */}
+          {/* </div> */}
         </div>
 
       </div>

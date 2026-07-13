@@ -26,8 +26,8 @@ import {
   Camera, Check, ChevronDown, ChevronUp, GripVertical,
   Plus, Save, Trash2, User,
 } from 'lucide-react'
-import type { CT1Content, CT1CarouselSlide } from '@/components/booking/templates/templateUtils'
-import { DEFAULT_CT1_CONTENT } from '@/components/booking/templates/templateUtils'
+import type { CT1Content, CT1CarouselSlide, CT6ExpertiseItem } from '@/components/booking/templates/templateUtils'
+import { DEFAULT_CT1_CONTENT, DEFAULT_CT6_CONTENT } from '@/components/booking/templates/templateUtils'
 import type { TherapistProfile } from '@/lib/template'
 import Cropper, { type Area } from 'react-easy-crop'
 
@@ -395,10 +395,69 @@ export default function UnifiedContentEditor({
           <div className="p-4 space-y-3">
 
             <p className="text-xs text-[#9ca3af] -mt-1 mb-1">
-              Edit what appears in each section of your website — services you offer, client testimonials, process steps.
+              {selectedTemplate === 'classic6'
+                ? 'Edit the expertise cards shown on your Quiet Room website — label and supporting line for each area you work in.'
+                : 'Edit what appears in each section of your website — services you offer, client testimonials, process steps.'}
             </p>
 
-            {/* Services */}
+            {/* ── Quiet Room (classic6) — Expertise cards ── */}
+            {selectedTemplate === 'classic6' && (() => {
+              const rawC6 = (profileContent as any)?.classic6 ?? {}
+              const expertiseItems: CT6ExpertiseItem[] = Array.isArray(rawC6.expertise)
+                ? rawC6.expertise
+                : DEFAULT_CT6_CONTENT.expertise
+
+              function patchExpertise(updated: CT6ExpertiseItem[]) {
+                onContentChange('classic6', { ...rawC6, expertise: updated })
+              }
+
+              return (
+                <Accordion label="Expertise Cards — What You Work On" defaultOpen>
+                  <div className="space-y-3">
+                    {expertiseItems.map((item, i) => (
+                      <div key={i} className="rounded-lg border border-[#e8e4df] p-3 space-y-2 bg-white">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] font-bold uppercase tracking-widest text-[#9ca3af]">Card {String(i + 1).padStart(2, '0')}</span>
+                          <button
+                            onClick={() => patchExpertise(expertiseItems.filter((_, j) => j !== i))}
+                            className="text-[#d1d5db] hover:text-red-400 transition"
+                          >
+                            <Trash2 size={13} />
+                          </button>
+                        </div>
+                        <Field label="Label / area name">
+                          <input
+                            value={item.label}
+                            onChange={e => patchExpertise(expertiseItems.map((x, j) => j === i ? { ...x, label: e.target.value } : x))}
+                            placeholder="e.g. Anxiety & Stress"
+                            className={inp}
+                          />
+                        </Field>
+                        <Field label="Supporting line" hint="A short, human sentence — not clinical.">
+                          <input
+                            value={item.blurb}
+                            onChange={e => patchExpertise(expertiseItems.map((x, j) => j === i ? { ...x, blurb: e.target.value } : x))}
+                            placeholder="e.g. For the worry that never quite switches off."
+                            className={inp}
+                          />
+                        </Field>
+                      </div>
+                    ))}
+                    {expertiseItems.length < 8 && (
+                      <button
+                        onClick={() => patchExpertise([...expertiseItems, { label: '', blurb: '' }])}
+                        className={addBtn}
+                      >
+                        <Plus size={13} /> Add expertise card
+                      </button>
+                    )}
+                  </div>
+                </Accordion>
+              )
+            })()}
+
+            {/* Services — not shown for Quiet Room which uses Expertise instead */}
+            {selectedTemplate !== 'classic6' && (
             <Accordion label="Services — What You Offer" defaultOpen>
               <div className="space-y-4">
                 {ct1.services.map((svc, i) => (

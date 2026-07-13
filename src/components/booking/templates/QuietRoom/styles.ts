@@ -60,7 +60,6 @@ export const quietRoomStyles = `
 .qr-eyebrow { font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: 0.08em;
   font-size: 11px; color: var(--qr-moss); display: inline-flex; align-items: center; gap: 10px; margin-bottom: 22px; }
 .qr-dusk .qr-eyebrow { color: var(--qr-honey); }
-.qr-eyebrow::before { content: ''; width: 24px; height: 1px; background: currentColor; opacity: 0.7; }
 
 /* ── The Window — an irregular soft glow of light through an old pane ── */
 .qr-window {

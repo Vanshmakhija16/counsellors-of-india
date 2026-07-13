@@ -2,26 +2,17 @@
 
 import { useRef } from 'react'
 import type { TherapistProfile } from '../templateUtils'
+import { resolveCT6Content } from '../templateUtils'
 import { useQuietRoomMotion } from './_motion'
 
 interface ReadingsProps { therapist: TherapistProfile }
 
-interface Reading { category: string; title: string; excerpt: string; read: string }
-
-// A small library of thoughtful pieces, themed off the practitioner's focus.
-const LIBRARY: Reading[] = [
-  { category: 'On anxiety', title: 'The anxiety underneath your productivity', excerpt: 'When ambition is fuelled by avoidance, achievement starts to feel like relief instead of joy.', read: '6 min' },
-  { category: 'On grief', title: 'Grief without a vocabulary', excerpt: 'Some losses don’t arrive with a name — the friendship that quietly thinned, the self you outgrew.', read: '8 min' },
-  { category: 'On relationships', title: 'Why repair matters more than rupture', excerpt: 'Conflict isn’t the threat to closeness we think it is. Unrepaired conflict is.', read: '5 min' },
-  { category: 'On rest', title: 'Rest is not a reward', excerpt: 'You don’t have to earn the right to stop. A short note on permission.', read: '4 min' },
-  { category: 'On beginnings', title: 'What the first session is actually like', excerpt: 'Demystifying the thing most people quietly dread before they walk in.', read: '7 min' },
-]
-
 export default function Readings({ therapist }: ReadingsProps) {
   const rootRef = useRef<HTMLElement | null>(null)
-  void therapist // reserved for future per-practitioner posts
 
-  const [featured, ...rest] = LIBRARY
+  // Read from profile_content.classic6.readings (user-editable via dashboard).
+  const saved = (therapist.profile_content as any)?.classic6
+  const { readings: LIBRARY } = resolveCT6Content(saved)
 
   useQuietRoomMotion(({ gsap, reduced }) => {
     const ctx = gsap.context(() => {
@@ -33,6 +24,11 @@ export default function Readings({ therapist }: ReadingsProps) {
     }, rootRef)
     return () => ctx.revert()
   })
+
+  // Guard AFTER all hooks have run (rules-of-hooks) — an editor-cleared list
+  // should just hide the section, not crash on the [featured, ...rest] destructure.
+  if (LIBRARY.length === 0) return null
+  const [featured, ...rest] = LIBRARY
 
   return (
     <section id="readings" ref={rootRef} className="qr-daylight qr-section">

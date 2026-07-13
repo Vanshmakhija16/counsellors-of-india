@@ -77,6 +77,17 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true },
   },
+
+  // Site favicon / browser-tab icon — uses the real COI brand mark
+  // (same file already used for the navbar logo) instead of the stale
+  // default favicon.ico that was showing up in Google search results.
+  icons: {
+    icon: [
+      { url: '/coi.png', type: 'image/png' },
+    ],
+    shortcut: '/coi.png',
+    apple: '/coi.png',
+  },
 }
 
 export default function RootLayout({

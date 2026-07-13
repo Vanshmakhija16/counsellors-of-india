@@ -1,15 +1,11 @@
 'use client'
 
 import { useEffect, useRef, useState } from 'react'
+import type { TherapistProfile } from '../templateUtils'
+import { resolveCT6Content } from '../templateUtils'
 import { useQuietRoomMotion } from './_motion'
 
-const STEPS = [
-  { n: '01', t: 'Reach out',          d: "A short message or a form. No detail needed — just the decision to start." },
-  { n: '02', t: 'First conversation', d: 'A 20-minute call to feel out fit. Honest, no obligation, no script.' },
-  { n: '03', t: 'A plan, together',   d: 'We agree on rhythm and focus. The plan is yours; I just help shape it.' },
-  { n: '04', t: 'Ongoing sessions',   d: '50 minutes, weekly or as suits — steady, confidential, unhurried.' },
-  { n: '05', t: 'Reflection',         d: 'We revisit where things are every few months. You set the pace throughout.' },
-]
+interface ProcessProps { therapist?: TherapistProfile }
 
 // A winding vertical path; nodes sit alternately left/right of it.
 const PATH = 'M120 30 C120 70 220 80 220 130 C220 185 70 195 70 250 C70 305 220 315 220 370 C220 425 120 435 120 480'
@@ -21,10 +17,15 @@ const NODES = [
   { x: 120, y: 480, side: 'right' },
 ]
 
-export default function Process() {
+export default function Process({ therapist }: ProcessProps) {
   const rootRef = useRef<HTMLElement | null>(null)
   const pathRef = useRef<SVGPathElement | null>(null)
   const wrapRef = useRef<HTMLDivElement | null>(null)
+
+  // Read from profile_content.classic6.process (user-editable via dashboard).
+  const saved = (therapist?.profile_content as any)?.classic6
+  const { process: STEPS } = resolveCT6Content(saved)
+
   const [nodePositions, setNodePositions] = useState(NODES)
   const [pathD, setPathD] = useState(PATH)
   const [svgHeight, setSvgHeight] = useState(510)

@@ -15,7 +15,7 @@ import AvailabilitySettings from '@/components/dashboard/AvailabilitySettings'
 import FeedbackManager from '@/components/dashboard/FeedbackManager'
 import TemplateLiveSwitcher from '@/components/appearance/TemplateLiveSwitcher'
 import { addNormalizedUnique } from '@/lib/specialties'
-import type { ProfileContent, CT1Content, CT2Content, CT3Content, CT4Content, CT5Content } from '@/components/booking/templates/templateUtils'
+import type { ProfileContent, CT1Content, CT2Content, CT3Content, CT4Content, CT5Content, CT6Content } from '@/components/booking/templates/templateUtils'
 import {
   User, Briefcase, Camera, CheckCircle, Clock, ExternalLink, Globe2,
   IndianRupee, Languages, Link as LinkIcon, MapPin, Phone, Save, ShieldCheck,
@@ -28,6 +28,7 @@ const CT2ContentEditor = dynamic(() => import('@/components/appearance/CT2Conten
 const CT3ContentEditor = dynamic(() => import('@/components/appearance/CT3ContentEditor'), { ssr: false })
 const CT4ContentEditor = dynamic(() => import('@/components/appearance/CT4ContentEditor'), { ssr: false })
 const CT5ContentEditor = dynamic(() => import('@/components/appearance/CT5ContentEditor'), { ssr: false })
+const CT6ContentEditor = dynamic(() => import('@/components/appearance/CT6ContentEditor'), { ssr: false })
 
 const BRAND = '#ff9933'
 const INK = '#171412'
@@ -424,7 +425,7 @@ export default function ProfilePage() {
               onClick={() => setTab(id)}
               className="relative flex shrink-0 items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition"
               style={active
-                ? { background: '#eaf6ef', color: '#1f7a54', boxShadow: 'inset 0 0 0 1px #9bd1b3' }
+                ? { background: '#eaf6ef', color: '#ff9933', boxShadow: 'inset 0 0 0 1px #9bd1b3' }
                 : { color: '#6f665d' }}
             >
               <Icon size={15} />
@@ -447,7 +448,7 @@ export default function ProfilePage() {
           <section className="rounded-lg border border-[#eadfd2] bg-white">
             <div className="border-b border-[#ece7df] p-5">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#eaf6ef] text-[#1f7a54]"><User size={18} /></div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#eaf6ef] text-[#ff9933]"><User size={18} /></div>
                 <div>
                   <h2 className="text-base font-semibold text-[#171412]">Identity</h2>
                   <p className="text-sm text-[#766c62]">Name, photo, credentials, location, and how clients contact you.</p>
@@ -461,7 +462,7 @@ export default function ProfilePage() {
                     {photoPreview ? <img src={photoPreview} alt="Profile" className="h-full w-full object-cover" /> : <User size={22} className="text-[#8b8278]" />}
                   </div>
                   <button type="button" onClick={() => fileRef.current?.click()}
-                    className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-white bg-[#1f7a54] text-white shadow-sm transition hover:bg-[#176344]">
+                    className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-white bg-[#ff9933] text-white shadow-sm transition hover:bg-[#176344]">
                     <Camera size={11} />
                   </button>
                   <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
@@ -589,11 +590,11 @@ export default function ProfilePage() {
                     const active = form.specialties.includes(s)
                     return <button key={s} type="button" onClick={() => toggleSpecialty(s)}
                       className="rounded-full border px-3 py-1.5 text-xs font-semibold transition"
-                      style={active ? { background: '#eaf6ef', color: '#1f7a54', borderColor: '#9bd1b3' } : { background: '#fffdfb', color: '#6f665d', borderColor: '#ded8ce' }}>{s}</button>
+                      style={active ? { background: '#eaf6ef', color: '#ff9933', borderColor: '#9bd1b3' } : { background: '#fffdfb', color: '#6f665d', borderColor: '#ded8ce' }}>{s}</button>
                   })}
                   {form.specialties.filter(s => !SPECIALTIES_LIST.includes(s)).map(s => (
                     <button key={s} type="button" onClick={() => toggleSpecialty(s)}
-                      className="rounded-full border border-[#9bd1b3] bg-[#eaf6ef] px-3 py-1.5 text-xs font-semibold text-[#1f7a54]">{s} x</button>
+                      className="rounded-full border border-[#9bd1b3] bg-[#eaf6ef] px-3 py-1.5 text-xs font-semibold text-[#ff9933]">{s} x</button>
                   ))}
                 </div>
                 <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
@@ -601,7 +602,7 @@ export default function ProfilePage() {
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomSpecialty() } }} placeholder="Add another specialty"
                     className="h-10 rounded-lg border border-[#ded8ce] bg-[#fffdfb] px-4 text-sm text-[#171412] outline-none transition placeholder:text-[#aaa197] focus:border-[#171412]" />
                   <button type="button" onClick={addCustomSpecialty} disabled={!customSpecialty.trim()}
-                    className="h-10 rounded-lg bg-[#1f7a54] px-4 text-sm font-semibold text-white transition hover:bg-[#176344] disabled:opacity-50">Add</button>
+                    className="h-10 rounded-lg bg-[#ff9933] px-4 text-sm font-semibold text-white transition hover:bg-[#176344] disabled:opacity-50">Add</button>
                 </div>
               </div>
               <div>
@@ -626,7 +627,7 @@ export default function ProfilePage() {
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomLanguage() } }} placeholder="Add another language"
                     className="h-10 rounded-lg border border-[#ded8ce] bg-[#fffdfb] px-4 text-sm text-[#171412] outline-none transition placeholder:text-[#aaa197] focus:border-[#171412]" />
                   <button type="button" onClick={addCustomLanguage} disabled={!customLanguage.trim()}
-                    className="h-10 rounded-lg bg-[#1f7a54] px-4 text-sm font-semibold text-white transition hover:bg-[#176344] disabled:opacity-50">Add</button>
+                    className="h-10 rounded-lg bg-[#ff9933] px-4 text-sm font-semibold text-white transition hover:bg-[#176344] disabled:opacity-50">Add</button>
                 </div>
               </div>
             </div>
@@ -648,7 +649,7 @@ export default function ProfilePage() {
               ].map(({ key, label, icon: Icon, placeholder }) => (
                 <label key={key} className="space-y-1.5">
                   <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8b8278]">{label}</span>
-                  <div className="flex h-11 items-center gap-3 rounded-lg border border-[#ded8ce] bg-[#fffdfb] px-3 transition focus-within:border-[#1f7a54] focus-within:ring-2 focus-within:ring-[#d9efe3]">
+                  <div className="flex h-11 items-center gap-3 rounded-lg border border-[#ded8ce] bg-[#fffdfb] px-3 transition focus-within:border-[#ff9933] focus-within:ring-2 focus-within:ring-[#d9efe3]">
                     <Icon size={15} className="shrink-0 text-[#8b8278]" />
                     <input value={(form as any)[key]} onChange={e => setForm({ ...form, [key]: e.target.value })}
                       placeholder={placeholder} className="min-w-0 flex-1 bg-transparent text-sm text-[#171412] outline-none placeholder:text-[#aaa197]" />
@@ -658,16 +659,7 @@ export default function ProfilePage() {
             </div>
           </section>
 
-          <div className="sticky bottom-4 z-20 rounded-lg border border-[#eadfd2] bg-white/95 p-3 shadow-[0_18px_50px_rgba(31,26,20,0.10)] backdrop-blur">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-sm text-[#6f665d]">Save to update your public website and booking details.</p>
-              <button type="button" onClick={handleSaveBasic} disabled={savingBasic}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[#ff9933] px-5 text-sm font-bold text-[#171412] transition hover:brightness-95 disabled:opacity-60">
-                {savingBasic ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#171412]/30 border-t-[#171412]" /> : savedBasic ? <CheckCircle size={15} /> : <Save size={15} />}
-                {savedBasic ? 'Saved' : 'Save basic info'}
-              </button>
-            </div>
-          </div>
+
 
           {userId && <section className="rounded-lg border border-[#eadfd2] bg-white p-5"><FeedbackManager therapistId={userId} /></section>}
 
@@ -689,6 +681,21 @@ export default function ProfilePage() {
               </div>
             </div>
           )}
+
+
+
+          <div className="sticky bottom-4 z-20 rounded-lg border border-[#eadfd2] bg-white/95 p-3 shadow-[0_18px_50px_rgba(31,26,20,0.10)] backdrop-blur">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-[#6f665d]">Save to update your public website and booking details.</p>
+              <button type="button" onClick={handleSaveBasic} disabled={savingBasic}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[#ff9933] px-5 text-sm font-bold text-[#171412] transition hover:brightness-95 disabled:opacity-60">
+                {savingBasic ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#171412]/30 border-t-[#171412]" /> : savedBasic ? <CheckCircle size={15} /> : <Save size={15} />}
+                {savedBasic ? 'Saved' : 'Save basic info'}
+              </button>
+            </div>
+          </div>
+
+
         </div>
       )}
 
@@ -720,13 +727,7 @@ export default function ProfilePage() {
                 {selectedTemplate === 'classic3' && <CT3ContentEditor value={(profileContent as any).classic3 ?? {}} onChange={v => patchContent('classic3', v as CT3Content)} saveButton={contentSaveButton} />}
                 {selectedTemplate === 'classic4' && <CT4ContentEditor value={(profileContent as any).classic4 ?? {}} onChange={v => patchContent('classic4', v as CT4Content)} saveButton={contentSaveButton} />}
                 {selectedTemplate === 'classic5' && <CT5ContentEditor value={(profileContent as any).classic5 ?? {}} onChange={v => patchContent('classic5', v as CT5Content)} saveButton={contentSaveButton} />}
-                {selectedTemplate === 'classic6' && (
-                  <p className="rounded-xl border border-[#ded8ce] bg-[#fbfaf8] p-4 text-sm text-[#6f665d]">
-                    The Quiet Room's content is edited directly on the template. Visit
-                    <Link href="/dashboard/appearance" className="mx-1 font-semibold text-[#c2650a] hover:underline">My Website</Link>
-                    to preview it.
-                  </p>
-                )}
+                {selectedTemplate === 'classic6' && <CT6ContentEditor value={(profileContent as any).classic6 ?? {}} onChange={v => patchContent('classic6', v as CT6Content)} saveButton={contentSaveButton} />}
               </>
             )}
           </div>

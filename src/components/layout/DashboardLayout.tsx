@@ -68,7 +68,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const supabase = createClient()
 
   const [gate,       setGate]       = useState<'checking' | 'ok'>('checking')
-  const [therapist,  setTherapist]  = useState<{ full_name?: string; username?: string; plan?: string } | null>(null)
+  const [therapist,  setTherapist]  = useState<{ full_name?: string; username?: string; plan?: string; email?: string } | null>(null)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -86,7 +86,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (!alive) return
       const plan    = data?.plan
       const hasPlan = !!plan && !['none', 'free', ''].includes(plan)
-      if (hasPlan) { setTherapist(data); setGate('ok') }
+      if (hasPlan) { setTherapist({ ...data, email: user.email ?? undefined }); setGate('ok') }
       else router.replace('/pricing?redirect=' + encodeURIComponent(pathname))
     })()
     return () => { alive = false }
@@ -209,7 +209,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </span>
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-bold truncate" style={{ color: INK }}>{firstName}</p>
-            <p className="text-[11px]" style={{ color: '#9a9188' }}>{planLabel} plan</p>
+            {therapist?.email ? (
+              <p className="text-[11px] truncate" style={{ color: '#9a9188' }} title={therapist.email}>{therapist.email}</p>
+            ) : (
+              <p className="text-[11px]" style={{ color: '#9a9188' }}>{planLabel} plan</p>
+            )}
           </div>
           {!isPro ? (
             <Link

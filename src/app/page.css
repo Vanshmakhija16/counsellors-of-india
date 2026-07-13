@@ -8475,7 +8475,15 @@ section#experience.texp {
   .pfoot-top{ gap: 2.4rem 3rem; }
 }
 @media(max-width: 760px){
-  .pfoot-top{ flex-direction: column; gap: 2.4rem; }
+  .pfoot-top{ flex-direction: column; gap: 1.4rem; }
+  .pfoot-col:nth-of-type(2){
+    margin-left: 0;
+    margin-top: 3.6rem;
+  }
+  /* .pfoot-brand's 440px flex-basis is meant for desktop row *width* —
+     in column direction that basis applies to *height* instead, forcing
+     a huge empty gap below the logo/tagline/socials before "PLATFORM". */
+  .pfoot-brand{ flex: 0 0 auto; }
 }
 .pfoot-col-news .pfoot-news{ padding: 0; background: none; border: none; border-radius: 0; }
 .pfoot-brand{ max-width: 440px; }
@@ -8485,8 +8493,15 @@ section#experience.texp {
   font-family: var(--display); font-size: 17px; font-weight: 500;
   letter-spacing: -.01em; line-height: 1.15;
 }
-.pfoot-logo-img{ height: 48px; width: auto; object-fit: contain; flex-shrink: 0; }
-.pfoot-tag{
+.pfoot-logo-img {
+  height: 58px;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+  background: #fff;           /* contrasting bg behind the logo */
+  border-radius: 10px;        /* soften the box edges */
+  /* padding: 6px 8px;           breathing room so bg isn't tight against the mark */
+}.pfoot-tag{
   margin: 1.3rem 0 0;
   font-family: var(--sans); font-size: 14.5px; font-weight: 300; line-height: 1.75;
   color: rgba(255,255,255,.5);

@@ -14,7 +14,7 @@ import Hero from './QuietRoom/Hero'
 import About from './QuietRoom/About'
 import Expertise from './QuietRoom/Expertise'
 import Process from './QuietRoom/Process'
-import Testimonials from './QuietRoom/Testimonials'
+import Testimonials, { type QRFeedbackItem } from './QuietRoom/Testimonials'
 import FAQ from './QuietRoom/FAQ'
 import Readings from './QuietRoom/Readings'
 import Booking from './QuietRoom/Booking'
@@ -24,9 +24,10 @@ interface ClassicTemplate6Props {
   therapist: TherapistProfile
   bookedTimes?: string[]
   hiddenSections?: string[]
+  feedbacks?: QRFeedbackItem[]
 }
 
-export default function ClassicTemplate6({ therapist, bookedTimes = [], hiddenSections = [] }: ClassicTemplate6Props) {
+export default function ClassicTemplate6({ therapist, bookedTimes = [], hiddenSections = [], feedbacks = [] }: ClassicTemplate6Props) {
   const orderedIds = getOrderedSections('classic6', therapist.section_order, hiddenSections).map(s => s.id)
 
   // Scroll only THIS document's window (never asks a parent iframe host).
@@ -52,8 +53,8 @@ export default function ClassicTemplate6({ therapist, bookedTimes = [], hiddenSe
           case 'hero':         return <Hero key={id} therapist={therapist} scrollTo={scrollTo} />
           case 'about':        return <About key={id} therapist={therapist} />
           case 'expertise':    return <Expertise key={id} therapist={therapist} />
-          case 'process':      return <Process key={id} />
-          case 'testimonials': return <Testimonials key={id} therapist={therapist} />
+          case 'process':      return <Process key={id} therapist={therapist} />
+          case 'testimonials': return <Testimonials key={id} therapist={therapist} feedbacks={feedbacks} />
           case 'faq':          return <FAQ key={id} therapist={therapist} />
           case 'readings':     return <Readings key={id} therapist={therapist} />
           case 'booking':      return <Booking key={id} therapist={therapist} bookedTimes={bookedTimes} />
