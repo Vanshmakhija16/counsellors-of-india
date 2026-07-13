@@ -17,7 +17,7 @@ const TRUST_POINTS = [
   },
   {
     icon: MessageCircle,
-    title: 'Talk to a real person',
+    title: 'Talk to us',
     body: 'Platform questions, pricing, or getting your practice set up, ask us anything.',
   },
   {
