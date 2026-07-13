@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import MarketingHeader from '@/components/layout/MarketingHeader'
+import SiteNav from '@/components/layout/SiteNav'
 import SiteFooter from '@/components/layout/SiteFooter'
 import ContactForm from '@/components/contact/ContactForm'
 import { Mail, Clock, MessageCircle } from 'lucide-react'
@@ -30,7 +30,7 @@ const TRUST_POINTS = [
 export default function ContactPage() {
   return (
     <div className="flex min-h-screen flex-col bg-[#FFFCF8]">
-      <MarketingHeader />
+      <SiteNav />
 
       {/* Hero + form, single composed section for tighter visual rhythm */}
       <section className="relative overflow-hidden px-6 pt-28 pb-24">

@@ -63,11 +63,11 @@ export default function SiteNav() {
           <span className="nav-mobile-title">Counsellors of India</span>
 
           <div className="nav-mid">
-            <Link href="/about" className={`nav-a ${isActive('/about') ? 'on' : ''}`}>About</Link>
-            <Link href="/why-us" className={`nav-a ${isActive('/why-us') ? 'on' : ''}`}>Why Us</Link>
-            <Link href="/onboarding-guide" className={`nav-a ${isActive('/onboarding-guide') ? 'on' : ''}`}>How it works</Link>
-            <Link href="/blog" className={`nav-a ${isActive('/blog') ? 'on' : ''}`}>Blog</Link>
-            <Link href="/contact" className={`nav-a ${isActive('/contact') ? 'on' : ''}`}>Contact</Link>
+            <Link href="/#experience" className="nav-a">Templates</Link>
+            <Link href="/#templates" className="nav-a">Demo</Link>
+            <Link href="/#how" className="nav-a">Steps</Link>
+            <Link href="/#therapists" className="nav-a">Therapists</Link>
+            <Link href="/#pricing" className="nav-a">Pricing</Link>
           </div>
 
           <div className="nav-r">
@@ -116,11 +116,11 @@ export default function SiteNav() {
         </div>
 
         <div className="sidebar-links">
-          <a href="/about" className={isActive('/about') ? 'on' : ''}>About</a>
-          <a href="/why-us" className={isActive('/why-us') ? 'on' : ''}>Why Us</a>
-          <a href="/onboarding-guide" className={isActive('/onboarding-guide') ? 'on' : ''}>How it works</a>
-          <a href="/blog" className={isActive('/blog') ? 'on' : ''}>Blog</a>
-          <a href="/contact" className={isActive('/contact') ? 'on' : ''}>Contact</a>
+          <a href="/#templates">Demo</a>
+          <a href="/#experience">Templates</a>
+          <a href="/#how">Steps</a>
+          <a href="/#therapists">Therapists</a>
+          <a href="/#pricing">Pricing</a>
         </div>
 
         <div className="sidebar-card">

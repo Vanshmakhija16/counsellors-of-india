@@ -1,13 +1,68 @@
 // components/landing/FooterReveal.tsx
 'use client'
 
-import { useRef } from 'react'
+import { useEffect, useRef } from 'react'
 
 const WORDMARK = 'Counsellors of India'
+const MIN_FONT = 30   // below this, switch to a two-line wrap instead of shrinking further
+const MAX_FONT = 150  // design ceiling, matches the old clamp() max
+const SAFETY = 0.95   // small margin so the text never touches the container edge
 
 export default function FooterReveal() {
   const wordRef = useRef<HTMLHeadingElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
   const touchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Measures the real available width and the wordmark's actual rendered
+  // width at a reference font-size (via canvas, accounting for the
+  // negative letter-spacing too), then scales the font linearly so the
+  // text always fills — but never exceeds — that width. Re-runs on any
+  // container resize, so it's correct at every breakpoint without
+  // hand-tuned vw/cqw guesses per screen size.
+  useEffect(() => {
+    const headingEl = wordRef.current
+    const containerEl = containerRef.current
+    if (!headingEl || !containerEl) return
+
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+
+    function fit() {
+      if (!ctx || !headingEl || !containerEl) return
+      const cs = window.getComputedStyle(containerEl)
+      const available = containerEl.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
+      if (available <= 0) return
+
+      const refSize = 100
+      const hs = window.getComputedStyle(headingEl)
+      ctx.font = `${hs.fontWeight} ${refSize}px ${hs.fontFamily}`
+      const baseWidth = ctx.measureText(WORDMARK).width
+      const letterSpacingAtRef = refSize * -0.01 // matches the inline letterSpacing below
+      const totalWidthAtRef = baseWidth + letterSpacingAtRef * (WORDMARK.length - 1)
+
+      const idealFont = (available / totalWidthAtRef) * refSize * SAFETY
+
+      if (idealFont < MIN_FONT) {
+        // Too tight even at the readability floor — wrap onto two lines
+        // instead of shrinking further.
+        headingEl.style.fontSize = `${MIN_FONT}px`
+        headingEl.style.whiteSpace = 'normal'
+      } else {
+        headingEl.style.fontSize = `${Math.min(idealFont, MAX_FONT)}px`
+        headingEl.style.whiteSpace = 'nowrap'
+      }
+    }
+
+    fit()
+    const ro = new ResizeObserver(fit)
+    ro.observe(containerEl)
+    window.addEventListener('resize', fit)
+    document.fonts?.ready?.then(fit) // re-fit once the real webfont has loaded (canvas measured a fallback font before that)
+    return () => {
+      ro.disconnect()
+      window.removeEventListener('resize', fit)
+    }
+  }, [])
 
   // :hover does nothing on touch devices, so a tap re-triggers the same
   // letter-wave animation via a .fr-touch class instead. Timed to outlast
@@ -47,7 +102,7 @@ export default function FooterReveal() {
       {/* Radial glow overlay removed — flat solid background now, to match SiteFooter exactly */}
 
       {/* ── Content ── */}
-      <div className="relative z-10 text-center px-6 max-w-5xl mx-auto">
+      <div ref={containerRef} className="relative z-10 text-center px-6 w-full max-w-5xl mx-auto fr-word-container">
 
         {/* Eyebrow */}
         {/* <p
@@ -58,13 +113,18 @@ export default function FooterReveal() {
         </p> */}
 
         {/* Hero type — the big statement */}
+        <style>{`
+          .fr-heading {
+            font-size: clamp(40px, 7vw, 140px); /* pre-hydration fallback only — JS takes over and measures the exact fit on mount */
+            white-space: nowrap;
+          }
+        `}</style>
         <h2
           ref={wordRef}
           onClick={onTouch}
           onTouchStart={onTouch}
-          className="font-bold leading-[0.9] tracking-tighter mb-8 select-none fr-word"
+          className="font-bold leading-[0.9] tracking-tighter mb-8 select-none fr-word fr-heading"
           style={{
-            fontSize: 'clamp(52px, 7vw, 140px)',
             letterSpacing: '-0.01em',
           }}
         >

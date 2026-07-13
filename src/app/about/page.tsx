@@ -123,7 +123,7 @@ export default function AboutPage() {
             We envision a future where every psychologist in India has a professional online presence, making
             quality mental health care easier to discover, access, and trust. As the profession continues to
             evolve, Counsellors of India will continue building tools that support practitioners at every stage of
-            their journey — from starting a private practice to growing an established one.
+            their journey, from starting a private practice to growing an established one.
           </p>
           <Link
             href="/signup"
