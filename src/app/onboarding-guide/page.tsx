@@ -28,8 +28,8 @@ export default function OnboardingGuidePage() {
             Go live in <span className="text-[#FF9933]">10 minutes.</span>
           </h1>
           <p className="mx-auto mt-4 max-w-2xl text-[15px] leading-relaxed text-[#6E685F]">
-            Seven calm steps from sign-up to your first client booking, one at a time. Use Back and Next to move
-            through the journey, or tap any step on the rail to jump straight to it.
+            Seven calm steps from sign-up to your first client booking, one at a time. Scroll through the journey,
+            or tap any step on the rail to jump straight to it.
           </p>
         </div>
       </section>

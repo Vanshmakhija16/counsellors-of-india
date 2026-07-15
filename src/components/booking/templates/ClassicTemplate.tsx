@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { TherapistProfile, getNext7Days, resolveCT1Content } from './templateUtils'
 import { getOrderedSections } from '@/lib/template'
 import { globalStyles } from './ClassicTemplate/styles'
+import Loader from './ClassicTemplate/Loader'
 import Navbar from './ClassicTemplate/Navbar'
 import Hero from './ClassicTemplate/Hero'
 import About from './ClassicTemplate/About'
@@ -79,6 +80,7 @@ function ClassicTemplateInner({ bookedTimes = [], feedbacks = [], hiddenSections
     : baseSlides
 
   const [scrolled, setScrolled] = useState(false)
+  const [loaderDone, setLoaderDone] = useState(false)
   const [heroLoaded, setHeroLoaded] = useState(false)
   const heroRef = useRef<HTMLElement | null>(null)
   const [carouselIndex, setCarouselIndex] = useState(0)
@@ -122,9 +124,15 @@ function ClassicTemplateInner({ bookedTimes = [], feedbacks = [], hiddenSections
   }, [])
 
   useEffect(() => {
-    const t = window.setTimeout(() => setHeroLoaded(true), 60)
+    // Hero's own entrance animation (.ct-hero--in) waits for the loader
+    // ritual to finish, so it doesn't quietly play out underneath the
+    // overlay before the visitor ever sees it.
+    if (loaderDone) setHeroLoaded(true)
+  }, [loaderDone])
+
+  useEffect(() => {
     const hero = heroRef.current
-    if (!hero) return () => window.clearTimeout(t)
+    if (!hero) return
     let raf = 0, targetX = 0, targetY = 0, curX = 0, curY = 0
     const onMove = (e: MouseEvent) => {
       const rect = hero.getBoundingClientRect()
@@ -138,7 +146,7 @@ function ClassicTemplateInner({ bookedTimes = [], feedbacks = [], hiddenSections
     }
     raf = requestAnimationFrame(loop)
     window.addEventListener('mousemove', onMove, { passive: true })
-    return () => { window.clearTimeout(t); cancelAnimationFrame(raf); window.removeEventListener('mousemove', onMove) }
+    return () => { cancelAnimationFrame(raf); window.removeEventListener('mousemove', onMove) }
   }, [])
 
   const startAuto = useCallback(() => {
@@ -230,8 +238,11 @@ function ClassicTemplateInner({ bookedTimes = [], feedbacks = [], hiddenSections
   return (
     <div className="font-sans" ref={rootRef}>
       <style>{globalStyles}</style>
+      <Loader onDone={() => setLoaderDone(true)} therapistName={therapist.name} />
       <Navbar scrolled={scrolled} scrollTo={scrollTo} therapist={therapist} />
-      {orderedIds.map(id => sectionEls[id])}
+      <div className={`ct-stage ${loaderDone ? 'ct-stage--in' : ''}`}>
+        {orderedIds.map(id => sectionEls[id])}
+      </div>
       <EditToggle />
     </div>
   )

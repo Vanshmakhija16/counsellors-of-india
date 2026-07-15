@@ -28,9 +28,9 @@ export default function Hero({ therapist, scrollTo }: HeroProps) {
           display: flex; align-items: center;
           padding: 150px 0 90px;
           background:
-            radial-gradient(120% 100% at 85% 15%, rgba(168,224,99,0.08) 0%, transparent 55%),
-            radial-gradient(90% 90% at 10% 100%, rgba(76,122,90,0.14) 0%, transparent 60%),
-            linear-gradient(160deg, #0F2419 0%, #0B1A13 60%, #08120D 100%);
+            radial-gradient(120% 100% at 85% 15%, rgba(198,167,107,0.08) 0%, transparent 55%),
+            radial-gradient(90% 90% at 10% 100%, rgba(107,122,112,0.14) 0%, transparent 60%),
+            linear-gradient(160deg, #2C3B35 0%, #23302B 60%, #1A2521 100%);
           overflow: hidden;
         }
         .ct7-hero::after {
@@ -54,9 +54,9 @@ export default function Hero({ therapist, scrollTo }: HeroProps) {
         .ct7-hero-pill {
           display: inline-flex; align-items: center; gap: 8px;
           padding: 8px 16px; border-radius: 100px;
-          background: rgba(168,224,99,0.1); border: 1px solid rgba(168,224,99,0.25);
+          background: rgba(198,167,107,0.12); border: 1px solid rgba(198,167,107,0.28);
           font-family: 'Inter', system-ui, sans-serif; font-size: 12.5px; font-weight: 600;
-          color: #A8E063; margin-bottom: 26px;
+          color: #D9BC85; margin-bottom: 26px;
         }
 
         .ct7-hero-headline {
@@ -65,7 +65,7 @@ export default function Hero({ therapist, scrollTo }: HeroProps) {
           max-width: 14ch; color: #F6F1E7;
         }
         .ct7-hero-headline em {
-          font-style: normal; color: #A8E063;
+          font-style: normal; color: #D9BC85;
         }
 
         .ct7-hero-sub {
@@ -86,7 +86,7 @@ export default function Hero({ therapist, scrollTo }: HeroProps) {
         }
         .ct7-hero-feat-icon {
           width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
-          background: rgba(168,224,99,0.12); color: #A8E063;
+          background: rgba(198,167,107,0.14); color: #D9BC85;
           display: flex; align-items: center; justify-content: center;
         }
         .ct7-hero-feat-t { font-family: 'Inter', system-ui, sans-serif; font-size: 12.5px; font-weight: 600; color: #F6F1E7; line-height: 1.3; }
@@ -98,13 +98,13 @@ export default function Hero({ therapist, scrollTo }: HeroProps) {
         .ct7-hero-cta-primary {
           display: inline-flex; align-items: center; gap: 9px;
           padding: 15px 28px; border-radius: 100px;
-          background: #A8E063; color: #0F2419;
+          background: #C6A76B; color: #23302B;
           border: none; cursor: pointer;
           font-family: 'Inter', system-ui, sans-serif; font-size: 14px; font-weight: 700;
-          box-shadow: 0 10px 26px rgba(168,224,99,0.22);
+          box-shadow: 0 10px 26px rgba(198,167,107,0.22);
           transition: transform 260ms var(--ct7-ease-out), box-shadow 260ms var(--ct7-ease-out);
         }
-        .ct7-hero-cta-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(168,224,99,0.3); }
+        .ct7-hero-cta-primary:hover { transform: translateY(-2px); box-shadow: 0 14px 32px rgba(198,167,107,0.3); }
 
         .ct7-hero-cta-secondary {
           display: inline-flex; align-items: center; gap: 10px;
@@ -132,8 +132,8 @@ export default function Hero({ therapist, scrollTo }: HeroProps) {
           border-radius: 20px;
           padding: 0;
           overflow: hidden;
-          background: linear-gradient(160deg, #1B3A2A, #0F2419);
-          box-shadow: 0 40px 80px rgba(0,0,0,0.35);
+          background: linear-gradient(160deg, #3B4B43, #23302B);
+          box-shadow: 0 40px 80px rgba(0,0,0,0.3);
         }
         .ct7-hero-frame img {
           width: 100%; height: 100%; object-fit: cover; object-position: center 18%; display: block;
@@ -142,46 +142,46 @@ export default function Hero({ therapist, scrollTo }: HeroProps) {
 
         .ct7-hero-badge {
           position: absolute; left: 16px; bottom: 16px; z-index: 3;
-          background: rgba(15,36,25,0.9); backdrop-filter: blur(6px);
+          background: rgba(35,48,43,0.9); backdrop-filter: blur(6px);
           border: 1px solid rgba(246,241,231,0.1);
           padding: 9px 15px; border-radius: 100px;
           font-family: 'Inter', system-ui, sans-serif; font-size: 11.5px; font-weight: 600; color: #F6F1E7;
           display: flex; align-items: center; gap: 8px;
         }
-        .ct7-hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #A8E063; box-shadow: 0 0 8px 2px rgba(168,224,99,0.5); }
+        .ct7-hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: #C6A76B; box-shadow: 0 0 8px 2px rgba(198,167,107,0.5); }
 
         .ct7-hero-stat {
           position: absolute; top: 20px; right: -14px; z-index: 3;
-          background: #F6F1E7; color: #0F2419;
+          background: #F6F1E7; color: #23302B;
           padding: 12px 16px; border-radius: 14px;
-          box-shadow: 0 16px 32px rgba(0,0,0,0.25);
+          box-shadow: 0 16px 32px rgba(0,0,0,0.2);
           font-family: 'Inter', system-ui, sans-serif;
         }
         @media (max-width: 900px) { .ct7-hero-stat { right: 6px; } }
         .ct7-hero-stat-n { font-size: 18px; font-weight: 700; line-height: 1; }
-        .ct7-hero-stat-l { font-size: 10px; color: #4C7A5A; margin-top: 3px; font-weight: 600; }
+        .ct7-hero-stat-l { font-size: 10px; color: #6B7A70; margin-top: 3px; font-weight: 600; }
       `}</style>
 
       <div className="ct7-hero-grid">
         <div className="ct7-hero-left">
-          <span className="ct7-hero-pill">
+          {/* <span className="ct7-hero-pill ct7-hero-enter" style={{ '--ct7-d': '200ms' } as React.CSSProperties}>
             <Sparkles size={13} /> Feel Better · Move Freely · Live Fully
-          </span>
+          </span> */}
 
-          <h1 className="ct7-hero-headline">
+          <h1 className="ct7-hero-headline ct7-hero-enter" style={{ '--ct7-d': '340ms' } as React.CSSProperties}>
             {therapist.tagline?.trim() || (
               <>Transforming pain into <em>strength</em>, one step at a time</>
             )}
           </h1>
 
-          <p className="ct7-hero-sub">
+          <p className="ct7-hero-sub ct7-hero-enter" style={{ '--ct7-d': '460ms' } as React.CSSProperties}>
             {therapist.approach_text?.trim() ||
               (specialty
                 ? `Personalised support for ${specialty.toLowerCase()} — a calm, considered space to help you recover, cope, and move forward.`
                 : 'Personalised, evidence-based support to help you recover, cope, and move toward a fuller life — at your own pace.')}
           </p>
 
-          <div className="ct7-hero-feats">
+          <div className="ct7-hero-feats ct7-hero-enter" style={{ '--ct7-d': '560ms' } as React.CSSProperties}>
             {FEATURES.map(({ Icon, title, sub }) => (
               <div className="ct7-hero-feat" key={title}>
                 <span className="ct7-hero-feat-icon"><Icon size={16} strokeWidth={2} /></span>
@@ -193,8 +193,8 @@ export default function Hero({ therapist, scrollTo }: HeroProps) {
             ))}
           </div>
 
-          <div className="ct7-hero-ctas">
-            <button className="ct7-hero-cta-primary" onClick={() => scrollTo('booking')}>
+          <div className="ct7-hero-ctas ct7-hero-enter" style={{ '--ct7-d': '680ms' } as React.CSSProperties}>
+            <button className="ct7-hero-cta-primary" onClick={() => scrollTo('booking')} data-magnetic>
               Book a Session
             </button>
             <button className="ct7-hero-cta-secondary" onClick={() => scrollTo('about')}>

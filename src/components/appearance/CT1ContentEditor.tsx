@@ -220,7 +220,7 @@ export default function CT1ContentEditor({ value, onChange, saveButton }: Props)
                 </Field>
                 <Field label="Role / label">
                   <input value={slide.role ?? ''} onChange={e => update({ role: e.target.value })}
-                    placeholder="Client — 2024" className={inp} />
+                    placeholder="Client - 2024" className={inp} />
                 </Field>
               </>)}
             </>

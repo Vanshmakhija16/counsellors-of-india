@@ -119,7 +119,7 @@ export default function AboutPage() {
             {/* right — fact column, no cards, just labels + values */}
             <div className="divide-y" style={{ borderColor: '#DDD6CB', borderTop: '1px solid #DDD6CB' }}>
               {[
-                { label: 'Founded',            value: '2024, Jaipur'                  },
+                { label: 'Founded',            value: '2026, Jaipur'                  },
                 { label: 'Focus',              value: 'Mental health professionals'   },
                 { label: 'Average setup time', value: 'Under 10 minutes'               },
               ].map(row => (

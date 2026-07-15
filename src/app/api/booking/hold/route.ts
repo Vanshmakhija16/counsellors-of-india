@@ -38,6 +38,14 @@ const HOLD_MINUTES = 15
 // Flip this back to true once therapist-direct payouts are live.
 const PAYMENTS_ENABLED = false
 
+// 💳 Which gateway builds the paid-booking response below.
+// 'razorpay' uses the existing per-therapist Razorpay integration (money
+// goes straight to the therapist's own connected account — see
+// /api/razorpay/therapist-order and useRazorpayCheckout). 'payu' keeps the
+// original platform-settled flow untouched, further down this file, for
+// quick rollback. Nothing is deleted — this just picks which branch runs.
+const PAYMENT_PROVIDER: 'razorpay' | 'payu' = 'razorpay'
+
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
@@ -333,7 +341,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ free: true, appointment_id: appointmentId })
     }
 
-    // ── Build PayU form ───────────────────────────────────────────────────
+    // ── Razorpay flow — stays on-page; the client opens Razorpay checkout
+    // directly against the therapist's own connected account via
+    // useRazorpayCheckout → /api/razorpay/therapist-order + therapist-verify.
+    // None of the PayU code below runs when this branch is taken.
+    if (PAYMENT_PROVIDER === 'razorpay') {
+      return NextResponse.json({
+        provider:       'razorpay',
+        appointment_id: appointmentId,
+        therapist_id,
+        amount:         effectivePrice,
+        client_name,
+        client_email,
+        client_phone,
+        description:    resolved.serviceName
+          ? `${resolved.serviceName} with ${therapist?.full_name ?? 'Therapist'}`
+          : `Therapy session with ${therapist?.full_name ?? 'Therapist'}`,
+      })
+    }
+
+    // ── Build PayU form (only reached when PAYMENT_PROVIDER === 'payu') ─────
     assertPayuConfigured()
 
     const amount      = formatAmount(effectivePrice)

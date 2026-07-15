@@ -101,7 +101,7 @@ export const demoProfiles: Record<string, any> = {
         insights: [
           { title: 'Understanding Anxiety in the Body', excerpt: 'Why anxiety lives in the nervous system, and what that means for treatment.', category: 'Anxiety', date: 'March 2025' },
           { title: 'The Difference Between Grief and Depression', excerpt: 'Two experiences that can look similar but require very different support.', category: 'Grief', date: 'January 2025' },
-          { title: 'Secure Attachment in Adult Relationships', excerpt: 'How early attachment patterns show up in our closest relationships and how to change them.', category: 'Relationships', date: 'November 2024' },
+          { title: 'Secure Attachment in Adult Relationships', excerpt: 'How early attachment patterns show up in our closest relationships and how to change them.', category: 'Relationships', date: 'April 2026' },
         ],
       }
     },

@@ -17,6 +17,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRazorpayCheckout } from '@/hooks/useRazorpayCheckout'
 
 export interface BookingPayload {
   therapist_id:  string
@@ -37,6 +38,7 @@ interface UseBookingOptions {
 
 export function useBooking({ onSuccess, onError, onSlotsRefresh }: UseBookingOptions = {}) {
   const [loading, setLoading] = useState(false)
+  const { initiatePayment } = useRazorpayCheckout()
 
   async function book(payload: BookingPayload) {
     setLoading(true)
@@ -83,7 +85,32 @@ export function useBooking({ onSuccess, onError, onSlotsRefresh }: UseBookingOpt
         return
       }
 
-      // Paid booking — submit form to PayU (browser leaves the page)
+      // Paid booking, Razorpay — stays on this page and opens the therapist's
+      // own Razorpay checkout (order + signature verification happen inside
+      // useRazorpayCheckout). Kept as its own branch so the original PayU
+      // redirect flow right below is completely untouched.
+      if (data.provider === 'razorpay') {
+        await initiatePayment({
+          therapistId:   data.therapist_id,
+          appointmentId: data.appointment_id,
+          amount:        data.amount,
+          clientName:    data.client_name,
+          clientEmail:   data.client_email,
+          clientPhone:   data.client_phone,
+          description:   data.description,
+          onSuccess: () => {
+            setLoading(false)
+            onSuccess?.(data.appointment_id)
+          },
+          onFailure: (reason) => {
+            setLoading(false)
+            onError?.(reason)
+          },
+        })
+        return
+      }
+
+      // Paid booking, PayU (unchanged) — submit form to PayU (browser leaves the page)
       // Do NOT setLoading(false) here — page navigates away
       const form = document.createElement('form')
       form.method  = 'POST'

@@ -7,7 +7,13 @@ import { createClient } from '@/lib/supabase'
 import Button from '@/components/ui/Button'
 import { Check, Lock, Zap, ArrowRight, ShieldCheck, Crown, X } from 'lucide-react'
 import { startPayuPlanCheckout } from '@/lib/payu-client'
+import { startRazorpayPlanCheckout } from '@/lib/razorpay-client'
 import JourneyProgress from '@/components/journey/JourneyProgress'
+
+// 💳 Which gateway the "choose a plan" buttons use. Kept as a single flag so
+// reverting to PayU is a one-line change — startPayuPlanCheckout below is
+// untouched, just unused while this is 'razorpay'.
+const PLAN_PAYMENT_PROVIDER: 'razorpay' | 'payu' = 'razorpay'
 
 const PLAN_PRICE: Record<string, number> = { starter: 1499, pro: 2499 }
 const PLAN_RANK:  Record<string, number> = { starter: 1,    pro: 2   }
@@ -90,11 +96,18 @@ function PricingPageInner() {
   const redirectAfter = searchParams.get('redirect') ?? '/dashboard'
 
   // Close / back: return to wherever the user came from. Prefer the explicit
-  // ?redirect target; otherwise use browser history; otherwise the dashboard.
+  // ?redirect target; otherwise use browser history; otherwise the homepage.
+  //
+  // Guard against the redirect loop: if the target is a /dashboard route and
+  // the user still has no active plan, DashboardLayout's own gate would just
+  // bounce them straight back here (dashboard -> pricing -> dashboard ...).
+  // In that case, go home instead so closing this page actually goes
+  // somewhere.
   function goBack() {
     const from = searchParams.get('redirect')
-    if (from) { router.push(from); return }
-    if (typeof window !== 'undefined' && window.history.length > 1) { router.back(); return }
+    const noPlanYet = !currentPlan || currentPlan === 'free' || currentPlan === 'none'
+    if (from && !(noPlanYet && from.startsWith('/dashboard'))) { router.push(from); return }
+    if (typeof window !== 'undefined' && window.history.length > 1 && !(noPlanYet && from?.startsWith('/dashboard'))) { router.back(); return }
     router.push('/')
   }
 
@@ -169,11 +182,25 @@ const highest =
         return
       }
 
-      // New paid plan → PayU hosted checkout.
-      // This redirects the browser away to PayU; on return, /api/payu/callback
-      // verifies the response hash, applies the upgrade, and routes the user to
-      // /payment/success (or /payment/failure). uid + plan travel via udf1/udf2.
+      // New paid plan → gateway determined by PLAN_PAYMENT_PROVIDER.
+      // Razorpay opens an in-page checkout modal and resolves once the
+      // upgrade is verified + applied; PayU redirects the browser away and
+      // /api/payu/callback applies the upgrade on return.
       sessionStorage.setItem('pending_plan', planId)
+
+      if (PLAN_PAYMENT_PROVIDER === 'razorpay') {
+        await startRazorpayPlanCheckout({ plan: planId, email: userEmail })
+        setCurrentPlan(planId)
+        setHighestPlan(prev => (PLAN_RANK[planId] > (PLAN_RANK[prev] ?? 0) ? planId : prev))
+        setSuccessMsg(`✓ ${planId.charAt(0).toUpperCase() + planId.slice(1)} plan activated!`)
+        setSelecting(null)
+        setTimeout(() => router.push(redirectAfter), 1000)
+        return
+      }
+
+      // PayU hosted checkout (unchanged) — browser navigates away here; on
+      // return, /api/payu/callback verifies the response hash, applies the
+      // upgrade, and routes the user to /payment/success (or /payment/failure).
       await startPayuPlanCheckout(planId)
       // Browser navigates to PayU here — nothing below runs on success.
     } catch (err: unknown) {
@@ -482,7 +509,7 @@ const highest =
                   size={12}
                   className="text-[#FF9933]"
                 />
-                Secure payment via PayU
+                Secure payment via {PLAN_PAYMENT_PROVIDER === 'razorpay' ? 'Razorpay' : 'PayU'}
               </p>
             </div>
           )}

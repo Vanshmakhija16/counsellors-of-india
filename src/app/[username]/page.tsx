@@ -9,6 +9,7 @@ import ClassicTemplate3 from '@/components/booking/templates/ClassicTemplate3'
 import ClassicTemplate4 from '@/components/booking/templates/ClassicTemplate4'
 import ClassicTemplate5 from '@/components/booking/templates/ClassicTemplate5'
 import ClassicTemplate6 from '@/components/booking/templates/ClassicTemplate6'
+import ClassicTemplate7 from '@/components/booking/templates/ClassicTemplate7'
 
 const BASE_URL = 'https://www.counsellorsofindia.com'
 
@@ -202,6 +203,7 @@ export default async function TherapistPublicPage({
       case 'classic4': return <ClassicTemplate4 therapist={profile} bookedTimes={bookedTimes} hiddenSections={hiddenSections} />
       case 'classic5': return <ClassicTemplate5 therapist={profile} bookedTimes={bookedTimes} hiddenSections={hiddenSections} />
       case 'classic6': return <ClassicTemplate6 therapist={profile} bookedTimes={bookedTimes} hiddenSections={hiddenSections} feedbacks={feedbacks ?? []} />
+      case 'classic7': return <ClassicTemplate7 therapist={profile} bookedTimes={bookedTimes} hiddenSections={hiddenSections} feedbacks={feedbacks ?? []} />
       default:         return <ClassicTemplate  therapist={profile} bookedTimes={bookedTimes} feedbacks={feedbacks ?? []} hiddenSections={hiddenSections} isOwner={isOwner} />
     }
   })()

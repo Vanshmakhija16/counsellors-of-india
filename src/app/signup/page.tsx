@@ -27,8 +27,12 @@ function SignupForm() {
   const searchParams = useSearchParams()
   const supabase     = createClient()
 
-  // Honour ?redirect so we can chain: signup → pricing → onboarding
-  const redirectTo = searchParams.get('redirect') ?? '/pricing'
+  // Honour ?redirect so we can chain: signup → wherever it points.
+  // Default final destination (after they pick a plan) is the homepage.
+  // finishSignup() below always routes through /pricing first, carrying this
+  // as the pricing page's own ?redirect, so pricing's X/cancel button lands
+  // them back here.
+  const redirectTo = searchParams.get('redirect') ?? '/'
   const fromDemo   = searchParams.get('from') === 'demo'
 
   const [prefix, setPrefix]       = useState('Dr.')
@@ -302,8 +306,10 @@ function SignupForm() {
 
     if (demo) clearDemo()
 
-    // After signup always go to pricing so they can choose a plan
-    router.push(redirectTo)
+    // After signup, show pricing first. Pricing's close/cancel button (X)
+    // reads this same ?redirect and falls back to it (defaulting to home)
+    // if the user backs out without picking a plan.
+    router.push(`/pricing?redirect=${encodeURIComponent(redirectTo)}`)
   }
 
   const usernameBorder =

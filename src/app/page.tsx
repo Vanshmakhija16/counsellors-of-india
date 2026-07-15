@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import FaqRevealEffect from "@/components/landing/FaqRevealEffect";
 import FooterReveal from '@/components/landing/FooterReveal'
 import SiteFooter from '@/components/layout/SiteFooter'
+import { useTherapist } from '@/lib/useTherapist'
 import { loadDemo, saveDemo, emptyDemo, type DemoProfile } from '@/lib/demoSession'
 import { normalizeSpecialtyKey, titleCaseLabel } from '@/lib/specialties'
 import { Check, Crown, ArrowRight } from 'lucide-react'
@@ -1659,6 +1660,19 @@ export default function Home() {
   const [search,setSearch]=useState('')
   const [filter,setFilter]=useState('all') // 'all' | normalized specialty key | 'online' | 'in-person'
 
+  // Logged-in therapist (if any) - swaps the nav's "List your practice" CTA
+  // for the user's first name, linking to their dashboard instead of signup.
+  const { therapist: authTherapist } = useTherapist()
+  const authNameParts = (authTherapist?.full_name ?? '').trim().split(/\s+/).filter(Boolean)
+  const authFirstName = authNameParts.length > 1 && /^(dr|mr|mrs|ms|miss|mx|prof)\.?$/i.test(authNameParts[0])
+    ? authNameParts[1]
+    : (authNameParts[0] ?? '')
+  // If they haven't paid for a plan yet, clicking their name should send them
+  // to pick one (not straight into the dashboard, which would just bounce
+  // them to /pricing anyway via DashboardLayout's own gate).
+  const authHasPlan = !!authTherapist?.plan && !['none', 'free', ''].includes(authTherapist.plan)
+  const authHref = authHasPlan ? '/dashboard' : '/pricing?redirect=' + encodeURIComponent('/dashboard')
+
   // Magnetic hover tilt for therapist cards - the card tilts toward the
   // cursor position (small 3D perspective) and eases back flat on leave.
   function handleCardTiltMove(e: React.MouseEvent<HTMLAnchorElement>) {
@@ -1790,9 +1804,22 @@ export default function Home() {
       Sign in
     </Link> */}
 
-    <Link href="/signup" className="btn btn-dark">
-      List your practice
-    </Link>
+    {authTherapist ? (
+      <Link href={authHref} className="btn btn-dark" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+        {authFirstName || 'Dashboard'}
+        {authTherapist.photo_url && (
+          <img
+            src={authTherapist.photo_url}
+            alt=""
+            style={{ width: 22, height: 22, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+          />
+        )}
+      </Link>
+    ) : (
+      <Link href="/signup" className="btn btn-dark">
+        List your practice
+      </Link>
+    )}
   </div>
 
   <button
@@ -1873,11 +1900,24 @@ export default function Home() {
     </div>
 
     <div className="sidebar-card">
-      <p>Grow your counselling practice online.</p>
+      <p>Go to your dashabord.</p>
 
-      <Link href="/signup" className="btn btn-dark">
-        Get Started
-      </Link>
+      {authTherapist ? (
+        <Link href={authHref} className="btn btn-dark" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+           {authFirstName || 'Dashboard'}
+          {authTherapist.photo_url && (
+            <img
+              src={authTherapist.photo_url}
+              alt=""
+              style={{ width: 22, height: 22, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
+            />
+          )}
+        </Link>
+      ) : (
+        <Link href="/signup" className="btn btn-dark">
+          Get Started
+        </Link>
+      )}
     </div>
 
     {/* <div className="sidebar-footer">

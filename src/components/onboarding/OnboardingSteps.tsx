@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Check, MapPin } from 'lucide-react'
 
@@ -71,24 +71,126 @@ const STEPS = [
     label: 'Publish Website',
     title: 'Publish your website',
     body: [
-      'Preview your website. Once you\u2019re happy, publish it and start sharing your personal link with clients.',
+      "Preview your website. Once you're happy, publish it and start sharing your personal link with clients.",
       'Your practice is now live.',
     ],
   },
 ]
 
+function StepBody({ s }: { s: (typeof STEPS)[number] }) {
+  return (
+    <>
+      <div className="mb-1 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#B4600F]">
+        <MapPin size={13} /> Stop {s.n} of {STEPS.length}
+      </div>
+      <h3
+        className="mb-5 text-[22px] leading-snug text-[#1F1C18] sm:text-[26px]"
+        style={{ fontFamily: 'var(--font-jakarta)' }}
+      >
+        {s.title}
+      </h3>
+
+      {s.intro && <p className="mb-2.5 text-[14px] font-medium text-[#1F1C18]">{s.intro}</p>}
+
+      {s.list && (
+        <ul className="mb-4 grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
+          {s.list.map(item => (
+            <li key={item} className="flex items-center gap-2 text-[14px] text-[#4A453D]">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FF9933]" />
+              {item}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {s.body.map((p, bi) => (
+        <p key={bi} className="mb-2 text-[14.5px] leading-relaxed text-[#6E685F] last:mb-0">
+          {p}
+        </p>
+      ))}
+
+      {s.highlight && (
+        <div className="mt-5 rounded-xl border border-[#ECE5D9] bg-[#FAF7F2] p-4">
+          <div className="mb-1 text-[14px] font-semibold text-[#1F1C18]">{s.highlight.t}</div>
+          <p className="text-[13.5px] leading-relaxed text-[#6E685F]">{s.highlight.d}</p>
+        </div>
+      )}
+    </>
+  )
+}
+
 export default function OnboardingSteps() {
   const [current, setCurrent] = useState(1)
-  const step = STEPS.find(s => s.n === current)!
+  const [reducedMotion, setReducedMotion] = useState(false)
   const isFirst = current === 1
   const isLast = current === STEPS.length
 
-  function go(n: number) {
-    setCurrent(Math.min(STEPS.length, Math.max(1, n)))
-  }
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const rafId = useRef<number | null>(null)
+
+  useEffect(() => {
+    setReducedMotion(window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  }, [])
+
+  // ── Pin-and-scrub: the wrapper below is tall (STEPS.length × 100vh). Its
+  // inner panel is `position: sticky; top: X`, so as long as you're scrolling
+  // through that tall region the panel stays visually locked on screen — the
+  // "main page" doesn't move — while we read how far into that region the
+  // window has scrolled and swap which step is shown. Once you scroll past
+  // the wrapper (or back above it), it's ordinary page scroll again. No
+  // preventDefault/wheel-hijacking needed — native scroll does the locking.
+  useEffect(() => {
+    if (reducedMotion) return
+
+    function updateFromScroll() {
+      const wrapper = wrapperRef.current
+      if (!wrapper) return
+      const total = wrapper.offsetHeight - window.innerHeight
+      if (total <= 0) return
+      const rectTop = wrapper.getBoundingClientRect().top
+      const progress = Math.min(1, Math.max(0, -rectTop / total))
+      const idx = Math.min(STEPS.length - 1, Math.floor(progress * STEPS.length))
+      setCurrent(idx + 1)
+    }
+
+    function onScroll() {
+      if (rafId.current) cancelAnimationFrame(rafId.current)
+      rafId.current = requestAnimationFrame(updateFromScroll)
+    }
+
+    updateFromScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      if (rafId.current) cancelAnimationFrame(rafId.current)
+    }
+  }, [reducedMotion])
+
+  // Rail clicks / Back-Next: scroll the window to the middle of that step's
+  // slice of the wrapper's scroll range, so the sticky panel lands on it.
+  const go = useCallback(
+    (n: number) => {
+      const target = Math.min(STEPS.length, Math.max(1, n))
+
+      if (reducedMotion) {
+        setCurrent(target)
+        return
+      }
+
+      const wrapper = wrapperRef.current
+      if (!wrapper) return
+      const total = wrapper.offsetHeight - window.innerHeight
+      const wrapperTop = wrapper.getBoundingClientRect().top + window.scrollY
+      const sliceProgress = (target - 0.5) / STEPS.length
+      window.scrollTo({ top: wrapperTop + sliceProgress * total, behavior: 'smooth' })
+    },
+    [reducedMotion]
+  )
 
   return (
-    <div className="mx-auto max-w-5xl px-6">
+    <div className="mx-auto max-w-5xl px-6 py-16">
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_1fr] lg:items-start lg:gap-10">
         {/* ── VERTICAL RAIL ─────────────────────────────────────────── */}
         <div className="relative lg:sticky lg:top-28">
@@ -147,91 +249,75 @@ export default function OnboardingSteps() {
           </ol>
         </div>
 
-        {/* ── DESTINATION CARD for the current stop ───────────────────── */}
-        <div
-          key={current}
-          className="relative flex min-h-[420px] flex-col rounded-3xl border border-[#ECE5D9] bg-white p-8 shadow-[0_1px_2px_rgba(31,28,24,0.04),0_20px_50px_-24px_rgba(31,28,24,0.14)] animate-[stopfade_.4s_ease] sm:min-h-[460px] sm:p-10"
-        >
-          <div className="flex-1">
-            <div className="mb-1 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#B4600F]">
-              <MapPin size={13} /> Stop {step.n} of {STEPS.length}
-            </div>
-            <h3
-              className="mb-5 text-[22px] leading-snug text-[#1F1C18] sm:text-[26px]"
-              style={{ fontFamily: 'var(--font-jakarta)' }}
-            >
-              {step.title}
-            </h3>
-
-            {step.intro && <p className="mb-2.5 text-[14px] font-medium text-[#1F1C18]">{step.intro}</p>}
-
-            {step.list && (
-              <ul className="mb-4 grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
-                {step.list.map(item => (
-                  <li key={item} className="flex items-center gap-2 text-[14px] text-[#4A453D]">
-                    <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FF9933]" />
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            )}
-
-            {step.body.map((p, i) => (
-              <p key={i} className="mb-2 text-[14.5px] leading-relaxed text-[#6E685F] last:mb-0">
-                {p}
-              </p>
-            ))}
-
-            {step.highlight && (
-              <div className="mt-5 rounded-xl border border-[#ECE5D9] bg-[#FAF7F2] p-4">
-                <div className="mb-1 text-[14px] font-semibold text-[#1F1C18]">{step.highlight.t}</div>
-                <p className="text-[13.5px] leading-relaxed text-[#6E685F]">{step.highlight.d}</p>
+        {/* ── RIGHT COLUMN ─────────────────────────────────────────── */}
+        {reducedMotion ? (
+          // Reduced-motion fallback: no scroll-jack, just a normal stacked list.
+          <div className="flex flex-col gap-6">
+            {STEPS.map(s => (
+              <div
+                key={s.n}
+                className="rounded-3xl border border-[#ECE5D9] bg-white p-8 shadow-[0_1px_2px_rgba(31,28,24,0.04),0_20px_50px_-24px_rgba(31,28,24,0.14)] sm:p-10"
+              >
+                <StepBody s={s} />
               </div>
-            )}
+            ))}
           </div>
+        ) : (
+          <div ref={wrapperRef} className="relative" style={{ height: `${STEPS.length * 100}vh` }}>
+            <div className="sticky top-[12vh] h-[75vh] max-h-[640px] overflow-hidden rounded-3xl border border-[#ECE5D9] bg-white shadow-[0_1px_2px_rgba(31,28,24,0.04),0_20px_50px_-24px_rgba(31,28,24,0.14)]">
+              <div className="relative h-full">
+                {STEPS.map(s => (
+                  <div
+                    key={s.n}
+                    aria-hidden={s.n !== current}
+                    className="absolute inset-0 flex flex-col overflow-y-auto p-8 pb-24 transition-opacity duration-300 ease-out sm:p-10 sm:pb-28"
+                    style={{
+                      opacity: s.n === current ? 1 : 0,
+                      pointerEvents: s.n === current ? 'auto' : 'none',
+                    }}
+                  >
+                    <div className="flex-1">
+                      <StepBody s={s} />
+                    </div>
+                    {s.n === STEPS.length && (
+                      <p className="mt-4 text-[11px] text-[#B7AC98]">Keep scrolling to return to the page.</p>
+                    )}
+                  </div>
+                ))}
+              </div>
 
-          <div className="mt-8 flex items-center justify-between border-t border-[#ECE5D9] pt-6">
-            <button
-              type="button"
-              onClick={() => go(current - 1)}
-              disabled={isFirst}
-              className="flex items-center gap-1.5 rounded-full border border-[#ECE5D9] bg-white px-5 py-2.5 text-[13.5px] font-semibold text-[#1F1C18] transition hover:border-[#FF9933]/40 disabled:cursor-not-allowed disabled:opacity-40"
-            >
-              <ArrowLeft size={14} /> Previous stop
-            </button>
+              {/* pinned fallback controls — scroll is primary, these are secondary */}
+              <div className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-between border-t border-[#ECE5D9] bg-white p-6 sm:px-10">
+                <button
+                  type="button"
+                  onClick={() => go(current - 1)}
+                  disabled={isFirst}
+                  className="flex items-center gap-1.5 rounded-full border border-[#ECE5D9] bg-white px-5 py-2.5 text-[13.5px] font-semibold text-[#1F1C18] transition hover:border-[#FF9933]/40 disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  <ArrowLeft size={14} /> Previous stop
+                </button>
 
-            {isLast ? (
-              <Link
-                href="/signup"
-                className="flex items-center gap-1.5 rounded-full bg-[#FF9933] px-5 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-[#E07A12]"
-              >
-                Create your account <ArrowRight size={14} />
-              </Link>
-            ) : (
-              <button
-                type="button"
-                onClick={() => go(current + 1)}
-                className="flex items-center gap-1.5 rounded-full bg-[#FF9933] px-5 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-[#E07A12]"
-              >
-                Next stop <ArrowRight size={14} />
-              </button>
-            )}
+                {isLast ? (
+                  <Link
+                    href="/signup"
+                    className="flex items-center gap-1.5 rounded-full bg-[#FF9933] px-5 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-[#E07A12]"
+                  >
+                    Create your account <ArrowRight size={14} />
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => go(current + 1)}
+                    className="flex items-center gap-1.5 rounded-full bg-[#FF9933] px-5 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-[#E07A12]"
+                  >
+                    Next stop <ArrowRight size={14} />
+                  </button>
+                )}
+              </div>
+            </div>
           </div>
-        </div>
+        )}
       </div>
-
-      <style jsx>{`
-        @keyframes stopfade {
-          from {
-            opacity: 0;
-            transform: translateY(8px);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-      `}</style>
     </div>
   )
 }

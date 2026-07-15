@@ -597,4 +597,66 @@ body { margin: 0; font-family: var(--sans); background: var(--sand); }
   .ct-hero__seal svg, .ct-hero__ring { animation: none !important; transition-duration: .01ms !important; }
 }
 
+/* ───────────────────────────────────────────────────────────────────────
+   LOADER — "The Arrival Seal"
+   Two warm ivory panels hold the page shut while a slim terracotta ring
+   traces itself closed around a monogram, like a wax seal completing.
+   Once full, the panels part like curtains and the hero is already
+   waiting behind them — same paper/grain/bracket language as the hero,
+   deliberately the quiet opposite of a bold mono-counted ritual.
+   ─────────────────────────────────────────────────────────────────────── */
+.ct-loader {
+  position: fixed; inset: 0; z-index: 9999;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--bark);
+  opacity: 1;
+  transition: opacity 500ms ease;
+}
+.ct-loader--exit { opacity: 0; pointer-events: none; }
+
+.ct-loader-inner {
+  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  font-family: var(--sans);
+}
+
+.ct-loader-tag {
+  font-size: 12px; letter-spacing: .34em; text-transform: uppercase; color: var(--brand);
+}
+
+.ct-loader-count {
+  font-family: var(--serif); font-style: italic; font-weight: 500;
+  font-size: clamp(64px, 14vw, 140px); line-height: 1; letter-spacing: -.02em;
+  color: #f5efe8; font-variant-numeric: tabular-nums;
+}
+
+.ct-loader-rule {
+  width: min(220px, 40vw); height: 2px; border-radius: 2px;
+  background: rgba(245,239,232,.15); overflow: hidden;
+}
+.ct-loader-rule-fill {
+  display: block; height: 100%; background: var(--brand);
+  transition: width 80ms linear;
+}
+
+.ct-loader-name {
+  font-family: var(--serif); font-style: italic; font-size: 15px; color: rgba(245,239,232,.55);
+}
+
+@media (max-width: 640px) {
+  .ct-loader-tag { font-size: 10px; letter-spacing: .26em; }
+  .ct-loader-name { font-size: 13px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ct-loader { transition: none !important; }
+}
+
+/* Stage: hero (and the rest of the page) lift in just behind the parting
+   panels, instead of popping in the instant the loader unmounts. */
+.ct-stage { opacity: 0; transform: translateY(16px); }
+.ct-stage--in {
+  opacity: 1; transform: translateY(0);
+  transition: opacity 750ms var(--ease-out) 320ms, transform 750ms var(--ease-out) 320ms;
+}
+
 `

@@ -124,10 +124,15 @@ export const TEMPLATE_SECTIONS: Record<TemplateId, SectionConfig[]> = {
     { id: 'booking',      label: 'Book Session',  defaultEnabled: true },
     { id: 'footer',       label: 'Footer',        defaultEnabled: true },
   ],
-  // classic7 ('The Atrium') is still being built section by section — only
-  // the hero exists so far. More get appended here as they're designed.
   classic7: [
-    { id: 'hero', label: 'Hero', defaultEnabled: true },
+    { id: 'hero',         label: 'Hero',          defaultEnabled: true },
+    { id: 'about',        label: 'About Me',      defaultEnabled: true },
+    { id: 'expertise',    label: 'Focus Areas',   defaultEnabled: true },
+    { id: 'process',      label: 'Process',       defaultEnabled: true },
+    { id: 'testimonials', label: 'Testimonials',  defaultEnabled: true },
+    { id: 'faq',          label: 'FAQ',           defaultEnabled: true },
+    { id: 'booking',      label: 'Book Session',  defaultEnabled: true },
+    { id: 'footer',       label: 'Footer',        defaultEnabled: true },
   ],
 }
 
@@ -202,12 +207,12 @@ export const TEMPLATES: Template[] = [
   {
     id: 'classic7',
     name: 'The Atrium',
-    tagline: 'Opens with a counted-in arrival ritual, then ink, brass, and quiet precision',
-    style: 'Ink · Brass · Premium',
+    tagline: 'Opens with a counted-in arrival ritual, then a soothing, editorial ledger of sand and sage',
+    style: 'Calm · Editorial · Premium',
     plan: 'growth',
     thumbnail: 'classic7',
-    accent: '#BE9552',
-    bg: '#0E1B17',
+    accent: '#C6A76B',
+    bg: '#263630',
     sections: TEMPLATE_SECTIONS.classic7,
   },
 ]
