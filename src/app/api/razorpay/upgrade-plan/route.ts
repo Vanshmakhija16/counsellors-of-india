@@ -48,7 +48,7 @@ export async function POST(req: NextRequest) {
     }
 
     const order = await fetchPlatformRazorpayOrder(razorpay_order_id)
-    const expectedAmount = toPaise(getPlanPriceInr(targetPlan))
+    const expectedAmount = toPaise(getPlanPriceInr(targetPlan, user.email))
     if (
       order.amount !== expectedAmount ||
       order.currency !== 'INR' ||

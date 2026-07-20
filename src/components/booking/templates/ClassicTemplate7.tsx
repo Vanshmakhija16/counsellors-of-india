@@ -63,7 +63,7 @@ export default function ClassicTemplate7({ therapist, bookedTimes = [], hiddenSe
           switch (id) {
             case 'hero':         return <Hero key={id} therapist={therapist} scrollTo={scrollTo} />
             case 'about':        return <About key={id} therapist={therapist} />
-            case 'expertise':    return <Expertise key={id} therapist={therapist} />
+            case 'expertise':    return <Expertise key={id} therapist={therapist} scrollTo={scrollTo} />
             case 'process':      return <Process key={id} />
             case 'testimonials': return <Testimonials key={id} therapist={therapist} feedbacks={feedbacks} />
             case 'faq':          return <FAQ key={id} />

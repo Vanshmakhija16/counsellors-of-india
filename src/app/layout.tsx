@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter, Plus_Jakarta_Sans } from 'next/font/google'
 import './globals.css'
+import WhatsAppFab from '@/components/layout/WhatsAppFab'
 
 const jakarta = Plus_Jakarta_Sans({
   variable: '--font-jakarta',
@@ -106,6 +107,7 @@ export default function RootLayout({
         suppressHydrationWarning
       >
         {children}
+        <WhatsAppFab />
       </body>
     </html>
   )

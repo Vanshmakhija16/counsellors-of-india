@@ -1,18 +1,17 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
 import {
   Calendar, Clock, User, CheckCircle, RotateCw, Search,
-  Loader2, FileText, ExternalLink,
+  Loader2, Trash2,
 } from 'lucide-react'
 import {
   listAppointments,
   updateAppointmentStatus,
+  deleteAppointment,
   type Appointment,
   type AppointmentStatus,
 } from '@/lib/clinical/appointments'
-import SessionNotesModal from '@/components/clinical/SessionNotesModal'
 
 type Tab = AppointmentStatus | 'all'
 
@@ -31,7 +30,7 @@ export default function AppointmentsPage() {
   const [search, setSearch] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [updatingId, setUpdatingId] = useState<string | null>(null)
-  const [notesFor, setNotesFor] = useState<Appointment | null>(null)
+  const [deletingId, setDeletingId] = useState<string | null>(null)
 
   async function load() {
     setLoading(true)
@@ -78,11 +77,24 @@ export default function AppointmentsPage() {
     try {
       const updated = await updateAppointmentStatus(apt.id, status)
       setAppointments((prev) => prev.map((a) => (a.id === apt.id ? updated : a)))
-      if (status === 'completed') setNotesFor(updated)
     } catch (e) {
       console.error('[appointments] status update failed:', e)
     } finally {
       setUpdatingId(null)
+    }
+  }
+
+  async function handleDelete(apt: Appointment) {
+    if (!confirm(`Delete the booking for ${apt.client_name}? This can't be undone.`)) return
+    setDeletingId(apt.id)
+    try {
+      await deleteAppointment(apt.id)
+      setAppointments((prev) => prev.filter((a) => a.id !== apt.id))
+    } catch (e) {
+      console.error('[appointments] delete failed:', e)
+      alert('Could not delete this booking. Please try again.')
+    } finally {
+      setDeletingId(null)
     }
   }
 
@@ -97,7 +109,7 @@ export default function AppointmentsPage() {
             Appointments
           </h1>
           <p className="text-sm text-[#6b7280] mt-1">
-            Track upcoming sessions, mark them complete, and file notes.
+            Track upcoming sessions and mark them complete.
           </p>
         </div>
       </div>
@@ -185,18 +197,6 @@ export default function AppointmentsPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     <p className="text-sm font-semibold text-[#1c1c1e] truncate">{apt.client_name}</p>
                     <StatusPill status={apt.status} />
-                    {apt.patient_id ? (
-                      <Link
-                        href={`/clinical/patients/${apt.patient_id}`}
-                        className="inline-flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wider text-[#9A5200] hover:underline"
-                      >
-                        Chart <ExternalLink size={10} />
-                      </Link>
-                    ) : (
-                      <span className="text-[10px] font-medium uppercase tracking-wider text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">
-                        Unlinked
-                      </span>
-                    )}
                   </div>
                   <div className="mt-0.5 flex items-center flex-wrap gap-x-3 gap-y-0.5 text-xs text-[#6b7280]">
                     <span className="inline-flex items-center gap-1">
@@ -211,60 +211,56 @@ export default function AppointmentsPage() {
                 </div>
 
                 <div className="flex items-center flex-wrap gap-2 shrink-0 pl-12 sm:pl-0">
-                  {apt.status === 'upcoming' && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => setStatus(apt, 'rescheduled')}
-                        disabled={updatingId === apt.id}
-                        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
-                      >
-                        <RotateCw size={11} /> Reschedule
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setStatus(apt, 'completed')}
-                        disabled={updatingId === apt.id}
-                        className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#FF9933] text-white text-xs font-medium hover:bg-[#E07A12] transition disabled:opacity-50"
-                      >
-                        {updatingId === apt.id ? <Loader2 size={11} className="animate-spin" /> : <CheckCircle size={11} />}
-                        Mark complete
-                      </button>
-                    </>
-                  )}
-                  {apt.status === 'rescheduled' && (
+                  {/* Every status is reachable from every other status — not just the
+                      "natural" next step — so a therapist can freely correct a
+                      mis-click at any time (e.g. jump straight from Completed
+                      back to Upcoming, or Rescheduled to Completed). */}
+                  {apt.status !== 'upcoming' && (
                     <button
                       type="button"
                       onClick={() => setStatus(apt, 'upcoming')}
                       disabled={updatingId === apt.id}
                       className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
                     >
-                      Back to upcoming
+                      Upcoming
                     </button>
                   )}
-                  {apt.status === 'completed' && (
+                  {apt.status !== 'rescheduled' && (
                     <button
                       type="button"
-                      onClick={() => setNotesFor(apt)}
-                      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-[#F5D9B0] text-[#9A5200] text-xs font-medium hover:bg-[#FFEFD9] transition"
+                      onClick={() => setStatus(apt, 'rescheduled')}
+                      disabled={updatingId === apt.id}
+                      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
                     >
-                      <FileText size={11} /> Notes
+                      <RotateCw size={11} /> Reschedule
                     </button>
                   )}
+                  {apt.status !== 'completed' && (
+                    <button
+                      type="button"
+                      onClick={() => setStatus(apt, 'completed')}
+                      disabled={updatingId === apt.id}
+                      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#FF9933] text-white text-xs font-medium hover:bg-[#E07A12] transition disabled:opacity-50"
+                    >
+                      {updatingId === apt.id ? <Loader2 size={11} className="animate-spin" /> : <CheckCircle size={11} />}
+                      Mark complete
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(apt)}
+                    disabled={deletingId === apt.id}
+                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-red-200 text-red-600 text-xs font-medium hover:bg-red-50 transition disabled:opacity-50"
+                  >
+                    {deletingId === apt.id ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
+                    Delete
+                  </button>
                 </div>
               </li>
             ))}
           </ul>
         )}
       </div>
-
-      {notesFor && (
-        <SessionNotesModal
-          open={!!notesFor}
-          onClose={() => setNotesFor(null)}
-          appointment={notesFor}
-        />
-      )}
     </div>
   )
 }

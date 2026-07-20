@@ -15,6 +15,17 @@ const DEFAULT_DEV_PLAN_PRICES: Record<string, number> = {
   pro: 2499,
 }
 
+// Internal test account — always charged ₹1 regardless of plan or which
+// page/flow they came through (pricing page, dashboard upgrade prompt,
+// etc.), since every payment path funnels through getPlanPriceInr(). Exact,
+// case-insensitive match against the AUTHENTICATED user's email only —
+// callers must never pass a client-supplied email here.
+const TEST_FULL_ACCESS_EMAILS = new Set(['vanshmakhija18@gmail.com'])
+
+export function isTestPriceEmail(email: string | null | undefined): boolean {
+  return !!email && TEST_FULL_ACCESS_EMAILS.has(email.trim().toLowerCase())
+}
+
 const PLAN_PRICE_ENV: Record<string, string | undefined> = {
   starter: process.env.PLAN_PRICE_STARTER_INR,
   growth: process.env.PLAN_PRICE_GROWTH_INR,
@@ -26,7 +37,9 @@ export function normalizePlan(plan: unknown): 'starter' | 'growth' | 'pro' | nul
   return null
 }
 
-export function getPlanPriceInr(plan: 'starter' | 'growth' | 'pro'): number {
+export function getPlanPriceInr(plan: 'starter' | 'growth' | 'pro', email?: string | null): number {
+  if (isTestPriceEmail(email)) return 1
+
   const configured = Number(PLAN_PRICE_ENV[plan])
   if (Number.isFinite(configured) && configured > 0) return configured
 

@@ -74,9 +74,9 @@ export default function About({ therapist }: AboutProps) {
 
       <div className="ct7-ab-wrap">
         <div className="ct7-ledger-row ct7-reveal" style={{ borderTop: 'none', paddingTop: 0 }}>
-          <span className="ct7-ledger-num">01</span>
+          {/* <span className="ct7-ledger-num">01</span> */}
           <div className="ct7-ledger-body">
-            <span className="ct7-eyebrow" style={{ color: 'var(--ct7-brass)' }}>Who's in the room</span>
+            <span className="ct7-eyebrow" style={{ color: 'var(--ct7-brass)' }}>About me</span>
             <p className="ct7-ab-quote">
               {therapist.tagline?.trim() || 'Therapy works best when it stops feeling like a transaction and starts feeling like a relationship.'}
             </p>

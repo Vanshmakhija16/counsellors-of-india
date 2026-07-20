@@ -59,7 +59,6 @@ export const ct7Styles = `
   font-size: 11px; color: var(--ct7-brass); display: inline-flex; align-items: center; gap: 10px;
   margin-bottom: 20px;
 }
-.ct7-eyebrow::before { content: ''; width: 22px; height: 1px; background: currentColor; opacity: 0.8; }
 
 /* ── Loading ritual ─────────────────────────────────────────────────────── */
 .ct7-loader {

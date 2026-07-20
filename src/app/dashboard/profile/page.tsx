@@ -131,7 +131,7 @@ export default function ProfilePage() {
 
   const [form, setForm] = useState({
     full_name: '', title: '', bio: '', city: '', phone: '',
-    fee_per_session: '', session_duration_mins: '50', years_experience: '',
+    fee_per_session: '', session_duration_mins: '50', years_experience: '', total_sessions: '',
     session_mode: 'both', specialties: [] as string[], languages: ['English'] as string[],
     instagram: '', linkedin: '', whatsapp: '', website: '', meet_link: '',
   })
@@ -190,6 +190,7 @@ export default function ProfilePage() {
           fee_per_session: String(data.fee_per_session ?? ''),
           session_duration_mins: String(data.session_duration_mins ?? 50),
           years_experience: String(data.years_experience ?? ''),
+          total_sessions: String(data.total_sessions ?? ''),
           session_mode: data.session_mode ?? 'both',
           specialties: data.specialties ?? [], languages: data.languages ?? ['English'],
           instagram: data.instagram ?? '', linkedin: data.linkedin ?? '',
@@ -280,6 +281,7 @@ export default function ProfilePage() {
         fee_per_session: Number(form.fee_per_session),
         session_duration_mins: Number(form.session_duration_mins),
         years_experience: Number(form.years_experience || 0),
+        total_sessions: form.total_sessions === '' ? null : Number(form.total_sessions),
         session_mode: form.session_mode, specialties: form.specialties, languages: form.languages,
         instagram: form.instagram || null, linkedin: form.linkedin || null,
         whatsapp: form.whatsapp || null, website: form.website || null,
@@ -552,6 +554,13 @@ export default function ProfilePage() {
                   <option value="0">Fresher</option>
                   {Array.from({ length: 40 }, (_, i) => i + 1).map(y => <option key={y} value={y}>{y} {y === 1 ? 'year' : 'years'}</option>)}
                 </select>
+              </label>
+              <label className="space-y-1.5">
+                <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8b8278]">Total sessions completed</span>
+                <input type="number" min={0} value={form.total_sessions} onChange={e => setForm({ ...form, total_sessions: e.target.value })}
+                  onWheel={e => e.currentTarget.blur()} placeholder="e.g. 500"
+                  className="h-11 w-full rounded-lg border border-[#ded8ce] bg-[#fffdfb] px-4 text-sm text-[#171412] outline-none transition placeholder:text-[#aaa197] focus:border-[#171412]" />
+                <p className="text-xs text-[#9a9188]">Shown as a stat on your public page (e.g. "500+ Sessions"). Leave blank to show a default placeholder value.</p>
               </label>
               <label className="space-y-1.5">
                 <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8b8278]">Session mode</span>

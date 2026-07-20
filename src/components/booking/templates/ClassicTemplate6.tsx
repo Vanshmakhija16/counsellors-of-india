@@ -6,9 +6,11 @@
 // own file under ./QuietRoom; this root just orders and assembles them.
 // ───────────────────────────────────────────────────────────────────────────
 
+import { useState } from 'react'
 import type { TherapistProfile } from './templateUtils'
 import { getOrderedSections } from '@/lib/template'
 import { quietRoomStyles } from './QuietRoom/styles'
+import Loader from './QuietRoom/Loader'
 import Navbar from './QuietRoom/Navbar'
 import Hero from './QuietRoom/Hero'
 import About from './QuietRoom/About'
@@ -29,6 +31,7 @@ interface ClassicTemplate6Props {
 
 export default function ClassicTemplate6({ therapist, bookedTimes = [], hiddenSections = [], feedbacks = [] }: ClassicTemplate6Props) {
   const orderedIds = getOrderedSections('classic6', therapist.section_order, hiddenSections).map(s => s.id)
+  const [loaderDone, setLoaderDone] = useState(false)
 
   // Scroll only THIS document's window (never asks a parent iframe host).
   function scrollTo(id: string) {
@@ -46,22 +49,26 @@ export default function ClassicTemplate6({ therapist, bookedTimes = [], hiddenSe
         rel="stylesheet"
       />
 
+      <Loader onDone={() => setLoaderDone(true)} therapistName={therapist.name} />
+
       <Navbar scrollTo={scrollTo} therapist={therapist} />
 
-      {orderedIds.map(id => {
-        switch (id) {
-          case 'hero':         return <Hero key={id} therapist={therapist} scrollTo={scrollTo} />
-          case 'about':        return <About key={id} therapist={therapist} />
-          case 'expertise':    return <Expertise key={id} therapist={therapist} />
-          case 'process':      return <Process key={id} therapist={therapist} />
-          case 'testimonials': return <Testimonials key={id} therapist={therapist} feedbacks={feedbacks} />
-          case 'faq':          return <FAQ key={id} therapist={therapist} />
-          case 'readings':     return <Readings key={id} therapist={therapist} />
-          case 'booking':      return <Booking key={id} therapist={therapist} bookedTimes={bookedTimes} />
-          case 'footer':       return <Footer key={id} therapist={therapist} scrollTo={scrollTo} />
-          default: return null
-        }
-      })}
+      <div className={`qr-stage ${loaderDone ? 'qr-stage--in' : ''}`}>
+        {orderedIds.map(id => {
+          switch (id) {
+            case 'hero':         return <Hero key={id} therapist={therapist} scrollTo={scrollTo} />
+            case 'about':        return <About key={id} therapist={therapist} />
+            case 'expertise':    return <Expertise key={id} therapist={therapist} />
+            case 'process':      return <Process key={id} therapist={therapist} />
+            case 'testimonials': return <Testimonials key={id} therapist={therapist} feedbacks={feedbacks} />
+            case 'faq':          return <FAQ key={id} therapist={therapist} />
+            case 'readings':     return <Readings key={id} therapist={therapist} />
+            case 'booking':      return <Booking key={id} therapist={therapist} bookedTimes={bookedTimes} />
+            case 'footer':       return <Footer key={id} therapist={therapist} scrollTo={scrollTo} />
+            default: return null
+          }
+        })}
+      </div>
     </div>
   )
 }

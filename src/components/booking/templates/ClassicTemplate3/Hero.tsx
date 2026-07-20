@@ -204,7 +204,7 @@
 
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import type { TherapistProfile } from '../templateUtils'
-import { resolveImage, getInitials } from '../templateUtils'
+import { resolveImage, getInitials, resolveCT3Content } from '../templateUtils'
 
 interface HeroProps {
   therapist: TherapistProfile
@@ -287,6 +287,10 @@ export default function Hero({
   const photo = resolveImage(therapist.image)
 
   const initials = getInitials(therapist.name ?? '') || '?'
+
+  const heroContent = resolveCT3Content(therapist.profile_content?.classic3)
+  const headline = heroContent.hero.headline?.trim() || 'Helping you feel safe, heard, and understood.'
+  const headlineLines = headline.split('\n').filter(l => l.length > 0)
 
   const scrollProgress =
     typeof window !== 'undefined'
@@ -372,15 +376,26 @@ export default function Hero({
         ref={contentRef}
       >
         <div className="ct3-eyebrow">
-          THERAPIST • WELLNESS • CARE
+          {heroContent.hero.eyebrow?.trim() || 'THERAPIST • WELLNESS • CARE'}
         </div>
 
         <h1 className="ct3-hero-title">
-          Helping you feel
-          <br />
-          <em>safe, heard,</em>
-          <br />
-          and understood.
+          {headlineLines.length > 0
+            ? headlineLines.map((line, i) => (
+                <span key={i}>
+                  {line}
+                  {i < headlineLines.length - 1 && <br />}
+                </span>
+              ))
+            : (
+              <>
+                Helping you feel
+                <br />
+                <em>safe, heard,</em>
+                <br />
+                and understood.
+              </>
+            )}
         </h1>
 
         <p className="ct3-hero-subtitle">

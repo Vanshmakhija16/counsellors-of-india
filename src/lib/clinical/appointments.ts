@@ -36,7 +36,16 @@ export async function listAppointments(
     .order('scheduled_at', { ascending: false })
     .limit(limit)
 
-  if (status !== 'all') q = q.eq('status', status)
+  if (status !== 'all') {
+    q = q.eq('status', status)
+  } else {
+    // 'all' here means "every real booking", not literally every row in the
+    // table — the paid-booking hold flow also writes pending_payment /
+    // expired / payment_failed / cancelled rows for abandoned or incomplete
+    // payment attempts. Those were never actual appointments and shouldn't
+    // count toward (or appear in) the dashboard.
+    q = q.not('status', 'in', '("pending_payment","expired","payment_failed","cancelled")')
+  }
   if (patientId) q = q.eq('patient_id', patientId)
   if (search && search.trim()) {
     const s = search.trim().replace(/[,()]/g, ' ')
@@ -68,6 +77,15 @@ export async function updateAppointmentStatus(
     .single()
   if (error) throw error
   return data as Appointment
+}
+
+/** Permanently removes a booking. No status transition can bring it back. */
+export async function deleteAppointment(id: string): Promise<void> {
+  const { error } = await client()
+    .from('appointments')
+    .delete()
+    .eq('id', id)
+  if (error) throw error
 }
 
 /** Manually link (or unlink) an appointment to a patient chart. */

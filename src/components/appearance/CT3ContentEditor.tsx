@@ -12,7 +12,7 @@ interface Props {
   saveButton?: React.ReactNode
 }
 
-type Section = 'services' | 'faq'
+type Section = 'hero' | 'nav' | 'services' | 'faq'
 
 export default function CT3ContentEditor({ value, onChange, saveButton }: Props) {
   const [open, setOpen] = useState<Section | null>(null)
@@ -21,6 +21,12 @@ export default function CT3ContentEditor({ value, onChange, saveButton }: Props)
   // empty list" from "field was never set". An empty [] means the user deleted
   // everything intentionally; it must render as empty, NOT fall back to defaults.
   const c = {
+    hero:     { ...DEFAULT_CT3_CONTENT.hero, ...(value.hero ?? {}) },
+    footer:   { ...DEFAULT_CT3_CONTENT.footer, ...(value.footer ?? {}) },
+    nav: {
+      reserveLabel: value.nav?.reserveLabel ?? DEFAULT_CT3_CONTENT.nav.reserveLabel,
+      labels: { ...DEFAULT_CT3_CONTENT.nav.labels, ...(value.nav?.labels ?? {}) },
+    },
     services: Array.isArray(value.services) ? value.services : DEFAULT_CT3_CONTENT.services,
     faq:      Array.isArray(value.faq)      ? value.faq      : DEFAULT_CT3_CONTENT.faq,
   }
@@ -34,11 +40,76 @@ export default function CT3ContentEditor({ value, onChange, saveButton }: Props)
       activeSection={open}
       onSelect={setOpen}
       sections={[
+        { id: 'hero', label: 'Hero', meta: 'headline text' },
+        { id: 'nav', label: 'Nav', meta: 'menu labels' },
         { id: 'services', label: 'Services', meta: `${c.services.length} items` },
         { id: 'faq', label: 'FAQ', meta: `${c.faq.length} questions` },
       ]}
       saveButton={saveButton}
     >
+
+      {/* ── HERO ───────────────────────────────────── */}
+      <Accordion open={open === 'hero'}>
+        <p className="text-xs text-[#9ca3af] mb-2">This is the big headline shown at the top of your page.</p>
+        <Field label="Eyebrow tag — the small label above the headline">
+          <input value={c.hero.eyebrow ?? ''} onChange={e => patch({ hero: { ...c.hero, eyebrow: e.target.value } })}
+            placeholder="THERAPIST • WELLNESS • CARE" className={inp} />
+        </Field>
+        <div className="mt-3">
+          <Field label="Headline">
+            <textarea rows={3} value={c.hero.headline ?? ''}
+              onChange={e => patch({ hero: { ...c.hero, headline: e.target.value } })}
+              placeholder="Helping you feel safe, heard, and understood." className={ta} />
+          </Field>
+        </div>
+        <div className="mt-4 pt-4 border-t border-[#e8e4df]">
+          <p className="text-xs text-[#9ca3af] mb-2">Footer note — the short line at the bottom of your page (label + text).</p>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Section label — blank to use your name automatically">
+              <input value={c.footer.label ?? ''} onChange={e => patch({ footer: { ...c.footer, label: e.target.value } })}
+                placeholder="e.g. Dr. Vansh Makhija" className={inp} />
+            </Field>
+          </div>
+          <div className="mt-3">
+            <Field label="Note text — blank to use your credentials & location automatically">
+              <textarea rows={2} value={c.footer.note ?? ''}
+                onChange={e => patch({ footer: { ...c.footer, note: e.target.value } })}
+                placeholder="e.g. Psychotherapy practice based in Mumbai." className={ta} />
+            </Field>
+          </div>
+        </div>
+      </Accordion>
+
+      {/* ── MENU ───────────────────────────────────── */}
+      <Accordion open={open === 'nav'}>
+        <p className="text-xs text-[#9ca3af] mb-2">Change the words shown in your website's top menu.</p>
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="First menu item">
+            <input value={c.nav.labels.home ?? ''} onChange={e => patch({ nav: { ...c.nav, labels: { ...c.nav.labels, home: e.target.value } } })}
+              placeholder="Cover" className={inp} />
+          </Field>
+          <Field label="Second menu item">
+            <input value={c.nav.labels.about ?? ''} onChange={e => patch({ nav: { ...c.nav, labels: { ...c.nav.labels, about: e.target.value } } })}
+              placeholder="Practice" className={inp} />
+          </Field>
+          <Field label="Third menu item">
+            <input value={c.nav.labels.services ?? ''} onChange={e => patch({ nav: { ...c.nav, labels: { ...c.nav.labels, services: e.target.value } } })}
+              placeholder="Method" className={inp} />
+          </Field>
+          <Field label="Fourth menu item">
+            <input value={c.nav.labels.insights ?? ''} onChange={e => patch({ nav: { ...c.nav, labels: { ...c.nav.labels, insights: e.target.value } } })}
+              placeholder="Writing" className={inp} />
+          </Field>
+          <Field label="Fifth menu item">
+            <input value={c.nav.labels.faq ?? ''} onChange={e => patch({ nav: { ...c.nav, labels: { ...c.nav.labels, faq: e.target.value } } })}
+              placeholder="FAQ" className={inp} />
+          </Field>
+          <Field label="Booking button">
+            <input value={c.nav.reserveLabel ?? ''} onChange={e => patch({ nav: { ...c.nav, reserveLabel: e.target.value } })}
+              placeholder="Reserve" className={inp} />
+          </Field>
+        </div>
+      </Accordion>
 
       {/* ── SERVICES ─────────────────────────────────────────────────── */}
       <Accordion open={open === 'services'}>

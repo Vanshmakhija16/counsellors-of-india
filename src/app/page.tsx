@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import FaqRevealEffect from "@/components/landing/FaqRevealEffect";
 import FooterReveal from '@/components/landing/FooterReveal'
 import SiteFooter from '@/components/layout/SiteFooter'
+import SiteNavbar from '@/components/layout/SiteNavbar'
 import { useTherapist } from '@/lib/useTherapist'
 import { loadDemo, saveDemo, emptyDemo, type DemoProfile } from '@/lib/demoSession'
 import { normalizeSpecialtyKey, titleCaseLabel } from '@/lib/specialties'
@@ -1565,8 +1566,6 @@ function FaqItem({ q, a, idx }: { q: string; a: string; idx: number }) {
    MAIN PAGE
 ───────────────────────────────────────────────────────────────── */
 export default function Home() {
-  const [scrolled,setScrolled]=useState(false)
-  const [menuOpen, setMenuOpen] = useState(false);
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
@@ -1575,25 +1574,12 @@ export default function Home() {
   }, [])
 
   useEffect(()=>{
-    if(!menuOpen) return
-    const prev = document.body.style.overflow
-    document.body.style.overflow = 'hidden'
-    const onKey = (e: KeyboardEvent) => { if(e.key === 'Escape') setMenuOpen(false) }
-    document.addEventListener('keydown', onKey)
-    return ()=>{
-      document.body.style.overflow = prev
-      document.removeEventListener('keydown', onKey)
-    }
-  },[menuOpen])
-
-  useEffect(()=>{
     let ticking = false
     const fn = () => {
       if (ticking) return
       ticking = true
       requestAnimationFrame(() => {
         const y = window.scrollY
-        setScrolled(y > 18)
         const sy = Math.min(1, Math.max(0, y / Math.max(1, window.innerHeight)))
         document.documentElement.style.setProperty('--sy', String(sy))
         ticking = false
@@ -1660,18 +1646,10 @@ export default function Home() {
   const [search,setSearch]=useState('')
   const [filter,setFilter]=useState('all') // 'all' | normalized specialty key | 'online' | 'in-person'
 
-  // Logged-in therapist (if any) - swaps the nav's "List your practice" CTA
-  // for the user's first name, linking to their dashboard instead of signup.
+  // Logged-in therapist (if any) — SiteNavbar shows their own dashboard CTA;
+  // Pricing below still needs authHasPlan to know which plan to highlight.
   const { therapist: authTherapist } = useTherapist()
-  const authNameParts = (authTherapist?.full_name ?? '').trim().split(/\s+/).filter(Boolean)
-  const authFirstName = authNameParts.length > 1 && /^(dr|mr|mrs|ms|miss|mx|prof)\.?$/i.test(authNameParts[0])
-    ? authNameParts[1]
-    : (authNameParts[0] ?? '')
-  // If they haven't paid for a plan yet, clicking their name should send them
-  // to pick one (not straight into the dashboard, which would just bounce
-  // them to /pricing anyway via DashboardLayout's own gate).
   const authHasPlan = !!authTherapist?.plan && !['none', 'free', ''].includes(authTherapist.plan)
-  const authHref = authHasPlan ? '/dashboard' : '/pricing?redirect=' + encodeURIComponent('/dashboard')
 
   // Magnetic hover tilt for therapist cards - the card tilts toward the
   // cursor position (small 3D perspective) and eases back flat on leave.
@@ -1768,6 +1746,24 @@ export default function Home() {
     return [...therapists, ...placeholders].slice(0,12)
   },[therapists])
 
+  // Homepage only ever teases the directory — real browsing (all
+  // therapists, no cap) lives on /therapists. Hidden usernames/names are
+  // filtered out of both the homepage teaser and the full directory.
+  const HIDDEN_THERAPISTS = ['ayush', 'harsh', 'himangi']
+  const visibleTherapists = useMemo(() => {
+    const list = filtered.filter((t:any) => {
+      const uname = (t.username || '').toLowerCase()
+      const fname = (t.full_name || t.name || '').toLowerCase()
+      return !HIDDEN_THERAPISTS.some(h => uname === h || uname.includes(h) || fname.includes(h))
+    })
+    // Pro-plan therapists surface first (stable sort keeps everyone else in
+    // their existing, newest-first order beneath them).
+    return [...list].sort((a: any, b: any) => (b.plan === 'pro' ? 1 : 0) - (a.plan === 'pro' ? 1 : 0))
+  }, [filtered])
+  const HOME_GRID_LIMIT = 6
+  const gridTherapists = visibleTherapists.slice(0, HOME_GRID_LIMIT)
+  const remainingCount = Math.max(0, visibleTherapists.length - HOME_GRID_LIMIT)
+
 
 
 
@@ -1778,158 +1774,7 @@ export default function Home() {
 
 
 {/* ───────────────────────────── NAVBAR ───────────────────────────── */}
-<nav className={`nav site-topnav ${scrolled ? 'scrolled' : ''}`}>
-  <div className="nav-inner">
-
-  <Link href="/" className="logo">
-    <img src="/coi.png" alt="" className="logo-img"/>
-    <span className="logo-tagline">Counsellors<br/>of India</span>
-  </Link>
-
-  <span className="nav-mobile-title">Counsellors of India</span>
-
-  <div className="nav-mid">
-    {/* <a href="#hero" className="nav-a">Home</a> */}
-    <a href="#experience" className="nav-a">Templates</a>
-        <a href="#templates" className="nav-a">Demo</a>
-
-    <a href="#how" className="nav-a">Steps </a>
-    <a href="#therapists" className="nav-a">Therapists</a>
-    <a href="#pricing" className="nav-a">Pricing</a>
-    {/* <a href="#faq" className="nav-a">Resources</a> */}
-  </div>
-
-  <div className="nav-r">
-    {/* <Link href="/login" className="btn btn-light">
-      Sign in
-    </Link> */}
-
-    {authTherapist ? (
-      <Link href={authHref} className="btn btn-dark" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-        {authFirstName || 'Dashboard'}
-        {authTherapist.photo_url && (
-          <img
-            src={authTherapist.photo_url}
-            alt=""
-            style={{ width: 22, height: 22, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
-          />
-        )}
-      </Link>
-    ) : (
-      <Link href="/signup" className="btn btn-dark">
-        List your practice
-      </Link>
-    )}
-  </div>
-
-  <button
-    className={`menu-btn ${menuOpen ? "active" : ""}`}
-    onClick={() => setMenuOpen(!menuOpen)}
-  >
-    <span></span>
-    <span></span>
-    <span></span>
-  </button>
-
-  </div>
-</nav>
-
-<>
-  <div
-    className={`mobile-overlay ${menuOpen ? "show" : ""}`}
-    onClick={() => setMenuOpen(false)}
-  />
-
-  <aside
-    className={`mobile-sidebar ${menuOpen ? "show" : ""}`}
-    onClick={(e) => {
-      if ((e.target as HTMLElement).closest("a")) setMenuOpen(false);
-    }}
-  >
-
-    <div className="sidebar-glow"></div>
-
- <div className="sidebar-top">
-  <div className="sidebar-brand">
-    <img src="/coi.png" alt="Counsellors of India" />
-
-    <h3>Counsellors of India</h3>
-  </div>
-
-  <button
-    className="sidebar-close"
-    onClick={() => setMenuOpen(false)}
-    aria-label="Close Menu"
-  >
-    ✕
-  </button>
-</div>
-
-    <div className="sidebar-links">
-
-      {/* <a href="#hero">
-        Home
-      </a> */}
-
-     <a href="#templates">
-        Demo
-      </a>
-
-      <a href="#experience">
-        Templates
-      </a>
-
-      <a href="#how">
-        Steps
-      </a>
-
-      <a href="#therapists">
-        Therapists
-      </a>
-
-
-
-      <a href="#pricing">
-        Pricing
-      </a>
-
-      {/* <a href="#faq">
-        Resources
-      </a> */}
-
-    </div>
-
-    <div className="sidebar-card">
-      <p>Go to your dashabord.</p>
-
-      {authTherapist ? (
-        <Link href={authHref} className="btn btn-dark" style={{ display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-           {authFirstName || 'Dashboard'}
-          {authTherapist.photo_url && (
-            <img
-              src={authTherapist.photo_url}
-              alt=""
-              style={{ width: 22, height: 22, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }}
-            />
-          )}
-        </Link>
-      ) : (
-        <Link href="/signup" className="btn btn-dark">
-          Get Started
-        </Link>
-      )}
-    </div>
-
-    {/* <div className="sidebar-footer">
-
-      <Link href="/login" className="footer-link">
-        Sign in
-      </Link>
-
-    </div> */}
-
-  </aside>
-</>
+<SiteNavbar />
 
 
       {/* ── HERO ── */}
@@ -2034,6 +1879,38 @@ export default function Home() {
           </div>
 
           <div className="td-grid" style={{transitionDelay:'.12s'}}>
+            <style>{`
+              .td-card-cell-wrap { position: relative; height: 100%; }
+              .td-card-cell-wrap .td-card {
+                filter: blur(3px);
+                opacity: 0.8;
+                pointer-events: none;
+                user-select: none;
+              }
+              .td-viewall-overlay {
+                position: absolute; inset: 0; z-index: 2; border-radius: 16px;
+                display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+                text-align: center; text-decoration: none; padding: 20px;
+                background: rgba(20,18,15,0.16);
+                transition: background 200ms ease;
+              }
+              .td-viewall-overlay:hover { background: rgba(20,18,15,0.26); }
+              .td-viewall-count {
+                font-family: 'Fraunces','Instrument Serif', Georgia, serif; font-weight: 500;
+                font-size: 26px; color: #fff;
+              }
+              .td-viewall-text {
+                font-family: 'Inter', system-ui, sans-serif; font-size: 12.5px; font-weight: 600;
+                color: #fff; letter-spacing: 0.01em;
+              }
+              .td-viewall-arrow {
+                display: inline-flex; align-items: center; justify-content: center;
+                width: 30px; height: 30px; border-radius: 50%; margin-top: 4px;
+                background: #FF9933; color: #fff; font-size: 14px;
+                transition: transform 200ms ease;
+              }
+              .td-viewall-overlay:hover .td-viewall-arrow { transform: translateX(3px); }
+            `}</style>
             {loading
               ? Array.from({length:6}).map((_,i)=>(
                   <div key={i} className="td-card td-card-skel">
@@ -2051,7 +1928,7 @@ export default function Home() {
                     </div>
                   </div>
                 ))
-              : filtered.length===0
+              : visibleTherapists.length===0
                 ? (
                     <div className="td-empty">
                       <div className="td-empty-icon" aria-hidden="true">
@@ -2065,12 +1942,8 @@ export default function Home() {
                       <button type="button" className="td-empty-reset" onClick={()=>{setSearch('');setFilter('all')}}>Reset filters</button>
                     </div>
                   )
-                : [...filtered].filter(t => {
-                    const hidden = ['ayush', 'harsh', 'himangi']
-                    const uname = (t.username || '').toLowerCase()
-                    const fname = (t.full_name || t.name || '').toLowerCase()
-                    return !hidden.some(h => uname === h || uname.includes(h) || fname.includes(h))
-                  }).slice(0,6).map((t, idx) => {
+                : gridTherapists.map((t, idx) => {
+                    const isLast = idx === gridTherapists.length - 1 && remainingCount > 0
                     const name = t.full_name || t.name || 'Therapist'
                     const photo = t.photo_url || ''
                     const role = t.title || t.qualification || ''
@@ -2081,8 +1954,9 @@ export default function Home() {
                     const mode = t.session_mode || ''
                     const modeLabel = mode==='online'?'Online':mode==='offline'?'In-person':mode==='both'?'Online & In-person':''
                     const init = name.split(' ').filter((w:string)=>!/^(dr|mr|mrs|ms|prof)\.?$/i.test(w)).map((w:string)=>w[0]).slice(0,2).join('').toUpperCase()||'?'
-                    return (
-                      <a key={`${t.id||name}-${idx}`} href={t.username?`/${t.username}`:'#'} target={t.username?'_blank':undefined} rel="noopener noreferrer" className="td-card rv" onMouseMove={handleCardTiltMove} onMouseLeave={handleCardTiltLeave}>
+                    const rowKey = `${t.id||name}-${idx}`
+                    const card = (
+                      <a href={t.username?`/${t.username}`:'#'} target={t.username?'_blank':undefined} rel="noopener noreferrer" className="td-card rv" onMouseMove={handleCardTiltMove} onMouseLeave={handleCardTiltLeave}>
                         <div className="td-card-glow" aria-hidden="true"/>
                         <div className="td-card-top">
                           <div className="td-card-av">
@@ -2140,6 +2014,19 @@ export default function Home() {
                         </span>
                       </a>
                     )
+                    if (isLast) {
+                      return (
+                        <div key={rowKey} className="td-card-cell-wrap">
+                          {card}
+                          <Link href="/alltherapists" className="td-viewall-overlay" aria-label={`View all ${visibleTherapists.length} practitioners`}>
+                            {/* <span className="td-viewall-count">+{remainingCount}</span> */}
+                            <span className="td-viewall-text">View more  <span className="td-viewall-arrow">→</span> </span>
+                           
+                          </Link>
+                        </div>
+                      )
+                    }
+                    return <span key={rowKey} style={{ display: 'contents' }}>{card}</span>
                   })
             }
           </div>
@@ -2160,7 +2047,18 @@ export default function Home() {
 
           <div className="mx-auto w-full max-w-[760px]">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 xl:gap-10 ">
-              {PLANS_DATA.map((p, i) => (
+              {PLANS_DATA.map((p, i) => {
+                const currentPlan = authTherapist?.plan
+                const isCurrentPlan = authHasPlan && currentPlan === p.id
+                const ctaHref = !authTherapist
+                  ? '/signup'
+                  : !authHasPlan
+                    ? '/pricing'
+                    : isCurrentPlan
+                      ? '/dashboard'
+                      : `/pricing?plan=${p.id}`
+                const ctaLabel = isCurrentPlan ? 'Continue with this' : p.cta
+                return (
                 <div
                   key={p.id}
                   className={`
@@ -2202,14 +2100,14 @@ export default function Home() {
                   </div>
 
                   <Link
-                    href="/signup"
+                    href={ctaHref}
                     className={`h-8 rounded-lg inline-flex items-center justify-center gap-1.5 text-[11.5px] font-medium transition ${
                       p.ctaStyle === 'filled'
                         ? 'bg-[#FF9933] hover:bg-[#E07A12] text-white'
                         : 'border border-[#ECE5D9] text-[#1F1C18] hover:border-[#FF9933] hover:text-[#FF9933]'
                     }`}
                   >
-                    {p.cta}
+                    {ctaLabel}
                     <ArrowRight size={11} />
                   </Link>
 
@@ -2222,7 +2120,8 @@ export default function Home() {
                     ))}
                   </ul>
                 </div>
-              ))}
+                )
+              })}
             </div>
           </div>
         </div>

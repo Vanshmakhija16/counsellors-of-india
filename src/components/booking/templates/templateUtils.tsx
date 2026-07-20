@@ -95,6 +95,18 @@ export interface CT2Content {
 export interface CT3Content {
   services?: EditableService[]
   faq?: EditableFAQ[]
+  hero?: {
+    headline?: string
+    eyebrow?: string
+  }
+  footer?: {
+    label?: string
+    note?: string
+  }
+  nav?: {
+    labels?: Record<string, string>
+    reserveLabel?: string
+  }
 }
 
 // ── CT4 (Obsidian) ────────────────────────────────────────────────────────
@@ -188,6 +200,7 @@ export interface TherapistProfile {
   education?: string[]
   certifications?: string[]
   phone?: string
+  email?: string
   whatsapp?: string
   instagram?: string
   linkedin?: string
@@ -445,6 +458,24 @@ export const DEFAULT_CT2_CONTENT: Required<CT2Content> = {
 }
 
 export const DEFAULT_CT3_CONTENT: Required<CT3Content> = {
+  hero: {
+    headline: 'Helping you feel safe, heard, and understood.',
+    eyebrow: 'THERAPIST • WELLNESS • CARE',
+  },
+  footer: {
+    label: '',
+    note: '',
+  },
+  nav: {
+    labels: {
+      home: 'Cover',
+      about: 'Practice',
+      services: 'Method',
+      insights: 'Writing',
+      faq: 'FAQ',
+    },
+    reserveLabel: 'Reserve',
+  },
   services: [
     { code: '01', name: 'Individual psychotherapy', kind: 'One-to-one · weekly', desc: 'Long-form work for adults navigating anxiety, depression, identity, and the residue of difficult early life — patient, reflective, and unhurried.', forWhom: ['Anxiety', 'Depression', 'Self-worth', 'Burnout'] },
     { code: '02', name: 'Trauma & EMDR', kind: 'Specialist · paced', desc: 'Trauma-informed work using EMDR and somatic methods. We move only at the speed your nervous system allows — never the other way around.', forWhom: ['PTSD', 'EMDR', 'Somatic', 'Recovery'] },
@@ -532,6 +563,12 @@ export function resolveCT2Content(saved?: CT2Content): Required<CT2Content> {
 
 export function resolveCT3Content(saved?: CT3Content): Required<CT3Content> {
   return {
+    hero:     { ...DEFAULT_CT3_CONTENT.hero, ...(saved?.hero ?? {}) },
+    footer:   { ...DEFAULT_CT3_CONTENT.footer, ...(saved?.footer ?? {}) },
+    nav: {
+      reserveLabel: saved?.nav?.reserveLabel ?? DEFAULT_CT3_CONTENT.nav.reserveLabel,
+      labels: { ...DEFAULT_CT3_CONTENT.nav.labels, ...(saved?.nav?.labels ?? {}) },
+    },
     services: Array.isArray(saved?.services) ? saved!.services : DEFAULT_CT3_CONTENT.services,
     faq:      Array.isArray(saved?.faq)      ? saved!.faq      : DEFAULT_CT3_CONTENT.faq,
   }

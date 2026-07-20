@@ -127,4 +127,106 @@ export const quietRoomStyles = `
   .qr-window { animation: none !important; }
   .qr-root * { transition-duration: 150ms !important; }
 }
+
+/* ────────────────────────────────────────────────────────────────────────
+   LOADER — "Arrival". A quiet line of introduction on the same dusk
+   background and window-glow motif as the rest of the room, ending on the
+   therapist's name in the honey accent before the room opens. No count,
+   no percentage — just an arrival. On exit, two ink panels (top/bottom)
+   physically slide apart — the same doorway mechanic as Template 7 — so
+   the base loader carries no background of its own; the panels *are* the
+   ink field, and pulling them apart is what reveals the room underneath.
+   ─────────────────────────────────────────────────────────────────────── */
+.qr-loader {
+  position: fixed; inset: 0; z-index: 9999;
+}
+
+.qr-loader-panel {
+  position: fixed; left: 0; right: 0; height: 50vh;
+  background: var(--qr-ink);
+  transition: transform 900ms var(--qr-calm-inout);
+}
+.qr-loader-panel--top    { top: 0; }
+.qr-loader-panel--bottom { bottom: 0; }
+.qr-loader--opening .qr-loader-panel--top    { transform: translateY(-100%); }
+.qr-loader--opening .qr-loader-panel--bottom { transform: translateY(100%); }
+
+.qr-loader-window {
+  position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: 70vw; height: 70vw; max-width: 820px; max-height: 820px;
+  border-radius: 45% 55% 52% 48% / 50% 46% 54% 50%;
+  background: radial-gradient(circle at 42% 38%,
+    rgba(199, 154, 61, 0.24) 0%,
+    rgba(199, 154, 61, 0.10) 28%,
+    rgba(139, 79, 82, 0.05) 52%,
+    transparent 72%);
+  filter: blur(40px);
+  opacity: 0.9;
+  animation: qr-loader-glow 5s var(--qr-breath) infinite alternate;
+}
+@keyframes qr-loader-glow {
+  from { opacity: 0.6; transform: translate(-50%, -50%) scale(1); }
+  to   { opacity: 1;   transform: translate(-50%, -50%) scale(1.06); }
+}
+
+.qr-loader-center {
+  position: fixed; inset: 0; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  padding: 0 32px; text-align: center;
+  transition: opacity 500ms var(--qr-calm-out), transform 500ms var(--qr-calm-out);
+}
+.qr-loader--opening .qr-loader-center { opacity: 0; transform: scale(0.97); }
+
+.qr-loader-eyebrow {
+  font-family: 'IBM Plex Mono', monospace; text-transform: uppercase; letter-spacing: 0.18em;
+  font-size: 11px; color: var(--qr-honey); margin-bottom: 6px;
+  opacity: 0; animation: qr-loader-rise 800ms var(--qr-calm-out) 100ms forwards;
+}
+
+.qr-loader-line {
+  font-family: 'Spectral', Georgia, serif; font-weight: 300; font-style: italic;
+  font-size: clamp(18px, 2.4vw, 24px); color: var(--qr-paper); opacity: 0.7; margin: 0;
+  opacity: 0; animation: qr-loader-rise 800ms var(--qr-calm-out) 260ms forwards;
+}
+
+.qr-loader-name {
+  font-family: 'Spectral', Georgia, serif; font-weight: 300;
+  font-size: clamp(32px, 5vw, 52px); color: var(--qr-honey); letter-spacing: -0.01em;
+  margin: 4px 0 18px;
+  opacity: 0; animation: qr-loader-rise 900ms var(--qr-calm-out) 480ms forwards;
+}
+
+.qr-loader-rule {
+  display: block; width: 64px; height: 1px; background: var(--qr-honey);
+  transform: scaleX(0); transform-origin: center;
+  animation: qr-loader-draw linear 700ms forwards;
+}
+@keyframes qr-loader-draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+@keyframes qr-loader-rise {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@media (max-width: 640px) {
+  .qr-loader-eyebrow { font-size: 10px; letter-spacing: 0.14em; }
+  .qr-loader-line { font-size: 16px; }
+  .qr-loader-name { font-size: 30px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qr-loader-window { animation: none !important; }
+  .qr-loader-eyebrow, .qr-loader-line, .qr-loader-name, .qr-loader-rule {
+    animation: none !important; opacity: 1 !important; transform: none !important;
+  }
+  .qr-loader-panel, .qr-loader-center {
+    transition: none !important; transform: none !important; opacity: 1 !important;
+  }
+}
+
+.qr-stage { opacity: 0; transform: translateY(14px); }
+.qr-stage--in {
+  opacity: 1; transform: translateY(0);
+  transition: opacity 750ms var(--qr-calm-out) 150ms, transform 750ms var(--qr-calm-out) 150ms;
+}
 `

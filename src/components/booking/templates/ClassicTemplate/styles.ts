@@ -598,35 +598,51 @@ body { margin: 0; font-family: var(--sans); background: var(--sand); }
 }
 
 /* ───────────────────────────────────────────────────────────────────────
-   LOADER — "The Arrival Seal"
-   Two warm ivory panels hold the page shut while a slim terracotta ring
-   traces itself closed around a monogram, like a wax seal completing.
+   LOADER — "The Quiet Arrival"
+   Two bark panels hold the page shut while a warm intro line gives way to
+   the therapist's own name — a name-led arrival in the spirit of the
+   QuietRoom loader, but told in Template 1's own serif/terracotta voice:
+   the eyebrow label tracks REAL load progress (not a fixed clock) and a
+   terracotta rule beneath the name fills with that same real progress.
    Once full, the panels part like curtains and the hero is already
-   waiting behind them — same paper/grain/bracket language as the hero,
-   deliberately the quiet opposite of a bold mono-counted ritual.
+   waiting behind them.
    ─────────────────────────────────────────────────────────────────────── */
 .ct-loader {
   position: fixed; inset: 0; z-index: 9999;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--bark);
-  opacity: 1;
-  transition: opacity 500ms ease;
 }
-.ct-loader--exit { opacity: 0; pointer-events: none; }
+
+.ct-loader-panel {
+  position: fixed; left: 0; right: 0; height: 50vh;
+  background: var(--bark);
+  transition: transform 900ms var(--ease-out);
+}
+.ct-loader-panel--top    { top: 0; }
+.ct-loader-panel--bottom { bottom: 0; }
+.ct-loader--opening .ct-loader-panel--top    { transform: translateY(-100%); }
+.ct-loader--opening .ct-loader-panel--bottom { transform: translateY(100%); }
 
 .ct-loader-inner {
-  display: flex; flex-direction: column; align-items: center; gap: 16px;
+  position: fixed; inset: 0; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px;
+  padding: 0 32px; text-align: center;
   font-family: var(--sans);
+  transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out);
 }
+.ct-loader--opening .ct-loader-inner { opacity: 0; transform: scale(0.97); }
 
 .ct-loader-tag {
   font-size: 12px; letter-spacing: .34em; text-transform: uppercase; color: var(--brand);
 }
 
-.ct-loader-count {
-  font-family: var(--serif); font-style: italic; font-weight: 500;
-  font-size: clamp(64px, 14vw, 140px); line-height: 1; letter-spacing: -.02em;
-  color: #f5efe8; font-variant-numeric: tabular-nums;
+.ct-loader-line {
+  font-family: var(--serif); font-style: italic; font-weight: 400;
+  font-size: clamp(16px, 2.2vw, 20px); color: rgba(245,239,232,.7); margin: 0;
+}
+
+.ct-loader-headline {
+  font-family: var(--serif); font-weight: 400;
+  font-size: clamp(34px, 6vw, 76px); line-height: 1.05; letter-spacing: -.02em;
+  color: #f5efe8; margin: 4px 0 6px;
 }
 
 .ct-loader-rule {
@@ -638,17 +654,13 @@ body { margin: 0; font-family: var(--sans); background: var(--sand); }
   transition: width 80ms linear;
 }
 
-.ct-loader-name {
-  font-family: var(--serif); font-style: italic; font-size: 15px; color: rgba(245,239,232,.55);
-}
-
 @media (max-width: 640px) {
   .ct-loader-tag { font-size: 10px; letter-spacing: .26em; }
-  .ct-loader-name { font-size: 13px; }
+  .ct-loader-line { font-size: 15px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ct-loader { transition: none !important; }
+  .ct-loader-panel, .ct-loader-inner { transition: none !important; transform: none !important; opacity: 1 !important; }
 }
 
 /* Stage: hero (and the rest of the page) lift in just behind the parting

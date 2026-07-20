@@ -91,6 +91,9 @@ export default function MonthCalendar({
               aria-pressed={isSelected}
             >
               {day.date}
+              {isToday && !isSelected && (
+                <span className={`ct7-cal-cell-dot ${hasSlots ? 'ct7-cal-cell-dot--open' : ''}`} />
+              )}
             </button>
           )
         })}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import type { TherapistProfile } from '../templateUtils'
-import { getInitials } from '../templateUtils'
+import { getInitials, resolveCT3Content } from '../templateUtils'
 
 interface SideNavProps {
   scrollTo: (id: string) => void
@@ -41,6 +41,11 @@ export default function SideNav({ scrollTo, therapist }: SideNavProps) {
 
   const initials = getInitials(therapist.name ?? '') || 'CI'
 
+  const navContent = resolveCT3Content(therapist.profile_content?.classic3)
+  const navLabels   = navContent.nav.labels
+  const reserveLabel = navContent.nav.reserveLabel?.trim() || 'Reserve'
+  const SECTIONS_LABELED = SECTIONS.map(s => ({ ...s, label: navLabels[s.id]?.trim() || s.label }))
+
   return (
     <>
       <header className="ct3-nav" data-scrolled={scrolled}>
@@ -54,7 +59,7 @@ export default function SideNav({ scrollTo, therapist }: SideNavProps) {
 
           {/* Desktop links */}
           <nav className="ct3-nav-links">
-            {SECTIONS.map(s => (
+            {SECTIONS_LABELED.map(s => (
               <button
                 key={s.id}
                 onClick={() => scrollTo(s.id)}
@@ -71,7 +76,7 @@ export default function SideNav({ scrollTo, therapist }: SideNavProps) {
               className="ct3-btn-primary ct3-nav-cta"
               onClick={() => { scrollTo('book'); setMenuOpen(false) }}
             >
-              Reserve
+              {reserveLabel}
             </button>
             <button
               className="ct3-hamburger"
@@ -87,7 +92,7 @@ export default function SideNav({ scrollTo, therapist }: SideNavProps) {
 
         {/* Mobile drawer */}
         <div className={`ct3-drawer ${menuOpen ? 'open' : ''}`}>
-          {SECTIONS.map((s, i) => (
+          {SECTIONS_LABELED.map((s, i) => (
             <button
               key={s.id}
               className={`ct3-drawer-link ${activeId === s.id ? 'active' : ''}`}
@@ -103,7 +108,7 @@ export default function SideNav({ scrollTo, therapist }: SideNavProps) {
             className="ct3-btn-primary ct3-drawer-cta"
             onClick={() => { scrollTo('book'); setMenuOpen(false) }}
           >
-            Reserve a session
+            {reserveLabel} a session
           </button>
         </div>
       </header>

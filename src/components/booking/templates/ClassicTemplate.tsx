@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { TherapistProfile, getNext7Days, resolveCT1Content } from './templateUtils'
+import { TherapistProfile, getNext7Days, resolveCT1Content, resolveImage } from './templateUtils'
 import { getOrderedSections } from '@/lib/template'
 import { globalStyles } from './ClassicTemplate/styles'
 import Loader from './ClassicTemplate/Loader'
@@ -82,6 +82,10 @@ function ClassicTemplateInner({ bookedTimes = [], feedbacks = [], hiddenSections
   const [scrolled, setScrolled] = useState(false)
   const [loaderDone, setLoaderDone] = useState(false)
   const [heroLoaded, setHeroLoaded] = useState(false)
+  // Real readiness signal for the loader — flips true once the hero
+  // portrait has actually decoded, instead of the loader running on a
+  // fixed clock disconnected from what's really on screen.
+  const [heroImgReady, setHeroImgReady] = useState(false)
   const heroRef = useRef<HTMLElement | null>(null)
   const [carouselIndex, setCarouselIndex] = useState(0)
   const [carouselAnim, setCarouselAnim] = useState<'idle' | 'left' | 'right'>('idle')
@@ -122,6 +126,21 @@ function ClassicTemplateInner({ bookedTimes = [], feedbacks = [], hiddenSections
     window.addEventListener('scroll', onScroll)
     return () => window.removeEventListener('scroll', onScroll)
   }, [])
+
+  useEffect(() => {
+    const src = resolveImage(therapist.image)
+    if (!src) { setHeroImgReady(true); return }
+    let cancelled = false
+    const mark = () => { if (!cancelled) setHeroImgReady(true) }
+    const img = new window.Image()
+    img.onload = mark
+    img.onerror = mark // don't hang the page if the image 404s
+    img.src = src
+    if (img.complete) mark()
+    return () => { cancelled = true }
+  }, [therapist.image])
+
+  const handleLoaderDone = useCallback(() => setLoaderDone(true), [])
 
   useEffect(() => {
     // Hero's own entrance animation (.ct-hero--in) waits for the loader
@@ -238,7 +257,12 @@ function ClassicTemplateInner({ bookedTimes = [], feedbacks = [], hiddenSections
   return (
     <div className="font-sans" ref={rootRef}>
       <style>{globalStyles}</style>
-      <Loader onDone={() => setLoaderDone(true)} therapistName={therapist.name} />
+      <Loader
+        onDone={handleLoaderDone}
+        therapistName={therapist.name}
+        therapistId={therapist.id}
+        ready={heroImgReady}
+      />
       <Navbar scrolled={scrolled} scrollTo={scrollTo} therapist={therapist} />
       <div className={`ct-stage ${loaderDone ? 'ct-stage--in' : ''}`}>
         {orderedIds.map(id => sectionEls[id])}

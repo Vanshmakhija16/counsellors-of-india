@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { TherapistProfile, EditableService } from './templateUtils'
 import { getOrderedSections } from '@/lib/template'
 import { ct3Styles } from './ClassicTemplate3/styles'
+import Loader   from './ClassicTemplate3/Loader'
 import SideNav  from './ClassicTemplate3/SideNav'
 import Hero     from './ClassicTemplate3/Hero'
 import About    from './ClassicTemplate3/About'
@@ -23,14 +24,14 @@ export default function ClassicTemplate3({ therapist, bookedTimes = [], hiddenSe
   const show = (id: string) => !hiddenSections.includes(id)
   const orderedIds = getOrderedSections('classic3', therapist.section_order, hiddenSections).map(s => s.id)
   const [heroLoaded, setHeroLoaded]           = useState(false)
+  const [loaderDone, setLoaderDone]           = useState(false)
   const heroRef                               = useRef<HTMLElement | null>(null)
   const rootRef                               = useRef<HTMLDivElement | null>(null)
   const [selectedService, setSelectedService] = useState<EditableService | null>(null)
 
   useEffect(() => {
-    const t = window.setTimeout(() => setHeroLoaded(true), 80)
-    return () => window.clearTimeout(t)
-  }, [])
+    if (loaderDone) setHeroLoaded(true)
+  }, [loaderDone])
 
   // Scroll that works both on the real page and inside the LivePreview container
   function scrollTo(id: string) {
@@ -61,8 +62,9 @@ export default function ClassicTemplate3({ therapist, bookedTimes = [], hiddenSe
   return (
     <div className="ct3-root" ref={rootRef}>
       <style>{ct3Styles}</style>
+      <Loader onDone={() => setLoaderDone(true)} therapistName={therapist.name} />
       <SideNav scrollTo={scrollTo} therapist={therapist} />
-      <div style={{ paddingTop: 'var(--nav-h)' }}>
+      <div className={`ct3-stage ${loaderDone ? 'ct3-stage--in' : ''}`} style={{ paddingTop: 'var(--nav-h)' }}>
         {orderedIds.map(id => {
           switch (id) {
             case 'hero':     return <Hero key={id} therapist={therapist} heroLoaded={heroLoaded} heroRef={heroRef} />

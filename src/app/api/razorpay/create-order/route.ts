@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
         Authorization: `Basic ${auth}`,
       },
       body: JSON.stringify({
-        amount: Math.round(getPlanPriceInr(plan) * 100),
+        amount: Math.round(getPlanPriceInr(plan, user.email) * 100),
         currency,
         receipt: (receipt ?? `rcpt_${Date.now()}`).slice(0, 40),
         notes: { plan, therapist_id: user.id },

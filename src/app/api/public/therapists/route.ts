@@ -16,11 +16,10 @@ export async function GET() {
     const { data, error } = await supabase
       .from('therapists')
       .select(
-        'id, full_name, username, title, bio, photo_url, specialties, city, fee_per_session, years_experience, session_mode'
+        'id, full_name, username, title, bio, photo_url, specialties, city, fee_per_session, years_experience, session_mode, plan'
       )
       .eq('is_profile_complete', true)
       .order('created_at', { ascending: false })
-      .limit(12)
 
     if (error) {
       console.error('[public/therapists] supabase error:', error)
@@ -28,10 +27,9 @@ export async function GET() {
       const { data: fallback, error: fallbackErr } = await supabase
         .from('therapists')
         .select(
-          'id, full_name, username, title, bio, photo_url, specialties, city, fee_per_session, years_experience, session_mode'
+          'id, full_name, username, title, bio, photo_url, specialties, city, fee_per_session, years_experience, session_mode, plan'
         )
         .order('created_at', { ascending: false })
-        .limit(12)
 
       if (fallbackErr) throw fallbackErr
       return NextResponse.json({ therapists: fallback ?? [] })

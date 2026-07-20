@@ -18,6 +18,16 @@ const PLAN_PAYMENT_PROVIDER: 'razorpay' | 'payu' = 'razorpay'
 const PLAN_PRICE: Record<string, number> = { starter: 1499, pro: 2499 }
 const PLAN_RANK:  Record<string, number> = { starter: 1,    pro: 2   }
 
+// Internal test account — pricing page shows ₹1 for every plan when this
+// email is logged in, matching the ₹1 server-side charge in pricing.ts.
+// Display-only; the actual amount is enforced server-side in create-order
+// and upgrade-plan, so this can't be used to actually pay ₹1 without also
+// being authenticated as this email.
+const TEST_PRICE_EMAILS = new Set(['vanshmakhija18@gmail.com'])
+function isTestPriceEmail(email: string) {
+  return TEST_PRICE_EMAILS.has(email.trim().toLowerCase())
+}
+
 const plans = [
   {
     id: 'starter',

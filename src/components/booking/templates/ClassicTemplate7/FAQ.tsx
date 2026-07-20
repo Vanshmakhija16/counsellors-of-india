@@ -42,31 +42,52 @@ export default function FAQ() {
           padding-top: 14px; font-family: 'Inter', system-ui, sans-serif; font-size: 15px; line-height: 1.65;
           color: rgba(43,51,46,0.68); max-width: 60ch;
         }
+
+        .ct7-faq-layout {
+          position: relative; max-width: 1180px; margin: 0 auto; padding: 0 clamp(20px,5vw,56px);
+          display: grid; grid-template-columns: 0.85fr 1.4fr; gap: clamp(28px, 5vw, 64px); align-items: start;
+        }
+        @media (max-width: 900px) { .ct7-faq-layout { grid-template-columns: 1fr; } }
+
+        .ct7-faq-side { position: sticky; top: 120px; }
+        @media (max-width: 900px) { .ct7-faq-side { position: static; margin-bottom: 8px; } }
+        .ct7-faq-side-word {
+          font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-style: italic; letter-spacing: -0.01em;
+          font-size: clamp(48px, 7vw, 88px); line-height: 0.96; color: var(--ct7-charcoal); margin: 12px 0 0;
+        }
+        .ct7-faq-side-word em { font-style: italic; color: var(--ct7-brass); }
+        .ct7-faq-side-sub {
+          font-family: 'Inter', system-ui, sans-serif; font-size: 14.5px; line-height: 1.6;
+          color: rgba(43,51,46,0.6); margin: 18px 0 0; max-width: 34ch;
+        }
       `}</style>
 
-      <div className="ct7-section-head">
-        <span className="ct7-eyebrow ct7-reveal">Before you begin</span>
-        <h2 className="ct7-section-title ct7-reveal-clip">Questions people usually <em>carry</em>.</h2>
-      </div>
+      <div className="ct7-faq-layout">
+        <div className="ct7-faq-side">
+          <span className="ct7-eyebrow ct7-reveal">Before you begin</span>
+          <h2 className="ct7-faq-side-word ct7-reveal-clip">FAQs</h2>
+          <p className="ct7-faq-side-sub ct7-reveal">Questions people usually carry into that first message — answered before you have to ask.</p>
+        </div>
 
-      <div className="ct7-wrap-narrow">
-        {ITEMS.map((item, i) => {
-          const isOpen = open === i
-          return (
-            <div key={i} className="ct7-ledger-row ct7-reveal">
-              <span className="ct7-ledger-num">{String(i + 1).padStart(2, '0')}</span>
-              <div className="ct7-ledger-body">
-                <button className="ct7-faq-q" onClick={() => setOpen(isOpen ? null : i)} aria-expanded={isOpen}>
-                  {item.q}
-                  <span className={`ct7-faq-ind ${isOpen ? 'ct7-faq-ind--open' : ''}`} aria-hidden />
-                </button>
-                <div className={`ct7-faq-a ${isOpen ? 'ct7-faq-a--open' : ''}`}>
-                  <p className="ct7-faq-a-inner">{item.a}</p>
+        <div className="ct7-faq-list">
+          {ITEMS.map((item, i) => {
+            const isOpen = open === i
+            return (
+              <div key={i} className="ct7-ledger-row ct7-reveal">
+                <span className="ct7-ledger-num">{String(i + 1).padStart(2, '0')}</span>
+                <div className="ct7-ledger-body">
+                  <button className="ct7-faq-q" onClick={() => setOpen(isOpen ? null : i)} aria-expanded={isOpen}>
+                    {item.q}
+                    <span className={`ct7-faq-ind ${isOpen ? 'ct7-faq-ind--open' : ''}`} aria-hidden />
+                  </button>
+                  <div className={`ct7-faq-a ${isOpen ? 'ct7-faq-a--open' : ''}`}>
+                    <p className="ct7-faq-a-inner">{item.a}</p>
+                  </div>
                 </div>
               </div>
-            </div>
-          )
-        })}
+            )
+          })}
+        </div>
       </div>
     </section>
   )

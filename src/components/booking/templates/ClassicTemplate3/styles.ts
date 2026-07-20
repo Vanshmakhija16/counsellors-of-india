@@ -470,7 +470,7 @@ export const ct3Styles = `
   .ct3-footer-name { font-family: 'Fraunces', serif; font-size: clamp(40px, 4vw, 96px); font-style: italic;  line-height: 0.95; letter-spacing: -0.005em; color: #fff; margin: 0 0 clamp(1.5rem, 3vh, 2.5rem); opacity: 0.95; }
   .ct3-footer-grid { display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 3rem 5rem; padding-top: 2.5rem; border-top: 1px solid rgba(255,255,255,0.1); }
   @media (max-width: 720px) { .ct3-footer-grid { grid-template-columns: 1fr; gap: 2rem; } }
-  .ct3-footer-col-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 0.26em; text-transform: uppercase; color: var(--sage-light); margin-bottom: 1rem; display: block; }
+  .ct3-footer-col-label { font-family: 'Fraunces', serif; font-size: clamp(18px, 2vw, 22px); font-weight: 500; letter-spacing: -0.01em; text-transform: none; color: #ffffff; margin-bottom: 1rem; display: block; line-height: 1.25; }
   .ct3-footer-col-text { font-family: 'Hanken Grotesk', sans-serif; font-size: 14px; line-height: 1.75; color: rgba(248,250,249,0.6); font-weight: 400; }
   .ct3-footer-link { display: block; font-family: 'Hanken Grotesk', sans-serif; font-size: 14px; color: rgba(248,250,249,0.65); font-weight: 400; text-decoration: none; margin-bottom: 8px; transition: color 0.2s ease; }
   .ct3-footer-link:hover { color: var(--sage-light); }
@@ -1004,18 +1004,90 @@ export const ct3Styles = `
    layout). Placed last so it wins the cascade over earlier same-breakpoint
    rules without needing to touch them. */
 @media (max-width: 900px) {
-  .ct3-hero-photo-wrap { justify-content: center; }
-  .ct3-hero-content {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
-    margin: 0 auto;
-  }
-  .ct3-hero-content .ct3-eyebrow { text-align: center; }
-  .ct3-hero-title { text-align: center; }
-  .ct3-hero-subtitle { text-align: center; margin-left: auto; margin-right: auto; }
-  .ct3-hero-meta { justify-content: center; }
-  .ct3-hero-actions { justify-content: center; }
+.ct3-hero-photo-wrap { justify-content: center; }
+.ct3-hero-content {
+display: flex;
+flex-direction: column;
+align-items: center;
+text-align: center;
+margin: 0 auto;
+}
+.ct3-hero-content .ct3-eyebrow { text-align: center; }
+.ct3-hero-title { text-align: center; }
+.ct3-hero-subtitle { text-align: center; margin-left: auto; margin-right: auto; }
+.ct3-hero-meta { justify-content: center; }
+.ct3-hero-actions { justify-content: center; }
+}
+
+/* ────────────────────────────────────────────────────────────────────────
+   LOADER — "The Breath": a soft sage ring fills like a slow inhale.
+   ─────────────────────────────────────────────────────────────────────── */
+.ct3-loader {
+  position: fixed; inset: 0; z-index: 9999;
+}
+
+.ct3-loader-panel {
+  position: fixed; left: 0; right: 0; height: 50vh; overflow: hidden;
+  background: linear-gradient(160deg, #F8FAF9 0%, #EEF4F1 60%, #E8F0EC 100%);
+  transition: transform 900ms cubic-bezier(0.65, 0, 0.35, 1);
+}
+/* Each panel shows only its half of the same full-viewport gradient, so
+   the seam lines up as if it were one continuous background before it splits. */
+.ct3-loader-panel--top    { top: 0;    background-size: 100% 200vh; background-position: top; }
+.ct3-loader-panel--bottom { bottom: 0; background-size: 100% 200vh; background-position: bottom; }
+.ct3-loader--opening .ct3-loader-panel--top    { transform: translateY(-100%); }
+.ct3-loader--opening .ct3-loader-panel--bottom { transform: translateY(100%); }
+
+.ct3-loader-inner {
+  position: fixed; inset: 0; z-index: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  transition: opacity 500ms cubic-bezier(0.16, 1, 0.3, 1), transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.ct3-loader--opening .ct3-loader-inner { opacity: 0; transform: scale(0.97); }
+
+.ct3-loader-ring-wrap {
+  position: relative; width: 128px; height: 128px;
+  display: flex; align-items: center; justify-content: center;
+  animation: ct3-loader-breathe 2.4s ease-in-out infinite;
+}
+@keyframes ct3-loader-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.05); }
+}
+.ct3-loader-ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.ct3-loader-ring-track { fill: none; stroke: var(--sage-border, rgba(61,122,106,0.2)); stroke-width: 2; }
+.ct3-loader-ring-fill {
+  fill: none; stroke: #3D7A6A; stroke-width: 2; stroke-linecap: round;
+  transition: stroke-dashoffset 80ms linear;
+  filter: drop-shadow(0 0 8px rgba(61,122,106,.3));
+}
+.ct3-loader-pct {
+  font-family: 'JetBrains Mono', monospace; font-size: 22px; font-weight: 400;
+  color: #1C2B26; font-variant-numeric: tabular-nums;
+}
+
+.ct3-loader-eyebrow {
+  font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .26em;
+  text-transform: uppercase; color: #3D7A6A;
+}
+.ct3-loader-name {
+  font-family: 'Fraunces', serif; font-style: italic; font-size: 15px; color: #6B8C7D;
+}
+
+@media (max-width: 640px) {
+  .ct3-loader-ring-wrap { width: 104px; height: 104px; }
+  .ct3-loader-pct { font-size: 18px; }
+  .ct3-loader-eyebrow { font-size: 9px; letter-spacing: .2em; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ct3-loader-ring-wrap { animation: none !important; }
+  .ct3-loader-panel, .ct3-loader-inner { transition: none !important; transform: none !important; opacity: 1 !important; }
+}
+
+.ct3-stage { opacity: 0; transform: translateY(14px); }
+.ct3-stage--in {
+  opacity: 1; transform: translateY(0);
+  transition: opacity 700ms cubic-bezier(0.16,0.84,0.3,1) 150ms, transform 700ms cubic-bezier(0.16,0.84,0.3,1) 150ms;
 }
   `
