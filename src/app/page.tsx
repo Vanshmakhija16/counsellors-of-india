@@ -1956,7 +1956,7 @@ export default function Home() {
                     const init = name.split(' ').filter((w:string)=>!/^(dr|mr|mrs|ms|prof)\.?$/i.test(w)).map((w:string)=>w[0]).slice(0,2).join('').toUpperCase()||'?'
                     const rowKey = `${t.id||name}-${idx}`
                     const card = (
-                      <a href={t.username?`/${t.username}`:'#'} target={t.username?'_blank':undefined} rel="noopener noreferrer" className="td-card rv" onMouseMove={handleCardTiltMove} onMouseLeave={handleCardTiltLeave}>
+                      <a href={t.username?`/${t.username}`:'#'} className="td-card rv" onMouseMove={handleCardTiltMove} onMouseLeave={handleCardTiltLeave}>
                         <div className="td-card-glow" aria-hidden="true"/>
                         <div className="td-card-top">
                           <div className="td-card-av">

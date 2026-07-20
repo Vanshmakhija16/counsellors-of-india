@@ -176,7 +176,7 @@ export default function TherapistsDirectoryPage() {
                     const modeLabel = mode === 'online' ? 'Online' : mode === 'offline' ? 'In-person' : mode === 'both' ? 'Online & In-person' : ''
                     const init = name.split(' ').filter((w: string) => !/^(dr|mr|mrs|ms|prof)\.?$/i.test(w)).map((w: string) => w[0]).slice(0, 2).join('').toUpperCase() || '?'
                     return (
-                      <a key={`${t.id || name}-${idx}`} href={t.username ? `/${t.username}` : '#'} target={t.username ? '_blank' : undefined} rel="noopener noreferrer" className="td-card" onMouseMove={handleCardTiltMove} onMouseLeave={handleCardTiltLeave}>
+                      <a key={`${t.id || name}-${idx}`} href={t.username ? `/${t.username}` : '#'} className="td-card" onMouseMove={handleCardTiltMove} onMouseLeave={handleCardTiltLeave}>
                         <div className="td-card-glow" aria-hidden="true" />
                         <div className="td-card-top">
                           <div className="td-card-av">
