@@ -291,6 +291,7 @@ export default function Hero({
   const heroContent = resolveCT3Content(therapist.profile_content?.classic3)
   const headline = heroContent.hero.headline?.trim() || 'Helping you feel safe, heard, and understood.'
   const headlineLines = headline.split('\n').filter(l => l.length > 0)
+  const subtitle = heroContent.hero.subtitle?.trim()
 
   const scrollProgress =
     typeof window !== 'undefined'
@@ -399,12 +400,16 @@ export default function Hero({
         </h1>
 
         <p className="ct3-hero-subtitle">
-          Hi, I’m {firstName}.{' '}
-          {therapist.credentials ||
-            'Licensed Therapist'}{' '}
-          focused on creating calm, clarity,
-          and emotional resilience through
-          thoughtful therapy sessions.
+          {subtitle || (
+            <>
+              Hi, I’m {firstName}.{' '}
+              {therapist.credentials ||
+                'Licensed Therapist'}{' '}
+              focused on creating calm, clarity,
+              and emotional resilience through
+              thoughtful therapy sessions.
+            </>
+          )}
         </p>
 
         <div className="ct3-hero-meta">

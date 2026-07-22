@@ -62,6 +62,13 @@ export default function CT3ContentEditor({ value, onChange, saveButton }: Props)
               placeholder="Helping you feel safe, heard, and understood." className={ta} />
           </Field>
         </div>
+        <div className="mt-3">
+          <Field label="Introduction text — shown below the headline">
+            <textarea rows={4} value={c.hero.subtitle ?? ''}
+              onChange={e => patch({ hero: { ...c.hero, subtitle: e.target.value } })}
+              placeholder="Leave blank to use your name and credentials automatically." className={ta} />
+          </Field>
+        </div>
         <div className="mt-4 pt-4 border-t border-[#e8e4df]">
           <p className="text-xs text-[#9ca3af] mb-2">Footer note — the short line at the bottom of your page (label + text).</p>
           <div className="grid grid-cols-2 gap-3">

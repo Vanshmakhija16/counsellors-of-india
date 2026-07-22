@@ -98,6 +98,7 @@ export interface CT3Content {
   hero?: {
     headline?: string
     eyebrow?: string
+    subtitle?: string
   }
   footer?: {
     label?: string
