@@ -448,6 +448,9 @@ export const ct3Styles = `
 
   /* ═══════════════════════════════════════════════════════════ BOOKING */
   .ct3-booking { background: var(--bg-base); }
+  /* Booking can be reached directly from the fixed Reserve button, before its
+     IntersectionObserver fires. Keep its contents visible in that case. */
+  .ct3-booking .ct3-reveal { opacity: 1; transform: translateY(0); }
   .ct3-booking-grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 4rem 5rem; align-items: start; }
   @media (max-width: 900px) { .ct3-booking-grid { grid-template-columns: 1fr; gap: 3rem; } }
   .ct3-booking-intro { font-family: 'Hanken Grotesk', sans-serif; font-size: clamp(14px, 1.25vw, 16.5px); line-height: 1.8; color: var(--ink-2); font-weight: 400; max-width: 44ch; margin: 0 0 2rem; }
