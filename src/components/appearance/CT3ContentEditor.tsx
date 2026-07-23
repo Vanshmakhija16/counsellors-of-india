@@ -12,7 +12,12 @@ interface Props {
   saveButton?: React.ReactNode
 }
 
-type Section = 'hero' | 'nav' | 'services' | 'faq'
+type Section = 'hero' | 'ticker' | 'nav' | 'services' | 'faq'
+
+// CardPager needs a spreadable object per item — ticker tags are plain
+// strings, so we wrap/unwrap them at the boundary instead of touching
+// CardPager itself.
+type TickerTag = { text: string }
 
 export default function CT3ContentEditor({ value, onChange, saveButton }: Props) {
   const [open, setOpen] = useState<Section | null>(null)
@@ -23,6 +28,7 @@ export default function CT3ContentEditor({ value, onChange, saveButton }: Props)
   const c = {
     hero:     { ...DEFAULT_CT3_CONTENT.hero, ...(value.hero ?? {}) },
     footer:   { ...DEFAULT_CT3_CONTENT.footer, ...(value.footer ?? {}) },
+    ticker:   { items: value.ticker?.items ?? DEFAULT_CT3_CONTENT.ticker.items },
     nav: {
       reserveLabel: value.nav?.reserveLabel ?? DEFAULT_CT3_CONTENT.nav.reserveLabel,
       labels: { ...DEFAULT_CT3_CONTENT.nav.labels, ...(value.nav?.labels ?? {}) },
@@ -40,8 +46,9 @@ export default function CT3ContentEditor({ value, onChange, saveButton }: Props)
       activeSection={open}
       onSelect={setOpen}
       sections={[
-        { id: 'hero', label: 'Hero', meta: 'headline text' },
         { id: 'nav', label: 'Nav', meta: 'menu labels' },
+        { id: 'hero', label: 'Hero', meta: 'headline text' },
+        { id: 'ticker', label: 'Rotating Line', meta: `${c.ticker.items.length} tags` },
         { id: 'services', label: 'Services', meta: `${c.services.length} items` },
         { id: 'faq', label: 'FAQ', meta: `${c.faq.length} questions` },
       ]}
@@ -85,6 +92,28 @@ export default function CT3ContentEditor({ value, onChange, saveButton }: Props)
             </Field>
           </div>
         </div>
+      </Accordion>
+
+
+
+      <Accordion open={open === 'ticker'} >
+        <p className="text-xs text-[#9ca3af] mb-2">
+          Short tags that scroll across the rotating line above your About section. Use the arrows to move between them.
+        </p>
+        <CardPager<TickerTag>
+          items={c.ticker.items.map(text => ({ text }))}
+          onChange={tags => patch({ ticker: { items: tags.map(t => t.text) } })}
+          newItem={() => ({ text: 'New tag' })}
+          itemLabel={(t, i) => t.text || `Tag ${i + 1}`}
+          maxItems={20}
+          addButtonLabel="Add tag"
+          emptyLabel="You haven't added any tags yet."
+          renderItem={(t, update) => (
+            <Field label="Tag text">
+              <input value={t.text} onChange={e => update({ text: e.target.value })} className={inp} />
+            </Field>
+          )}
+        />
       </Accordion>
 
       {/* ── MENU ───────────────────────────────────── */}

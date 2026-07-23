@@ -53,7 +53,9 @@ export default function CardPager<T>({
     return (
       <div className="text-center py-6 rounded-lg border border-dashed border-[#d9d1c7] bg-white">
         <p className="text-sm text-[#9ca3af] mb-2">{emptyLabel}</p>
-        <button onClick={addOne} className={addBtn}><Plus size={13} /> {addButtonLabel}</button>
+        <div className="flex justify-center">
+          <button onClick={addOne} className={addBtn}><Plus size={13} /> {addButtonLabel}</button>
+        </div>
       </div>
     )
   }

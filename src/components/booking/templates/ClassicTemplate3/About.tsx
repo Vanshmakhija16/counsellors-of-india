@@ -15,15 +15,6 @@ function Row({ k, v }: { k: string; v: string }) {
   )
 }
 
-const TICKER_ITEMS = [
-  'Licensed Practitioner',
-  'Confidential Sessions',
-  'Evidence-Based Practice',
-  'Online & In-Person',
-  'Integrative Approach',
-  'First Session Diagnostic',
-]
-
 export default function About({ therapist }: AboutProps) {
   const bio = therapist.bio?.trim() || 'I work with adults navigating anxiety, burnout, grief, and the long aftermath of difficult early relationships. My approach is integrative, rooted in psychodynamic listening, with tools from CBT, ACT, and somatic work woven in when the moment asks for them.'
   const firstLetter = bio[0]?.toUpperCase() ?? 'I'
@@ -31,18 +22,6 @@ export default function About({ therapist }: AboutProps) {
 
   return (
     <>
-      {/* ── Ticker ── */}
-      <div className="ct3-ticker-wrap">
-        <div className="ct3-ticker-belt">
-          {[...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS, ...TICKER_ITEMS].map((item, i) => (
-            <span key={i} className="ct3-ticker-item">
-              {item}
-              <span className="ct3-ticker-dot" />
-            </span>
-          ))}
-        </div>
-      </div>
-
       {/* ── About ── */}
       <section id="about" className="ct3-section ct3-about ct3-gold-rule-top">
         <div className="ct3-container">

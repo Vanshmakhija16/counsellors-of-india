@@ -10,7 +10,7 @@ import SiteNavbar from '@/components/layout/SiteNavbar'
 import { useTherapist } from '@/lib/useTherapist'
 import { loadDemo, saveDemo, emptyDemo, type DemoProfile } from '@/lib/demoSession'
 import { normalizeSpecialtyKey, titleCaseLabel } from '@/lib/specialties'
-import { Check, Crown, ArrowRight } from 'lucide-react'
+import { Check, Crown, Rocket, ArrowRight } from 'lucide-react'
 import './page.css'
 
 
@@ -191,10 +191,10 @@ const PLANS_DATA = [
     feats: [
       'Professional therapist website',
       'Custom domain',
-      'Online Appointment Booking',
-      'Payment Collection',
-      'Booking confirmation on email',
-      'Client Dashboard',
+      'Online appointment booking',
+      'Secure online payments',
+      'Email booking confirmations',
+      'Client management dashboard',
       'Shareable profile link',
       'Up to 10 bookings per month',
     ],
@@ -210,18 +210,12 @@ const PLANS_DATA = [
     hi: true,
     recommended: true,
     feats: [
-      'Professional therapist website',
-      'Custom domain',
-      'Online appointment booking',
-      'Payment collection',
-      'Client dashboard',
-      'Booking confirmation on email',
-      'Booking confirmation on WhatsApp',
-      'Shareable profile link',
+      'Everything in Starter, plus:',
       'Unlimited bookings',
-      'Featured Therapist Badge',
-      'Higher Visibility in Directory',
-      'Priority Support',
+      'WhatsApp booking confirmations',
+      'Featured Therapist badge',
+      'Higher visibility in directory',
+      'Priority support',
     ],
     cta: 'Grow Your Practice',
     ctaStyle: 'filled',
@@ -728,10 +722,12 @@ function LiveTemplateExperience() {
     { id: 't3', n: 3, name: 'The Mindful Space',     desc: 'Green tones, minimal' },
     { id: 't4', n: 4, name: 'The Executive Suite',   desc: 'Luxury editorial' },
     { id: 't5', n: 5, name: 'The Retreat',           desc: 'Warm greens, parchment' },
+    // { id: 't6', n: 6, name: 'The Quiet Room',        desc: 'Dusk-to-daylight, minimal' },
+    // { id: 't7', n: 7, name: 'The Atrium',            desc: 'Editorial sand & sage' },
   ]
   const [active, setActive] = useState(2) // default → template 3 (Sage & Clean)
   const [loading, setLoading] = useState(true)
-  const cur = EXP[active]
+  const cur = EXP[active] ?? EXP[0]
 
   const [device, setDevice] = useState<'mobile' | 'tablet' | 'desktop'>('desktop')
 
@@ -2045,8 +2041,8 @@ export default function Home() {
             <h2 className="price-h">See our <em>Plans</em></h2>
           </div>
 
-          <div className="mx-auto w-full max-w-[760px]">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 xl:gap-10 ">
+          <div className="mx-auto w-full max-w-[820px]">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 xl:gap-6 items-stretch">
               {PLANS_DATA.map((p, i) => {
                 const currentPlan = authTherapist?.plan
                 const isCurrentPlan = authHasPlan && currentPlan === p.id
@@ -2063,23 +2059,24 @@ export default function Home() {
                   key={p.id}
                   className={`
                     rv ${i === 0 ? 'price-anim-left' : 'price-anim-right'}
-                    relative flex flex-col h-full rounded-[18px] bg-white p-5 transition-all duration-300
+                    relative flex flex-col h-full rounded-[18px] bg-white p-5 sm:p-6 transition-all duration-300
                     ${p.hi
-                      ? 'border border-[#FF9933] shadow-[0_14px_36px_rgba(255,153,51,0.14)] lg:scale-[1.02]'
+                      ? 'border border-[#FF9933] shadow-[0_14px_36px_rgba(255,153,51,0.13)] lg:scale-[1.015]'
                       : 'border border-[#ECE5D9] shadow-sm hover:shadow-lg hover:border-[#FF9933]/30'}
                   `}
                 >
                   {p.recommended && (
-                    <div className="absolute left-1/2 -translate-x-1/2 -top-3 px-3.5 py-1 rounded-full text-[11px] font-semibold bg-[#FF9933] text-white shadow-md whitespace-nowrap">
+                    <div className="absolute left-1/2 -translate-x-1/2 -top-2.5 px-3 py-1 rounded-full text-[10px] font-semibold bg-[#FF9933] text-white shadow-md whitespace-nowrap">
                       Most Popular
                     </div>
                   )}
 
                   <div className="mb-4">
                     <div className="flex items-center gap-1.5">
-                      {p.id === 'pro' && <Crown size={14} className="text-[#FF9933]" />}
+                      {p.id === 'pro' && <Crown size={13} className="text-[#FF9933]" />}
+                      {p.id === 'starter' && <Rocket size={13} className="text-[#FF9933]" />}
                       <h3
-                        className="text-base text-[#1F1C18]"
+                        className="text-[15px] text-[#1F1C18]"
                         style={{ fontFamily: "'Fraunces','Instrument Serif',serif", fontWeight: 500 }}
                       >
                         {p.name}
@@ -2088,7 +2085,7 @@ export default function Home() {
 
                     <div className="mt-2 flex items-end gap-1">
                       <span
-                        className="text-2xl font-semibold tracking-tight text-[#1F1C18]"
+                        className="text-[26px] font-semibold tracking-tight text-[#1F1C18]"
                         style={{ fontFamily: 'Inter, system-ui, sans-serif' }}
                       >
                         {p.price}
@@ -2101,21 +2098,21 @@ export default function Home() {
 
                   <Link
                     href={ctaHref}
-                    className={`h-8 rounded-lg inline-flex items-center justify-center gap-1.5 text-[11.5px] font-medium transition ${
+                    className={`h-10 rounded-lg inline-flex items-center justify-center gap-1.5 text-[12.5px] font-medium transition ${
                       p.ctaStyle === 'filled'
                         ? 'bg-[#FF9933] hover:bg-[#E07A12] text-white'
                         : 'border border-[#ECE5D9] text-[#1F1C18] hover:border-[#FF9933] hover:text-[#FF9933]'
                     }`}
                   >
                     {ctaLabel}
-                    <ArrowRight size={11} />
+                    <ArrowRight size={12} />
                   </Link>
 
-                  <ul className="mt-4 mb-0 flex-1 space-y-1.5">
+                  <ul className="mt-4 mb-0 flex-1 space-y-2">
                     {p.feats.map((f) => (
                       <li key={f} className="flex items-start gap-2">
-                        <Check size={11} className="mt-0.5 shrink-0 text-[#FF9933]" />
-                        <span className="text-[11.5px] leading-snug text-[#3D3A33]">{f}</span>
+                        <span className="mt-[3px] shrink-0 text-[#FF9933] text-[13px] leading-none">•</span>
+                        <span className="text-[12px] leading-snug text-[#3D3A33]">{f}</span>
                       </li>
                     ))}
                   </ul>

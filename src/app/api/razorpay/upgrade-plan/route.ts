@@ -81,6 +81,11 @@ export async function POST(req: NextRequest) {
         highest_plan: newHighest,
         razorpay_payment_id,
         plan_activated_at: new Date().toISOString(),
+        // Starting (or re-starting) a Pro subscription gives a fresh
+        // 2-switch template allowance for a new yearly cycle.
+        ...(targetPlan === 'pro'
+          ? { pro_switches_used: 0, pro_switch_cycle_start: new Date().toISOString() }
+          : {}),
       })
       .eq('id', user.id)
 

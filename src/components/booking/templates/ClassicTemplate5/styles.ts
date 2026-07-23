@@ -1007,6 +1007,10 @@ export const ct5Styles = `
      BOOKING SECTION
   ════════════════════════════════════════════ */
   .ct5-booking { background: var(--bg); }
+  /* Keep booking visible when the navigation jumps directly to this section. */
+  .ct5-booking .ct5-reveal,
+  .ct5-booking .ct5-reveal-left,
+  .ct5-booking .ct5-reveal-right { opacity: 1; transform: translate(0); }
   .ct5-booking-grid {
     display: grid;
     grid-template-columns: 1fr 1.4fr;

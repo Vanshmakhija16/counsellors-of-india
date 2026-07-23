@@ -737,6 +737,8 @@ export const ct4Styles = `
      BOOKING SECTION
   ═══════════════════════════════════════ */
   .ct4-booking { background: var(--void); }
+  /* The Reserve button can jump straight here before the reveal observer runs. */
+  .ct4-booking .ct4-reveal { opacity: 1; transform: translateY(0); }
   .ct4-booking-grid {
     display: grid; grid-template-columns: 1fr 1.3fr;
     gap: 4rem 5rem; align-items: start;

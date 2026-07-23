@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase'
 import Button from '@/components/ui/Button'
-import { Check, Lock, Zap, ArrowRight, ShieldCheck, Crown, X } from 'lucide-react'
+import { Check, Lock, Zap, ArrowRight, ShieldCheck, Crown, Rocket, X } from 'lucide-react'
 import { startPayuPlanCheckout } from '@/lib/payu-client'
 import { startRazorpayPlanCheckout } from '@/lib/razorpay-client'
 import JourneyProgress from '@/components/journey/JourneyProgress'
@@ -40,10 +40,10 @@ const plans = [
     features: [
       'Professional therapist website',
       'Custom domain',
-      'Online Appointment Booking',
-      'Payment Collection',
-      'Booking confirmation on email',
-      'Client Dashboard',
+      'Online appointment booking',
+      'Secure online payments',
+      'Email booking confirmations',
+      'Client management dashboard',
       'Shareable profile link',
       'Up to 10 bookings per month',
     ],
@@ -59,18 +59,12 @@ const plans = [
     highlight: true,
     badge: 'Most Popular',
     features: [
-      'Professional therapist website',
-      'Custom domain',
-      'Online appointment booking',
-      'Payment collection',
-      'Client dashboard',
-      'Booking confirmation on email',
-      'Booking confirmation on WhatsApp',
-      'Shareable profile link',
+      'Everything in Starter, plus:',
       'Unlimited bookings',
-      'Featured Therapist Badge',
-      'Higher Visibility in Directory',
-      'Priority Support',
+      'WhatsApp booking confirmations',
+      'Featured Therapist badge',
+      'Higher visibility in directory',
+      'Priority support',
     ],
     locked: [],
     cta: 'Grow Your Practice',
@@ -328,8 +322,8 @@ const highest =
         )} */}
 
         {/* Plans grid */}
-<div className="mx-auto w-full max-w-[980px]">
-  <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 xl:gap-8 items-stretch">
+<div className="mx-auto w-full max-w-[820px]">
+  <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 xl:gap-6 items-stretch">
 
     {plans.map((plan) => {
       const isActive = currentPlan === plan.id
@@ -347,9 +341,9 @@ const highest =
             relative
             flex flex-col
             h-full
-            rounded-[28px]
+            rounded-[18px]
             bg-white
-            p-6 sm:p-8
+            p-5 sm:p-6
             transition-all
             duration-300
 
@@ -357,8 +351,8 @@ const highest =
               plan.highlight
                 ? `
                   border border-[#FF9933]
-                  shadow-[0_20px_60px_rgba(255,153,51,0.15)]
-                  lg:scale-[1.03]
+                  shadow-[0_14px_36px_rgba(255,153,51,0.13)]
+                  lg:scale-[1.015]
                 `
                 : `
                   border border-[#ECE5D9]
@@ -377,11 +371,11 @@ const highest =
                 absolute
                 left-1/2
                 -translate-x-1/2
-                -top-3
-                px-4
-                py-1.5
+                -top-2.5
+                px-3
+                py-1
                 rounded-full
-                text-xs
+                text-[10px]
                 font-semibold
                 bg-[#FF9933]
                 text-white
@@ -393,14 +387,17 @@ const highest =
             </div>
           )}
 
-          <div className="mb-8">
-            <div className="flex items-center gap-2">
+          <div className="mb-4">
+            <div className="flex items-center gap-1.5">
               {plan.id === 'pro' && (
-                <Crown size={16} className="text-[#FF9933]" />
+                <Crown size={13} className="text-[#FF9933]" />
+              )}
+              {plan.id === 'starter' && (
+                <Rocket size={13} className="text-[#FF9933]" />
               )}
 
               <h2
-                className="text-2xl text-[#1F1C18]"
+                className="text-[15px] text-[#1F1C18]"
                 style={{
                   fontFamily:
                     "'Fraunces','Instrument Serif',serif",
@@ -417,9 +414,9 @@ const highest =
               )}
             </div>
 
-            <div className="mt-5 flex items-end gap-2">
+            <div className="mt-2 flex items-end gap-1">
 <span
-  className="text-5xl font-semibold tracking-tight text-[#1F1C18]"
+  className="text-[26px] font-semibold tracking-tight text-[#1F1C18]"
   style={{
     fontFamily: 'Inter, system-ui, sans-serif'
   }}
@@ -427,12 +424,12 @@ const highest =
   {plan.price}
 </span>
 
-              <span className="text-sm text-gray-400 mb-1">
+              <span className="text-[11px] text-gray-400 mb-0.5">
                 {plan.period}
               </span>
             </div>
 
-            <p className="mt-3 text-sm text-[#6E685F] leading-relaxed">
+            <p className="mt-1.5 text-[11.5px] text-[#6E685F] leading-snug">
               {plan.tagline}
             </p>
           </div>
@@ -446,15 +443,15 @@ const highest =
             className={
               plan.highlight
                 ? `
-                  h-12
-                  rounded-xl
+                  h-10
+                  rounded-lg
                   bg-[#FF9933]!
                   hover:bg-[#E07A12]!
                   text-white!
                 `
                 : `
-                  h-12
-                  rounded-xl
+                  h-10
+                  rounded-lg
                   hover:border-[#FF9933]!
                   hover:text-[#FF9933]!
                 `
@@ -462,34 +459,31 @@ const highest =
           >
             {isActive ? (
               <>
-                <Check size={15} className="mr-2" />
+                <Check size={13} className="mr-1.5" />
                 Current Plan
               </>
             ) : alreadyPaid ? (
               <>
                Continue 
-                <ArrowRight size={14} className="ml-2" />
+                <ArrowRight size={12} className="ml-1.5" />
               </>
             ) : (
               <>
                 {plan.cta}
-                <ArrowRight size={14} className="ml-2" />
+                <ArrowRight size={12} className="ml-1.5" />
               </>
             )}
           </Button>
 
-          <ul className="mt-8 mb-8 flex-1 space-y-4">
+          <ul className="mt-4 mb-4 flex-1 space-y-2">
             {plan.features.map((feature) => (
               <li
                 key={feature}
-                className="flex items-start gap-3"
+                className="flex items-start gap-2"
               >
-                <Check
-                  size={16}
-                  className="mt-1 shrink-0 text-[#FF9933]"
-                />
+                <span className="mt-[3px] shrink-0 text-[#FF9933] text-[13px] leading-none">•</span>
 
-                <span className="text-[15px] leading-relaxed text-[#3D3A33]">
+                <span className="text-[12px] leading-snug text-[#3D3A33]">
                   {feature}
                 </span>
               </li>
@@ -498,14 +492,14 @@ const highest =
             {plan.locked?.map((feature) => (
               <li
                 key={feature}
-                className="flex items-start gap-3 opacity-40"
+                className="flex items-start gap-2 opacity-40"
               >
                 <Lock
-                  size={14}
-                  className="mt-1 shrink-0 text-gray-300"
+                  size={12}
+                  className="mt-[3px] shrink-0 text-gray-300"
                 />
 
-                <span className="text-[15px] text-gray-400 line-through">
+                <span className="text-[12px] text-gray-400 line-through">
                   {feature}
                 </span>
               </li>
@@ -513,10 +507,10 @@ const highest =
           </ul>
 
           {isPaid && !alreadyPaid && (
-            <div className="mt-auto pt-2">
-              <p className="flex items-center justify-center gap-2 text-xs text-gray-400">
+            <div className="mt-auto pt-1">
+              <p className="flex items-center justify-center gap-1.5 text-[10.5px] text-gray-400">
                 <ShieldCheck
-                  size={12}
+                  size={11}
                   className="text-[#FF9933]"
                 />
                 Secure payment via {PLAN_PAYMENT_PROVIDER === 'razorpay' ? 'Razorpay' : 'PayU'}

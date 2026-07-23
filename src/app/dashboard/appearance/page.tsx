@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase'
 import {
   TEMPLATES, TEMPLATE_SECTIONS, canUseTemplate, getColor, getOrderedSections,
+  PRO_TEMPLATE_SWITCH_LIMIT, PRO_SWITCH_CYCLE_DAYS,
   type TemplateId, type ColorId, type TherapistProfile,
 } from '@/lib/template'
 import LivePreview from '@/components/appearance/LivePreview'
@@ -78,8 +79,12 @@ export default function AppearancePage() {
   const [savedContent,     setSavedContent]     = useState(false)
   const [saveError,        setSaveError]        = useState<string | null>(null)
   const [lockedTemplate,   setLockedTemplate]   = useState<TemplateId | null>(null)
+  const [lockReason,       setLockReason]       = useState<'starter-annual' | 'plan-tier' | 'pro-switch-limit'>('plan-tier')
   const [committedTemplate,setCommittedTemplate]= useState<TemplateId>('classic')
   const [templateLockedUntil, setTemplateLockedUntil] = useState<string | null>(null)
+  const [grandfatheredTemplateId, setGrandfatheredTemplateId] = useState<TemplateId | null>(null)
+  const [proSwitchesUsed,  setProSwitchesUsed]  = useState<number>(0)
+  const [proSwitchCycleStart, setProSwitchCycleStart] = useState<string | null>(null)
   const [showEditHint,     setShowEditHint]     = useState(false)
 
   useEffect(() => {
@@ -107,6 +112,9 @@ export default function AppearancePage() {
         setProfileContent(data.profile_content ?? {})
         setSavedProfileContent(data.profile_content ?? {})
         setTemplateLockedUntil(data.template_locked_until ?? null)
+        setGrandfatheredTemplateId((data.grandfathered_template_id as TemplateId | null) ?? null)
+        setProSwitchesUsed(data.pro_switches_used ?? 0)
+        setProSwitchCycleStart(data.pro_switch_cycle_start ?? null)
       }
     }
     load()

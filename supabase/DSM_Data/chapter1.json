@@ -1,0 +1,271 @@
+{
+  "id": "chapter-1",
+  "order": 1,
+  "title": "Neurodevelopmental Disorders",
+  "headings": [
+
+
+                {
+                "id": "heading-1",
+                "order": 1,
+                "title": "Intellectual Developmental Disorders",
+                "disorders": [
+                    {
+                    "id": "intellectual-developmental-disorder",
+                    "order": 1,
+                    "title": "Intellectual Developmental Disorder",
+                    "sections": [
+                        {
+                        "id": "diagnostic-criteria",
+                        "order": 1,
+                        "title": "Diagnostic Criteria",
+                        "criteria": []
+                        },
+                        {
+                        "id": "severity",
+                        "order": 2,
+                        "title": "Severity",
+                        "criteria": []
+                        }
+                    ]
+                    }
+                ]
+                },
+
+
+                {
+                "id": "heading-2",
+                "order": 2,
+                "title": "Communication Disorders",
+                "disorders": 
+                        [
+                            {
+                            "id": "language-disorder",
+                            "order": 1,
+                            "title": "Language Disorder",
+                            "sections":
+                                        [
+                                            {
+                                            "id": "diagnostic-criteria",
+                                            "order": 1,
+                                            "title": "Diagnostic Criteria",
+                                            "content": [
+                                                {
+                                                "order": 1,
+                                                "label": "A",
+                                                "text": "Persistent difficulties in the acquisition and use of language across modalities (spoken, written, sign language, or other) due to deficits in comprehension or production that include:",
+                                                "children": [
+                                                    {
+                                                    "order": 1,
+                                                    "label": "1",
+                                                    "text": "Reduced vocabulary (word knowledge and use)."
+                                                    },
+                                                    {
+                                                    "order": 2,
+                                                    "label": "2",
+                                                    "text": "Limited sentence structure (ability to combine words and word endings according to grammar and morphology)."
+                                                    },
+                                                    {
+                                                    "order": 3,
+                                                    "label": "3",
+                                                    "text": "Impairments in discourse (ability to use vocabulary and connect sentences to explain, describe, or converse)."
+                                                    }
+                                                    ]
+                                                    },
+                                                {
+                                                "order": 2,
+                                                "label": "B",
+                                                "text": "Language abilities are substantially and quantifiably below those expected for age, resulting in functional limitations in communication, social participation, academic achievement, or occupational performance."
+                                                },
+                                                {
+                                                "order": 3,
+                                                "label": "C",
+                                                "text": "Onset of symptoms is in the early developmental period."
+                                                },
+                                                {
+                                                "order": 4,
+                                                "label": "D",
+                                                "text": "The difficulties are not attributable to hearing or other sensory impairment, motor dysfunction, another medical or neurological condition, and are not better explained by intellectual developmental disorder or global developmental delay."
+                                                }
+                                            ]
+                                            }
+                                        ]
+                            },
+                            {
+                            "id": "speech-sound-disorder",
+                            "order": 2,
+                            "title": "Speech Sound Disorder",
+                            "sections": [
+                                {
+                                "id": "diagnostic-criteria",
+                                "order": 1,
+                                "title": "Diagnostic Criteria",
+                                "content": [
+                                    {
+                                    "label": "A",
+                                    "text": "Persistent difficulty with speech sound production that interferes with speech intelligibility or prevents verbal communication of messages."
+                                    },
+                                    {
+                                    "label": "B",
+                                    "text": "The disturbance causes limitations in effective communication that interfere with social participation, academic achievement, or occupational performance, individually or in any combination."
+                                    },
+                                    {
+                                    "label": "C",
+                                    "text": "Onset of symptoms is in the early developmental period."
+                                    },
+                                    {
+                                    "label": "D",
+                                    "text": "The difficulties are not attributable to congenital or acquired conditions, such as cerebral palsy, cleft palate, deafness or hearing loss, traumatic brain injury, or other medical or neurological conditions."
+                                    }
+                                ]
+                                }
+                            ]
+                            },
+                            {
+                            "id": "childhood-onset-fluency-disorder",
+                            "order": 3,
+                            "title": "Childhood-Onset Fluency Disorder (Stuttering)",
+                            "sections": [
+                                {
+                                "id": "diagnostic-criteria",
+                                "order": 1,
+                                "title": "Diagnostic Criteria",
+                                "content": [
+                                    {
+                                    "label": "A",
+                                    "text": "Disturbances in the normal fluency and time patterning of speech that are inappropriate for the individual's age and language skills, persistent over time, and characterized by frequent and marked occurrence of one (or more) of the following:",
+                                    "children": [
+                                        {
+                                        "label": "1",
+                                        "text": "Sound and syllable repetitions."
+                                        },
+                                        {
+                                        "label": "2",
+                                        "text": "Sound prolongations of consonants as well as vowels."
+                                        },
+                                        {
+                                        "label": "3",
+                                        "text": "Broken words (e.g., pauses within a word)."
+                                        },
+                                        {
+                                        "label": "4",
+                                        "text": "Audible or silent blocking (filled or unfilled pauses in speech)."
+                                        },
+                                        {
+                                        "label": "5",
+                                        "text": "Circumlocutions (word substitutions to avoid problematic words)."
+                                        },
+                                        {
+                                        "label": "6",
+                                        "text": "Words produced with an excess of physical tension."
+                                        },
+                                        {
+                                        "label": "7",
+                                        "text": "Monosyllabic whole-word repetitions (e.g., 'I-I-I-I see him')."
+                                        }
+                                    ]
+                                    },
+                                    {
+                                    "label": "B",
+                                    "text": "The disturbance causes anxiety about speaking or limitations in effective communication, social participation, academic achievement, or occupational performance, individually or in any combination."
+                                    },
+                                    {
+                                    "label": "C",
+                                    "text": "Onset of symptoms is in the early developmental period."
+                                    },
+                                    {
+                                    "label": "D",
+                                    "text": "The disturbance is not attributable to a speech-motor or sensory deficit, disfluency associated with neurological insult, or another medical condition and is not better explained by another mental disorder."
+                                    }
+                                ]
+                                }
+                            ]
+                            },
+
+                            {
+                            "id": "social-pragmatic-communication-disorder",
+                                "order": 4,
+                                "title": "Social (Pragmatic) Communication Disorder",
+                                "sections": [
+                                    {
+                                    "id": "diagnostic-criteria",
+                                    "order": 1,
+                                    "title": "Diagnostic Criteria",
+                                    "content": [
+                                        {
+                                        "label": "A",
+                                        "text": "Persistent difficulties in the social use of verbal and nonverbal communication as manifested by all of the following:",
+                                        "children": [
+                                                        {
+                                                        "label": "1",
+                                                        "text": "Deficits in using communication for social purposes, such as greeting and sharing information, in a manner that is appropriate for the social context."
+                                                        },
+                                                        {
+                                                        "label": "2",
+                                                        "text": "Impairment of the ability to change communication to match context or the needs of the listener, such as speaking differently in a classroom than on a playground, talking differently to a child than to an adult, and avoiding use of overly formal language."
+                                                        },
+                                                        {
+                                                        "label": "3",
+                                                        "text": "Difficulties following rules for conversation and storytelling, such as taking turns in conversation, rephrasing when misunderstood, and knowing how to use verbal and nonverbal signals to regulate interaction."
+                                                        },
+                                                        {
+                                                        "label": "4",
+                                                        "text": "Difficulties understanding what is not explicitly stated (e.g., making inferences) and nonliteral or ambiguous meanings of language (e.g., idioms, humor, metaphors, multiple meanings that depend on context)."
+                                                        }
+                                                    ]
+                                        },
+                            {
+                            "label": "B",
+                            "text": "The deficits result in functional limitations in effective communication, social participation, social relationships, academic achievement, or occupational performance, individually or in combination."
+                            },
+                            {
+                            "label": "C",
+                            "text": "The onset of symptoms is in the early developmental period, but deficits may not become fully manifest until social communication demands exceed limited capacities."
+                            },
+                            {
+                            "label": "D",
+                            "text": "The symptoms are not attributable to another medical or neurological condition, low abilities in the domains of word structure and grammar, and are not better explained by autism spectrum disorder, intellectual developmental disorder, global developmental delay, or another mental disorder."
+                            }
+                        ]
+                        }
+                    ]
+                            }
+                        ]
+                },
+
+
+
+    {
+        "id": "heading-3",
+        "order": 3,
+        "title": "Autism Spectrum Disorder",
+        "disorders": []
+    },
+    {
+        "id": "heading-4",
+        "order": 4,
+        "title": "Attention-Deficit/Hyperactivity Disorder",
+        "disorders": []
+    },
+    {
+        "id": "heading-5",
+        "order": 5,
+        "title": "Specific Learning Disorder",
+        "disorders": []
+    },
+    {
+        "id": "heading-6",
+        "order": 6,
+        "title": "Motor Disorders",
+        "disorders": []
+    },
+    {
+        "id": "heading-7",
+        "order": 7,
+        "title": "Tic Disorders",
+        "disorders": []
+    }
+
+
+  ]
+}

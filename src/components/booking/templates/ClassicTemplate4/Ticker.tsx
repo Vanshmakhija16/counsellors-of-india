@@ -8,6 +8,7 @@ interface TickerProps { therapist: TherapistProfile }
 export default function Ticker({ therapist }: TickerProps) {
   const ct4 = resolveCT4Content(therapist.profile_content?.classic4)
   const items = ct4.ticker.items
+  if (items.length === 0) return null
   const repeated = [...items, ...items]
 
   return (

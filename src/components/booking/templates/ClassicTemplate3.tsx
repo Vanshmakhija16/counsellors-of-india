@@ -7,6 +7,7 @@ import { ct3Styles } from './ClassicTemplate3/styles'
 import Loader   from './ClassicTemplate3/Loader'
 import SideNav  from './ClassicTemplate3/SideNav'
 import Hero     from './ClassicTemplate3/Hero'
+import Ticker   from './ClassicTemplate3/Ticker'
 import About    from './ClassicTemplate3/About'
 import Services from './ClassicTemplate3/Services'
 import Insights from './ClassicTemplate3/Insights'
@@ -68,6 +69,7 @@ export default function ClassicTemplate3({ therapist, bookedTimes = [], hiddenSe
         {orderedIds.map(id => {
           switch (id) {
             case 'hero':     return <Hero key={id} therapist={therapist} heroLoaded={heroLoaded} heroRef={heroRef} />
+            case 'ticker':   return <Ticker key={id} therapist={therapist} />
             case 'about':    return <About key={id} therapist={therapist} />
             case 'services': return <Services key={id} therapist={therapist} onBookService={handleBookService} />
             case 'insights': return <Insights key={id} therapist={therapist} />

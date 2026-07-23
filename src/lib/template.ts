@@ -20,7 +20,7 @@ export interface Template {
   name: string           // user-friendly display name
   tagline: string        // one-line description
   style: string          // mood descriptor shown in UI
-  plan: 'starter' | 'growth' | 'clinic'  // minimum plan; all templates are on every paid plan
+  plan: 'starter' | 'pro' // minimum plan required to select/use this template
   thumbnail: string
   accent: string         // thumbnail preview accent color
   bg: string             // thumbnail preview bg
@@ -38,6 +38,13 @@ export interface TherapistProfile {
   section_order?: string[]
   template_locked_until?: string | null
   plan?: string
+  // Set only for a starter user whose template was picked before the
+  // starter/Pro tier split shipped, and that template is now Pro-only.
+  // Lets them keep using it even though new starter signups can't pick it.
+  grandfathered_template_id?: TemplateId | null
+  // Pro plan: template switches used in the current cycle (resets yearly).
+  pro_switches_used?: number
+  pro_switch_cycle_start?: string | null
 }
 
 // All plans are paid now (no free tier). Any active paid plan unlocks
@@ -48,9 +55,26 @@ export function isPaid(plan: string | null | undefined): boolean {
   return !!plan && PAID_PLANS.has(plan)
 }
 
-export function canUseTemplate(_template: Template, therapistPlan: string): boolean {
-  // Every template is available on every paid plan.
-  return PAID_PLANS.has(therapistPlan)
+// Pro plan: how many times a therapist may switch their live template
+// within one cycle, and how long that cycle lasts before resetting.
+export const PRO_TEMPLATE_SWITCH_LIMIT = 2
+export const PRO_SWITCH_CYCLE_DAYS = 365
+
+// Real per-template plan gating:
+//  - Pro can use every template.
+//  - Starter can use starter-tier templates, PLUS their own grandfathered
+//    template if they were locked into a now-Pro-only design before the
+//    tier split (grandfatheredTemplateId should be the therapist's saved
+//    `grandfathered_template_id`, not just any id).
+export function canUseTemplate(
+  template: Template,
+  therapistPlan: string,
+  grandfatheredTemplateId?: string | null,
+): boolean {
+  if (!isPaid(therapistPlan)) return false
+  if (therapistPlan === 'pro') return true
+  if (template.plan === 'starter') return true
+  return !!grandfatheredTemplateId && grandfatheredTemplateId === template.id
 }
 
 // ─── Colors ──────────────────────────────────────────────────────────────────
@@ -86,6 +110,7 @@ export const TEMPLATE_SECTIONS: Record<TemplateId, SectionConfig[]> = {
   ],
   classic3: [
     { id: 'hero',     label: 'Hero',         defaultEnabled: true },
+    { id: 'ticker',   label: 'Tag Banner',   defaultEnabled: true },
     { id: 'about',    label: 'About Me',     defaultEnabled: true },
     { id: 'services', label: 'Services',     defaultEnabled: true },
     { id: 'insights', label: 'Insights',     defaultEnabled: true },
@@ -154,7 +179,7 @@ export const TEMPLATES: Template[] = [
     name: 'The Night Clinic',
     tagline: 'High-contrast editorial for a strong first impression',
     style: 'Dark · Editorial · Dramatic',
-    plan: 'growth',
+    plan: 'starter',
     thumbnail: 'classic2',
     accent: '#c9a35a',
     bg: '#0b0d0e',
@@ -165,7 +190,7 @@ export const TEMPLATES: Template[] = [
     name: 'The Mindful Space',
     tagline: 'Warm paper tones with luxury magazine typography',
     style: 'Warm · Literary · Refined',
-    plan: 'growth',
+    plan: 'starter',
     thumbnail: 'classic3',
     accent: '#8b6f47',
     bg: '#f5f0e8',
@@ -176,7 +201,7 @@ export const TEMPLATES: Template[] = [
     name: 'The Executive Suite',
     tagline: 'Ultra-luxury dark profile with gold accents',
     style: 'Dark · Luxury · High-end',
-    plan: 'growth',
+    plan: 'starter',
     thumbnail: 'classic4',
     accent: '#D4AF37',
     bg: '#080808',
@@ -187,7 +212,7 @@ export const TEMPLATES: Template[] = [
     name: 'The Retreat',
     tagline: 'Earthy, warm tones that feel grounding and safe',
     style: 'Natural · Soft · Welcoming',
-    plan: 'growth',
+    plan: 'starter',
     thumbnail: 'classic5',
     accent: '#7a6652',
     bg: '#f9f5ef',
@@ -198,7 +223,7 @@ export const TEMPLATES: Template[] = [
     name: 'The Quiet Room',
     tagline: 'Cinematic dusk-to-daylight light that shifts as visitors go deeper',
     style: 'Dusk · Editorial · Animated',
-    plan: 'growth',
+    plan: 'pro',
     thumbnail: 'classic6',
     accent: '#C79A3D',
     bg: '#2A2330',
@@ -209,7 +234,7 @@ export const TEMPLATES: Template[] = [
     name: 'The Atrium',
     tagline: 'Opens with a counted-in arrival ritual, then a soothing, editorial ledger of sand and sage',
     style: 'Calm · Editorial · Premium',
-    plan: 'growth',
+    plan: 'pro',
     thumbnail: 'classic7',
     accent: '#C6A76B',
     bg: '#263630',

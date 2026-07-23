@@ -95,6 +95,7 @@ export interface CT2Content {
 export interface CT3Content {
   services?: EditableService[]
   faq?: EditableFAQ[]
+  ticker?: { items?: string[] }
   hero?: {
     headline?: string
     eyebrow?: string
@@ -462,6 +463,17 @@ export const DEFAULT_CT3_CONTENT: Required<CT3Content> = {
   hero: {
     headline: 'Helping you feel safe, heard, and understood.',
     eyebrow: 'THERAPIST • WELLNESS • CARE',
+    subtitle: '',
+  },
+  ticker: {
+    items: [
+      'Licensed Practitioner',
+      'Confidential Sessions',
+      'Evidence-Based Practice',
+      'Online & In-Person',
+      'Integrative Approach',
+      'First Session Diagnostic',
+    ],
   },
   footer: {
     label: '',
@@ -565,6 +577,7 @@ export function resolveCT2Content(saved?: CT2Content): Required<CT2Content> {
 export function resolveCT3Content(saved?: CT3Content): Required<CT3Content> {
   return {
     hero:     { ...DEFAULT_CT3_CONTENT.hero, ...(saved?.hero ?? {}) },
+    ticker:   { items: saved?.ticker?.items ?? DEFAULT_CT3_CONTENT.ticker.items },
     footer:   { ...DEFAULT_CT3_CONTENT.footer, ...(saved?.footer ?? {}) },
     nav: {
       reserveLabel: saved?.nav?.reserveLabel ?? DEFAULT_CT3_CONTENT.nav.reserveLabel,
