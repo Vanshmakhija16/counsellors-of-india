@@ -24,7 +24,7 @@ export default function ClassicTemplate4({ therapist, bookedTimes = [], hiddenSe
   const show = (id: string) => !hiddenSections.includes(id)
   const orderedIds = getOrderedSections('classic4', therapist.section_order, hiddenSections).map(s => s.id)
   const [loaded, setLoaded] = useState(false)
-  const [theme, setTheme] = useState<'dark' | 'light'>('dark')
+  const [theme, setTheme] = useState<'dark' | 'light'>('light')
   const heroRef = useRef<HTMLElement | null>(null)
   const rootRef = useRef<HTMLDivElement | null>(null)
 

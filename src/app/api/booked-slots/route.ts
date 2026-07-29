@@ -13,6 +13,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Missing therapist_id' }, { status: 400 })
   }
 
+
+
   // Demo/preview pages pass placeholder ids like "demo-classic1" which aren't
   // real UUIDs and can't exist in the appointments table — skip the DB call
   // and just report no booked slots instead of erroring.

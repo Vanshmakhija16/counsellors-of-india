@@ -1,4 +1,4 @@
-export type TemplateId = 'classic' | 'classic2' | 'classic3' | 'classic4' | 'classic5' | 'classic6' | 'classic7'
+export type TemplateId = 'classic' | 'classic2' | 'classic3' | 'classic4' | 'classic5' | 'classic6' | 'classic7' | 'classic8'
 export type ColorId   = 'teal' | 'amber' | 'rose' | 'indigo' | 'slate' | 'sage'
 
 export interface TemplateColor {
@@ -159,6 +159,20 @@ export const TEMPLATE_SECTIONS: Record<TemplateId, SectionConfig[]> = {
     { id: 'booking',      label: 'Book Session',  defaultEnabled: true },
     { id: 'footer',       label: 'Footer',        defaultEnabled: true },
   ],
+  classic8: [
+    { id: 'hero',            label: 'Hero',                    defaultEnabled: true },
+    { id: 'about',           label: 'About Me',                defaultEnabled: true },
+    { id: 'education',       label: 'Education',               defaultEnabled: true },
+    { id: 'research',        label: 'Research & Projects',     defaultEnabled: true },
+    { id: 'experience',      label: 'Clinical Experience',     defaultEnabled: true },
+    { id: 'skills',          label: 'Skills',                  defaultEnabled: true },
+    { id: 'certifications',  label: 'Certifications',          defaultEnabled: true },
+    { id: 'recommendations', label: 'Recommendations',         defaultEnabled: true },
+    { id: 'services',        label: 'Services',                defaultEnabled: true },
+    { id: 'faq',             label: 'FAQ',                    defaultEnabled: true },
+    { id: 'booking',         label: 'Book Session',            defaultEnabled: true },
+    { id: 'footer',          label: 'Footer',                 defaultEnabled: true },
+  ],
 }
 
 // ─── Templates ────────────────────────────────────────────────────────────────
@@ -239,6 +253,17 @@ export const TEMPLATES: Template[] = [
     accent: '#C6A76B',
     bg: '#263630',
     sections: TEMPLATE_SECTIONS.classic7,
+  },
+  {
+    id: 'classic8',
+    name: 'The Common Room',
+    tagline: 'One page, two audiences — a persona toggle tailors it for students and working professionals alike',
+    style: 'Adaptive · Approachable · Credible',
+    plan: 'starter',
+    thumbnail: 'classic8',
+    accent: '#3E6C64',
+    bg: '#FBFAF7',
+    sections: TEMPLATE_SECTIONS.classic8,
   },
 ]
 

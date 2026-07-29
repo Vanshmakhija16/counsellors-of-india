@@ -218,5 +218,43 @@ export default function TemplateThumbnail({ id, accent, bg, color }: {
     </div>
   )
 
+  // classic8 — "The Common Room": the persona toggle IS the idea, so the
+  // thumbnail leads with a small pill switch (Student / Pro) above a hero
+  // that reads as warm-but-credible — the middle ground the template lives in.
+  if (id === 'classic8') return (
+    <div className="w-full h-full flex flex-col" style={{ background: bg }}>
+      <div className="flex items-center justify-between px-3 py-2 border-b" style={{ borderColor: `${accent}25` }}>
+        <div className="w-10 h-1.5 rounded-full" style={{ background: '#1E2124', opacity: 0.7 }} />
+        <div className="flex gap-1.5">
+          {[0,1,2].map(i => <div key={i} className="w-4 h-1 rounded" style={{ background: '#1E2124', opacity: 0.25 }} />)}
+        </div>
+      </div>
+      <div className="px-3 pt-2.5">
+        <div className="inline-flex rounded-full p-0.5" style={{ background: `${accent}12`, border: `1px solid ${accent}25` }}>
+          <div className="px-2 py-0.5 rounded-full text-[6px] font-bold" style={{ background: accent, color: '#fff' }}>Student</div>
+          <div className="px-2 py-0.5 rounded-full text-[6px] font-bold" style={{ color: '#5B6470' }}>Pro</div>
+        </div>
+      </div>
+      <div className="flex-1 px-3 pt-2 flex gap-2">
+        <div className="flex-1">
+          <div className="w-full h-3 rounded mb-1" style={{ background: '#1E2124', opacity: 0.85 }} />
+          <div className="w-3/4 h-3 rounded mb-2" style={{ background: accent, opacity: 0.7 }} />
+          <div className="w-full h-1 rounded mb-1 opacity-35" style={{ background: '#5B6470' }} />
+          <div className="w-4/5 h-1 rounded opacity-35" style={{ background: '#5B6470' }} />
+          <div className="mt-2.5 h-5 w-16 rounded-full" style={{ background: accent }} />
+        </div>
+        <div className="w-12 h-16 rounded-2xl overflow-hidden flex-shrink-0" style={{ background: `${accent}20` }} />
+      </div>
+      <div className="px-3 pb-2 pt-1.5 flex gap-1.5">
+        {[0,1,2].map(i => (
+          <div key={i} className="flex-1 rounded-lg p-1.5" style={{ background: '#FFFFFF', border: `1px solid ${accent}25` }}>
+            <div className="w-4 h-0.5 rounded mb-1" style={{ background: accent, opacity: 0.6 }} />
+            <div className="w-full h-1 rounded" style={{ background: '#1E2124', opacity: 0.25 }} />
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+
   return null
 }

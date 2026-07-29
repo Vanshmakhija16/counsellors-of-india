@@ -2,7 +2,7 @@
 
 import { useTherapist } from '@/lib/useTherapist'
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase'
+import { useSupabaseClient } from '@/components/providers/TenantSupabaseProvider'
 import { Fraunces } from 'next/font/google'
 import {
   Calendar, Clock, ExternalLink, Copy,
@@ -51,7 +51,7 @@ function inferState(therapist: any): 'no-template' | 'no-content' | 'unpublished
 // ── Main ──────────────────────────────────────────────────────────
 export default function DashboardPage() {
   const { therapist, loading } = useTherapist()
-  const supabase = createClient()
+  const supabase = useSupabaseClient()
 
   const [appointments, setAppointments] = useState<any[]>([])
   const [stats, setStats]   = useState({ total: 0, today: 0, pending: 0 })

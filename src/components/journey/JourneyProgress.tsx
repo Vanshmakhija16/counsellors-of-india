@@ -43,7 +43,7 @@ export default function JourneyProgress({ current, className = '' }: Props) {
                 <div
                   className="w-7 h-7 rounded-full flex items-center justify-center transition-all duration-300"
                   style={{
-                    background: done ? '#22c55e' : active ? BRAND : '#EDE9E4',
+                    background: done ? '#22c55e' : active ? BRAND : '#F5E9D9',
                     boxShadow: active ? `0 0 0 4px ${BRAND}22` : 'none',
                   }}
                 >
@@ -52,7 +52,7 @@ export default function JourneyProgress({ current, className = '' }: Props) {
                   ) : (
                     <span
                       className="text-[11px] font-bold"
-                      style={{ color: active ? '#fff' : '#B0A89E' }}
+                      style={{ color: active ? '#fff' : '#C2A87A' }}
                     >
                       {i + 1}
                     </span>
@@ -60,7 +60,7 @@ export default function JourneyProgress({ current, className = '' }: Props) {
                 </div>
                 <span
                   className="mt-1.5 text-[10px] font-semibold uppercase tracking-wide whitespace-nowrap"
-                  style={{ color: done ? '#22c55e' : active ? BRAND : '#B0A89E' }}
+                  style={{ color: done ? '#22c55e' : active ? BRAND : '#C2A87A' }}
                 >
                   {step.label}
                 </span>
@@ -70,7 +70,7 @@ export default function JourneyProgress({ current, className = '' }: Props) {
               {!last && (
                 <div
                   className="h-0.5 flex-1 mx-2 rounded-full transition-all duration-500 -translate-y-2.5"
-                  style={{ background: i < currentIndex ? '#22c55e' : '#EDE9E4' }}
+                  style={{ background: i < currentIndex ? '#22c55e' : '#F0E2CC' }}
                 />
               )}
             </div>

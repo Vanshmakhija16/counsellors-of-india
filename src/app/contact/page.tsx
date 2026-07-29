@@ -3,13 +3,14 @@ import SiteNav from '@/components/layout/SiteNav'
 import SiteFooter from '@/components/layout/SiteFooter'
 import ContactForm from '@/components/contact/ContactForm'
 import { Mail, Clock, MessageCircle } from 'lucide-react'
+import { getCurrentTenant } from '@/lib/tenants/server'
 
 export const metadata: Metadata = {
   title: 'Contact Us',
-  description: 'Have a question about Counsellors of India? Send us a message and our team will get back to you shortly.',
+  description: 'Have a question? Send us a message and our team will get back to you shortly.',
 }
 
-const TRUST_POINTS = [
+const TRUST_POINTS = (email: string) => [
   {
     icon: Clock,
     title: 'We reply within 24 hours',
@@ -23,14 +24,15 @@ const TRUST_POINTS = [
   {
     icon: Mail,
     title: 'Prefer email?',
-    body: 'hello@counsellorsofindia.com',
+    body: email,
   },
 ]
 
-export default function ContactPage() {
+export default async function ContactPage() {
+  const tenant = await getCurrentTenant()
   return (
     <div className="flex min-h-screen flex-col bg-[#FFFCF8]">
-      <SiteNav />
+      <SiteNav tenant={{ brandName: tenant.brandName }} />
 
       {/* Hero + form, single composed section for tighter visual rhythm */}
       <section className="relative overflow-hidden px-6 pt-28 pb-24">
@@ -57,7 +59,7 @@ export default function ContactPage() {
                   turns this into a step-by-step journey instead of a flat list. */}
               <div className="absolute left-5 top-5 bottom-5 w-px bg-gradient-to-b from-[#FF9933]/40 via-[#FF9933]/20 to-transparent" aria-hidden="true" />
 
-              {TRUST_POINTS.map(({ icon: Icon, title, body }, i) => (
+              {TRUST_POINTS(`hello@${tenant.siteUrl.replace(/^https?:\/\/(www\.)?/, '')}`).map(({ icon: Icon, title, body }, i) => (
                 <div key={title} className="relative flex items-start gap-4">
                   <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#FF9933]/25 bg-white text-[#B4600F] shadow-[0_2px_8px_rgba(255,153,51,0.12)]">
                     <Icon size={16} strokeWidth={1.8} />
@@ -79,7 +81,7 @@ export default function ContactPage() {
         </div>
       </section>
 
-      <SiteFooter />
+      <SiteFooter tenant={{ brandName: tenant.brandName, footerTagline: tenant.footerTagline }} />
     </div>
   )
 }

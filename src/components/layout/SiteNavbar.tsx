@@ -4,6 +4,16 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useTherapist } from '@/lib/useTherapist'
 
+// See SiteFooter.tsx / SiteNav.tsx for why this is a small local shape
+// rather than the full server-only TenantConfig. Default is India's exact
+// original hardcoded copy, so any call site that doesn't pass `tenant`
+// yet renders byte-for-byte what it did before.
+export interface SiteNavbarTenant {
+  brandName: string
+}
+
+const DEFAULT_TENANT: SiteNavbarTenant = { brandName: 'Counsellors of India' }
+
 // The real site navbar (logo, section links, mobile sidebar, auth-aware
 // CTA) — shared by the homepage and any other marketing/directory page so
 // visitors get the exact same header + navigation everywhere. Section links
@@ -11,9 +21,10 @@ import { useTherapist } from '@/lib/useTherapist'
 // anchor jump (same path, browsers don't reload for a hash-only change);
 // from any other page it navigates back to the homepage and then jumps to
 // that section.
-export default function SiteNavbar() {
+export default function SiteNavbar({ tenant = DEFAULT_TENANT }: { tenant?: SiteNavbarTenant } = {}) {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const [brandFirst, brandRest] = tenant.brandName.split(' of ')
 
   const { therapist: authTherapist } = useTherapist()
   const authNameParts = (authTherapist?.full_name ?? '').trim().split(/\s+/).filter(Boolean)
@@ -56,10 +67,10 @@ export default function SiteNavbar() {
         <div className="nav-inner">
           <Link href="/" className="logo">
             <img src="/coi.png" alt="" className="logo-img" />
-            <span className="logo-tagline">Counsellors<br />of India</span>
+            <span className="logo-tagline">{brandFirst}{brandRest ? <><br />of {brandRest}</> : null}</span>
           </Link>
 
-          <span className="nav-mobile-title">Counsellors of India</span>
+          <span className="nav-mobile-title">{tenant.brandName}</span>
 
           <div className="nav-mid">
             <a href="/#experience" className="nav-a">Templates</a>
@@ -114,8 +125,8 @@ export default function SiteNavbar() {
 
         <div className="sidebar-top">
           <div className="sidebar-brand">
-            <img src="/coi.png" alt="Counsellors of India" />
-            <h3>Counsellors of India</h3>
+            <img src="/coi.png" alt={tenant.brandName} />
+            <h3>{tenant.brandName}</h3>
           </div>
 
           <button

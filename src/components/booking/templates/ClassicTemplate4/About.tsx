@@ -135,17 +135,22 @@ const photoSrc = resolveImage(therapist?.image)
           </div>
 
           {/* Right: Therapist photo card */}
-          <div className="ct4-spec-card ct4-reveal" style={{ transitionDelay: '0.15s', padding: 0, overflow: 'hidden' }}>
+          <div className="ct4-reveal" style={{ transitionDelay: '0.15s' }}>
             {/* Photo */}
             <div
               style={{
                 position: 'relative',
                 width: '100%',
-                aspectRatio: '4 / 5',
+                maxWidth: 320,
+                aspectRatio: '1 / 1',
+                borderRadius: '50%',
+                overflow: 'hidden',
+                margin: '0 auto',
                 background: photoSrc ? 'var(--surface-2)' : 'var(--gold-glow)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                border: '1px solid var(--border-gold)',
               }}
             >
               {photoSrc ? (

@@ -34,9 +34,9 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
     <section
       id="home"
       ref={heroRef}
-      className="relative overflow-hidden px-6 lg:px-12 flex items-center"
+      className=" relative overflow-hidden px-6 lg:px-12 flex items-center"
       style={{
-        minHeight: '560px',
+        minHeight: '660px',
         height: 'clamp(560px, 75vh, 800px)',
         background:
           'radial-gradient(ellipse 70% 55% at 18% 8%, rgba(201,163,90,0.13) 0%, transparent 55%), radial-gradient(ellipse 55% 45% at 92% 88%, rgba(201,138,138,0.07) 0%, transparent 60%), var(--ink-0)',
@@ -107,12 +107,12 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
                 }}
               >
                 {therapist.tagline?.trim() ||
-                  'A quiet, deliberate space for difficult feelings without performance, without shortcuts.'}
+                  'A quiet, deliberate space for difficult feelings without performance, without shortcuts.You can express you feeligns fearlessly, no one here will judge you. '}
               </p>
               <div className="flex flex-row flex-wrap gap-3">
-                <button onClick={scrollToBook} className="ct2-btn-primary">
+                {/* <button onClick={scrollToBook} className="ct2-btn-primary">
                   Reserve a session <ArrowDownRight size={16} />
-                </button>
+                </button> */}
                 <button onClick={scrollToAbout} className="ct2-btn-ghost">
                   About the practice
                 </button>

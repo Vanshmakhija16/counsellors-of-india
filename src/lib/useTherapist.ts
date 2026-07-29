@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase'
+import { useSupabaseClient } from '@/components/providers/TenantSupabaseProvider'
 
 export interface Therapist {
   id: string
@@ -28,7 +28,7 @@ export interface Therapist {
 }
 
 export function useTherapist() {
-  const supabase = createClient()
+  const supabase = useSupabaseClient()
   const [therapist, setTherapist] = useState<Therapist | null>(null)
   const [loading, setLoading] = useState(true)
 

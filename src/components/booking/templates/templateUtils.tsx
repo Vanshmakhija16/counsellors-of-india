@@ -39,6 +39,11 @@ export interface EditableService {
   code?: string
   forWhom?: string[]
   duration_mins?: number
+  // Which audience this service is aimed at — used by templates built for
+  // a dual student/professional audience (e.g. CT8) to badge/group
+  // services by who they're for. Optional; ignored by templates that
+  // don't have a persona split.
+  audience?: 'student' | 'professional' | 'both'
 }
 
 export interface EditableFAQ {
@@ -174,6 +179,7 @@ export interface ProfileContent {
   classic4?: CT4Content
   classic5?: CT5Content
   classic6?: CT6Content
+  classic8?: CT8Content
 }
 
 // NOTE: CT6Content is defined further below (after CT6ExpertiseItem); this
@@ -644,5 +650,101 @@ export function resolveCT6Content(saved?: CT6Content): Required<CT6Content> {
     faq:       Array.isArray(saved?.faq)       ? saved!.faq       : DEFAULT_CT6_CONTENT.faq,
     process:   Array.isArray(saved?.process)   ? saved!.process   : DEFAULT_CT6_CONTENT.process,
     readings:  Array.isArray(saved?.readings)  ? saved!.readings  : DEFAULT_CT6_CONTENT.readings,
+  }
+}
+
+// ── CT8 (The Common Room — built for both students AND working
+// professionals) ───────────────────────────────────────────────────────────
+// The hero carries a persona toggle (Student / Professional / neither
+// selected). Copy for each state lives here, editable per-therapist just
+// like every other template's content.
+export interface CT8Content {
+  hero?: {
+    eyebrowDefault?: string
+    eyebrowStudent?: string
+    eyebrowProfessional?: string
+    subDefault?: string
+    subStudent?: string
+    subProfessional?: string
+  }
+  services?: EditableService[]
+  faq?: EditableFAQ[]
+  // ── Student-portfolio sections (additive; a practicing-professional site
+  // simply won't populate these, and the sections render nothing if empty) ──
+  education?: CT8EducationItem[]
+  research?: CT8ResearchItem[]
+  clinicalExperience?: CT8ExperienceItem[]
+  skills?: { clinical?: string[]; technical?: string[] }
+  certifications?: CT8CertificationItem[]
+  recommendations?: CT8RecommendationItem[]
+}
+
+export interface CT8EducationItem { degree: string; institution: string; year: string; details?: string }
+export interface CT8ResearchItem { title: string; type: string; year: string; description: string; link?: string }
+export interface CT8ExperienceItem { role: string; organization: string; duration: string; description: string }
+export interface CT8CertificationItem { title: string; issuer: string; year: string }
+export interface CT8RecommendationItem { quote: string; name: string; role: string }
+
+export const DEFAULT_CT8_CONTENT: Required<CT8Content> = {
+  hero: {
+    eyebrowDefault: 'Psychology Student & Practicing Professional',
+    eyebrowStudent: 'Psychology Student \u00b7 Portfolio',
+    eyebrowProfessional: 'Practicing Clinical Psychologist',
+    subDefault: 'From classroom training to real client work \u2014 a page that grows with wherever I am right now.',
+    subStudent: 'Currently training in clinical psychology \u2014 here\u2019s my education, research, supervised experience, and the skills I\u2019ve built along the way.',
+    subProfessional: 'Confidential, structured support that fits around your career, deadlines, and responsibilities.',
+  },
+  services: [
+    { name: 'Student Support Session', desc: 'A shorter, budget-friendly session focused on exam stress, adjustment, relationships, and finding your footing \u2014 built around a student schedule and budget.', price: '600', duration_mins: 30, audience: 'student', forWhom: ['Exam Stress', 'Adjustment', 'Relationships'] },
+    { name: 'Professional Therapy Session', desc: 'A full-length session for burnout, workplace stress, career transitions, and longer-term personal growth \u2014 built around a working schedule.', price: '1500', duration_mins: 50, audience: 'professional', forWhom: ['Burnout', 'Workplace Stress', 'Career Transitions'] },
+    { name: 'General Consultation', desc: 'Open to anyone \u2014 a flexible first conversation to understand what you need and point you to the right track.', price: '800', duration_mins: 40, audience: 'both', forWhom: ['Getting Started'] },
+  ],
+  faq: [
+    { q: 'I\u2019m a student \u2014 is this too expensive for me?', a: 'No \u2014 there\u2019s a dedicated, shorter Student Support session priced specifically for a student budget. You\u2019re never pushed into the full-length professional rate.' },
+    { q: 'Can working professionals get evening or weekend slots?', a: 'Yes, availability is shown live on the booking calendar below, including evening and weekend options where offered.' },
+    { q: 'Do I have to pick \u201cstudent\u201d or \u201cprofessional\u201d \u2014 what if I\u2019m both?', a: 'Not at all \u2014 the toggle above is just to tailor the page to you. Everyone can book any session type that fits their actual needs.' },
+    { q: 'Is everything I share confidential?', a: 'Yes, within the standard clinical limits (risk of serious harm, or legal requirement). This applies equally whether you\u2019re a student or a working professional.' },
+    { q: 'How many sessions will I need?', a: 'It depends entirely on what you\u2019re working through. Some come for a focused handful of sessions around one issue (common for students around exam time); others continue for longer-term work.' },
+  ],
+  education: [
+    { degree: 'M.A. Clinical Psychology', institution: 'University of Delhi', year: '2024 \u2013 2026 (expected)', details: 'Coursework in psychopathology, psychometrics, and psychotherapy techniques.' },
+    { degree: 'B.A. (Hons) Psychology', institution: 'Lady Shri Ram College', year: '2021 \u2013 2024', details: 'Graduated with distinction; final-year project on adolescent anxiety.' },
+  ],
+  research: [
+    { title: 'Anxiety and Academic Performance in Undergraduate Students', type: 'Undergraduate Thesis', year: '2024', description: 'A mixed-methods study examining the relationship between test anxiety and academic outcomes across 120 undergraduate students.' },
+    { title: 'Attachment Styles and Social Media Use', type: 'Research Project', year: '2023', description: 'Class research project exploring correlations between attachment style and social media dependency in young adults.' },
+  ],
+  clinicalExperience: [
+    { role: 'Clinical Intern', organization: 'City Mental Health Clinic', duration: 'Jun 2025 \u2013 Present', description: 'Supervised intake assessments and co-facilitated group therapy sessions under a licensed clinical psychologist.' },
+    { role: 'Volunteer Counsellor', organization: 'University Student Wellness Centre', duration: 'Jan 2024 \u2013 May 2025', description: 'Provided peer support and first-contact listening sessions for students under faculty supervision.' },
+  ],
+  skills: {
+    clinical: ['CBT (in training)', 'Motivational Interviewing', 'Psychometric Testing', 'Case Formulation'],
+    technical: ['SPSS', 'R (basic)', 'Qualtrics', 'Academic Writing'],
+  },
+  certifications: [
+    { title: 'Foundations of CBT', issuer: 'Beck Institute (online)', year: '2025' },
+    { title: 'Psychological First Aid', issuer: 'WHO / NIMHANS', year: '2024' },
+  ],
+  recommendations: [
+    { quote: 'One of the most diligent students I\u2019ve supervised \u2014 genuinely curious about the \u201cwhy\u201d behind every case, not just the \u201chow.\u201d', name: 'Dr. A. Sharma', role: 'Thesis Supervisor, University of Delhi' },
+    { quote: 'Reliable, empathetic, and always prepared. Would recommend for any clinical placement without hesitation.', name: 'Dr. R. Mehta', role: 'Clinical Supervisor, City Mental Health Clinic' },
+  ],
+}
+
+export function resolveCT8Content(saved?: CT8Content): Required<CT8Content> {
+  return {
+    hero:     { ...DEFAULT_CT8_CONTENT.hero, ...(saved?.hero ?? {}) },
+    services: Array.isArray(saved?.services) ? saved!.services : DEFAULT_CT8_CONTENT.services,
+    faq:      Array.isArray(saved?.faq)      ? saved!.faq      : DEFAULT_CT8_CONTENT.faq,
+    education:          Array.isArray(saved?.education)          ? saved!.education          : DEFAULT_CT8_CONTENT.education,
+    research:           Array.isArray(saved?.research)           ? saved!.research           : DEFAULT_CT8_CONTENT.research,
+    clinicalExperience: Array.isArray(saved?.clinicalExperience) ? saved!.clinicalExperience : DEFAULT_CT8_CONTENT.clinicalExperience,
+    certifications:     Array.isArray(saved?.certifications)     ? saved!.certifications     : DEFAULT_CT8_CONTENT.certifications,
+    recommendations:    Array.isArray(saved?.recommendations)    ? saved!.recommendations    : DEFAULT_CT8_CONTENT.recommendations,
+    skills: {
+      clinical:  Array.isArray(saved?.skills?.clinical)  ? saved!.skills!.clinical!  : DEFAULT_CT8_CONTENT.skills.clinical,
+      technical: Array.isArray(saved?.skills?.technical) ? saved!.skills!.technical! : DEFAULT_CT8_CONTENT.skills.technical,
+    },
   }
 }

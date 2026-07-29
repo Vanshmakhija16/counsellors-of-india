@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase'
+import { useSupabaseClient } from '@/components/providers/TenantSupabaseProvider'
 import {
   TEMPLATES, TEMPLATE_SECTIONS, canUseTemplate, getColor, getOrderedSections,
   PRO_TEMPLATE_SWITCH_LIMIT, PRO_SWITCH_CYCLE_DAYS,
@@ -14,7 +14,7 @@ import TemplatePreviewModal from '@/components/appearance/TemplatePreviewModal'
 import TemplateLiveSwitcher from '@/components/appearance/TemplateLiveSwitcher'
 import DraggableDock from '@/components/appearance/DraggableDock'
 import { Save, Lock, Check, AlertCircle, Sparkles, Pencil, LayoutList, X, GripVertical, ArrowLeft, ChevronLeft, ChevronRight, Image as ImageIcon, ChevronUp, ChevronDown, Globe } from 'lucide-react'
-import type { ProfileContent, CT1Content, CT2Content, CT3Content, CT4Content, CT5Content, CT6Content } from '@/components/booking/templates/templateUtils'
+import type { ProfileContent, CT1Content, CT2Content, CT3Content, CT4Content, CT5Content, CT6Content, CT8Content } from '@/components/booking/templates/templateUtils'
 import dynamic from 'next/dynamic'
 
 const CT1ContentEditor = dynamic(() => import('../../../components/appearance/CT1ContentEditor'), { ssr: false })
@@ -23,10 +23,11 @@ const CT3ContentEditor = dynamic(() => import('../../../components/appearance/CT
 const CT4ContentEditor = dynamic(() => import('../../../components/appearance/CT4ContentEditor'), { ssr: false })
 const CT5ContentEditor = dynamic(() => import('../../../components/appearance/CT5ContentEditor'), { ssr: false })
 const CT6ContentEditor = dynamic(() => import('../../../components/appearance/CT6ContentEditor'), { ssr: false })
+const CT8ContentEditor = dynamic(() => import('../../../components/appearance/CT8ContentEditor'), { ssr: false })
 
 // template id → /try demo param
 const TEMPLATE_TPARAM: Record<TemplateId, string> = {
-  classic: 't1', classic2: 't2', classic3: 't3', classic4: 't4', classic5: 't5', classic6: 't6', classic7: 't7',
+  classic: 't1', classic2: 't2', classic3: 't3', classic4: 't4', classic5: 't5', classic6: 't6', classic7: 't7', classic8: 't8',
 }
 
 const STARTER_TEMPLATE_LOCK_DAYS = 365
@@ -50,7 +51,7 @@ function formatLockDate(iso: string | null) {
 }
 
 export default function AppearancePage() {
-  const supabase = createClient()
+  const supabase = useSupabaseClient()
   const router   = useRouter()
 
   const [profile,          setProfile]          = useState<TherapistProfile | null>(null)
@@ -551,6 +552,7 @@ export default function AppearancePage() {
                 {selectedTemplate === 'classic4' && <CT4ContentEditor value={(profileContent as any).classic4 ?? {}} onChange={v => patchContent('classic4', v as CT4Content)} />}
                 {selectedTemplate === 'classic5' && <CT5ContentEditor value={(profileContent as any).classic5 ?? {}} onChange={v => patchContent('classic5', v as CT5Content)} />}
                 {selectedTemplate === 'classic6' && <CT6ContentEditor value={(profileContent as any).classic6 ?? {}} onChange={v => patchContent('classic6', v as CT6Content)} />}
+                {selectedTemplate === 'classic8' && <CT8ContentEditor value={(profileContent as any).classic8 ?? {}} onChange={v => patchContent('classic8', v as CT8Content)} />}
 
                 <button
                   onClick={handleSaveContent}

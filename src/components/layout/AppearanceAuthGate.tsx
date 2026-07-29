@@ -2,12 +2,12 @@
 
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase'
+import { useSupabaseClient } from '@/components/providers/TenantSupabaseProvider'
 
 export default function AppearanceAuthGate({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()
-  const supabase = createClient()
+  const supabase = useSupabaseClient()
   const [gate, setGate] = useState<'checking' | 'ok'>('checking')
 
   useEffect(() => {

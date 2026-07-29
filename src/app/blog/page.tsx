@@ -3,16 +3,18 @@ import Link from 'next/link'
 import SiteNav from '@/components/layout/SiteNav'
 import SiteFooter from '@/components/layout/SiteFooter'
 import { ArrowRight, PenLine } from 'lucide-react'
+import { getCurrentTenant } from '@/lib/tenants/server'
 
 export const metadata: Metadata = {
   title: 'Blog',
-  description: 'Practice-growth tips, guides, and stories for Indian therapists and counsellors — coming soon.',
+  description: 'Practice-growth tips, guides, and stories for therapists and counsellors — coming soon.',
 }
 
-export default function BlogPage() {
+export default async function BlogPage() {
+  const tenant = await getCurrentTenant()
   return (
     <div className="flex min-h-screen flex-col bg-[#FFFCF8]">
-      <SiteNav />
+      <SiteNav tenant={{ brandName: tenant.brandName }} />
 
       <section className="relative overflow-hidden px-6 pt-20 pb-14">
         <div className="pointer-events-none absolute -top-24 left-[-10%] h-[420px] w-[420px] rounded-full bg-[#FF9933] opacity-[0.07] blur-3xl" />
@@ -24,7 +26,7 @@ export default function BlogPage() {
             className="text-4xl leading-[1.12] text-[#1F1C18] sm:text-5xl"
             style={{ fontFamily: 'var(--font-jakarta)' }}
           >
-            Practice-growth tips for Indian therapists.
+            Practice-growth tips for therapists.
           </h1>
         </div>
       </section>
@@ -54,7 +56,7 @@ export default function BlogPage() {
         </div>
       </section>
 
-      <SiteFooter />
+      <SiteFooter tenant={{ brandName: tenant.brandName, footerTagline: tenant.footerTagline }} />
     </div>
   )
 }

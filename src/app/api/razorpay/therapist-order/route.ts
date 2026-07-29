@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceSupabaseClient } from '@/lib/supabase-server'
 import { decrypt } from '@/lib/encryption'
+import { getValidAccessToken } from '@/lib/razorpay-oauth'
 
 export async function POST(req: NextRequest) {
   try {
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
 
     const { data: therapist, error: fetchErr } = await db
       .from('therapists')
-      .select('razorpay_key_id, razorpay_key_secret_encrypted, payments_enabled, full_name')
+      .select('razorpay_key_id, razorpay_key_secret_encrypted, payments_enabled, full_name, razorpay_oauth_merchant_id, razorpay_oauth_public_token')
       .eq('id', therapist_id)
       .single()
 
@@ -60,20 +61,48 @@ export async function POST(req: NextRequest) {
     if (!therapist.payments_enabled) {
       return NextResponse.json({ error: 'Therapist has not connected Razorpay yet.' }, { status: 422 })
     }
-    if (!therapist.razorpay_key_id || !therapist.razorpay_key_secret_encrypted) {
-      return NextResponse.json({ error: 'Therapist payment credentials not configured.' }, { status: 422 })
-    }
 
-    let keySecret: string
-    try {
-      keySecret = decrypt(therapist.razorpay_key_secret_encrypted)
-    } catch {
-      return NextResponse.json({ error: 'Failed to load payment credentials.' }, { status: 500 })
+    // Two ways a therapist can be payment-ready: OAuth connect (preferred --
+    // no keys ever touch our UI) or manual key entry. OAuth takes priority
+    // if both happen to be present. Each path needs a different Razorpay
+    // auth header and returns a different value as the frontend's `key`.
+    const isOAuthConnected = !!therapist.razorpay_oauth_merchant_id
+
+    let authHeader: string
+    let clientKey: string // what the frontend Checkout widget uses as `key`
+
+    if (isOAuthConnected) {
+      if (!therapist.razorpay_oauth_public_token) {
+        return NextResponse.json(
+          { error: 'Razorpay connection is missing its public token -- ask the therapist to reconnect.' },
+          { status: 422 },
+        )
+      }
+      let accessToken: string
+      try {
+        accessToken = await getValidAccessToken(therapist_id)
+      } catch (err) {
+        console.error('[therapist-order] OAuth token unavailable:', err)
+        return NextResponse.json({ error: 'Razorpay connection has expired -- ask the therapist to reconnect.' }, { status: 422 })
+      }
+      authHeader = `Bearer ${accessToken}`
+      clientKey = therapist.razorpay_oauth_public_token
+    } else {
+      if (!therapist.razorpay_key_id || !therapist.razorpay_key_secret_encrypted) {
+        return NextResponse.json({ error: 'Therapist payment credentials not configured.' }, { status: 422 })
+      }
+      let keySecret: string
+      try {
+        keySecret = decrypt(therapist.razorpay_key_secret_encrypted)
+      } catch {
+        return NextResponse.json({ error: 'Failed to load payment credentials.' }, { status: 500 })
+      }
+      authHeader = 'Basic ' + Buffer.from(`${therapist.razorpay_key_id}:${keySecret}`).toString('base64')
+      clientKey = therapist.razorpay_key_id
     }
 
     const amountInPaise = Math.round(amount * 100)
     const receipt = (booking_id ?? appointment_id).slice(0, 40)
-    const authHeader = 'Basic ' + Buffer.from(`${therapist.razorpay_key_id}:${keySecret}`).toString('base64')
 
     const rzpRes = await fetch('https://api.razorpay.com/v1/orders', {
       method: 'POST',
@@ -118,8 +147,12 @@ export async function POST(req: NextRequest) {
       order_id: rzpOrder.id,
       amount: rzpOrder.amount,
       currency: rzpOrder.currency,
-      key_id: therapist.razorpay_key_id,
+      key_id: clientKey,
       receipt: rzpOrder.receipt,
+      // Tells the frontend whether to expect immediate client-side
+      // verification (manual keys) or to wait on webhook confirmation
+      // (OAuth -- see therapist-verify/route.ts for why).
+      payment_flow: isOAuthConnected ? 'oauth' : 'manual',
     })
   } catch (err: unknown) {
     console.error('[therapist-order]', err)

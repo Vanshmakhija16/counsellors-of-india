@@ -126,7 +126,18 @@ export function useRazorpayCheckout() {
               })
 
               const verifyData = await verifyRes.json()
-              if (!verifyRes.ok || !verifyData.verified) {
+              if (!verifyRes.ok) {
+                reject(new Error(verifyData.error ?? 'Payment verification failed.'))
+                return
+              }
+              // `pending: true` means an OAuth-connected therapist's payment
+              // can't be verified client-side (we never have their secret) --
+              // Razorpay's own checkout `handler` firing at all already means
+              // the payment was captured, so we show success optimistically
+              // here while the webhook confirms the actual DB record
+              // asynchronously (usually within seconds). Only a genuine
+              // `verified: false` with no `pending` flag is a real failure.
+              if (!verifyData.verified && !verifyData.pending) {
                 reject(new Error(verifyData.error ?? 'Payment verification failed.'))
                 return
               }

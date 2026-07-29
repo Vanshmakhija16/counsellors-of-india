@@ -3,9 +3,10 @@ import Link from 'next/link'
 import SiteNav from '@/components/layout/SiteNav'
 import SiteFooter from '@/components/layout/SiteFooter'
 import { ArrowUpRight, ArrowRight, Check, X } from 'lucide-react'
+import { getCurrentTenant } from '@/lib/tenants/server'
 
 export const metadata: Metadata = {
-  title: 'Why Us — Counsellors of India',
+  title: 'Why Us',
   description:
     'See how a platform built for mental health professionals compares to piecing your practice together yourself.',
 }
@@ -37,7 +38,8 @@ const REASONS = [
   },
 ]
 
-export default function WhyUsPage() {
+export default async function WhyUsPage() {
+  const tenant = await getCurrentTenant()
   return (
     <div
       style={{
@@ -47,7 +49,7 @@ export default function WhyUsPage() {
       }}
       className="flex min-h-screen flex-col"
     >
-      <SiteNav />
+      <SiteNav tenant={{ brandName: tenant.brandName }} />
 
       {/* ─────────────────────────────────────────────────────
           HERO
@@ -109,7 +111,7 @@ export default function WhyUsPage() {
             <div className="flex items-center gap-3">
               <ArrowRight size={16} strokeWidth={2.2} style={{ color: '#FF9933' }} />
               <span className="text-[15px] font-bold" style={{ color: '#1C1814' }}>
-                One Counsellors of India account
+                One {tenant.brandName} account
               </span>
             </div>
           </div>
@@ -177,7 +179,7 @@ export default function WhyUsPage() {
             >
               <span className="h-1.5 w-1.5 rounded-full" style={{ background: '#FF9933' }} />
               <span className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: '#B4600F' }}>
-                Counsellors of India
+                {tenant.brandName}
               </span>
             </div>
           </div>
@@ -290,7 +292,7 @@ export default function WhyUsPage() {
             className="text-[32px] font-bold leading-[1.2] tracking-tight sm:text-[44px] lg:text-[52px]"
             style={{ color: '#1C1814', maxWidth: '20ch' }}
           >
-            See what a Counsellors of India website looks like for your practice.
+            See what a {tenant.brandName} website looks like for your practice.
           </p>
 
 
@@ -311,7 +313,7 @@ export default function WhyUsPage() {
         </div>
       </section>
 
-      <SiteFooter />
+      <SiteFooter tenant={{ brandName: tenant.brandName, footerTagline: tenant.footerTagline }} />
     </div>
   )
 }

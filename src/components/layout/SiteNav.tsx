@@ -5,6 +5,14 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import '../../app/page.css'
 
+// See SiteFooter.tsx for why this is a small local shape rather than the
+// full server-only TenantConfig. Default is India's exact original copy.
+export interface SiteNavTenant {
+  brandName: string
+}
+
+const DEFAULT_TENANT: SiteNavTenant = { brandName: 'Counsellors of India' }
+
 /**
  * The site's real top nav — same markup/classes as the homepage's own
  * <nav className="nav">, extracted here so standalone marketing pages
@@ -17,11 +25,12 @@ import '../../app/page.css'
  * since visitors on these pages are navigating the site, not scrolling
  * the homepage.
  */
-export default function SiteNav() {
+export default function SiteNav({ tenant = DEFAULT_TENANT }: { tenant?: SiteNavTenant } = {}) {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const pathname = usePathname()
   const isActive = (href: string) => pathname === href
+  const [brandFirst, brandRest] = tenant.brandName.split(' of ')
 
   useEffect(() => {
     let ticking = false
@@ -57,10 +66,10 @@ export default function SiteNav() {
 
           <Link href="/" className="logo">
             <img src="/coi.png" alt="" className="logo-img" />
-            <span className="logo-tagline">Counsellors<br />of India</span>
+            <span className="logo-tagline">{brandFirst}{brandRest ? <><br />of {brandRest}</> : null}</span>
           </Link>
 
-          <span className="nav-mobile-title">Counsellors of India</span>
+          <span className="nav-mobile-title">{tenant.brandName}</span>
 
           <div className="nav-mid">
             <Link href="/#experience" className="nav-a">Templates</Link>
@@ -103,8 +112,8 @@ export default function SiteNav() {
 
         <div className="sidebar-top">
           <div className="sidebar-brand">
-            <img src="/coi.png" alt="Counsellors of India" />
-            <h3>Counsellors of India</h3>
+            <img src="/coi.png" alt={tenant.brandName} />
+            <h3>{tenant.brandName}</h3>
           </div>
           <button
             className="sidebar-close"

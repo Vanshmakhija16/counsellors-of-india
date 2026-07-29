@@ -4,6 +4,7 @@ import SiteNav from '@/components/layout/SiteNav'
 import SiteFooter from '@/components/layout/SiteFooter'
 import OnboardingSteps from '@/components/onboarding/OnboardingSteps'
 import { ArrowRight } from 'lucide-react'
+import { getCurrentTenant } from '@/lib/tenants/server'
 
 export const metadata: Metadata = {
   title: 'Onboarding Guide',
@@ -11,10 +12,11 @@ export const metadata: Metadata = {
     'Go live in 10 minutes - create your account, build your profile, choose a template, and start accepting bookings and payments.',
 }
 
-export default function OnboardingGuidePage() {
+export default async function OnboardingGuidePage() {
+  const tenant = await getCurrentTenant()
   return (
     <div className="flex min-h-screen flex-col bg-[#FFFCF8]">
-      <SiteNav />
+      <SiteNav tenant={{ brandName: tenant.brandName }} />
 
       {/* Hero */}
       <section className="relative overflow-hidden px-6 pt-28 pb-16">
@@ -57,7 +59,7 @@ export default function OnboardingGuidePage() {
         </div>
       </section>
 
-      <SiteFooter />
+      <SiteFooter tenant={{ brandName: tenant.brandName, footerTagline: tenant.footerTagline }} />
     </div>
   )
 }

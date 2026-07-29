@@ -3,6 +3,22 @@
 import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 
+// Minimal branding shape the footer actually renders — kept separate from
+// the full TenantConfig so this client component doesn't need to import
+// server-only tenant code. Defaults below are India's exact original
+// hardcoded copy, so any call site that doesn't pass `tenant` yet renders
+// byte-for-byte what it did before.
+export interface SiteFooterTenant {
+  brandName: string
+  footerTagline: string
+}
+
+const DEFAULT_TENANT: SiteFooterTenant = {
+  brandName: 'Counsellors of India',
+  footerTagline:
+    'A calm, trusted home for every counselling practice in India, websites, bookings, and payments in one place.',
+}
+
 const FOOTER_COLS = [
   {
     h: 'Platform',
@@ -48,8 +64,11 @@ const FOOTER_COLS = [
  * Blog, Contact) shares the exact same footer + nav links instead of a
  * separate lightweight duplicate.
  */
-export default function SiteFooter() {
+export default function SiteFooter({ tenant = DEFAULT_TENANT }: { tenant?: SiteFooterTenant } = {}) {
   const footerRef = useRef<HTMLElement>(null)
+  // "Counsellors of America" -> ["Counsellors", "America"], so the logo
+  // keeps its two-line "Counsellors<br/>of X" look for any brand name.
+  const [brandFirst, brandRest] = tenant.brandName.split(' of ')
 
   // While this footer is in view, hide any top nav tagged .site-topnav (see
   // globals.css) so the nav never visually overlaps the footer as it scrolls
@@ -79,10 +98,10 @@ export default function SiteFooter() {
           <div className="pfoot-brand">
             <Link href="/" className="pfoot-logo">
               <img src="/coi.png" alt="" className="pfoot-logo-img" />
-              <span>Counsellors<br/>of India</span>
+              <span>{brandFirst}{brandRest ? <><br/>of {brandRest}</> : null}</span>
             </Link>
             <p className="pfoot-tag">
-              A calm, trusted home for every counselling practice in India, websites, bookings, and payments in one place.
+              {tenant.footerTagline}
             </p>
             {/* <div className="pfoot-socials">
               {FOOTER_SOCIALS.map(s => (
@@ -112,7 +131,7 @@ export default function SiteFooter() {
 
         <div className="pfoot-bottom">
           <div className="pfoot-bottom-l">
-            <span>© {new Date().getFullYear()} Counsellors of India. All rights reserved.</span>
+            <span>© {new Date().getFullYear()} {tenant.brandName}. All rights reserved.</span>
           
           </div>
           {/* <div className="pfoot-badges"> */}

@@ -40,14 +40,14 @@ export async function POST(req: NextRequest) {
 
     const { data: therapist, error: fetchErr } = await db
       .from('therapists')
-      .select('razorpay_key_secret_encrypted, payments_enabled')
+      .select('razorpay_key_secret_encrypted, payments_enabled, razorpay_oauth_merchant_id')
       .eq('id', therapist_id)
       .single()
 
     if (fetchErr || !therapist) {
       return NextResponse.json({ error: 'Therapist not found' }, { status: 404 })
     }
-    if (!therapist.payments_enabled || !therapist.razorpay_key_secret_encrypted) {
+    if (!therapist.payments_enabled) {
       return NextResponse.json({ error: 'Therapist payment credentials not configured' }, { status: 422 })
     }
 
@@ -79,6 +79,52 @@ export async function POST(req: NextRequest) {
         paymentAmountPaise: payment.amount_paise,
       })
       return NextResponse.json({ error: 'Payment amount does not match appointment price.' }, { status: 400 })
+    }
+
+    // OAuth-connected therapists: we never receive their key_secret (only
+    // an access token), so the HMAC signature check below is IMPOSSIBLE for
+    // them -- there's no secret on our side to compute it with. Razorpay's
+    // documented pattern for this case is to trust the application-level
+    // webhook instead (signed with OUR OWN RAZORPAY_OAUTH_WEBHOOK_SECRET,
+    // which we do control) -- see /api/razorpay/oauth/webhook's handling of
+    // `payment.captured`. So here we just record what the client reported
+    // and tell it to wait for webhook confirmation, rather than either (a)
+    // guessing at a verification scheme we can't actually trust, or (b)
+    // marking it paid on the client's word alone.
+    if (therapist.razorpay_oauth_merchant_id) {
+      // The webhook may have already confirmed this payment before the
+      // client's callback even reached us (webhooks and the browser
+      // redirect race independently) -- check first instead of always
+      // reporting pending.
+      if (payment.status === 'paid') {
+        return NextResponse.json({
+          verified: true,
+          appointment_id: payment.appointment_id,
+          payment_id: payment.id,
+        })
+      }
+
+      const { error: recordErr } = await db
+        .from('payments')
+        .update({ razorpay_payment_id, razorpay_signature })
+        .eq('id', payment.id)
+        .eq('status', 'created') // don't clobber if webhook already marked it paid
+
+      if (recordErr) {
+        console.error('[therapist-verify] Failed to record OAuth payment_id:', recordErr)
+      }
+
+      return NextResponse.json({
+        verified: false,
+        pending: true,
+        message: 'Payment received -- confirming with Razorpay. This usually takes a few seconds.',
+        appointment_id: payment.appointment_id,
+        payment_id: payment.id,
+      })
+    }
+
+    if (!therapist.razorpay_key_secret_encrypted) {
+      return NextResponse.json({ error: 'Therapist payment credentials not configured' }, { status: 422 })
     }
 
     let keySecret: string

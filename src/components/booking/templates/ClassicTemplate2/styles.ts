@@ -70,7 +70,7 @@ export const ct2Styles = `
     font-weight: 600;
     letter-spacing: 0.05em;
     text-transform: uppercase;
-    border-radius: 4px;
+    border-radius: 100px;
     transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
     cursor: pointer;
     border:none;
@@ -93,13 +93,15 @@ export const ct2Styles = `
     letter-spacing: 0.05em;
     text-transform: uppercase;
     border: 1px solid var(--ink-3);
-    border-radius: 2px;
+    border-radius: 102px;
     transition: border-color 0.2s ease, color 0.2s ease;
     cursor: pointer;
+    margin-top:20px;
   }
   .ct2-btn-ghost:hover {
     border-color: var(--gold);
     color: var(--gold);
+x
   }
 
   .ct2-card {

@@ -1,15 +1,15 @@
 import { NextResponse } from 'next/server'
-import { createServiceSupabaseClient } from '@/lib/supabase-server'
+import { createServiceSupabaseClientForTenant } from '@/lib/supabase-server'
 
 export const dynamic = 'force-dynamic'
 
+// Tenant-aware: resolves the current request's tenant (via middleware.ts's
+// x-tenant header) and queries THAT tenant's own Supabase project, so the
+// India homepage keeps showing India therapists and the America homepage
+// shows America therapists, from separate databases.
 export async function GET() {
   try {
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      console.error('[public/therapists] missing supabase env vars')
-      return NextResponse.json({ therapists: [] })
-    }
-    const supabase = createServiceSupabaseClient()
+    const supabase = await createServiceSupabaseClientForTenant()
 
     // Use only columns that actually exist on the therapists table.
     // Filter by is_profile_complete = true so only set-up profiles show.

@@ -3,11 +3,12 @@ import Link from 'next/link'
 import SiteNav from '@/components/layout/SiteNav'
 import SiteFooter from '@/components/layout/SiteFooter'
 import { ArrowUpRight } from 'lucide-react'
+import { getCurrentTenant } from '@/lib/tenants/server'
 
 export const metadata: Metadata = {
-  title: 'About — Counsellors of India',
+  title: 'About',
   description:
-    'Counsellors of India helps psychologists and therapists build a professional digital presence — website, bookings and payments in one place.',
+    'We help psychologists and therapists build a professional digital presence — website, bookings and payments in one place.',
 }
 
 const PRINCIPLES = [
@@ -40,7 +41,8 @@ const NUMBERS = [
   { n: '< 5m',  l: 'To go live'         },
 ]
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const tenant = await getCurrentTenant()
   return (
     <div
       style={{
@@ -50,7 +52,7 @@ export default function AboutPage() {
       }}
       className="flex min-h-screen flex-col"
     >
-      <SiteNav />
+      <SiteNav tenant={{ brandName: tenant.brandName }} />
 
       {/* ─────────────────────────────────────────────────────
           HERO
@@ -119,7 +121,7 @@ export default function AboutPage() {
             {/* right — fact column, no cards, just labels + values */}
             <div className="divide-y" style={{ borderColor: '#DDD6CB', borderTop: '1px solid #DDD6CB' }}>
               {[
-                { label: 'Founded',            value: '2026, Jaipur'                  },
+                { label: 'Founded',            value: '2026'                             },
                 { label: 'Focus',              value: 'Mental health professionals'   },
                 { label: 'Average setup time', value: 'Under 10 minutes'               },
               ].map(row => (
@@ -153,10 +155,10 @@ export default function AboutPage() {
               </p>
               <div className="space-y-6 text-[16px] leading-[1.9]" style={{ color: '#3A3530' }}>
                 <p>
-                  Across India, thousands of qualified psychologists were managing
-                  their entire practice through WhatsApp, sending appointment
-                  reminders manually, collecting fees via UPI screenshots, and hoping
-                  clients remembered the session time.
+                  Thousands of qualified psychologists were managing their
+                  entire practice through WhatsApp, sending appointment
+                  reminders manually, collecting fees via screenshots, and
+                  hoping clients remembered the session time.
                 </p>
                 <p>
                   Not because they didn't want to do better. But because every tool
@@ -164,7 +166,7 @@ export default function AboutPage() {
                   for a different profession entirely.
                 </p>
                 <p>
-                  So we built Counsellors of India. A platform where any therapist
+                  So we built {tenant.brandName}. A platform where any therapist
                   can be live with a professional booking page in under five minutes.
                   No code. No designer. No monthly agency retainer.
                 </p>
@@ -313,7 +315,7 @@ export default function AboutPage() {
             className="text-[32px] font-bold leading-[1.2] tracking-tight sm:text-[44px] lg:text-[52px]"
             style={{ color: '#1C1814', maxWidth: '20ch' }}
           >
-            Every therapist in India, professional, visible, and bookable online.
+            Every therapist, professional, visible, and bookable online.
           </p>
 
           <p
@@ -342,7 +344,7 @@ export default function AboutPage() {
         </div>
       </section>
 
-      <SiteFooter />
+      <SiteFooter tenant={{ brandName: tenant.brandName, footerTagline: tenant.footerTagline }} />
     </div>
   )
 }

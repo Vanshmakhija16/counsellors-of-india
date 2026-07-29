@@ -3,12 +3,12 @@
 
 import { useEffect, useRef } from 'react'
 
-const WORDMARK = 'Counsellors of India'
 const MIN_FONT = 30   // below this, switch to a two-line wrap instead of shrinking further
 const MAX_FONT = 150  // design ceiling, matches the old clamp() max
 const SAFETY = 0.95   // small margin so the text never touches the container edge
 
-export default function FooterReveal() {
+export default function FooterReveal({ wordmark = 'Counsellors of India' }: { wordmark?: string }) {
+  const WORDMARK = wordmark
   const wordRef = useRef<HTMLHeadingElement>(null)
   const containerRef = useRef<HTMLDivElement>(null)
   const touchTimer = useRef<ReturnType<typeof setTimeout> | null>(null)

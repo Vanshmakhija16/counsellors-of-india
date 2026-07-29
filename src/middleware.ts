@@ -1,58 +1,38 @@
-import { createServerClient } from '@supabase/ssr'
-import { NextResponse, type NextRequest } from 'next/server'
+import { NextResponse } from 'next/server'
+import type { NextRequest } from 'next/server'
+import { resolveTenantId } from '@/lib/tenants'
 
-export async function middleware(request: NextRequest) {
-  let supabaseResponse = NextResponse.next({ request })
+// ───────────────────────────────────────────────────────────────────────────
+// Multi-tenant domain resolution ("the receptionist").
+//
+// Reads the incoming Host header, resolves it to a TenantId (in/us/ca/uk/au),
+// and forwards it as an `x-tenant` request header so every server component
+// and route handler downstream can read it (via headers() / request.headers)
+// without re-deriving it themselves.
+//
+// Golden rule (see MULTI_COUNTRY_EXPANSION_POA.md §4 and §5 Phase 0):
+// any host we don't recognise — including localhost and the real India
+// domain — resolves to the 'in' tenant. This middleware is additive only;
+// it must never change the live India site's behaviour.
+// ───────────────────────────────────────────────────────────────────────────
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          )
-          supabaseResponse = NextResponse.next({ request })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
+export function middleware(request: NextRequest) {
+  const host = request.headers.get('host')
+  const tenantId = resolveTenantId(host)
 
-  // IMPORTANT: always call getUser() — this refreshes the session cookie.
-  // Without this, server components on /clinical/* get a stale/empty session
-  // and RLS blocks every DB query → patient not found → 404.
-  const { data: { user } } = await supabase.auth.getUser()
+  const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-tenant', tenantId)
 
-  const { pathname } = request.nextUrl
-
-  // Not logged in → redirect to login for all protected routes
-  if (!user && (
-    pathname.startsWith('/dashboard') ||
-    pathname.startsWith('/clinical') ||
-    pathname.startsWith('/onboarding')
-  )) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-
-  return supabaseResponse
+  return NextResponse.next({
+    request: { headers: requestHeaders },
+  })
 }
 
+// Run on everything except static assets / Next internals, so both pages
+// and API routes get the x-tenant header (payment routes need it too, once
+// Phase 2/3 land).
 export const config = {
-  // Match every protected route so the session cookie is always refreshed
   matcher: [
-    '/dashboard/:path*',
-    '/clinical/:path*',
-    '/onboarding/:path*',
-    '/login',
-    '/signup',
+    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map)$).*)',
   ],
 }
-

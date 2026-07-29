@@ -194,47 +194,70 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
               </div>
             ) : (
               <>
-                {/* Day picker */}
-                <div style={{ marginBottom: '1.8rem' }}>
-                  <span className="ct4-eyebrow" style={{ display: 'block', marginBottom: '0.9rem' }}>Select a Day</span>
-                  <div className="ct4-rule-gold" style={{ marginBottom: '1rem' }} />
-                  {availableDays.length === 0 || limitReached ? (
-                    <p style={{ fontSize: 14, color: 'var(--silver)', fontWeight: 300, fontStyle: 'italic' }}>No available slots. New times open next month.</p>
-                  ) : (
-                    <div className="ct4-day-chips">
-                      {availableDays.slice(0, 10).map((d, i) => (
-                        <button key={i} className={`ct4-day-chip ${selectedDayIdx === i ? 'selected' : ''}`}
-                          onClick={() => { setSelectedDayIdx(i); setSelectedSlot(null); setSelectedSlotIso(null); setClientName(''); setClientEmail(''); setClientPhone(''); setBookingError('') }}>
-                          {d.label} {d.date} {d.month.toUpperCase()}
-                        </button>
-                      ))}
+                {!selectedSlot ? (
+                  <>
+                    {/* Day picker */}
+                    <div style={{ marginBottom: '1.8rem' }}>
+                      <span className="ct4-eyebrow" style={{ display: 'block', marginBottom: '0.9rem' }}>Select a Day</span>
+                      <div className="ct4-rule-gold" style={{ marginBottom: '1rem' }} />
+                      {availableDays.length === 0 || limitReached ? (
+                        <p style={{ fontSize: 14, color: 'var(--silver)', fontWeight: 300, fontStyle: 'italic' }}>No available slots. New times open next month.</p>
+                      ) : (
+                        <div className="ct4-day-chips">
+                          {availableDays.slice(0, 10).map((d, i) => (
+                            <button key={i} className={`ct4-day-chip ${selectedDayIdx === i ? 'selected' : ''}`}
+                              onClick={() => { setSelectedDayIdx(i); setSelectedSlot(null); setSelectedSlotIso(null); setClientName(''); setClientEmail(''); setClientPhone(''); setBookingError('') }}>
+                              {d.label} {d.date} {d.month.toUpperCase()}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
 
-                {/* Time picker */}
-                <div style={{ marginBottom: '1.8rem' }}>
-                  <span className="ct4-eyebrow" style={{ display: 'block', marginBottom: '0.9rem' }}>Select a Time</span>
-                  <div className="ct4-rule-gold" style={{ marginBottom: '1rem' }} />
-                  {slotsForDay.length === 0 || limitReached ? (
-                    <p style={{ fontSize: 14, color: 'var(--silver)', fontWeight: 300, fontStyle: 'italic' }}>No remaining availability today.</p>
-                  ) : (
-                    <div className="ct4-time-chips">
-                      {slotsForDay.map(s => (
-                        <button key={s.label} className={`ct4-time-chip ${selectedSlot === s.label ? 'selected' : ''}`}
-                          onClick={() => { setSelectedSlot(s.label); setSelectedSlotIso(s.isoTime) }}>
-                          {s.label}
-                        </button>
-                      ))}
+                    {/* Time picker */}
+                    <div>
+                      <span className="ct4-eyebrow" style={{ display: 'block', marginBottom: '0.9rem' }}>Select a Time</span>
+                      <div className="ct4-rule-gold" style={{ marginBottom: '1rem' }} />
+                      {slotsForDay.length === 0 || limitReached ? (
+                        <p style={{ fontSize: 14, color: 'var(--silver)', fontWeight: 300, fontStyle: 'italic' }}>No remaining availability today.</p>
+                      ) : (
+                        <div className="ct4-time-chips">
+                          {slotsForDay.map(s => (
+                            <button key={s.label} className={`ct4-time-chip ${selectedSlot === s.label ? 'selected' : ''}`}
+                              onClick={() => { setSelectedSlot(s.label); setSelectedSlotIso(s.isoTime) }}>
+                              {s.label}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
+                  </>
+                ) : (
+                  /* Contact form — takes over the exact spot the day/time
+                     pickers were in, instead of appending below them. */
+                  <div style={{ animation: 'ct4-fade-up 0.5s ease both' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.4rem' }}>
+                      <div>
+                        <span className="ct4-eyebrow" style={{ display: 'block', marginBottom: 6 }}>Selected</span>
+                        <p style={{ fontSize: 14, color: 'var(--platinum)', fontWeight: 400 }}>
+                          {day?.label} {day?.date} {day?.month?.toUpperCase()} &middot; {selectedSlot}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => { setSelectedSlot(null); setSelectedSlotIso(null); setBookingError('') }}
+                        className="ct4-mono"
+                        style={{
+                          background: 'none', border: '0.5px solid var(--border-gold)', color: 'var(--gold)',
+                          fontSize: 9.5, letterSpacing: '0.16em', textTransform: 'uppercase',
+                          padding: '8px 14px', borderRadius: 'var(--radius-btn)', cursor: 'pointer', flexShrink: 0,
+                        }}
+                      >
+                        Change
+                      </button>
+                    </div>
+                    <div className="ct4-rule-gold" style={{ marginBottom: '1.6rem' }} />
 
-                {/* Contact form */}
-                {selectedSlot && !limitReached && (
-                  <div style={{ borderTop: '0.5px solid var(--border)', paddingTop: '1.8rem', animation: 'ct4-fade-up 0.5s ease both' }}>
                     <span className="ct4-eyebrow" style={{ display: 'block', marginBottom: '0.9rem' }}>Your Details</span>
-                    <div className="ct4-rule-gold" style={{ marginBottom: '0.5rem' }} />
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 1.5rem' }}>
                       <div style={{ gridColumn: '1 / -1' }}>

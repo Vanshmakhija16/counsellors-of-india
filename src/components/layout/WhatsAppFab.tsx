@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { usePathname } from 'next/navigation'
 
 const WHATSAPP_NUMBER = '918854030924'
 const WHATSAPP_MESSAGE = 'Hii, I want to know more about Counsellors of India'
@@ -40,6 +41,7 @@ function loadCalendlyAssets(onReady: () => void) {
 }
 
 export default function WhatsAppFab() {
+  const pathname = usePathname()
   const waHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`
   const [waHovered, setWaHovered] = useState(false)
   const [demoHovered, setDemoHovered] = useState(false)
@@ -62,6 +64,13 @@ export default function WhatsAppFab() {
       window.Calendly?.initPopupWidget({ url: CALENDLY_URL })
     })
   }, [])
+
+  // Hide on auth/onboarding flows — a marketing chat/demo widget doesn't
+  // belong floating over an account-creation or password-reset form. This
+  // check runs AFTER every hook above so hook order/count never changes
+  // between renders.
+  const hideOn = ['/signup', '/login', '/forgot-password', '/reset-password']
+  if (hideOn.some(p => pathname?.startsWith(p))) return null
 
   return (
     <>

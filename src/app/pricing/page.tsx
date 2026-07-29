@@ -8,14 +8,28 @@ import Button from '@/components/ui/Button'
 import { Check, Lock, Zap, ArrowRight, ShieldCheck, Crown, Rocket, X } from 'lucide-react'
 import { startPayuPlanCheckout } from '@/lib/payu-client'
 import { startRazorpayPlanCheckout } from '@/lib/razorpay-client'
+import { startPaypalPlanCheckout } from '@/lib/paypal-client'
+import { resolveTenantId, getTenantConfig, type TenantId } from '@/lib/tenants'
 import JourneyProgress from '@/components/journey/JourneyProgress'
 
-// 💳 Which gateway the "choose a plan" buttons use. Kept as a single flag so
-// reverting to PayU is a one-line change — startPayuPlanCheckout below is
-// untouched, just unused while this is 'razorpay'.
-const PLAN_PAYMENT_PROVIDER: 'razorpay' | 'payu' = 'razorpay'
+// 💳 Per-tenant gateway routing. India keeps Razorpay (unchanged, zero risk);
+// every other tenant routes through PayPal automatically — no manual flag
+// to flip anymore. Add a tenant to this map once its gateway is actually
+// ready to accept real payments.
+const GATEWAY_BY_TENANT: Record<TenantId, 'razorpay' | 'payu' | 'paypal'> = {
+  in: 'razorpay',
+  us: 'paypal',
+  ca: 'paypal',
+  uk: 'paypal',
+  au: 'paypal',
+}
 
-const PLAN_PRICE: Record<string, number> = { starter: 1499, pro: 2499 }
+// Plan prices, per currency. India's INR prices are unchanged from before;
+// USD prices here should match whatever PLAN_PRICE_STARTER_USD /
+// PLAN_PRICE_PRO_USD are set to in .env.local (falls back to pricing.ts's
+// dev defaults of $19 / $39 if unset).
+const PLAN_PRICE_INR: Record<string, number> = { starter: 1499, pro: 2499 }
+const PLAN_PRICE_USD: Record<string, number> = { starter: 19,   pro: 39   }
 const PLAN_RANK:  Record<string, number> = { starter: 1,    pro: 2   }
 
 // Internal test account — pricing page shows ₹1 for every plan when this
@@ -32,7 +46,8 @@ const plans = [
   {
     id: 'starter',
     name: 'Starter',
-    price: '₹1,499',
+    priceInr: '₹1,499',
+    priceUsd: '$19',
     period: '/ year',
     tagline: 'Professional website for independent therapists',
     highlight: false,
@@ -53,7 +68,8 @@ const plans = [
   {
     id: 'pro',
     name: 'PRO',
-    price: '₹2,499',
+    priceInr: '₹2,499',
+    priceUsd: '$39',
     period: '/ year',
     tagline: 'Grow your practice with unlimited bookings',
     highlight: true,
@@ -96,6 +112,18 @@ function PricingPageInner() {
   const [errorMsg,      setErrorMsg]      = useState<string | null>(null)
   const [successMsg,    setSuccessMsg]    = useState<string | null>(null)
   const [pageLoading,   setPageLoading]   = useState(true)
+
+  // Resolve tenant purely from the browser's own hostname — same domain
+  // list middleware.ts already uses. Defaults to 'in' during SSR (matches
+  // the fallback used everywhere else), then corrects on the client if the
+  // visitor is actually on a different tenant's domain.
+  const [tenantId] = useState<TenantId>(() => {
+    if (typeof window === 'undefined') return 'in'
+    return resolveTenantId(window.location.hostname)
+  })
+  const tenant = getTenantConfig(tenantId) // reserved for future tenant-specific copy/branding on this page
+  const gateway = GATEWAY_BY_TENANT[tenantId]
+  const PLAN_PRICE = tenantId === 'in' ? PLAN_PRICE_INR : PLAN_PRICE_USD
 
   const redirectAfter = searchParams.get('redirect') ?? '/dashboard'
 
@@ -186,19 +214,27 @@ const highest =
         return
       }
 
-      // New paid plan → gateway determined by PLAN_PAYMENT_PROVIDER.
-      // Razorpay opens an in-page checkout modal and resolves once the
-      // upgrade is verified + applied; PayU redirects the browser away and
-      // /api/payu/callback applies the upgrade on return.
+      // New paid plan → gateway determined by the tenant this visitor is on
+      // (India = Razorpay, everyone else = PayPal for now, until Stripe is
+      // set up per-country). Razorpay opens an in-page checkout modal and
+      // resolves once the upgrade is verified + applied; PayPal/PayU redirect
+      // the browser away and the return route applies the upgrade.
       sessionStorage.setItem('pending_plan', planId)
 
-      if (PLAN_PAYMENT_PROVIDER === 'razorpay') {
+      if (gateway === 'razorpay') {
         await startRazorpayPlanCheckout({ plan: planId, email: userEmail })
         setCurrentPlan(planId)
         setHighestPlan(prev => (PLAN_RANK[planId] > (PLAN_RANK[prev] ?? 0) ? planId : prev))
         setSuccessMsg(`✓ ${planId.charAt(0).toUpperCase() + planId.slice(1)} plan activated!`)
         setSelecting(null)
         setTimeout(() => router.push(redirectAfter), 1000)
+        return
+      }
+
+      if (gateway === 'paypal') {
+        await startPaypalPlanCheckout({ plan: planId, redirectAfter })
+        // Browser navigates to PayPal here — nothing below runs on success;
+        // /payment/paypal-return picks up the flow when the buyer returns.
         return
       }
 
@@ -421,7 +457,7 @@ const highest =
     fontFamily: 'Inter, system-ui, sans-serif'
   }}
 >
-  {plan.price}
+  {tenantId === 'in' ? plan.priceInr : plan.priceUsd}
 </span>
 
               <span className="text-[11px] text-gray-400 mb-0.5">
@@ -513,7 +549,7 @@ const highest =
                   size={11}
                   className="text-[#FF9933]"
                 />
-                Secure payment via {PLAN_PAYMENT_PROVIDER === 'razorpay' ? 'Razorpay' : 'PayU'}
+                Secure payment via {gateway === 'razorpay' ? 'Razorpay' : gateway === 'paypal' ? 'PayPal' : 'PayU'}
               </p>
             </div>
           )}

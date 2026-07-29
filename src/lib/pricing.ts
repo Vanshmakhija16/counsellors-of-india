@@ -32,6 +32,17 @@ const PLAN_PRICE_ENV: Record<string, string | undefined> = {
   pro: process.env.PLAN_PRICE_PRO_INR,
 }
 
+const DEFAULT_DEV_PLAN_PRICES_USD: Record<string, number> = {
+  starter: 19,
+  pro: 39,
+}
+
+const PLAN_PRICE_ENV_USD: Record<string, string | undefined> = {
+  starter: process.env.PLAN_PRICE_STARTER_USD,
+  growth: process.env.PLAN_PRICE_GROWTH_USD,
+  pro: process.env.PLAN_PRICE_PRO_USD,
+}
+
 export function normalizePlan(plan: unknown): 'starter' | 'growth' | 'pro' | null {
   if (plan === 'starter' || plan === 'growth' || plan === 'pro') return plan
   return null
@@ -48,6 +59,25 @@ export function getPlanPriceInr(plan: 'starter' | 'growth' | 'pro', email?: stri
   }
 
   return DEFAULT_DEV_PLAN_PRICES[plan]
+}
+
+/**
+ * USD equivalent of getPlanPriceInr, used by the PayPal (and any future
+ * Stripe) plan-subscription flow for non-India tenants. Returns a plain
+ * decimal number of dollars (e.g. 19 or 19.99) — NOT cents. Convert to
+ * PayPal's required string format ("19.00") at the call site.
+ */
+export function getPlanPriceUsd(plan: 'starter' | 'growth' | 'pro', email?: string | null): number {
+  if (isTestPriceEmail(email)) return 0.01
+
+  const configured = Number(PLAN_PRICE_ENV_USD[plan])
+  if (Number.isFinite(configured) && configured > 0) return configured
+
+  if (process.env.NODE_ENV === 'production') {
+    throw new Error(`Missing production price for ${plan}. Set PLAN_PRICE_${plan.toUpperCase()}_USD.`)
+  }
+
+  return DEFAULT_DEV_PLAN_PRICES_USD[plan]
 }
 
 export function highestPlan(currentPlan: string | null | undefined, targetPlan: string): string {

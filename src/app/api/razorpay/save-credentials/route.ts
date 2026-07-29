@@ -108,7 +108,10 @@ export async function GET() {
     const db = createServiceSupabaseClient()
     const { data, error } = await db
       .from('therapists')
-      .select('razorpay_key_id, payments_enabled, webhook_verified, razorpay_updated_at')
+      .select(
+        'razorpay_key_id, payments_enabled, webhook_verified, razorpay_updated_at, ' +
+        'razorpay_oauth_merchant_id, razorpay_oauth_scope, razorpay_oauth_connected_at'
+      )
       .eq('id', user.id)
       .single()
 
@@ -120,6 +123,12 @@ export async function GET() {
       webhook_verified: data.webhook_verified   ?? false,
       updated_at:       data.razorpay_updated_at ?? null,
       is_test_mode:     data.razorpay_key_id?.includes('test') ?? null,
+      oauth: {
+        connected:    !!data.razorpay_oauth_merchant_id,
+        merchant_id:  data.razorpay_oauth_merchant_id  ?? null,
+        scope:        data.razorpay_oauth_scope        ?? null,
+        connected_at: data.razorpay_oauth_connected_at ?? null,
+      },
     })
   } catch (err: unknown) {
     return NextResponse.json({ error: err instanceof Error ? err.message : 'Server error' }, { status: 500 })

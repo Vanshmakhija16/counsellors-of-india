@@ -4,20 +4,27 @@
  * RazorpayConnect — therapist dashboard section for connecting their
  * own Razorpay account to the platform.
  *
- * Security model:
- *  - Key Secret is submitted over HTTPS and immediately encrypted server-side
- *  - Key Secret is NEVER stored in component state after the save request
- *  - Only Key ID (public) is shown in the UI after saving
+ * OAuth-only: the therapist clicks "Connect with Razorpay", authorizes on
+ * Razorpay's own consent screen, and we get back an access/refresh token
+ * pair tied to their merchant account. No keys ever pass through our UI.
+ * (The old manual Key ID / Key Secret entry path has been removed from
+ * this screen — /api/razorpay/save-credentials still exists server-side
+ * for any therapists who connected that way previously.)
  */
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { useSearchParams } from 'next/navigation'
 import {
-  CreditCard, Eye, EyeOff, CheckCircle2, AlertCircle,
-  Trash2, RefreshCw, ExternalLink, ShieldCheck, Wifi, WifiOff,
-  TestTube2, Zap,
+  CheckCircle2, ShieldCheck, RefreshCw, Link2, Link2Off,
 } from 'lucide-react'
-import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
+
+interface OAuthStatus {
+  connected:    boolean
+  merchant_id:  string | null
+  scope:        string | null
+  connected_at: string | null
+}
 
 interface ConnectionStatus {
   key_id:           string | null
@@ -25,24 +32,46 @@ interface ConnectionStatus {
   webhook_verified: boolean
   is_test_mode:     boolean | null
   updated_at:       string | null
+  oauth?:           OAuthStatus
+}
+
+const OAUTH_QUERY_MESSAGES: Record<string, { type: 'success' | 'error'; text: string }> = {
+  connected:        { type: 'success', text: 'Razorpay connected via OAuth!' },
+  denied:           { type: 'error',   text: 'Razorpay connection was cancelled.' },
+  state_mismatch:   { type: 'error',   text: 'Connection could not be verified. Please try again.' },
+  invalid_request:  { type: 'error',   text: 'Something went wrong starting the connection. Please try again.' },
+  exchange_failed:  { type: 'error',   text: 'Could not complete the Razorpay connection. Please try again.' },
 }
 
 export default function RazorpayConnect() {
-  const [status, setStatus]       = useState<ConnectionStatus | null>(null)
-  const [loading, setLoading]     = useState(true)
-  const [saving, setSaving]       = useState(false)
-  const [removing, setRemoving]   = useState(false)
-  const [error, setError]         = useState('')
-  const [success, setSuccess]     = useState('')
+  const [status, setStatus]   = useState<ConnectionStatus | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError]     = useState('')
+  const [success, setSuccess] = useState('')
 
-  // Form fields — secret is immediately cleared from state after save
-  const [keyId,     setKeyId]     = useState('')
-  const [keySecret, setKeySecret] = useState('')
-  const [showSecret, setShowSecret] = useState(false)
-  const secretRef = useRef<HTMLInputElement>(null)
+  const [oauthConnecting, setOauthConnecting] = useState(false)
+  const [checkingConnection, setCheckingConnection] = useState(false)
+  const searchParams = useSearchParams()
 
   // ── Load current status on mount ─────────────────────────────────
   useEffect(() => { loadStatus() }, [])
+
+  // ── Pick up ?oauth=... after the callback redirect lands us back here ──
+  useEffect(() => {
+    const oauthResult = searchParams.get('oauth')
+    if (!oauthResult) return
+    const message = OAUTH_QUERY_MESSAGES[oauthResult]
+    if (message) {
+      if (message.type === 'success') setSuccess(message.text)
+      else setError(message.text)
+    }
+    if (oauthResult === 'connected') loadStatus()
+    // Clean the query param out of the URL without a full navigation.
+    const url = new URL(window.location.href)
+    url.searchParams.delete('oauth')
+    window.history.replaceState({}, '', url.toString())
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
 
   async function loadStatus() {
     setLoading(true)
@@ -59,57 +88,31 @@ export default function RazorpayConnect() {
     }
   }
 
-  // ── Save credentials ──────────────────────────────────────────────
-  async function handleSave() {
-    if (!keyId.trim() || !keySecret.trim()) {
-      setError('Both Key ID and Key Secret are required.')
-      return
-    }
-    setSaving(true)
-    setError('')
-    setSuccess('')
-
-    try {
-      const res = await fetch('/api/razorpay/save-credentials', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ key_id: keyId.trim(), key_secret: keySecret.trim() }),
-      })
-      const data = await res.json()
-
-      if (!res.ok) {
-        setError(data.error ?? 'Failed to save credentials.')
-        return
-      }
-
-      // ⚠ Clear the secret from state immediately after server confirms receipt
-      setKeySecret('')
-      setKeyId('')
-      setSuccess('Razorpay account connected successfully!')
-      await loadStatus()
-    } catch {
-      setError('Network error. Please try again.')
-    } finally {
-      setSaving(false)
-    }
+  // ── Start OAuth connect flow ───────────────────────────────
+  function handleOAuthConnect() {
+    setOauthConnecting(true)
+    // Full navigation, not fetch — /api/razorpay/oauth/connect redirects to
+    // Razorpay's own consent screen, which fetch() can't follow usefully.
+    window.location.href = '/api/razorpay/oauth/connect'
   }
 
-  // ── Remove credentials ────────────────────────────────────────────
-  async function handleRemove() {
-    if (!confirm('Remove your Razorpay credentials? Clients will no longer be able to pay online.')) return
-    setRemoving(true)
+  // ── Manually re-check / refresh OAuth connection health ─────────
+  async function handleCheckConnection() {
+    setCheckingConnection(true)
     setError('')
     try {
-      const res = await fetch('/api/razorpay/save-credentials', { method: 'DELETE' })
-      if (res.ok) {
-        setStatus(null)
-        setSuccess('Razorpay credentials removed.')
-        await loadStatus()
+      const res = await fetch('/api/razorpay/oauth/refresh', { method: 'POST' })
+      const data = await res.json()
+      if (!res.ok) {
+        setError(data.error ?? 'Could not refresh the Razorpay connection.')
+        return
       }
+      setSuccess('Razorpay connection is healthy.')
+      await loadStatus()
     } catch {
-      setError('Failed to remove credentials.')
+      setError('Network error while checking the connection.')
     } finally {
-      setRemoving(false)
+      setCheckingConnection(false)
     }
   }
 
@@ -121,7 +124,7 @@ export default function RazorpayConnect() {
     )
   }
 
-  const isConnected = status?.payments_enabled && status?.key_id
+  const isOAuthConnected = !!status?.oauth?.connected
 
   return (
     <div className="space-y-6">
@@ -154,188 +157,57 @@ export default function RazorpayConnect() {
         </div>
       </div>
 
-      {/* ── Connection status badge ───────────────────────────────── */}
-      <div className="flex items-center gap-3 p-4 bg-[#f2f0ed] rounded-xl border border-[#e8e4df]">
-        {isConnected ? (
-          <>
-            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center shrink-0">
-              <CheckCircle2 size={20} className="text-green-600" />
+      {/* ── Connect card — the only option on this page ───────────── */}
+      <div className="border border-[#e8e4df] rounded-2xl overflow-hidden shadow-sm">
+        <div className="p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
+              isOAuthConnected ? 'bg-green-100' : 'bg-[#FFF3E4]'
+            }`}>
+              {isOAuthConnected ? (
+                <Link2 size={22} className="text-green-600" />
+              ) : (
+                <Link2Off size={22} className="text-[#FF9933]" />
+              )}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-[#1c1c1e]">
-                Razorpay Connected
+              <p className="text-base font-semibold text-[#1c1c1e]">
+                {isOAuthConnected ? 'Connected with Razorpay' : 'Connect with Razorpay'}
               </p>
-              <p className="text-xs text-[#6b7280] font-mono truncate mt-0.5">
-                {status?.key_id}
-              </p>
-            </div>
-            <div className="flex flex-col items-end gap-1">
-              {status?.is_test_mode ? (
-                <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-amber-100 text-amber-700 font-medium">
-                  <TestTube2 size={11} /> Test mode
-                </span>
-              ) : (
-                <span className="flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">
-                  <Zap size={11} /> Live mode
-                </span>
-              )}
-              <span className={`flex items-center gap-1 text-xs px-2 py-0.5 rounded-full font-medium ${
-                status?.webhook_verified
-                  ? 'bg-teal-100 text-teal-700'
-                  : 'bg-gray-100 text-gray-500'
-              }`}>
-                {status?.webhook_verified
-                  ? <><Wifi size={11} /> Webhook active</>
-                  : <><WifiOff size={11} /> Webhook pending</>
-                }
-              </span>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center shrink-0">
-              <CreditCard size={20} className="text-gray-400" />
-            </div>
-            <div>
-              <p className="text-sm font-semibold text-[#1c1c1e]">Not connected</p>
               <p className="text-xs text-[#6b7280] mt-0.5">
-                Add your Razorpay credentials below to start accepting payments.
+                {isOAuthConnected
+                  ? `Merchant ID: ${status?.oauth?.merchant_id}`
+                  : "Authorize once on Razorpay's own screen. No keys to copy or store yourself."}
               </p>
             </div>
-          </>
-        )}
-      </div>
-
-      {/* ── Credential form ───────────────────────────────────────── */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <CreditCard size={16} className="text-[#6b7280]" />
-          <h3 className="text-sm font-semibold text-[#1c1c1e]">
-            {isConnected ? 'Update Credentials' : 'Enter Razorpay Credentials'}
-          </h3>
-        </div>
-
-        <div className="p-4 bg-amber-50 border border-amber-100 rounded-xl text-xs text-amber-800 space-y-1">
-          <p className="font-semibold">How to find your credentials:</p>
-          <ol className="list-decimal list-inside space-y-0.5">
-            <li>Log in to your Razorpay Dashboard</li>
-            <li>Go to Settings → API Keys</li>
-            <li>Generate or copy your Key ID and Key Secret</li>
-            <li>Use <strong>Test</strong> keys to verify the integration first</li>
-          </ol>
-          <a
-            href="https://dashboard.razorpay.com/app/website-app-settings/api-keys"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 font-medium underline mt-1"
-          >
-            Open Razorpay Dashboard <ExternalLink size={10} />
-          </a>
-        </div>
-
-        <Input
-          label="Razorpay Key ID"
-          value={keyId}
-          onChange={e => setKeyId(e.target.value)}
-          placeholder="rzp_test_xxxxxxxxxxxx or rzp_live_xxxxxxxxxxxx"
-          autoComplete="off"
-          spellCheck={false}
-        />
-
-        <div className="relative">
-          <Input
-            label="Razorpay Key Secret"
-            ref={secretRef}
-            value={keySecret}
-            onChange={e => setKeySecret(e.target.value)}
-            type={showSecret ? 'text' : 'password'}
-            placeholder="Your secret key (encrypted before storage)"
-            autoComplete="new-password"
-            spellCheck={false}
-          />
-          <button
-            type="button"
-            onClick={() => setShowSecret(v => !v)}
-            className="absolute right-3 top-9 text-[#FF9933] hover:text-[#C46800] transition"
-          >
-            {showSecret ? <EyeOff size={16} /> : <Eye size={16} />}
-          </button>
-        </div>
-
-        <p className="text-xs text-[#6b7280] flex items-start gap-1.5">
-          <ShieldCheck size={13} className="shrink-0 mt-0.5 text-[#FF9933]" />
-          Your secret key is encrypted with AES-256-GCM before being stored.
-          It is never visible in the UI or sent to the browser again.
-        </p>
-
-        {error && (
-          <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-100 rounded-lg text-sm text-red-700">
-            <AlertCircle size={15} className="shrink-0 mt-0.5" />
-            <span>{error}</span>
+            {isOAuthConnected && (
+              <span className="flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-green-100 text-green-700 font-medium shrink-0">
+                <CheckCircle2 size={11} /> Active
+              </span>
+            )}
           </div>
-        )}
 
-        {success && (
-          <div className="flex items-start gap-2 p-3 bg-green-50 border border-green-100 rounded-lg text-sm text-green-700">
-            <CheckCircle2 size={15} className="shrink-0 mt-0.5" />
-            <span>{success}</span>
-          </div>
-        )}
-
-        <div className="flex items-center gap-3">
-          <Button onClick={handleSave} loading={saving} fullWidth>
-            {isConnected ? 'Update Credentials' : 'Connect Razorpay'}
-          </Button>
-          {isConnected && (
+          {isOAuthConnected ? (
+            <Button variant="outline" onClick={handleCheckConnection} loading={checkingConnection} fullWidth>
+              Check Connection
+            </Button>
+          ) : (
             <Button
-              variant="danger"
-              onClick={handleRemove}
-              loading={removing}
+              onClick={handleOAuthConnect}
+              loading={oauthConnecting}
+              fullWidth
+              className="bg-[#FF9933]! hover:bg-[#E07A12]! text-white! h-12! rounded-xl! shadow-lg shadow-[#FF9933]/25"
             >
-              <Trash2 size={15} />
+              Connect with Razorpay
             </Button>
           )}
-        </div>
-      </div>
 
-      {/* ── Webhook setup instructions ─────────────────────────────── */}
-      <div className="border border-[#e8e4df] rounded-xl overflow-hidden">
-        <div className="px-4 py-3 bg-[#f2f0ed] flex items-center gap-2">
-          <Wifi size={15} className="text-[#C46800]" />
-          <h3 className="text-sm font-semibold text-[#1c1c1e]">Webhook Configuration</h3>
-          {status?.webhook_verified && (
-            <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-teal-100 text-teal-700 font-medium flex items-center gap-1">
-              <CheckCircle2 size={11} /> Verified
-            </span>
+          {error && (
+            <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-lg">{error}</p>
           )}
-        </div>
-        <div className="p-4 space-y-3 text-sm text-[#374151]">
-          <p>
-            For automatic booking confirmation, configure this URL in your
-            Razorpay Dashboard under <strong>Settings → Webhooks</strong>:
-          </p>
-          <div className="flex items-center gap-2 bg-[#1c1c1e] text-green-400 rounded-lg px-3 py-2 font-mono text-xs overflow-x-auto">
-            <span className="select-all break-all">
-              https://counsellorsofindia.com/api/payment/webhook
-            </span>
-          </div>
-          <p className="text-xs text-[#6b7280]">
-            Enable these events: <code className="bg-gray-100 px-1 rounded">payment.captured</code>{' '}
-            <code className="bg-gray-100 px-1 rounded">payment.failed</code>{' '}
-            <code className="bg-gray-100 px-1 rounded">refund.processed</code>
-          </p>
-          <p className="text-xs text-[#6b7280]">
-            Use the <strong>same secret key</strong> you entered above as the
-            Webhook Secret in Razorpay — do not generate a separate webhook secret.
-          </p>
-          <a
-            href="https://dashboard.razorpay.com/app/website-app-settings/webhooks"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-[#C46800] font-medium text-xs hover:underline"
-          >
-            Configure webhooks in Razorpay <ExternalLink size={11} />
-          </a>
+          {success && (
+            <p className="text-sm text-green-700 bg-green-50 px-4 py-2 rounded-lg">{success}</p>
+          )}
         </div>
       </div>
 

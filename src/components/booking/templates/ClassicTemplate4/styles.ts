@@ -41,7 +41,7 @@ export const ct4Styles = `
 
     background:  var(--void);
     color:       var(--platinum);
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: 'DM Mono', monospace;
     font-weight: 400;
     min-height:  100vh;
     overflow-x:  hidden;
@@ -159,7 +159,7 @@ export const ct4Styles = `
   }
   // .ct4-nav-emblem:hover { border-color: var(--gold); background: var(--gold-glow); }
   .ct4-nav-emblem-text {
-    font-family: 'Playfair Display', serif;
+    font-family: 'DM Mono', monospace;
     font-size: 15px; font-weight: 500;
     color: var(--gold);
     letter-spacing: 0.04em;
@@ -266,7 +266,7 @@ export const ct4Styles = `
     width: 100%; background: none; border: none;
     border-bottom: 0.5px solid var(--border);
     padding: 16px 0; cursor: pointer; text-align: left;
-    font-family: 'Playfair Display', serif;
+    font-family: 'DM Mono', monospace;
     font-size: 20px; font-weight: 400;
     color: var(--platinum);
     transition: color 0.2s ease, padding-left 0.2s ease;
@@ -284,15 +284,15 @@ export const ct4Styles = `
      TYPOGRAPHY SYSTEM
   ═══════════════════════════════════════ */
   .ct4-display {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: 'DM Mono', monospace;
     font-weight: 400; letter-spacing: -0.02em;
   }
   .ct4-display-italic {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: 'DM Mono', monospace;
     font-weight: 400; font-style: italic;
   }
-  .ct4-serif { font-family: 'Playfair Display', Georgia, serif; }
-  .ct4-sans  { font-family: 'DM Sans', system-ui, sans-serif; }
+  .ct4-serif { font-family: 'DM Mono', monospace; }
+  .ct4-sans  { font-family: 'DM Mono', monospace; }
   .ct4-mono  { font-family: 'DM Mono', ui-monospace, monospace; }
 
   /* #1 — eyebrow is a "whisper" accent: muted gold, not full strength,
@@ -369,17 +369,17 @@ export const ct4Styles = `
 
   /* Name */
   .ct4-hero-plain-name {
-    font-family: 'Playfair Display', Georgia, serif;
-    font-size: clamp(42px, 6.5vw, 88px);
-    font-weight: 400; line-height: 1.04;
-    letter-spacing: -0.03em;
+    font-family: 'DM Mono', monospace;
+    font-size: clamp(30px, 4.6vw, 56px);
+    font-weight: 400; line-height: 1.08;
+    letter-spacing: -0.02em;
     color: var(--platinum);
     margin: 0 0 0.5rem;
   }
 
   /* Credential subtitle */
   .ct4-hero-plain-cred {
-    font-family: 'DM Sans', system-ui, sans-serif;
+    font-family: 'DM Mono', monospace;
     font-size: clamp(13px, 1.3vw, 16px);
     font-weight: 300; letter-spacing: 0.04em;
     color: var(--silver); margin: 0;
@@ -413,7 +413,7 @@ export const ct4Styles = `
 
   /* Pull quote */
   .ct4-hero-plain-quote {
-    font-family: 'Playfair Display', Georgia, serif;
+    font-family: 'DM Mono', monospace;
     font-size: clamp(20px, 3vw, 38px);
     font-weight: 400; font-style: italic;
     line-height: 1.5; letter-spacing: -0.01em;
@@ -422,7 +422,7 @@ export const ct4Styles = `
     position: relative;
   }
   .ct4-hero-plain-qmark {
-    font-family: 'Playfair Display', serif;
+    font-family: 'DM Mono', monospace;
     font-size: 1.6em; line-height: 0;
     vertical-align: -0.28em;
     color: var(--gold); opacity: 0.55;
@@ -454,7 +454,7 @@ export const ct4Styles = `
 
   /* Shared stat number/label (reused from above) */
   .ct4-stat-num {
-    font-family: 'Playfair Display', serif;
+    font-family: 'DM Mono', monospace;
     font-size: 26px; font-weight: 400;
     color: var(--gold); line-height: 1;
   }
@@ -536,9 +536,9 @@ export const ct4Styles = `
     color: var(--silver); opacity: 0.4;
   }
   .ct4-section-title {
-    font-family: 'Playfair Display', Georgia, serif;
-    font-size: clamp(38px, 5.5vw, 72px);
-    font-weight: 400; line-height: 1.02; letter-spacing: -0.025em;
+    font-family: 'DM Mono', monospace;
+    font-size: clamp(26px, 3.6vw, 46px);
+    font-weight: 400; line-height: 1.08; letter-spacing: -0.02em;
     color: var(--platinum); margin: 0.6rem 0 0;
   }
   .ct4-section-title em { font-style: italic; color: var(--gold); }
@@ -556,7 +556,7 @@ export const ct4Styles = `
   @media (max-width: 900px) { .ct4-about-grid { grid-template-columns: 1fr; gap: 3rem; } }
 
   .ct4-drop-cap {
-    float: left; font-family: 'Playfair Display', serif;
+    float: left; font-family: 'DM Mono', monospace;
     font-size: clamp(72px, 9vw, 108px);
     line-height: 0.72; margin: 0.12em 0.18em 0 0;
     color: var(--gold); font-weight: 400;
@@ -594,7 +594,7 @@ export const ct4Styles = `
     text-transform: uppercase; color: var(--silver); opacity: 0.7;
   }
   .ct4-spec-val {
-    font-family: 'Playfair Display', serif;
+    font-family: 'DM Mono', monospace;
     font-size: 14px; color: var(--platinum);
     text-align: right; max-width: 60%;
   }
@@ -628,7 +628,7 @@ export const ct4Styles = `
   .ct4-service-card:hover { background: var(--surface); box-shadow: var(--shadow-2), var(--edge-light); transform: translateY(-2px); z-index: 1; }
   .ct4-service-card:hover::before { opacity: 1; }
   .ct4-service-number {
-    font-family: 'Playfair Display', serif;
+    font-family: 'DM Mono', monospace;
     font-size: 48px; font-weight: 400;
     color: var(--gold); opacity: 0.15; line-height: 1;
     display: block; margin-bottom: 1rem;
@@ -636,7 +636,7 @@ export const ct4Styles = `
   }
   .ct4-service-card:hover .ct4-service-number { opacity: 0.4; }
   .ct4-service-name {
-    font-family: 'Playfair Display', serif;
+    font-family: 'DM Mono', monospace;
     font-size: 18px; font-weight: 400;
     color: var(--platinum); margin: 0 0 0.8rem;
   }
@@ -665,13 +665,13 @@ export const ct4Styles = `
   .ct4-testimonials { background: var(--charcoal); overflow: hidden; }
   .ct4-testimonial-main { max-width: 1120px; }
   .ct4-quote-mark {
-    font-family: 'Playfair Display', serif;
+    font-family: 'DM Mono', monospace;
     font-size: clamp(80px, 12vw, 160px);
     line-height: 0.6; color: var(--gold); opacity: 0.12;
     user-select: none; display: block; margin-bottom: -0.3em;
   }
   .ct4-quote-text {
-    font-family: 'Playfair Display', serif;
+    font-family: 'DM Mono', monospace;
     font-size: clamp(20px, 3.2vw, 36px);
     font-weight: 400; font-style: italic;
     line-height: 1.45; letter-spacing: -0.01em;
@@ -707,7 +707,7 @@ export const ct4Styles = `
   }
   .ct4-faq-trigger:hover .ct4-faq-q { color: var(--gold-light); }
   .ct4-faq-q {
-    font-family: 'Playfair Display', serif;
+    font-family: 'DM Mono', monospace;
     font-size: clamp(16px, 1.6vw, 20px); font-weight: 400;
     color: var(--platinum); transition: color 0.25s ease;
   }
@@ -788,7 +788,7 @@ export const ct4Styles = `
     width: 100%; background: transparent;
     border: none; border-bottom: 0.5px solid var(--border);
     color: var(--platinum); padding: 14px 0;
-    font-family: 'DM Sans', system-ui; font-size: 14px; font-weight: 300;
+    font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 300;
     outline: none; transition: border-color 0.25s ease; border-radius: 0;
   }
   .ct4-input::placeholder { color: var(--silver); opacity: 0.4; font-style: italic; }
@@ -839,7 +839,7 @@ export const ct4Styles = `
     align-items: center; justify-content: space-between;
   }
   .ct4-footer-brand {
-    font-family: 'Playfair Display', serif;
+    font-family: 'DM Mono', monospace;
     font-size: 18px; color: var(--gold); letter-spacing: 0.04em;
   }
   .ct4-footer-copy {

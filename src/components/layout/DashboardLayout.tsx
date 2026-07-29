@@ -9,7 +9,7 @@ import {
   ExternalLink, X, Menu,
   CreditCard, FileText, ChevronDown,
 } from 'lucide-react'
-import { createClient } from '@/lib/supabase'
+import { useSupabaseClient } from '@/components/providers/TenantSupabaseProvider'
 
 const NAV_MAIN = [
   { label: 'Dashboard',       href: '/dashboard',              icon: LayoutDashboard, match: 'exact'  as const },
@@ -65,7 +65,7 @@ function SideLink({
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
   const router   = useRouter()
-  const supabase = createClient()
+  const supabase = useSupabaseClient()
 
   const [gate,       setGate]       = useState<'checking' | 'ok'>('checking')
   const [therapist,  setTherapist]  = useState<{ full_name?: string; username?: string; plan?: string; email?: string } | null>(null)

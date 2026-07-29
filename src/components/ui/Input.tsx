@@ -25,7 +25,7 @@ export default function Input({
       <input
         className={`
           w-full h-11 px-4 rounded-lg border text-gray-900
-          placeholder-gray-400 transition
+          placeholder-gray-500 transition
           focus:outline-none focus:ring-2 focus:ring-[#FF9933]/50 focus:border-transparent
           ${error ? 'border-red-400 bg-red-50' : 'border-gray-200 bg-white'}
           ${className}
