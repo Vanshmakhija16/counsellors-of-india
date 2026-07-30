@@ -196,6 +196,7 @@ export async function POST(req: NextRequest) {
       serviceName:    appointment.service_name ?? null,
       scheduledAt:    appointment.scheduled_at,
       durationMins:   appointment.duration_mins ?? null,
+      amountPaid:     appointment.service_price ?? null,
     }).catch(e => console.error('[therapist-verify] notifyBookingConfirmed failed:', e))
 
     return NextResponse.json({

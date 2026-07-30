@@ -147,7 +147,7 @@ export async function POST(req: NextRequest) {
                 // must never affect the 200 we return to Razorpay.
                 const [{ data: notifyAppt }, { data: notifyTherapist }] = await Promise.all([
                   db.from('appointments')
-                    .select('client_name, client_email, client_phone, scheduled_at, duration_mins, service_name')
+                    .select('client_name, client_email, client_phone, scheduled_at, duration_mins, service_name, service_price')
                     .eq('id', paymentRow.appointment_id)
                     .single(),
                   db.from('therapists')
@@ -169,6 +169,7 @@ export async function POST(req: NextRequest) {
                     serviceName:    notifyAppt.service_name ?? null,
                     scheduledAt:    notifyAppt.scheduled_at,
                     durationMins:   notifyAppt.duration_mins ?? null,
+                    amountPaid:     notifyAppt.service_price ?? null,
                   }).catch(e => console.error('[razorpay/oauth/webhook] notifyBookingConfirmed failed:', e))
                 }
               }

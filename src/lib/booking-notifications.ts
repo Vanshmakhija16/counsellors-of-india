@@ -46,6 +46,8 @@ interface EmailParams {
   serviceName?:    string | null
   scheduledAt:     string
   durationMins?:   number | null
+  /** Amount the client paid, in rupees. Only shown in the THERAPIST email, and only when set (free sessions pass null/0). */
+  amountPaid?:     number | null
 }
 
 /**
@@ -105,13 +107,16 @@ export async function sendBookingConfirmationEmails(params: EmailParams): Promis
       <p style="color:#666;font-size:13px;word-break:break-all">${escapeHtml(params.meetLink)}</p>`
   }
 
-  function detailsBlock(): string {
+  function detailsBlock(includePrice: boolean): string {
     return `
-      <p><strong>Session:</strong> ${sessionLabel}</p>
+      ${params.serviceName ? `<p><strong>Session Type:</strong> ${escapeHtml(params.serviceName)}</p>` : ''}
       <p><strong>Date:</strong> ${escapeHtml(formattedDate)}</p>
       <p><strong>Time:</strong> ${escapeHtml(formattedTime)}</p>
-      ${durationLine ? `<p><strong>Duration:</strong> ${escapeHtml(durationLine)}</p>` : ''}`
+      ${durationLine ? `<p><strong>Duration:</strong> ${escapeHtml(durationLine)}</p>` : ''}
+      ${includePrice && params.amountPaid ? `<p><strong>Amount Paid:</strong> ₹${params.amountPaid.toLocaleString('en-IN')}</p>` : ''}`
   }
+
+  const signOff = '<p style="margin-top:24px">With regards,<br/>Team Counsellors of India</p>'
 
   const sends: Promise<unknown>[] = []
 
@@ -126,9 +131,9 @@ export async function sendBookingConfirmationEmails(params: EmailParams): Promis
   <h2 style="color:#1a1a18">Your session is confirmed</h2>
   <p>Hi ${escapeHtml(params.clientName)},</p>
   <p>Your session with <strong>${escapeHtml(params.therapistName)}</strong> is confirmed.</p>
-  ${detailsBlock()}
+  ${detailsBlock(false)}
   ${meetLinkBlock()}
-  <p style="color:#888;font-size:13px;margin-top:24px">Counsellors of India</p>
+  ${signOff}
 </body></html>`,
     }).then(info => {
       console.log('[booking-notifications] client email sent OK:', { to: params.clientEmail, messageId: info.messageId })
@@ -151,9 +156,9 @@ export async function sendBookingConfirmationEmails(params: EmailParams): Promis
   <h2 style="color:#1a1a18">New session booked</h2>
   <p>Hi ${escapeHtml(params.therapistName)},</p>
   <p><strong>${escapeHtml(params.clientName)}</strong> has booked a session with you.</p>
-  ${detailsBlock()}
+  ${detailsBlock(true)}
   ${meetLinkBlock()}
-  <p style="color:#888;font-size:13px;margin-top:24px">Counsellors of India</p>
+  ${signOff}
 </body></html>`,
       }).then(info => {
         console.log('[booking-notifications] therapist email sent OK:', { to: params.therapistEmail, messageId: info.messageId })
@@ -184,6 +189,8 @@ interface NotifyBookingConfirmedParams {
   serviceName?:      string | null
   scheduledAt:       string
   durationMins?:     number | null
+  /** Amount the client paid, in rupees. Omit/null for free sessions. Shown to the therapist only. */
+  amountPaid?:       number | null
 }
 
 /**
@@ -248,6 +255,7 @@ export async function notifyBookingConfirmed(params: NotifyBookingConfirmedParam
       serviceName:    params.serviceName ?? null,
       scheduledAt:    params.scheduledAt,
       durationMins:   params.durationMins ?? null,
+      amountPaid:     params.amountPaid ?? null,
     })
   } catch (e) {
     console.error('[booking-notifications] email failed:', e)
