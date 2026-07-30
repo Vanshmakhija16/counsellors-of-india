@@ -27,16 +27,19 @@ import {
   formatAmount,
 } from '@/lib/payu'
 import { resolveBookingPrice } from '@/lib/pricing'
-import { sendBookingConfirmation, sendTherapistBookingAlert } from '@/lib/whatsapp'
+import { notifyBookingConfirmed } from '@/lib/booking-notifications'
 
 const HOLD_MINUTES = 15
 
-// 🔒 Payments are temporarily disabled platform-wide: money currently settles
-// to Counsellors of India's own PayU merchant account, not the therapist's.
-// Until therapist-level payment collection is built, every booking is
-// confirmed immediately (no charge) and both parties get an email.
-// Flip this back to true once therapist-direct payouts are live.
-const PAYMENTS_ENABLED = false
+// 💳 Payments are LIVE platform-wide. Per-therapist payment collection
+// (Razorpay OAuth-connect or manually entered keys, money settling
+// directly to the therapist's own account) is fully built -- see
+// /api/razorpay/therapist-order, /api/razorpay/therapist-verify, and
+// useRazorpayCheckout. When a therapist has NOT connected any Razorpay
+// credentials yet, /api/razorpay/therapist-order returns a 422
+// ('Therapist has not connected Razorpay yet.') and the booking UI shows
+// that as an error instead of silently confirming an unpaid booking.
+const PAYMENTS_ENABLED = true
 
 // 💳 Which gateway builds the paid-booking response below.
 // 'razorpay' uses the existing per-therapist Razorpay integration (money
@@ -71,7 +74,7 @@ export async function POST(req: NextRequest) {
 
     const { data: therapist, error: therapistErr } = await supabase
       .from('therapists')
-      .select('id, full_name, fee_per_session, session_duration_mins, profile_content, template_id, plan')
+      .select('id, full_name, fee_per_session, session_duration_mins, profile_content, template_id, plan, payments_enabled')
       .eq('id', therapist_id)
       .single()
 
@@ -116,6 +119,28 @@ export async function POST(req: NextRequest) {
     if (resolved.priceInr == null) {
       return NextResponse.json(
         { error: 'This therapist has not configured a payable or free session price.' },
+        { status: 422 },
+      )
+    }
+
+    // ── Razorpay-connection gate (paid sessions only) ───────────────
+    // A therapist with no Razorpay connected (neither OAuth nor manual
+    // keys -- payments_enabled covers both, see lib/razorpay-oauth.ts and
+    // save-credentials/route.ts) can't actually take payment, so refuse
+    // the booking here instead of letting the client hold a slot that can
+    // never be paid for. Free sessions (price 0) are unaffected -- they
+    // don't touch Razorpay at all.
+    if (
+      PAYMENT_PROVIDER === 'razorpay' &&
+      PAYMENTS_ENABLED &&
+      resolved.priceInr > 0 &&
+      !therapist.payments_enabled
+    ) {
+      return NextResponse.json(
+        {
+          error: 'This therapist has not connected a payment method yet. Bookings are unavailable until they do.',
+          code:  'THERAPIST_PAYMENTS_NOT_CONNECTED',
+        },
         { status: 422 },
       )
     }
@@ -233,110 +258,24 @@ export async function POST(req: NextRequest) {
         .eq('id', therapist_id)
         .single()
 
-      const sessionDate   = new Date(normalizedAt)
-      const formattedDate = sessionDate.toLocaleDateString('en-IN', {
-        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-      })
-      const formattedTime = sessionDate.toLocaleTimeString('en-IN', {
-        hour: '2-digit', minute: '2-digit',
-      })
       const therapistName = th?.full_name ?? 'Your Therapist'
-      const durationMins  = resolved.durationMins
 
-      function escapeHtml(s: string) {
-        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-          .replace(/"/g,'&quot;').replace(/'/g,'&#39;')
-      }
-
-      // Send emails non-blocking so they never break the booking response
-      ;(async () => {
-        try {
-          const nodemailer = await import('nodemailer')
-          const transporter = nodemailer.default.createTransport({
-            host:   process.env.SMTP_HOST,
-            port:   Number(process.env.SMTP_PORT),
-            secure: process.env.SMTP_SECURE === 'true',
-            auth:   { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
-          })
-          const FROM = process.env.SMTP_FROM || 'Counsellors of India <support@counsellorsofindia.com>'
-
-          // Client email
-          await transporter.sendMail({
-            from:    FROM,
-            to:      client_email,
-            subject: `Your booking request with ${therapistName} has been sent`,
-            html: `
-<html><body style="font-family:sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px">
-  <h2 style="color:#1a1a18">Request Sent ✓</h2>
-  <p>Hi ${escapeHtml(client_name)},</p>
-  <p>Your booking request with <strong>${escapeHtml(therapistName)}</strong> has been sent. They will connect with you shortly to confirm your session.</p>
-  ${resolved.serviceName ? `<p><strong>Service:</strong> ${escapeHtml(resolved.serviceName)}</p>` : ''}
-  <p><strong>Requested date:</strong> ${escapeHtml(formattedDate)}</p>
-  <p><strong>Requested time:</strong> ${escapeHtml(formattedTime)}</p>
-  <p><strong>Duration:</strong> ${durationMins} minutes</p>
-  ${th?.meet_link
-    ? `<p style="margin-top:16px"><strong>Meeting link:</strong> <a href="${escapeHtml(th.meet_link)}">${escapeHtml(th.meet_link)}</a></p>`
-    : `<p style="margin-top:24px;color:#666">The meeting link will be shared once your session is confirmed.</p>`}
-  <p style="margin-top:24px">— Counsellors of India</p>
-</body></html>`,
-          })
-
-          // Therapist email
-          if (th?.email) {
-            await transporter.sendMail({
-              from:    FROM,
-              to:      th.email,
-              subject: `New booking request from ${client_name}`,
-              html: `
-<html><body style="font-family:sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px">
-  <h2 style="color:#1a1a18">New Booking Request</h2>
-  <p>Hi ${escapeHtml(therapistName)},</p>
-  <p>A client would like to book a session with you. Please review the details below and connect with them soon to confirm.</p>
-  <p><strong>Client:</strong> ${escapeHtml(client_name)}</p>
-  <p><strong>Email:</strong> ${escapeHtml(client_email)}</p>
-  <p><strong>Phone:</strong> ${escapeHtml(client_phone || 'Not provided')}</p>
-  ${resolved.serviceName ? `<p><strong>Service:</strong> ${escapeHtml(resolved.serviceName)}</p>` : ''}
-  <p><strong>Requested date:</strong> ${escapeHtml(formattedDate)}</p>
-  <p><strong>Requested time:</strong> ${escapeHtml(formattedTime)}</p>
-  <p><strong>Duration:</strong> ${durationMins} minutes</p>
-</body></html>`,
-            })
-          }
-        } catch (e) {
-          console.error('[booking/hold] email failed:', e)
-        }
-
-        // WhatsApp notifications — same fire-and-forget pattern as emails above,
-        // so a WhatsApp/GetGabs failure never breaks the booking response.
-        try {
-          if (client_phone) {
-            await sendBookingConfirmation(client_phone, {
-              employeeName: client_name,
-              doctorName:   therapistName,
-              date:         formattedDate,
-              time:         formattedTime,
-              meetLink:     th?.meet_link || undefined,
-            })
-          }
-        } catch (e) {
-          console.error('[booking/hold] client WhatsApp failed:', e)
-        }
-
-        try {
-          const therapistPhone = th?.whatsapp || th?.phone
-          if (therapistPhone) {
-            await sendTherapistBookingAlert(therapistPhone, {
-              therapistName,
-              clientName: client_name,
-              date:       formattedDate,
-              time:       formattedTime,
-              clientPhone: client_phone || undefined,
-            })
-          }
-        } catch (e) {
-          console.error('[booking/hold] therapist WhatsApp failed:', e)
-        }
-      })()
+      // Fire-and-forget so a notification failure never breaks the booking
+      // response. Channel (email vs WhatsApp) is decided inside by the
+      // therapist's plan -- see lib/booking-notifications.ts.
+      notifyBookingConfirmed({
+        plan:            therapist.plan,
+        clientName:      client_name,
+        clientEmail:     client_email,
+        clientPhone:     client_phone,
+        therapistName,
+        therapistEmail:  th?.email ?? null,
+        therapistPhone:  th?.whatsapp || th?.phone || null,
+        meetLink:        th?.meet_link ?? null,
+        serviceName:     resolved.serviceName ?? null,
+        scheduledAt:     normalizedAt,
+        durationMins:    resolved.durationMins,
+      }).catch(e => console.error('[booking/hold] notifyBookingConfirmed failed:', e))
 
       return NextResponse.json({ free: true, appointment_id: appointmentId })
     }

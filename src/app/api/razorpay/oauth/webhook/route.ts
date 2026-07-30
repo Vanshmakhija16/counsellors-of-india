@@ -27,6 +27,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'crypto'
 import { getOAuthWebhookSecret, disconnectOAuthByMerchantId } from '@/lib/razorpay-oauth'
 import { createServiceSupabaseClient } from '@/lib/supabase-server'
+import { notifyBookingConfirmed } from '@/lib/booking-notifications'
 
 function verifySignature(rawBody: string, signature: string | null, secret: string): boolean {
   if (!signature) return false
@@ -139,6 +140,37 @@ export async function POST(req: NextRequest) {
                 console.error('[razorpay/oauth/webhook] Payment marked paid but appointment update failed:', apptErr)
               } else {
                 console.log('[razorpay/oauth/webhook] Confirmed OAuth payment via webhook:', razorpayOrderId)
+
+                // Fire-and-forget booking confirmation -- fetch what
+                // notifyBookingConfirmed needs (not selected above to keep
+                // the lookup query lean) and send. A notification failure
+                // must never affect the 200 we return to Razorpay.
+                const [{ data: notifyAppt }, { data: notifyTherapist }] = await Promise.all([
+                  db.from('appointments')
+                    .select('client_name, client_email, client_phone, scheduled_at, duration_mins, service_name')
+                    .eq('id', paymentRow.appointment_id)
+                    .single(),
+                  db.from('therapists')
+                    .select('full_name, email, meet_link, phone, whatsapp, plan')
+                    .eq('id', paymentRow.therapist_id)
+                    .single(),
+                ])
+
+                if (notifyAppt && notifyTherapist) {
+                  notifyBookingConfirmed({
+                    plan:           notifyTherapist.plan,
+                    clientName:     notifyAppt.client_name,
+                    clientEmail:    notifyAppt.client_email,
+                    clientPhone:    notifyAppt.client_phone,
+                    therapistName:  notifyTherapist.full_name ?? 'Your Therapist',
+                    therapistEmail: notifyTherapist.email ?? null,
+                    therapistPhone: notifyTherapist.whatsapp || notifyTherapist.phone || null,
+                    meetLink:       notifyTherapist.meet_link ?? null,
+                    serviceName:    notifyAppt.service_name ?? null,
+                    scheduledAt:    notifyAppt.scheduled_at,
+                    durationMins:   notifyAppt.duration_mins ?? null,
+                  }).catch(e => console.error('[razorpay/oauth/webhook] notifyBookingConfirmed failed:', e))
+                }
               }
             }
           }

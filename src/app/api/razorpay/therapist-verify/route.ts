@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceSupabaseClient } from '@/lib/supabase-server'
 import { decrypt } from '@/lib/encryption'
 import { verifyRazorpaySignature } from '@/lib/razorpay'
+import { notifyBookingConfirmed } from '@/lib/booking-notifications'
 
 export async function POST(req: NextRequest) {
   try {
@@ -40,7 +41,7 @@ export async function POST(req: NextRequest) {
 
     const { data: therapist, error: fetchErr } = await db
       .from('therapists')
-      .select('razorpay_key_secret_encrypted, payments_enabled, razorpay_oauth_merchant_id')
+      .select('razorpay_key_secret_encrypted, payments_enabled, razorpay_oauth_merchant_id, full_name, email, meet_link, phone, whatsapp, plan')
       .eq('id', therapist_id)
       .single()
 
@@ -53,7 +54,7 @@ export async function POST(req: NextRequest) {
 
     const { data: appointment, error: appointmentErr } = await db
       .from('appointments')
-      .select('id, therapist_id, service_price, status, payment_status')
+      .select('id, therapist_id, service_price, status, payment_status, client_name, client_email, client_phone, scheduled_at, duration_mins, service_name')
       .eq('id', payment.appointment_id)
       .maybeSingle()
 
@@ -179,6 +180,23 @@ export async function POST(req: NextRequest) {
       console.error('[therapist-verify] Appointment update failed:', apptErr)
       return NextResponse.json({ error: 'Payment verified but appointment update failed.' }, { status: 500 })
     }
+
+    // Fire-and-forget -- a notification failure must never affect the
+    // payment-verified response the client is waiting on. Channel (email
+    // vs WhatsApp) is decided inside by the therapist's plan.
+    notifyBookingConfirmed({
+      plan:           therapist.plan,
+      clientName:     appointment.client_name,
+      clientEmail:    appointment.client_email,
+      clientPhone:    appointment.client_phone,
+      therapistName:  therapist.full_name ?? 'Your Therapist',
+      therapistEmail: therapist.email ?? null,
+      therapistPhone: therapist.whatsapp || therapist.phone || null,
+      meetLink:       therapist.meet_link ?? null,
+      serviceName:    appointment.service_name ?? null,
+      scheduledAt:    appointment.scheduled_at,
+      durationMins:   appointment.duration_mins ?? null,
+    }).catch(e => console.error('[therapist-verify] notifyBookingConfirmed failed:', e))
 
     return NextResponse.json({
       verified: true,

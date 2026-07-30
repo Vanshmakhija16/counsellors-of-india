@@ -123,6 +123,12 @@ export async function storeTokensForTherapist(therapistId: string, tokens: Razor
       razorpay_oauth_scope: tokens.scope ?? null,
       razorpay_oauth_connected_at: new Date(now).toISOString(),
       razorpay_oauth_public_token: tokens.public_token ?? null,
+      // therapist-order/route.ts gates payment-order creation on this flag.
+      // It was previously only ever set true by the manual key-entry path
+      // (save-credentials/route.ts) -- OAuth-connected therapists never had
+      // it flipped, so a successful OAuth connect still failed at checkout
+      // with "Therapist has not connected Razorpay yet." Set it here too.
+      payments_enabled: true,
     })
     .eq('id', therapistId)
 
@@ -178,10 +184,25 @@ export async function getValidAccessToken(therapistId: string): Promise<string> 
 /**
  * Clears OAuth connection state for a therapist by their Razorpay merchant
  * id -- used when the webhook reports the therapist revoked access. Manual
- * key credentials (if separately configured) are left untouched.
+ * key credentials (if separately configured) are left untouched, and
+ * `payments_enabled` is only turned off if there's no manual key fallback
+ * -- otherwise a therapist who has BOTH methods configured would
+ * incorrectly lose the ability to accept payments via their still-valid
+ * manual keys just because they revoked the OAuth app.
  */
 export async function disconnectOAuthByMerchantId(merchantId: string): Promise<void> {
   const db = createServiceSupabaseClient()
+
+  const { data: therapist, error: findErr } = await db
+    .from('therapists')
+    .select('id, razorpay_key_id, razorpay_key_secret_encrypted')
+    .eq('razorpay_oauth_merchant_id', merchantId)
+    .maybeSingle()
+
+  if (findErr) throw findErr
+  if (!therapist) return
+
+  const hasManualKeys = !!(therapist.razorpay_key_id && therapist.razorpay_key_secret_encrypted)
 
   const { error } = await db
     .from('therapists')
@@ -193,8 +214,10 @@ export async function disconnectOAuthByMerchantId(merchantId: string): Promise<v
       razorpay_oauth_refresh_expires_at: null,
       razorpay_oauth_scope: null,
       razorpay_oauth_connected_at: null,
+      razorpay_oauth_public_token: null,
+      ...(hasManualKeys ? {} : { payments_enabled: false }),
     })
-    .eq('razorpay_oauth_merchant_id', merchantId)
+    .eq('id', therapist.id)
 
   if (error) throw error
 }
