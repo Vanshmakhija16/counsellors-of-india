@@ -261,3 +261,152 @@ export async function notifyBookingConfirmed(params: NotifyBookingConfirmedParam
     console.error('[booking-notifications] email failed:', e)
   }
 }
+
+interface NotifyBookingRescheduledParams {
+  /** Therapist's plan -- 'pro' sends WhatsApp, anything else (incl. missing) sends email. */
+  plan:            string | null | undefined
+  clientName:      string
+  clientEmail:     string
+  clientPhone?:    string | null
+  therapistName:   string
+  therapistEmail?: string | null
+  therapistPhone?: string | null
+  meetLink?:       string | null
+  serviceName?:    string | null
+  /** The NEW date/time the session was moved to. */
+  newScheduledAt:  string
+  durationMins?:   number | null
+}
+
+/**
+ * Tells BOTH client and therapist a session was rescheduled to a new time.
+ * Same plan-based channel split as notifyBookingConfirmed (starter -> email,
+ * pro -> WhatsApp), but always sends to both sides regardless of who
+ * triggered the reschedule -- per product requirement, the therapist gets
+ * their own confirmation too, not just the client.
+ *
+ * WhatsApp note: there is no separate Meta-approved "rescheduled" template
+ * yet, so this reuses the existing booking_details / therapist_session_request
+ * templates (same 4-5 params, now carrying the NEW time) -- the wording on
+ * WhatsApp will read like a fresh booking, not explicitly "rescheduled",
+ * until a dedicated template is submitted and approved.
+ */
+export async function notifyBookingRescheduled(params: NotifyBookingRescheduledParams): Promise<void> {
+  const isPro = (params.plan ?? 'starter').toLowerCase() === 'pro'
+  console.log('[booking-notifications] notifyBookingRescheduled() called:', {
+    plan: params.plan,
+    channel: isPro ? 'whatsapp' : 'email',
+    newScheduledAt: params.newScheduledAt,
+  })
+
+  if (isPro) {
+    const { formattedDate, formattedTime } = formatDateTime(params.newScheduledAt)
+
+    try {
+      if (params.clientPhone) {
+        await sendBookingConfirmation(params.clientPhone, {
+          employeeName: params.clientName,
+          doctorName:   params.therapistName,
+          date:         formattedDate,
+          time:         formattedTime,
+          meetLink:     params.meetLink || undefined,
+        })
+      }
+    } catch (e) {
+      console.error('[booking-notifications] reschedule client WhatsApp failed:', e)
+    }
+
+    try {
+      if (params.therapistPhone) {
+        await sendTherapistBookingAlert(params.therapistPhone, {
+          therapistName: params.therapistName,
+          clientName:    params.clientName,
+          date:          formattedDate,
+          time:          formattedTime,
+          clientPhone:   params.clientPhone || undefined,
+        })
+      }
+    } catch (e) {
+      console.error('[booking-notifications] reschedule therapist WhatsApp failed:', e)
+    }
+    return
+  }
+
+  // Starter (default) -- email both sides with reschedule-specific copy.
+  const { formattedDate, formattedTime } = formatDateTime(params.newScheduledAt)
+  const sessionLabel = params.serviceName ? escapeHtml(params.serviceName) : 'Therapy Session'
+  const durationLine = params.durationMins ? `${params.durationMins} minutes` : null
+
+  try {
+    const nodemailer = await import('nodemailer')
+    const transporter = nodemailer.default.createTransport({
+      host:   process.env.SMTP_HOST,
+      port:   Number(process.env.SMTP_PORT),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth:   { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    })
+    const FROM = process.env.SMTP_FROM || 'Counsellors of India <support@counsellorsofindia.com>'
+    const signOff = '<p style="margin-top:24px">With regards,<br/>Team Counsellors of India</p>'
+
+    function meetLinkBlock(): string {
+      if (!params.meetLink) {
+        return '<p style="color:#888">The meeting link will be shared closer to your session.</p>'
+      }
+      return `
+        <p style="margin:20px 0">
+          <a href="${escapeHtml(params.meetLink)}"
+             style="background:#5a7f7a;color:#fff;padding:12px 24px;border-radius:8px;
+                    text-decoration:none;font-weight:600;display:inline-block">
+            Join Session
+          </a>
+        </p>
+        <p style="color:#666;font-size:13px;word-break:break-all">${escapeHtml(params.meetLink)}</p>`
+    }
+
+    function detailsBlock(): string {
+      return `
+        ${params.serviceName ? `<p><strong>Session Type:</strong> ${escapeHtml(params.serviceName)}</p>` : ''}
+        <p><strong>New Date:</strong> ${escapeHtml(formattedDate)}</p>
+        <p><strong>New Time:</strong> ${escapeHtml(formattedTime)}</p>
+        ${durationLine ? `<p><strong>Duration:</strong> ${escapeHtml(durationLine)}</p>` : ''}`
+    }
+
+    await Promise.all([
+      transporter.sendMail({
+        from: FROM,
+        to:   params.clientEmail,
+        subject: `Session Rescheduled: ${sessionLabel} with ${escapeHtml(params.therapistName)}`,
+        html: `
+<html><body style="font-family:sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px">
+  <h2 style="color:#1a1a18">Your session has been rescheduled</h2>
+  <p>Hi ${escapeHtml(params.clientName)},</p>
+  <p>Your session with <strong>${escapeHtml(params.therapistName)}</strong> has been moved to a new time.</p>
+  ${detailsBlock()}
+  ${meetLinkBlock()}
+  ${signOff}
+</body></html>`,
+      }).then(info => console.log('[booking-notifications] reschedule client email sent OK:', { to: params.clientEmail, messageId: info.messageId }))
+        .catch(err => { console.error('[booking-notifications] reschedule client email FAILED:', err?.message ?? err); throw err }),
+
+      ...(params.therapistEmail ? [
+        transporter.sendMail({
+          from: FROM,
+          to:   params.therapistEmail,
+          subject: `Session Rescheduled: ${sessionLabel} with ${escapeHtml(params.clientName)}`,
+          html: `
+<html><body style="font-family:sans-serif;color:#333;max-width:600px;margin:0 auto;padding:24px">
+  <h2 style="color:#1a1a18">Session rescheduled</h2>
+  <p>Hi ${escapeHtml(params.therapistName)},</p>
+  <p>The session with <strong>${escapeHtml(params.clientName)}</strong> has been moved to a new time.</p>
+  ${detailsBlock()}
+  ${meetLinkBlock()}
+  ${signOff}
+</body></html>`,
+        }).then(info => console.log('[booking-notifications] reschedule therapist email sent OK:', { to: params.therapistEmail, messageId: info.messageId }))
+          .catch(err => { console.error('[booking-notifications] reschedule therapist email FAILED:', err?.message ?? err); throw err }),
+      ] : []),
+    ])
+  } catch (e) {
+    console.error('[booking-notifications] reschedule email failed:', e)
+  }
+}

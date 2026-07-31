@@ -12,6 +12,7 @@ import {
   type Appointment,
   type AppointmentStatus,
 } from '@/lib/clinical/appointments'
+import RescheduleModal from '@/components/dashboard/RescheduleModal'
 
 type Tab = AppointmentStatus | 'all'
 
@@ -31,6 +32,7 @@ export default function AppointmentsPage() {
   const [dateFrom, setDateFrom] = useState('')
   const [updatingId, setUpdatingId] = useState<string | null>(null)
   const [deletingId, setDeletingId] = useState<string | null>(null)
+  const [reschedulingApt, setReschedulingApt] = useState<Appointment | null>(null)
 
   async function load() {
     setLoading(true)
@@ -228,7 +230,7 @@ export default function AppointmentsPage() {
                   {apt.status !== 'rescheduled' && (
                     <button
                       type="button"
-                      onClick={() => setStatus(apt, 'rescheduled')}
+                      onClick={() => setReschedulingApt(apt)}
                       disabled={updatingId === apt.id}
                       className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
                     >
@@ -261,6 +263,17 @@ export default function AppointmentsPage() {
           </ul>
         )}
       </div>
+
+      {reschedulingApt && (
+        <RescheduleModal
+          appointment={reschedulingApt}
+          onClose={() => setReschedulingApt(null)}
+          onRescheduled={(updated) => {
+            setAppointments((prev) => prev.map((a) => (a.id === updated.id ? updated : a)))
+            setReschedulingApt(null)
+          }}
+        />
+      )}
     </div>
   )
 }
