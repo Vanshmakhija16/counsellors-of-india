@@ -65,12 +65,37 @@ export default function WhatsAppFab() {
     })
   }, [])
 
-  // Hide on auth/onboarding flows — a marketing chat/demo widget doesn't
-  // belong floating over an account-creation or password-reset form. This
-  // check runs AFTER every hook above so hook order/count never changes
-  // between renders.
+  // Hide on auth/onboarding flows -- a marketing chat/demo widget doesn't
+  // belong floating over an account-creation or password-reset form. Also
+  // hidden on therapist public profile pages ([username]) -- this WhatsApp
+  // button is for "ask about Counsellors of India" (the platform), and it
+  // sits fixed bottom-right at a very high z-index (2000), which was
+  // overlapping the booking card's own "Pay & Confirm" button there,
+  // causing accidental clicks into WhatsApp instead of completing payment.
+  // This check runs AFTER every hook above so hook order/count never
+  // changes between renders.
   const hideOn = ['/signup', '/login', '/forgot-password', '/reset-password']
-  if (hideOn.some(p => pathname?.startsWith(p))) return null
+  const isPublicTherapistProfile =
+    pathname != null &&
+    pathname !== '/' &&
+    !pathname.startsWith('/dashboard') &&
+    !pathname.startsWith('/admin') &&
+    !pathname.startsWith('/api') &&
+    !pathname.startsWith('/about') &&
+    !pathname.startsWith('/why-us') &&
+    !pathname.startsWith('/blog') &&
+    !pathname.startsWith('/contact') &&
+    !pathname.startsWith('/pricing') &&
+    !pathname.startsWith('/onboarding') &&
+    !pathname.startsWith('/try') &&
+    !pathname.startsWith('/preview') &&
+    !pathname.startsWith('/signup-preview') &&
+    !pathname.startsWith('/clinical') &&
+    !pathname.startsWith('/screen') &&
+    !pathname.startsWith('/booking') &&
+    !pathname.startsWith('/payment') &&
+    pathname.split('/').filter(Boolean).length === 1 // e.g. /some-therapist-slug
+  if (hideOn.some(p => pathname?.startsWith(p)) || isPublicTherapistProfile) return null
 
   return (
     <>

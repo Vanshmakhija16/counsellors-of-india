@@ -7,10 +7,12 @@ import { getAvailableDays, slotToISO } from '../templateUtils'
 import { useBooking } from '@/lib/useBooking'
 
 // ── Client's own WhatsApp opens with a pre-filled message to the
-// therapist when they click Book — in ADDITION to the normal booking flow
+// therapist when they click Book -- in ADDITION to the normal booking flow
 // (API call, slot lock, confirmation email + WhatsApp API notification),
-// not instead of it. Flipped on for Template 3 only, for now.
-const USE_WHATSAPP = true
+// not instead of it. Was turned on for Template 3 only; turned back off --
+// it was opening a stray WhatsApp tab alongside the real payment flow on
+// every booking click.
+const USE_WHATSAPP = false
 function openWhatsApp(therapist: TherapistProfile, name: string, slot: string, date: string) {
   const num = (therapist.whatsapp ?? therapist.phone ?? '').replace(/\D/g, '')
   if (!num) return // no number on file — don't open a broken wa.me link

@@ -79,13 +79,22 @@ export async function updateAppointmentStatus(
   return data as Appointment
 }
 
-/** Permanently removes a booking. No status transition can bring it back. */
+/** Permanently removes a booking. No status transition can bring it back.
+ *  Verifies the row actually got deleted (not just that the request didn't
+ *  error) -- Supabase RLS silently returns success with zero rows deleted
+ *  when a DELETE policy blocks it, rather than throwing a permission error,
+ *  so checking `error` alone isn't enough to know the delete really
+ *  happened. */
 export async function deleteAppointment(id: string): Promise<void> {
-  const { error } = await client()
+  const { data, error } = await client()
     .from('appointments')
     .delete()
     .eq('id', id)
+    .select('id')
   if (error) throw error
+  if (!data || data.length === 0) {
+    throw new Error('Delete did not go through -- you may not have permission to delete this booking.')
+  }
 }
 
 /** Manually link (or unlink) an appointment to a patient chart. */
