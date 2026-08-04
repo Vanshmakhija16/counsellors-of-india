@@ -2,6 +2,7 @@ import Link from 'next/link'
 import SiteNavbar from '@/components/layout/SiteNavbar'
 import SiteFooter from '@/components/layout/SiteFooter'
 import FooterReveal from '@/components/landing/FooterReveal'
+
 import '../app/page.css'
 
 // Shown for ANY unmatched URL on the site (Next.js wires this up

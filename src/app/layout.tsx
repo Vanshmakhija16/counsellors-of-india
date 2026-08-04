@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter, Plus_Jakarta_Sans } from 'next/font/google'
+import { Inter, Plus_Jakarta_Sans, Fraunces } from 'next/font/google'
 import './globals.css'
 import WhatsAppFab from '@/components/layout/WhatsAppFab'
 import { getCurrentTenant } from '@/lib/tenants/server'
@@ -16,6 +16,18 @@ const inter = Inter({
   variable: '--font-inter',
   subsets: ['latin'],
   weight: ['300', '400', '500', '600', '700'],
+})
+
+// Was referenced as var(--font-fraunces) in dashboard/appointments/page.tsx
+// already, but never actually loaded here -- it was silently falling back
+// to the browser's generic `serif`. Loading it properly now also powers
+// the new editorial blog design (headlines + pull-quotes).
+const fraunces = Fraunces({
+  variable: '--font-fraunces',
+  subsets: ['latin'],
+  weight: 'variable',
+  style: ['normal', 'italic'],
+  axes: ['opsz', 'SOFT', 'WONK'],
 })
 
 // Metadata is built per-request from the resolved tenant (see
@@ -104,7 +116,7 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
-      className={`${jakarta.variable} ${inter.variable} antialiased`}
+      className={`${jakarta.variable} ${inter.variable} ${fraunces.variable} antialiased`}
       suppressHydrationWarning
     >
       <body
