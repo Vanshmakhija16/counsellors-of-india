@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft } from 'lucide-react'
-import SiteNav from '@/components/layout/SiteNav'
+import SiteNavbar from '@/components/layout/SiteNavbar'
+import '@/app/page.css'
 import SiteFooter from '@/components/layout/SiteFooter'
 import FooterReveal from '@/components/landing/FooterReveal'
 import { getCurrentTenant } from '@/lib/tenants/server'
@@ -51,7 +52,7 @@ export default async function BlogPostPage({ params }: Props) {
 
   return (
     <div className="flex flex-col blog-post-shell" style={{ background: PAPER }}>
-      <SiteNav tenant={{ brandName: tenant.brandName }} />
+      <SiteNavbar tenant={{ brandName: tenant.brandName }} />
 
       {/* Exactly one viewport tall — nav + back-link + book fit here with
           no scrolling needed. Footer lives below this box as normal
@@ -102,7 +103,6 @@ export default async function BlogPostPage({ params }: Props) {
       <style>{`
 .blog-book-header{
     margin-bottom:2rem;
-    break-inside:avoid;
 }
 .blog-book-kicker{
     display:flex;
@@ -139,7 +139,6 @@ export default async function BlogPostPage({ params }: Props) {
     font-weight:500;
     font-size:2.2rem;
     line-height:1.15;
-    break-inside:avoid-column;
 }
 
 .blog-book-columns{
@@ -150,7 +149,6 @@ export default async function BlogPostPage({ params }: Props) {
 
 .blog-book-columns p{
     margin-bottom:1.4rem;
-    break-inside:avoid-column;
 }
 
 .blog-book-columns h2{
@@ -160,7 +158,6 @@ export default async function BlogPostPage({ params }: Props) {
     font-family:var(--font-fraunces);
     color:#24312E;
     font-weight:500;
-    break-after:avoid-column;
 }
 
 .blog-book-columns h3{
@@ -169,7 +166,6 @@ export default async function BlogPostPage({ params }: Props) {
     font-size:1.25rem;
     font-family:var(--font-fraunces);
     color:#24312E;
-    break-after:avoid-column;
 }
 
 .blog-book-columns strong{

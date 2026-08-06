@@ -7823,7 +7823,7 @@ padding:
 
   background: rgba(255, 153, 51, 0.08);
 
-  color: #ff9933;
+  color: #0f172a;
 
   font-size: 1.25rem;
   font-weight: 600;
@@ -8669,3 +8669,33 @@ section#experience.texp {
   box-shadow: 0 12px 28px rgba(255,153,51,.16);
 }
 .sidebar-links a.on::before{ opacity: 1; }
+
+/* ── MOBILE SIDEBAR DIRECTION — top-to-bottom, not right-to-left ────────
+   Several older .mobile-sidebar blocks earlier in this file slide the
+   panel in from the right edge (translateX). Rather than untangle all of
+   them, this block sits last in the cascade and wins on every property it
+   touches, turning the panel into a full-width sheet that drops down from
+   under the nav instead. Properties not redeclared here (padding,
+   background, blur, box-shadow, etc.) still come from the earlier blocks
+   as before — only position/size/direction changes. */
+.mobile-sidebar{
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  max-height: calc(100vh - 24px);
+  border-radius: 0 0 28px 28px;
+  transform: translateY(-100%);
+}
+.mobile-sidebar.show{
+  transform: translateY(0);
+}
+@media (max-width: 480px){
+  .mobile-sidebar{
+    width: 100%;
+    border-radius: 0 0 22px 22px;
+  }
+}
+

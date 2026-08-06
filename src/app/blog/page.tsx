@@ -1,7 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import Script from 'next/script'
-import SiteNav from '@/components/layout/SiteNav'
+import SiteNavbar from '@/components/layout/SiteNavbar'
+import '@/app/page.css'
 import SiteFooter from '@/components/layout/SiteFooter'
 import { ArrowRight, ArrowUpRight, PenLine } from 'lucide-react'
 import { getCurrentTenant } from '@/lib/tenants/server'
@@ -36,7 +37,7 @@ function formatDate(iso: string | null) {
 }
 
 // ── Closed spine -- a book standing upright, viewed from the side ──────
-function SpineBook({ post, index, wide }: { post: BlogPost; index: number; wide: boolean }) {
+function SpineBook({ post, index, wide, className = '' }: { post: BlogPost; index: number; wide: boolean; className?: string }) {
   const color = SPINE_COLORS[index % SPINE_COLORS.length]
   return (
     <button
@@ -44,8 +45,8 @@ function SpineBook({ post, index, wide }: { post: BlogPost; index: number; wide:
       data-role="spine-book"
       data-book-id={post.id}
       data-spine-index={index}
-      className="group relative shrink-0 self-stretch transition-transform duration-300 ease-out hover:-translate-y-3"
-      style={{ width: wide ? 56 : 48 }}
+      className={`group relative shrink-0 self-stretch transition-transform duration-300 ease-out hover:-translate-y-3 ${className}`}
+      style={{ width: wide ? 56 : 48, height: 260 }}
       title={post.title}
     >
       <div
@@ -83,101 +84,127 @@ function SpineBook({ post, index, wide }: { post: BlogPost; index: number; wide:
 }
 
 // ── Center book, open -- the featured post shown across two pages ──────
+//
+// Rebuilt on a simple, robust structure instead of five separately
+// absolute-positioned divs faking depth (that version was fragile and
+// wasn't reading as an actual book): the COVER is just the outer div's own
+// background -- one gradient-filled rounded shell. The PAGES sit inside it
+// with horizontal (and vertical) padding, so the cover shows through as a
+// visible colored border on every side, most noticeably left and right.
+// The pages themselves are a CSS grid: one column (so the two pages stack
+// as two ROWS) up to 640px, two columns (side by side, like a real open
+// book) from 640px up. On desktop the whole book is `lg:flex-1` so it
+// grows to fill whatever width is left in the shelf row after the fixed-
+// width spine books -- it scales with however many spines are there,
+// instead of a fixed pixel width regardless of shelf length.
 function OpenBook({ post, coverStart, coverEnd }: { post: BlogPost; coverStart: string; coverEnd: string }) {
   return (
     <Link
       href={`/blog/${post.slug}`}
       data-role="open-book"
       data-book-id={post.id}
-      className="group relative mx-1 shrink-0 sm:mx-3"
+      className="group relative block w-full shrink-0 lg:w-[480px]"
       title={post.title}
     >
-      <div className="relative w-[340px] sm:w-[520px]">
-        <div
-          data-cover="background"
-          className="absolute inset-x-[6%] bottom-0 h-[90%] rounded-t-[7px]"
-          style={{
-            background: 'linear-gradient(155deg, var(--cover-start, #2F4A45), var(--cover-end, #223228))',
-            '--cover-start': coverStart,
-            '--cover-end': coverEnd,
-          } as React.CSSProperties}
-        />
+      <div
+        data-cover="background"
+        className="relative w-full overflow-hidden rounded-t-[10px] ob-cover-shell"
+        style={{
+          background: 'linear-gradient(155deg, var(--cover-start, #2F4A45), var(--cover-end, #223228))',
+          '--cover-start': coverStart,
+          '--cover-end': coverEnd,
+        } as React.CSSProperties}
+      >
+        <div data-open-content className="relative grid ob-content">
+          {/* Page 1 (top row on mobile, left page on desktop) */}
+          <div className="ob-page flex flex-col items-start justify-center gap-2.5 lg:gap-1 text-left">
+            <span className="h-px w-10" style={{ background: SAFFRON }} />
+            <p data-open="meta" className="text-[10px] font-semibold uppercase tracking-[0.16em] lg:text-[8.5px]" style={{ color: INK_MUT }}>
+              {formatDate(post.published_at)} &middot; {estimateReadingMinutes(post.content)} min read
+            </p>
+            <h2
+              data-open="title"
+              className="text-[18px] leading-[1.25] sm:text-[23px] lg:text-[14px] lg:leading-[1.3]"
+              style={{ fontFamily: 'var(--font-fraunces)', color: INK, fontWeight: 500 }}
+            >
+              {post.title}
+            </h2>
+            <span className="h-px w-10" style={{ background: SAFFRON }} />
+          </div>
 
-        <div className="relative flex items-end justify-center">
-          <div
-            className="pointer-events-none absolute left-[10%] bottom-0 h-[280px] w-[44%] rounded-tl-[7px] rounded-bl-[3px] bg-[#F0E9D8] sm:h-[335px]"
-            style={{ transform: 'rotate(-0.9deg)' }}
-          />
-          <div
-            className="pointer-events-none absolute right-[10%] bottom-0 h-[280px] w-[44%] rounded-tr-[7px] rounded-br-[3px] bg-[#F0E9D8] sm:h-[335px]"
-            style={{ transform: 'rotate(0.9deg)' }}
-          />
-          <div
-            className="relative z-10 h-[280px] w-[52%] origin-bottom-right rounded-tl-[7px] rounded-bl-[3px] sm:h-[335px]"
-            style={{
-              background: '#F8F2E4',
-              boxShadow: '-3px 5px 12px rgba(0,0,0,0.12)',
-              transform: 'rotate(-1.2deg)',
-            }}
-          />
-          <div
-            className="pointer-events-none absolute inset-y-0 left-1/2 z-20 w-px -translate-x-1/2"
-            style={{ background: '#E8DDD0' }}
-          />
-          <div
-            className="relative z-10 h-[280px] w-[52%] origin-bottom-left rounded-tr-[7px] rounded-br-[3px] sm:h-[335px]"
-            style={{
-              background: '#F8F2E4',
-              boxShadow: '3px 5px 12px rgba(0,0,0,0.12)',
-              transform: 'rotate(1.2deg)',
-            }}
-          />
-
-          <div data-open-content className="pointer-events-none absolute inset-x-0 bottom-0 top-2 z-30 grid grid-cols-2 gap-6 px-8 sm:px-14">
-            <div className="flex flex-col items-start justify-center gap-3 text-left">
-              <span className="h-px w-10" style={{ background: SAFFRON }} />
-              <p data-open="meta" className="text-[10px] font-semibold uppercase tracking-[0.16em]" style={{ color: INK_MUT }}>
-                {formatDate(post.published_at)} &middot; {estimateReadingMinutes(post.content)} min read
+          {/* Page 2 (bottom row on mobile, right page on desktop) */}
+          <div className="ob-page relative flex flex-col items-start justify-center gap-2.5 lg:gap-1 text-left">
+            <span className="h-px w-10" style={{ background: SAFFRON }} />
+            {post.excerpt ? (
+              <p
+                data-open="excerpt"
+                className="line-clamp-3 lg:line-clamp-4 text-[12px] italic leading-relaxed sm:text-[13px] lg:text-[11px] lg:leading-snug"
+                style={{ fontFamily: 'var(--font-fraunces)', color: INK_MUT }}
+              >
+                &ldquo;{post.excerpt}&rdquo;
               </p>
-              <h2
-                data-open="title"
-                className="text-[19px] leading-[1.3] sm:text-[24px]"
-                style={{ fontFamily: 'var(--font-fraunces)', color: INK, fontWeight: 500 }}
-              >
-                {post.title}
-              </h2>
-              <span className="h-px w-10" style={{ background: SAFFRON }} />
-            </div>
-
-            <div className="relative flex flex-col items-start justify-center gap-3 text-left">
-              <span className="h-px w-10" style={{ background: SAFFRON }} />
-              {post.excerpt ? (
-                <p
-                  data-open="excerpt"
-                  className="text-[12px] italic leading-relaxed sm:text-[13px]"
-                  style={{ fontFamily: 'var(--font-fraunces)', color: INK_MUT }}
-                >
-                  &ldquo;{post.excerpt}&rdquo;
-                </p>
-              ) : (
-                <div className="h-0.5 w-16 rounded-full bg-[#E7DCC8]" />
-              )}
-              <div
-                className="pointer-events-none absolute bottom-4 right-4 z-40 flex h-9 w-9 items-center justify-center rounded-full transition-transform duration-300 group-hover:rotate-45"
-                style={{ background: SAFFRON }}
-              >
-                <ArrowUpRight size={16} color="#223029" strokeWidth={2.5} />
-              </div>
-              <span className="h-px w-10" style={{ background: SAFFRON }} />
+            ) : (
+              <div className="h-0.5 w-16 rounded-full bg-[#E7DCC8]" />
+            )}
+            <span className="h-px w-10" style={{ background: SAFFRON }} />
+            <div
+              className="pointer-events-none absolute bottom-3 right-3 flex h-9 w-9 items-center justify-center rounded-full transition-transform duration-300 group-hover:rotate-45"
+              style={{ background: SAFFRON }}
+            >
+              <ArrowUpRight size={16} color="#223029" strokeWidth={2.5} />
             </div>
           </div>
         </div>
-
-        <div
-          className="pointer-events-none absolute -bottom-3 left-[10%] right-[10%] h-3 rounded-full blur-md"
-          style={{ background: 'rgba(32,46,40,0.42)' }}
-        />
       </div>
+
+      <div
+        className="pointer-events-none absolute -bottom-3 left-[8%] right-[8%] h-3 rounded-full blur-md"
+        style={{ background: 'rgba(32,46,40,0.42)' }}
+      />
+
+      <style>{`
+        /* Cover padding IS what makes the cover visible as a border around
+           the pages -- pages never touch the cover's own edges. */
+        .ob-cover-shell {
+          padding: 16px 7%;
+          box-shadow: 0 10px 26px rgba(0,0,0,0.22);
+        }
+        .ob-content {
+          grid-template-columns: 1fr; /* mobile: two children = two stacked rows */
+          gap: 3px;
+        }
+        .ob-page {
+          background: #F8F2E4;
+          border-radius: 5px;
+          padding: 16px 18px;
+          min-height: 140px;
+          box-shadow: 0 3px 8px rgba(0,0,0,0.12);
+        }
+        @media (min-width: 640px) {
+          .ob-content { grid-template-columns: 1fr 1fr; gap: 4px; } /* side-by-side pages */
+          .ob-cover-shell { padding: 24px 6%; }
+          .ob-page { min-height: 220px; padding: 24px 28px; }
+        }
+        @media (min-width: 1024px) {
+          /* Hard-capped to the SAME fixed height as SpineBook (220px) --
+             not just a min-height, an actual limit -- so the open book
+             never grows taller than the spines standing next to it.
+             overflow-hidden on the shell (see className) clips anything
+             that doesn't fit; the line-clamp on title/excerpt keeps that
+             from actually happening in normal use.
+
+             align-items: stretch (not center) + .ob-content/.ob-page both
+             set to height: 100% is what makes the CREAM pages fill nearly
+             all of that fixed 220px -- only the shell's own (now smaller)
+             padding is reserved for the green cover border. Shrinking the
+             shell's padding is the only way to grow the pages without
+             growing the shell itself, since the shell's total height is
+             fixed. */
+          .ob-cover-shell { height: 260px; padding: 8px 5%; display: flex; align-items: stretch; }
+          .ob-content { height: 100%; }
+          .ob-page { min-height: 0; height: 100%; padding: 8px 14px; overflow: hidden; }
+        }
+      `}</style>
     </Link>
   )
 }
@@ -193,7 +220,7 @@ export default async function BlogPage() {
 
   return (
     <div className="flex min-h-screen flex-col" style={{ background: PAPER }}>
-      <SiteNav tenant={{ brandName: tenant.brandName }} />
+      <SiteNavbar tenant={{ brandName: tenant.brandName }} />
 
       {/* ── Hero: faint ruled-notebook lines + paper grain ─────────────── */}
       <section
@@ -211,7 +238,7 @@ export default async function BlogPage() {
           backgroundBlendMode: 'normal, multiply',
         }}
       >
-        <div className="mx-auto max-w-2xl text-center">
+        <div className="mx-auto mt-8 max-w-2xl text-center">
           <div className="mb-5 flex items-center justify-center gap-2">
             <span className="h-px w-8" style={{ background: SAFFRON }} />
             <span className="text-[11px] font-semibold uppercase tracking-[0.22em]" style={{ color: SAFFRON }}>
@@ -261,23 +288,58 @@ export default async function BlogPage() {
               book) is its own link to that post. A shelf ledge with a
               soft under-shadow grounds the whole row. ── */}
           <div className="mx-auto w-fit min-w-full" data-bookshelf>
-            <div className="flex items-end justify-center gap-2.5 px-4 pt-1 sm:gap-3.5">
-                          {activePost && (
-                <OpenBook
-                  post={activePost}
-                  coverStart={SPINE_COLORS[0]}
-                  coverEnd="#223228"
-                />
+            <div className="flex flex-wrap items-end justify-center gap-x-2.5 gap-y-6 px-4 pt-1 lg:flex-nowrap lg:gap-y-0 sm:gap-x-3.5">
+              {/* Open book — single instance so the swap script below always
+                  updates the one that's actually on screen. Full width (and
+                  therefore its own row, since the container wraps below
+                  `lg`) on mobile/tablet; resumes its normal in-line spot,
+                  flanked by the spines, at `lg` via `lg:contents`. */}
+              {activePost && (
+                <div className="order-1 flex w-full justify-center lg:order-none lg:w-auto lg:contents">
+                  <OpenBook
+                    post={activePost}
+                    coverStart={SPINE_COLORS[0]}
+                    coverEnd="#223228"
+                  />
+                </div>
               )}
+
+              {/* Desktop (`lg` and up): original shelf — spines flank the
+                  open book left/right, exactly as before. Hidden below
+                  `lg` since mobile/tablet gets its own combined strip. */}
               {leftSpines.map((post, i) => (
-                <SpineBook key={post.id} post={post} index={i} wide={i % 2 === 0} />
+                <SpineBook
+                  key={`d-l-${post.id}`}
+                  post={post}
+                  index={i}
+                  wide={i % 2 === 0}
+                  className="order-none hidden lg:block"
+                />
               ))}
-
-
-
               {rightSpines.map((post, i) => (
-                <SpineBook key={post.id} post={post} index={i + half} wide={i % 2 === 1} />
+                <SpineBook
+                  key={`d-r-${post.id}`}
+                  post={post}
+                  index={i + half}
+                  wide={i % 2 === 1}
+                  className="order-none hidden lg:block"
+                />
               ))}
+
+              {/* Mobile/tablet (below `lg`): every closed book together in
+                  one horizontally-scrollable row beneath the open book. */}
+              {spinePosts.length > 0 && (
+                <div className="order-2 flex w-full items-end justify-center gap-2.5 overflow-x-auto pb-2 sm:gap-3.5 lg:hidden">
+                  {spinePosts.map((post, i) => (
+                    <SpineBook
+                      key={`m-${post.id}`}
+                      post={post}
+                      index={i}
+                      wide={i % 2 === 0}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="relative mx-auto mt-3 max-w-4xl">

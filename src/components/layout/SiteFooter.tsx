@@ -80,7 +80,17 @@ export default function SiteFooter({ tenant = DEFAULT_TENANT }: { tenant?: SiteF
       ([entry]) => {
         document.body.classList.toggle('footer-in-view', entry.isIntersecting)
       },
-      { threshold: 0.01 }
+      {
+        threshold: 0,
+        // Only counts as "in view" once the footer actually reaches the
+        // top sliver of the viewport (where the floating nav pill sits) —
+        // not the instant any part of it is anywhere on screen. Without
+        // this, short pages (e.g. the blog listing on desktop, where the
+        // footer already sits inside the viewport on initial load) fire
+        // this observer immediately and hide the nav permanently, even
+        // though nothing is actually overlapping.
+        rootMargin: '0px 0px -88% 0px',
+      }
     )
     obs.observe(el)
     return () => {
