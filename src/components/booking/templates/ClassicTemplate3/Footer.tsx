@@ -41,12 +41,16 @@ export default function Footer({ therapist }: FooterProps) {
             {therapist.email && (
               <a href={`mailto:${therapist.email}`} className="ct3-footer-link">{therapist.email}</a>
             )}
-            {therapist.whatsapp && (
-              <a href={`https://wa.me/${therapist.whatsapp.replace(/\D/g, '')}`}
-                className="ct3-footer-link" target="_blank" rel="noopener noreferrer">
-                WhatsApp
-              </a>
-            )}
+            {therapist.whatsapp && (() => {
+              const digits = therapist.whatsapp.replace(/\D/g, '')
+              const withCountryCode = digits.length === 10 ? `91${digits}` : digits
+              return (
+                <a href={`https://wa.me/${withCountryCode}`}
+                  className="ct3-footer-link" target="_blank" rel="noopener noreferrer">
+                  WhatsApp
+                </a>
+              )
+            })()}
             {therapist.location && (
               <p className="ct3-footer-col-text" style={{ marginTop: 4 }}>
                 {therapist.location}
