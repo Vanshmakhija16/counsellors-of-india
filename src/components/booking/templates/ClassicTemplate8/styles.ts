@@ -480,23 +480,94 @@ export const ct8Styles = `
      (in the About block) rather than redefining them.
      ──────────────────────────────────────────────────────── */
 
-  /* Education — vertical timeline */
-  .ct8-timeline { position: relative; display: flex; flex-direction: column; gap: 1.6rem; margin-top: 0.5rem; }
+  /* Education — bento boxes, but taller (own modifier, so the shared
+     .ct8-bento-grid used by Research/Certifications/etc. is untouched) and
+     with a clearer content hierarchy inside each tile: an icon medallion +
+     colored year pill up top, instead of the plain grey caps label the
+     shared tile uses by default. No more "first item = solid dark box" —
+     that was arbitrary (just array position, not actually the highest or
+     most recent degree); every tile now reads the same way.
+
+     Filled color, cycling through a small curated 4-tone palette (sage /
+     terracotta / dusty blue / mustard) rather than the plain white card
+     the shared bento tile uses by default — muted, paper-adjacent tones
+     that stay inside the template's restrained editorial feel instead of
+     a bright/rainbow look. Icon + year pill pick up each tile's own tone
+     (via --edu-strong) so they read as part of that box, not a mismatched
+     fixed accent color layered on top. */
+  /* Education — bento boxes, alternating solid fills: odd tiles (1st,
+     3rd...) get the brand accent #3E6C64 with white text, even tiles
+     (2nd, 4th...) stay plain white/card with the accent used only for
+     the icon + year pill -- a clean two-tone rhythm instead of the four
+     soft-tint cycle this used to have. */
+  /* Education — own column/row sizing instead of the generic 6-col
+     asymmetric bento spans (that pattern assumes 5-6+ items; with just a
+     couple of education entries it was forcing each tile to span 2 grid
+     rows, producing tall, sparse-looking boxes). Equal-width, content-sized
+     tiles read much better at low item counts. */
+  .ct8-bento-grid--edu {
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    grid-auto-rows: auto;
+  }
+  .ct8-bento-grid--edu .ct8-edu-tile {
+    grid-column: span 1 !important;
+    grid-row: auto !important;
+    min-height: 190px;
+  }
+  .ct8-edu-tile { background: #3E6C64; border-color: transparent; }
+  .ct8-edu-tile-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem; }
+  .ct8-edu-icon {
+    width: 34px; height: 34px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.16); color: #FFFFFF; flex-shrink: 0;
+  }
+  .ct8-edu-year {
+    display: inline-flex; padding: 3px 11px; border-radius: 100px;
+    background: rgba(255,255,255,0.18); color: #FFFFFF;
+  }
+  .ct8-edu-tile .ct8-bento-title { margin-top: 1.1rem; color: #FFFFFF; }
+  .ct8-edu-tile .ct8-bento-sub { color: rgba(255,255,255,0.78); }
+  .ct8-edu-tile .ct8-bento-desc { margin-top: 0.3rem; color: rgba(255,255,255,0.72); }
+
+  .ct8-bento-grid--edu .ct8-edu-tile:nth-child(even) {
+    background: #FFFFFF; border-color: var(--line);
+  }
+  .ct8-bento-grid--edu .ct8-edu-tile:nth-child(even) .ct8-edu-icon { background: #EDF3EE; color: #3E6C64; }
+  .ct8-bento-grid--edu .ct8-edu-tile:nth-child(even) .ct8-edu-year { background: #EDF3EE; color: #3E6C64; }
+  .ct8-bento-grid--edu .ct8-edu-tile:nth-child(even) .ct8-bento-title { color: var(--ink); }
+  .ct8-bento-grid--edu .ct8-edu-tile:nth-child(even) .ct8-bento-sub { color: var(--ink-soft); }
+  .ct8-bento-grid--edu .ct8-edu-tile:nth-child(even) .ct8-bento-desc { color: var(--ink-soft); }
+
+  /* Education — vertical timeline. Marker + year pill both use --accent,
+     so this automatically re-tints with the student/professional persona
+     toggle rather than a fixed color that could clash with it. The ring
+     around each marker matches the section's own background (paper-2, via
+     ct8-section-alt) so it reads as a clean "cutout" on the connecting
+     line instead of a hard edge. */
+  .ct8-timeline { position: relative; display: flex; flex-direction: column; gap: 1.8rem; margin-top: 0.5rem; }
   .ct8-timeline::before {
-    content: ''; position: absolute; left: 5px; top: 8px; bottom: 8px; width: 1px;
+    content: ''; position: absolute; left: 15px; top: 4px; bottom: 4px; width: 1px;
     background: var(--line-strong);
   }
-  .ct8-timeline-item { position: relative; padding-left: 2.2rem; }
+  .ct8-timeline-item { position: relative; padding-left: 3.6rem; }
   .ct8-timeline-marker {
-    position: absolute; left: 0; top: 10px; width: 11px; height: 11px; border-radius: 50%;
-    background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft);
+    position: absolute; left: 0; top: 0; width: 30px; height: 30px; border-radius: 50%;
+    background: var(--accent); color: var(--accent-ink);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 0 5px var(--paper-2);
   }
-  .ct8-timeline-card { padding: 1.4rem 1.6rem; }
+  .ct8-timeline-card {
+    padding: 1.4rem 1.6rem;
+    transition: border-color 0.25s var(--ease), transform 0.25s var(--ease), box-shadow 0.25s var(--ease);
+  }
+  .ct8-timeline-card:hover { border-color: var(--accent); transform: translateX(3px); box-shadow: var(--shadow-md); }
   .ct8-timeline-year {
+    display: inline-flex; padding: 3px 11px; border-radius: 100px;
+    background: var(--accent-soft); color: var(--accent);
     font-family: 'Manrope', system-ui, sans-serif; font-size: 11px; font-weight: 700;
-    letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent);
+    letter-spacing: 0.06em; text-transform: uppercase;
   }
-  .ct8-timeline-title { font-size: 18px; margin: 0.4rem 0 0.15rem; }
+  .ct8-timeline-title { font-size: 18px; margin: 0.65rem 0 0.15rem; }
   .ct8-timeline-sub { font-size: 13.5px; color: var(--ink-soft); margin: 0; font-weight: 500; }
   .ct8-timeline-desc { font-size: 13.5px; color: var(--ink-soft); line-height: 1.6; margin: 0.6rem 0 0; }
 

@@ -86,14 +86,14 @@ export async function GET(req: NextRequest) {
   const authorizationUrl = buildAuthorizationUrl(state)
 
   // -- TEMPORARY DEBUG LOGGING: remove once the flow is confirmed fixed --
-  console.log('[razorpay/oauth/connect] debug', {
-    generatedState: state,
-    redirectUriSentToRazorpay: new URL(authorizationUrl).searchParams.get('redirect_uri'),
-    host: req.headers.get('host'),
-    xForwardedHost: req.headers.get('x-forwarded-host'),
-    xForwardedProto: req.headers.get('x-forwarded-proto'),
-    safeOrigin,
-  })
+  // console.log('[razorpay/oauth/connect] debug', {
+  //   generatedState: state,
+  //   redirectUriSentToRazorpay: new URL(authorizationUrl).searchParams.get('redirect_uri'),
+  //   host: req.headers.get('host'),
+  //   xForwardedHost: req.headers.get('x-forwarded-host'),
+  //   xForwardedProto: req.headers.get('x-forwarded-proto'),
+  //   safeOrigin,
+  // })
 
   const response = NextResponse.redirect(authorizationUrl)
   response.cookies.set(STATE_COOKIE, state, {

@@ -69,6 +69,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const [gate,       setGate]       = useState<'checking' | 'ok'>('checking')
   const [therapist,  setTherapist]  = useState<{ full_name?: string; username?: string; plan?: string; email?: string } | null>(null)
+  const [planExpired, setPlanExpired] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
@@ -86,7 +87,24 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       if (!alive) return
       const plan    = data?.plan
       const hasPlan = !!plan && !['none', 'free', ''].includes(plan)
-      if (hasPlan) { setTherapist({ ...data, email: user.email ?? undefined }); setGate('ok') }
+      if (hasPlan) {
+        setTherapist({ ...data, email: user.email ?? undefined })
+        setGate('ok')
+
+        // Lazy expiry check -- fire-and-forget, doesn't block rendering.
+        // If the plan just expired, this downgrades it server-side and we
+        // reflect that in the UI (banner + sidebar) without a reload.
+        fetch('/api/subscription/check-expiry', { method: 'POST' })
+          .then(res => res.json())
+          .then(result => {
+            if (!alive) return
+            if (result?.expired) {
+              setPlanExpired(true)
+              setTherapist(prev => prev ? { ...prev, plan: 'starter' } : prev)
+            }
+          })
+          .catch(err => console.error('[DashboardLayout] check-expiry failed:', err))
+      }
       else router.replace('/pricing?redirect=' + encodeURIComponent(pathname))
     })()
     return () => { alive = false }
@@ -300,6 +318,26 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <main className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-5xl px-5 sm:px-8 py-8">
+            {planExpired && (
+              <div
+                className="mb-6 flex flex-col items-start justify-between gap-3 rounded-xl border px-5 py-4 sm:flex-row sm:items-center"
+                style={{ borderColor: '#FBD9AE', background: '#FFF6EA' }}
+              >
+                <div>
+                  <p className="text-[14px] font-bold" style={{ color: INK }}>Your plan has expired</p>
+                  <p className="mt-0.5 text-[13px]" style={{ color: '#7a6f63' }}>
+                    Your subscription ran out and your account has moved to the free Starter plan. Renew to get your features back.
+                  </p>
+                </div>
+                <Link
+                  href="/pricing"
+                  className="shrink-0 rounded-lg px-4 py-2 text-[13px] font-bold text-white transition hover:brightness-95"
+                  style={{ background: SAFFRON }}
+                >
+                  View plans
+                </Link>
+              </div>
+            )}
             {children}
           </div>
         </main>

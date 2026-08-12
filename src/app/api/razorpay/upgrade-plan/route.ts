@@ -81,6 +81,12 @@ export async function POST(req: NextRequest) {
         highest_plan: newHighest,
         razorpay_payment_id,
         plan_activated_at: new Date().toISOString(),
+        // Every plan activation/renewal gets a fresh 1-year expiry from
+        // right now -- re-upgrading or renewing always resets the clock
+        // rather than extending from the old expiry date.
+        subscription_expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        subscription_status: 'active',
+        subscription_plan: targetPlan,
         // Starting (or re-starting) a Pro subscription gives a fresh
         // 2-switch template allowance for a new yearly cycle.
         ...(targetPlan === 'pro'

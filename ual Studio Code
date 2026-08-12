@@ -1,0 +1,252 @@
+warning: in the working copy of 'src/app/api/razorpay/oauth/connect/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/app/api/razorpay/upgrade-plan/route.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/booking/templates/ClassicTemplate8/Education.tsx', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/booking/templates/ClassicTemplate8/styles.ts', LF will be replaced by CRLF the next time Git touches it
+warning: in the working copy of 'src/components/layout/DashboardLayout.tsx', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/src/app/api/razorpay/oauth/connect/route.ts b/src/app/api/razorpay/oauth/connect/route.ts[m
+[1mindex 5dc37b6..d3c4b79 100644[m
+[1m--- a/src/app/api/razorpay/oauth/connect/route.ts[m
+[1m+++ b/src/app/api/razorpay/oauth/connect/route.ts[m
+[36m@@ -86,14 +86,14 @@[m [mexport async function GET(req: NextRequest) {[m
+   const authorizationUrl = buildAuthorizationUrl(state)[m
+ [m
+   // -- TEMPORARY DEBUG LOGGING: remove once the flow is confirmed fixed --[m
+[31m-  console.log('[razorpay/oauth/connect] debug', {[m
+[31m-    generatedState: state,[m
+[31m-    redirectUriSentToRazorpay: new URL(authorizationUrl).searchParams.get('redirect_uri'),[m
+[31m-    host: req.headers.get('host'),[m
+[31m-    xForwardedHost: req.headers.get('x-forwarded-host'),[m
+[31m-    xForwardedProto: req.headers.get('x-forwarded-proto'),[m
+[31m-    safeOrigin,[m
+[31m-  })[m
+[32m+[m[32m  // console.log('[razorpay/oauth/connect] debug', {[m
+[32m+[m[32m  //   generatedState: state,[m
+[32m+[m[32m  //   redirectUriSentToRazorpay: new URL(authorizationUrl).searchParams.get('redirect_uri'),[m
+[32m+[m[32m  //   host: req.headers.get('host'),[m
+[32m+[m[32m  //   xForwardedHost: req.headers.get('x-forwarded-host'),[m
+[32m+[m[32m  //   xForwardedProto: req.headers.get('x-forwarded-proto'),[m
+[32m+[m[32m  //   safeOrigin,[m
+[32m+[m[32m  // })[m
+ [m
+   const response = NextResponse.redirect(authorizationUrl)[m
+   response.cookies.set(STATE_COOKIE, state, {[m
+[1mdiff --git a/src/app/api/razorpay/upgrade-plan/route.ts b/src/app/api/razorpay/upgrade-plan/route.ts[m
+[1mindex 3f1ee53..f332cda 100644[m
+[1m--- a/src/app/api/razorpay/upgrade-plan/route.ts[m
+[1m+++ b/src/app/api/razorpay/upgrade-plan/route.ts[m
+[36m@@ -81,6 +81,12 @@[m [mexport async function POST(req: NextRequest) {[m
+         highest_plan: newHighest,[m
+         razorpay_payment_id,[m
+         plan_activated_at: new Date().toISOString(),[m
+[32m+[m[32m        // Every plan activation/renewal gets a fresh 1-year expiry from[m
+[32m+[m[32m        // right now -- re-upgrading or renewing always resets the clock[m
+[32m+[m[32m        // rather than extending from the old expiry date.[m
+[32m+[m[32m        subscription_expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),[m
+[32m+[m[32m        subscription_status: 'active',[m
+[32m+[m[32m        subscription_plan: targetPlan,[m
+         // Starting (or re-starting) a Pro subscription gives a fresh[m
+         // 2-switch template allowance for a new yearly cycle.[m
+         ...(targetPlan === 'pro'[m
+[1mdiff --git a/src/components/booking/templates/ClassicTemplate8/Education.tsx b/src/components/booking/templates/ClassicTemplate8/Education.tsx[m
+[1mindex 4705321..238d939 100644[m
+[1m--- a/src/components/booking/templates/ClassicTemplate8/Education.tsx[m
+[1m+++ b/src/components/booking/templates/ClassicTemplate8/Education.tsx[m
+[36m@@ -1,5 +1,6 @@[m
+ 'use client'[m
+ [m
+[32m+[m[32mimport { GraduationCap } from 'lucide-react'[m
+ import type { TherapistProfile } from '../templateUtils'[m
+ import { resolveCT8Content } from '../templateUtils'[m
+ [m
+[36m@@ -18,10 +19,15 @@[m [mexport default function Education({ therapist }: EducationProps) {[m
+           <h2 className="ct8-heading ct8-section-title">Academic background</h2>[m
+         </div>[m
+ [m
+[31m-        <div className="ct8-bento-grid">[m
+[32m+[m[32m        <div className="ct8-bento-grid ct8-bento-grid--edu">[m
+           {items.map((e, i) => ([m
+[31m-            <div key={i} className={`ct8-card ct8-bento-tile ct8-reveal${i === 0 ? ' ct8-bento-tile--dark' : ''}`}>[m
+[31m-              <span className="ct8-bento-label">{e.year}</span>[m
+[32m+[m[32m            <div key={i} className="ct8-card ct8-bento-tile ct8-edu-tile ct8-reveal">[m
+[32m+[m[32m              <div className="ct8-edu-tile-top">[m
+[32m+[m[32m                <span className="ct8-edu-icon">[m
+[32m+[m[32m                  <GraduationCap size={17} strokeWidth={2.1} />[m
+[32m+[m[32m                </span>[m
+[32m+[m[32m                <span className="ct8-bento-label ct8-edu-year">{e.year}</span>[m
+[32m+[m[32m              </div>[m
+               <h3 className="ct8-bento-title">{e.degree}</h3>[m
+               <p className="ct8-bento-sub">{e.institution}</p>[m
+               {e.details && <p className="ct8-bento-desc">{e.details}</p>}[m
+[1mdiff --git a/src/components/booking/templates/ClassicTemplate8/styles.ts b/src/components/booking/templates/ClassicTemplate8/styles.ts[m
+[1mindex deed975..d7c6766 100644[m
+[1m--- a/src/components/booking/templates/ClassicTemplate8/styles.ts[m
+[1m+++ b/src/components/booking/templates/ClassicTemplate8/styles.ts[m
+[36m@@ -480,23 +480,94 @@[m [mexport const ct8Styles = `[m
+      (in the About block) rather than redefining them.[m
+      ──────────────────────────────────────────────────────── */[m
+ [m
+[31m-  /* Education — vertical timeline */[m
+[31m-  .ct8-timeline { position: relative; display: flex; flex-direction: column; gap: 1.6rem; margin-top: 0.5rem; }[m
+[32m+[m[32m  /* Education — bento boxes, but taller (own modifier, so the shared[m
+[32m+[m[32m     .ct8-bento-grid used by Research/Certifications/etc. is untouched) and[m
+[32m+[m[32m     with a clearer content hierarchy inside each tile: an icon medallion +[m
+[32m+[m[32m     colored year pill up top, instead of the plain grey caps label the[m
+[32m+[m[32m     shared tile uses by default. No more "first item = solid dark box" —[m
+[32m+[m[32m     that was arbitrary (just array position, not actually the highest or[m
+[32m+[m[32m     most recent degree); every tile now reads the same way.[m
+[32m+[m
+[32m+[m[32m     Filled color, cycling through a small curated 4-tone palette (sage /[m
+[32m+[m[32m     terracotta / dusty blue / mustard) rather than the plain white card[m
+[32m+[m[32m     the shared bento tile uses by default — muted, paper-adjacent tones[m
+[32m+[m[32m     that stay inside the template's restrained editorial feel instead of[m
+[32m+[m[32m     a bright/rainbow look. Icon + year pill pick up each tile's own tone[m
+[32m+[m[32m     (via --edu-strong) so they read as part of that box, not a mismatched[m
+[32m+[m[32m     fixed accent color layered on top. */[m
+[32m+[m[32m  /* Education — bento boxes, alternating solid fills: odd tiles (1st,[m
+[32m+[m[32m     3rd...) get the brand accent #3E6C64 with white text, even tiles[m
+[32m+[m[32m     (2nd, 4th...) stay plain white/card with the accent used only for[m
+[32m+[m[32m     the icon + year pill -- a clean two-tone rhythm instead of the four[m
+[32m+[m[32m     soft-tint cycle this used to have. */[m
+[32m+[m[32m  /* Education — own column/row sizing instead of the generic 6-col[m
+[32m+[m[32m     asymmetric bento spans (that pattern assumes 5-6+ items; with just a[m
+[32m+[m[32m     couple of education entries it was forcing each tile to span 2 grid[m
+[32m+[m[32m     rows, producing tall, sparse-looking boxes). Equal-width, content-sized[m
+[32m+[m[32m     tiles read much better at low item counts. */[m
+[32m+[m[32m  .ct8-bento-grid--edu {[m
+[32m+[m[32m    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));[m
+[32m+[m[32m    grid-auto-rows: auto;[m
+[32m+[m[32m  }[m
+[32m+[m[32m  .ct8-bento-grid--edu .ct8-edu-tile {[m
+[32m+[m[32m    grid-column: span 1 !important;[m
+[32m+[m[32m    grid-row: auto !important;[m
+[32m+[m[32m    min-height: 190px;[m
+[32m+[m[32m  }[m
+[32m+[m[32m  .ct8-edu-tile { background: #3E6C64; border-color: transparent; }[m
+[32m+[m[32m  .ct8-edu-tile-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem; }[m
+[32m+[m[32m  .ct8-edu-icon {[m
+[32m+[m[32m    width: 34px; height: 34px; border-radius: 10px;[m
+[32m+[m[32m    display: flex; align-items: center; justify-content: center;[m
+[32m+[m[32m    background: rgba(255,255,255,0.16); color: #FFFFFF; flex-shrink: 0;[m
+[32m+[m[32m  }[m
+[32m+[m[32m  .ct8-edu-year {[m
+[32m+[m[32m    display: inline-flex; padding: 3px 11px; border-radius: 100px;[m
+[32m+[m[32m    background: rgba(255,255,255,0.18); color: #FFFFFF;[m
+[32m+[m[32m  }[m
+[32m+[m[32m  .ct8-edu-tile .ct8-bento-title { margin-top: 1.1rem; color: #FFFFFF; }[m
+[32m+[m[32m  .ct8-edu-tile .ct8-bento-sub { color: rgba(255,255,255,0.78); }[m
+[32m+[m[32m  .ct8-edu-tile .ct8-bento-desc { margin-top: 0.3rem; color: rgba(255,255,255,0.72); }[m
+[32m+[m
+[32m+[m[32m  .ct8-bento-grid--edu .ct8-edu-tile:nth-child(even) {[m
+[32m+[m[32m    background: #FFFFFF; border-color: var(--line);[m
+[32m+[m[32m  }[m
+[32m+[m[32m  .ct8-bento-grid--edu .ct8-edu-tile:nth-child(even) .ct8-edu-icon { background: #EDF3EE; color: #3E6C64; }[m
+[32m+[m[32m  .ct8-bento-grid--edu .ct8-edu-tile:nth-child(even) .ct8-edu-year { background: #EDF3EE; color: #3E6C64; }[m
+[32m+[m[32m  .ct8-bento-grid--edu .ct8-edu-tile:nth-child(even) .ct8-bento-title { color: var(--ink); }[m
+[32m+[m[32m  .ct8-bento-grid--edu .ct8-edu-tile:nth-child(even) .ct8-bento-sub { color: var(--ink-soft); }[m
+[32m+[m[32m  .ct8-bento-grid--edu .ct8-edu-tile:nth-child(even) .ct8-bento-desc { color: var(--ink-soft); }[m
+[32m+[m
+[32m+[m[32m  /* Education — vertical timeline. Marker + year pill both use --accent,[m
+[32m+[m[32m     so this automatically re-tints with the student/professional persona[m
+[32m+[m[32m     toggle rather than a fixed color that could clash with it. The ring[m
+[32m+[m[32m     around each marker matches the section's own background (paper-2, via[m
+[32m+[m[32m     ct8-section-alt) so it reads as a clean "cutout" on the connecting[m
+[32m+[m[32m     line instead of a hard edge. */[m
+[32m+[m[32m  .ct8-timeline { position: relative; display: flex; flex-direction: column; gap: 1.8rem; margin-top: 0.5rem; }[m
+   .ct8-timeline::before {[m
+[31m-    content: ''; position: absolute; left: 5px; top: 8px; bottom: 8px; width: 1px;[m
+[32m+[m[32m    content: ''; position: absolute; left: 15px; top: 4px; bottom: 4px; width: 1px;[m
+     background: var(--line-strong);[m
+   }[m
+[31m-  .ct8-timeline-item { position: relative; padding-left: 2.2rem; }[m
+[32m+[m[32m  .ct8-timeline-item { position: relative; padding-left: 3.6rem; }[m
+   .ct8-timeline-marker {[m
+[31m-    position: absolute; left: 0; top: 10px; width: 11px; height: 11px; border-radius: 50%;[m
+[31m-    background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft);[m
+[32m+[m[32m    position: absolute; left: 0; top: 0; width: 30px; height: 30px; border-radius: 50%;[m
+[32m+[m[32m    background: var(--accent); color: var(--accent-ink);[m
+[32m+[m[32m    display: flex; align-items: center; justify-content: center;[m
+[32m+[m[32m    box-shadow: 0 0 0 5px var(--paper-2);[m
+[32m+[m[32m  }[m
+[32m+[m[32m  .ct8-timeline-card {[m
+[32m+[m[32m    padding: 1.4rem 1.6rem;[m
+[32m+[m[32m    transition: border-color 0.25s var(--ease), transform 0.25s var(--ease), box-shadow 0.25s var(--ease);[m
+   }[m
+[31m-  .ct8-timeline-card { padding: 1.4rem 1.6rem; }[m
+[32m+[m[32m  .ct8-timeline-card:hover { border-color: var(--accent); transform: translateX(3px); box-shadow: var(--shadow-md); }[m
+   .ct8-timeline-year {[m
+[32m+[m[32m    display: inline-flex; padding: 3px 11px; border-radius: 100px;[m
+[32m+[m[32m    background: var(--accent-soft); color: var(--accent);[m
+     font-family: 'Manrope', system-ui, sans-serif; font-size: 11px; font-weight: 700;[m
+[31m-    letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent);[m
+[32m+[m[32m    letter-spacing: 0.06em; text-transform: uppercase;[m
+   }[m
+[31m-  .ct8-timeline-title { font-size: 18px; margin: 0.4rem 0 0.15rem; }[m
+[32m+[m[32m  .ct8-timeline-title { font-size: 18px; margin: 0.65rem 0 0.15rem; }[m
+   .ct8-timeline-sub { font-size: 13.5px; color: var(--ink-soft); margin: 0; font-weight: 500; }[m
+   .ct8-timeline-desc { font-size: 13.5px; color: var(--ink-soft); line-height: 1.6; margin: 0.6rem 0 0; }[m
+ [m
+[1mdiff --git a/src/components/layout/DashboardLayout.tsx b/src/components/layout/DashboardLayout.tsx[m
+[1mindex b7c3f67..08dff8c 100644[m
+[1m--- a/src/components/layout/DashboardLayout.tsx[m
+[1m+++ b/src/components/layout/DashboardLayout.tsx[m
+[36m@@ -69,6 +69,7 @@[m [mexport default function DashboardLayout({ children }: { children: React.ReactNod[m
+ [m
+   const [gate,       setGate]       = useState<'checking' | 'ok'>('checking')[m
+   const [therapist,  setTherapist]  = useState<{ full_name?: string; username?: string; plan?: string; email?: string } | null>(null)[m
+[32m+[m[32m  const [planExpired, setPlanExpired] = useState(false)[m
+   const [mobileOpen, setMobileOpen] = useState(false)[m
+   const [profileMenuOpen, setProfileMenuOpen] = useState(false)[m
+   const dropdownRef = useRef<HTMLDivElement>(null)[m
+[36m@@ -86,7 +87,24 @@[m [mexport default function DashboardLayout({ children }: { children: React.ReactNod[m
+       if (!alive) return[m
+       const plan    = data?.plan[m
+       const hasPlan = !!plan && !['none', 'free', ''].includes(plan)[m
+[31m-      if (hasPlan) { setTherapist({ ...data, email: user.email ?? undefined }); setGate('ok') }[m
+[32m+[m[32m      if (hasPlan) {[m
+[32m+[m[32m        setTherapist({ ...data, email: user.email ?? undefined })[m
+[32m+[m[32m        setGate('ok')[m
+[32m+[m
+[32m+[m[32m        // Lazy expiry check -- fire-and-forget, doesn't block rendering.[m
+[32m+[m[32m        // If the plan just expired, this downgrades it server-side and we[m
+[32m+[m[32m        // reflect that in the UI (banner + sidebar) without a reload.[m
+[32m+[m[32m        fetch('/api/subscription/check-expiry', { method: 'POST' })[m
+[32m+[m[32m          .then(res => res.json())[m
+[32m+[m[32m          .then(result => {[m
+[32m+[m[32m            if (!alive) return[m
+[32m+[m[32m            if (result?.expired) {[m
+[32m+[m[32m              setPlanExpired(true)[m
+[32m+[m[32m              setTherapist(prev => prev ? { ...prev, plan: 'starter' } : prev)[m
+[32m+[m[32m            }[m
+[32m+[m[32m          })[m
+[32m+[m[32m          .catch(err => console.error('[DashboardLayout] check-expiry failed:', err))[m
+[32m+[m[32m      }[m
+       else router.replace('/pricing?redirect=' + encodeURIComponent(pathname))[m
+     })()[m
+     return () => { alive = false }[m
+[36m@@ -300,6 +318,26 @@[m [mexport default function DashboardLayout({ children }: { children: React.ReactNod[m
+ [m
+         <main className="flex-1 overflow-y-auto">[m
+           <div className="mx-auto max-w-5xl px-5 sm:px-8 py-8">[m
+[32m+[m[32m            {planExpired && ([m
+[32m+[m[32m              <div[m
+[32m+[m[32m                className="mb-6 flex flex-col items-start justify-between gap-3 rounded-xl border px-5 py-4 sm:flex-row sm:items-center"[m
+[32m+[m[32m                style={{ borderColor: '#FBD9AE', background: '#FFF6EA' }}[m
+[32m+[m[32m              >[m
+[32m+[m[32m                <div>[m
+[32m+[m[32m                  <p className="text-[14px] font-bold" style={{ color: INK }}>Your plan has expired</p>[m
+[32m+[m[32m                  <p className="mt-0.5 text-[13px]" style={{ color: '#7a6f63' }}>[m
+[32m+[m[32m                    Your subscription ran out and your account has moved to the free Starter plan. Renew to get your features back.[m
+[32m+[m[32m                  </p>[m
+[32m+[m[32m                </div>[m
+[32m+[m[32m                <Link[m
+[32m+[m[32m                  href="/pricing"[m
+[32m+[m[32m                  className="shrink-0 rounded-lg px-4 py-2 text-[13px] font-bold text-white transition hover:brightness-95"[m
+[32m+[m[32m                  style={{ background: SAFFRON }}[m
+[32m+[m[32m                >[m
+[32m+[m[32m                  View plans[m
+[32m+[m[32m                </Link>[m
+[32m+[m[32m              </div>[m
+[32m+[m[32m            )}[m
+             {children}[m
+           </div>[m
+         </main>[m
