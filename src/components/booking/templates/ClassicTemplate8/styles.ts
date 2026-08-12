@@ -118,7 +118,37 @@ export const ct8Styles = `
   .ct8-nav-links { display: flex; align-items: center; gap: 1.6rem; }
   .ct8-nav-link { background: none; border: none; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 500; color: var(--ink-soft); padding: 0; }
   .ct8-nav-link:hover { color: var(--ink); }
-  @media (max-width: 760px) { .ct8-nav-links-desktop { display: none; } }
+  .ct8-nav-burger { display: none; }
+  @media (max-width: 760px) {
+    .ct8-nav-links-desktop { display: none; }
+    .ct8-nav-burger {
+      display: flex; align-items: center; justify-content: center;
+      width: 38px; height: 38px; border-radius: 50%; border: 1px solid var(--line-strong);
+      background: transparent; color: var(--ink); cursor: pointer; flex-shrink: 0;
+    }
+    .ct8-nav-burger:hover { border-color: var(--accent); color: var(--accent); }
+  }
+  .ct8-nav-mobile-sheet {
+    position: absolute; top: 100%; left: 0; right: 0; z-index: 39;
+    display: flex; flex-direction: column; gap: 0.2rem;
+    padding: 1rem clamp(1.25rem, 5vw, 3rem) 1.4rem;
+    background: var(--paper); border-bottom: 1px solid var(--line);
+    box-shadow: var(--shadow-md);
+    animation: ct8-nav-sheet-in 0.2s var(--ease);
+  }
+  @keyframes ct8-nav-sheet-in {
+    from { opacity: 0; transform: translateY(-6px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .ct8-nav-mobile-link {
+    background: none; border: none; cursor: pointer; text-align: left;
+    padding: 0.75rem 0; border-bottom: 1px solid var(--line);
+    font-family: 'Inter', sans-serif; font-size: 14.5px; font-weight: 500; color: var(--ink);
+  }
+  .ct8-nav-mobile-cta { margin-top: 0.9rem; justify-content: center; }
+  @media (prefers-reduced-motion: reduce) {
+    .ct8-nav-mobile-sheet { animation: none; }
+  }
 
   /* ── Hero ── premium/editorial: near-monochrome (ink, paper, hairlines),
      serif display headline, thin-underline persona tabs instead of a
@@ -301,8 +331,14 @@ export const ct8Styles = `
   .ct8-faq-icon { font-size: 18px; color: var(--accent); transition: transform 0.25s var(--ease); flex-shrink: 0; }
   .ct8-faq-icon.open { transform: rotate(45deg); }
   .ct8-faq-body { max-height: 0; overflow: hidden; transition: max-height 0.35s var(--ease); }
-  .ct8-faq-body.open { max-height: 320px; }
+  .ct8-faq-body.open { max-height: 600px; }
   .ct8-faq-ans { font-size: 13.5px; line-height: 1.7; color: var(--ink-soft); margin: 0 0 1.2rem; }
+  .ct8-faq-expand-all {
+    display: inline-flex; margin-top: 1.2rem; background: none; border: none; cursor: pointer; padding: 0;
+    font-family: 'Manrope', sans-serif; font-weight: 700; font-size: 12.5px; color: var(--accent);
+    text-decoration: underline; text-decoration-color: var(--accent-soft); text-underline-offset: 4px;
+  }
+  .ct8-faq-expand-all:hover { text-decoration-color: var(--accent); }
 
   /* ── Booking ── */
   .ct8-booking-grid { display: grid; grid-template-columns: 0.85fr 1.15fr; gap: clamp(2rem, 5vw, 3.5rem); align-items: start; }
@@ -344,6 +380,12 @@ export const ct8Styles = `
   .ct8-footer-col-title { display: block; font-family: 'Manrope', sans-serif; font-weight: 700; font-size: 11.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink); margin-bottom: 0.8rem; }
   .ct8-footer-link { display: block; background: none; border: none; padding: 0 0 0.55rem; cursor: pointer; text-align: left; font-size: 13.5px; color: var(--ink-soft); font-family: 'Inter', sans-serif; }
   .ct8-footer-link:hover { color: var(--accent); }
+  .ct8-footer-socials { display: flex; flex-wrap: wrap; gap: 1.4rem; padding-bottom: 1.6rem; }
+  .ct8-footer-social-link {
+    font-family: 'Manrope', sans-serif; font-size: 12.5px; font-weight: 700;
+    color: var(--ink-soft); text-decoration: none; letter-spacing: 0.02em;
+  }
+  .ct8-footer-social-link:hover { color: var(--accent); }
   .ct8-footer-bottom { border-top: 1px solid var(--line); padding-top: 1.4rem; }
   .ct8-footer-copy { font-size: 12px; color: var(--ink-soft); }
 
@@ -480,39 +522,23 @@ export const ct8Styles = `
      (in the About block) rather than redefining them.
      ──────────────────────────────────────────────────────── */
 
-  /* Education — bento boxes, but taller (own modifier, so the shared
-     .ct8-bento-grid used by Research/Certifications/etc. is untouched) and
-     with a clearer content hierarchy inside each tile: an icon medallion +
-     colored year pill up top, instead of the plain grey caps label the
-     shared tile uses by default. No more "first item = solid dark box" —
-     that was arbitrary (just array position, not actually the highest or
-     most recent degree); every tile now reads the same way.
-
-     Filled color, cycling through a small curated 4-tone palette (sage /
-     terracotta / dusty blue / mustard) rather than the plain white card
-     the shared bento tile uses by default — muted, paper-adjacent tones
-     that stay inside the template's restrained editorial feel instead of
-     a bright/rainbow look. Icon + year pill pick up each tile's own tone
-     (via --edu-strong) so they read as part of that box, not a mismatched
-     fixed accent color layered on top. */
-  /* Education — bento boxes, alternating solid fills: odd tiles (1st,
-     3rd...) get the brand accent #3E6C64 with white text, even tiles
-     (2nd, 4th...) stay plain white/card with the accent used only for
-     the icon + year pill -- a clean two-tone rhythm instead of the four
-     soft-tint cycle this used to have. */
-  /* Education — own column/row sizing instead of the generic 6-col
-     asymmetric bento spans (that pattern assumes 5-6+ items; with just a
-     couple of education entries it was forcing each tile to span 2 grid
-     rows, producing tall, sparse-looking boxes). Equal-width, content-sized
-     tiles read much better at low item counts. */
+  /* Education — bento boxes (own modifier, so the shared .ct8-bento-grid
+     used by Research/Certifications/etc. is untouched). Own column/row
+     sizing instead of the generic 6-col asymmetric bento spans (which
+     assumes 5-6+ items and forces tall, sparse boxes at low item counts).
+     Alternating solid fills — odd tiles get the brand accent #3E6C64 with
+     white text, even tiles stay plain white/card with the accent used only
+     for the icon + year pill — a clean two-tone rhythm rather than
+     "first item = arbitrary dark box" (array position, not actual
+     highest/most-recent degree). */
   .ct8-bento-grid--edu {
     grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     grid-auto-rows: auto;
   }
   .ct8-bento-grid--edu .ct8-edu-tile {
-    grid-column: span 1 !important;
+    grid-column: span 2 !important;
     grid-row: auto !important;
-    min-height: 190px;
+    min-height: 290px;
   }
   .ct8-edu-tile { background: #3E6C64; border-color: transparent; }
   .ct8-edu-tile-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.4rem; }
@@ -522,8 +548,8 @@ export const ct8Styles = `
     background: rgba(255,255,255,0.16); color: #FFFFFF; flex-shrink: 0;
   }
   .ct8-edu-year {
-    display: inline-flex; padding: 3px 11px; border-radius: 100px;
-    background: rgba(255,255,255,0.18); color: #FFFFFF;
+    display: inline-flex; padding: 3px 11px;
+     color: #FFFFFF;
   }
   .ct8-edu-tile .ct8-bento-title { margin-top: 1.1rem; color: #FFFFFF; }
   .ct8-edu-tile .ct8-bento-sub { color: rgba(255,255,255,0.78); }
@@ -665,6 +691,10 @@ export const ct8Styles = `
   .ct8-bento-grid--pair { grid-template-columns: repeat(2, 1fr); }
   .ct8-bento-grid--pair .ct8-bento-tile { grid-column: span 1 !important; grid-row: auto !important; }
   @media (max-width: 700px) { .ct8-bento-grid--pair { grid-template-columns: 1fr; } }
+  /* When only one of the pair's tiles has content (e.g. Skills with only
+     clinical OR only technical filled in), don't leave the other half of
+     the grid empty — the single tile takes the full row instead. */
+  .ct8-bento-grid--single { grid-template-columns: 1fr; }
 
   .ct8-bento-tile--dark {
     background: var(--ink); border-color: var(--ink); color: var(--paper);
@@ -680,7 +710,7 @@ export const ct8Styles = `
 
   .ct8-bento-label {
     font-family: 'Manrope', sans-serif; font-size: 10.5px; font-weight: 700;
-    letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft);
+    letter-spacing: 0.08em; text-transform: uppercase; 
   }
   .ct8-bento-title {
     font-family: 'Fraunces', Georgia, serif; font-weight: 500;

@@ -18,7 +18,7 @@ export default function Skills({ therapist }: SkillsProps) {
           <h2 className="ct8-heading ct8-section-title">Tools &amp; approaches</h2>
         </div>
 
-        <div className="ct8-bento-grid ct8-bento-grid--pair">
+        <div className={`ct8-bento-grid ct8-bento-grid--pair${clinical.length === 0 || technical.length === 0 ? ' ct8-bento-grid--single' : ''}`}>
           {clinical.length > 0 && (
             <div className="ct8-card ct8-bento-tile ct8-bento-tile--dark ct8-reveal">
               <span className="ct8-bento-label">Clinical &amp; Therapeutic</span>

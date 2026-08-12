@@ -63,6 +63,7 @@ export const sendBookingConfirmation = async (
       doctorName,
       date,
       time,
+      meetLink,
     } = bookingDetails;
 
     // validation
@@ -114,6 +115,14 @@ export const sendBookingConfirmation = async (
                 type: "text",
                 text: time,
               },
+
+              {
+                type: "text",
+                // Template's {{5}} "Session Link" -- WhatsApp templates
+                // reject empty params, so fall back to placeholder text
+                // when a meet link isn't set yet.
+                text: meetLink || "Link will be shared before your session",
+              },
             ],
           },
         ],
@@ -139,13 +148,12 @@ export const sendBookingConfirmation = async (
 };
 
 // ── Therapist-facing booking request alert ──────────────────────────────
-// Uses its own dedicated, Meta-approved "therapist_new_booking_request"
+// Uses its own dedicated, Meta-approved "therapist_session_request"
 // template (separate from the client-facing "booking_details" template
 // above), sent under its own GetGabs campaign
-// (GETGABS_THERAPIST_CAMPAIGN_ID). The 5 body params: therapist's own
-// name, the client's name, date, time — and the 5th slot carries the
-// client's phone number, since that's more useful for the therapist to
-// have on a fresh request.
+// (GETGABS_THERAPIST_CAMPAIGN_ID). The 6 body params: therapist's own
+// name, the client's name, date, time, client's phone number, and the
+// meeting link.
 export const sendTherapistBookingAlert = async (
   fullPhone: string,
   requestDetails: {
@@ -154,6 +162,7 @@ export const sendTherapistBookingAlert = async (
     date: string;
     time: string;
     clientPhone?: string;
+    meetLink?: string;
   }
 ) => {
   try {
@@ -162,7 +171,7 @@ export const sendTherapistBookingAlert = async (
       phone = "91" + phone;
     }
 
-    const { therapistName, clientName, date, time, clientPhone } = requestDetails;
+    const { therapistName, clientName, date, time, clientPhone, meetLink } = requestDetails;
 
     if (!therapistName || !clientName || !date || !time) {
       console.error("Invalid WhatsApp payload (therapist alert)");
@@ -200,6 +209,11 @@ export const sendTherapistBookingAlert = async (
               {
                 type: "text",
                 text: clientPhone ? `Client contact: ${clientPhone}` : "Client contact not provided",
+              },
+              {
+                type: "text",
+                // Template's {{6}} "Meet Link"-- must not be empty.
+                text: meetLink || "Link will be shared before the session",
               },
             ],
           },

@@ -51,9 +51,11 @@ export default function Services({ therapist, persona }: ServicesProps) {
             const price = s.price != null ? Number(s.price) : therapist.fee
             const duration = s.duration_mins ?? defaultDuration
             const audience = s.audience ?? 'both'
-            // First card reads as the "featured" one — dark tile, echoing
-            // the shared bento system used across the other sections.
-            const featured = i === 0
+            // "Featured" means matches the visitor's own active persona (or
+            // is open to everyone) — not just whichever service happens to
+            // sit first in the array. With no persona selected, nothing is
+            // singled out as dark/featured; every card reads the same way.
+            const featured = persona ? (audience === persona || audience === 'both') : false
 
             return (
               <div
@@ -69,7 +71,9 @@ export default function Services({ therapist, persona }: ServicesProps) {
                     <span>
                       From <b style={{ color: featured ? '#fff' : 'var(--ink)' }}>₹{Number(price).toLocaleString('en-IN')}</b> &middot; {duration} min
                     </span>
-                  ) : <span />}
+                  ) : (
+                    <span style={{ color: featured ? 'rgba(255,255,255,0.65)' : 'var(--ink-soft)' }}>Contact for pricing</span>
+                  )}
                   <button className="ct8-bento-link" style={{ marginTop: 0 }} onClick={scrollToBooking}>
                     Book now <ArrowUpRight size={14} />
                   </button>

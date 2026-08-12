@@ -2,7 +2,7 @@
 
 import { GraduationCap } from 'lucide-react'
 import type { TherapistProfile } from '../templateUtils'
-import { resolveImage } from '../templateUtils'
+import { resolveImage, DEFAULT_PROFILE_IMAGE } from '../templateUtils'
 
 interface AboutProps { therapist: TherapistProfile }
 
@@ -30,22 +30,21 @@ export default function About({ therapist }: AboutProps) {
       <div className="ct8-container ct8-about-grid ct8-about-grid--with-photo">
         <div>
           <div className="ct8-about-photo-wrap">
-            <img src={photo} alt={name} className="ct8-about-photo" />
-            <span className="ct8-about-photo-badge">
-              <span className="ct8-about-photo-badge-icon"><GraduationCap size={13} /></span>
-              {cred}
-            </span>
+            <img
+              src={photo}
+              alt={name}
+              className="ct8-about-photo"
+              onError={e => {
+                // If the stored image URL is broken/unreachable, fall back to
+                // the shared default profile image rather than showing a
+                // broken-image icon on a public-facing page.
+                const img = e.currentTarget
+                if (img.src !== DEFAULT_PROFILE_IMAGE) img.src = DEFAULT_PROFILE_IMAGE
+              }}
+            />
+
           </div>
-          <div className="ct8-stat-row">
-            <div className="ct8-card ct8-stat-box">
-              <div className="ct8-stat-box-num">{exp}+</div>
-              <div className="ct8-stat-box-lbl">Years of Experience</div>
-            </div>
-            <div className="ct8-card ct8-stat-box">
-              <div className="ct8-stat-box-num">{therapist.totalReviews ?? 200}+</div>
-              <div className="ct8-stat-box-lbl">Clients Helped</div>
-            </div>
-          </div>
+
         </div>
 
         <div>
@@ -60,7 +59,7 @@ export default function About({ therapist }: AboutProps) {
             ))}
           </div>
 
-          <div className="ct8-card ct8-cred-card">
+          {/* <div className="ct8-card ct8-cred-card">
             <span className="ct8-cred-title">Education & Credentials</span>
             {education.map((e, i) => (
               <div key={i} className="ct8-cred-item">
@@ -80,7 +79,7 @@ export default function About({ therapist }: AboutProps) {
                 ))}
               </>
             )}
-          </div>
+          </div> */}
         </div>
       </div>
     </section>

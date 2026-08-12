@@ -12,7 +12,7 @@ import 'server-only'
  *
  * Channel is decided by the therapist's plan:
  *   - starter (default) -> email only, to both client and therapist
- *   - pro               -> WhatsApp only, to both client and therapist
+ *   - pro               -> WhatsApp AND email, to both client and therapist
  *
  * Each send is independently try/caught -- a failed WhatsApp send never
  * blocks the email (not that both run together, but future-proofing), and
@@ -204,7 +204,7 @@ export async function notifyBookingConfirmed(params: NotifyBookingConfirmedParam
   const isPro = (params.plan ?? 'starter').toLowerCase() === 'pro'
   console.log('[booking-notifications] notifyBookingConfirmed() called:', {
     plan: params.plan,
-    channel: isPro ? 'whatsapp' : 'email',
+    channel: isPro ? 'whatsapp + email' : 'email',
     clientEmail: params.clientEmail,
     clientPhone: params.clientPhone,
     therapistEmail: params.therapistEmail,
@@ -236,15 +236,16 @@ export async function notifyBookingConfirmed(params: NotifyBookingConfirmedParam
           date:          formattedDate,
           time:          formattedTime,
           clientPhone:   params.clientPhone || undefined,
+          meetLink:      params.meetLink || undefined,
         })
       }
     } catch (e) {
       console.error('[booking-notifications] therapist WhatsApp failed:', e)
     }
-    return
   }
 
-  // Starter (default) -- email both sides.
+  // Email always goes out too -- pro plan gets WhatsApp (above) AND email;
+  // starter gets email only.
   try {
     await sendBookingConfirmationEmails({
       clientName:     params.clientName,
@@ -295,7 +296,7 @@ export async function notifyBookingRescheduled(params: NotifyBookingRescheduledP
   const isPro = (params.plan ?? 'starter').toLowerCase() === 'pro'
   console.log('[booking-notifications] notifyBookingRescheduled() called:', {
     plan: params.plan,
-    channel: isPro ? 'whatsapp' : 'email',
+    channel: isPro ? 'whatsapp + email' : 'email',
     newScheduledAt: params.newScheduledAt,
   })
 
@@ -324,15 +325,16 @@ export async function notifyBookingRescheduled(params: NotifyBookingRescheduledP
           date:          formattedDate,
           time:          formattedTime,
           clientPhone:   params.clientPhone || undefined,
+          meetLink:      params.meetLink || undefined,
         })
       }
     } catch (e) {
       console.error('[booking-notifications] reschedule therapist WhatsApp failed:', e)
     }
-    return
   }
 
-  // Starter (default) -- email both sides with reschedule-specific copy.
+  // Email always goes out too -- pro plan gets WhatsApp (above) AND email;
+  // starter gets email only.
   const { formattedDate, formattedTime } = formatDateTime(params.newScheduledAt)
   const sessionLabel = params.serviceName ? escapeHtml(params.serviceName) : 'Therapy Session'
   const durationLine = params.durationMins ? `${params.durationMins} minutes` : null

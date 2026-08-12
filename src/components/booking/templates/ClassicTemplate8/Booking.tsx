@@ -81,8 +81,18 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
 
   async function handleConfirm() {
     if (!selectedSlot || !selectedSlotIso) return
+    if (bookingLoading) return // guard against double-submit (e.g. rapid re-click, back-then-forward)
     if (!clientName.trim() || !clientPhone.trim()) {
       setBookingError('Please complete name and phone to continue.')
+      return
+    }
+    const digitsOnly = clientPhone.replace(/[^0-9]/g, '')
+    if (digitsOnly.length < 10) {
+      setBookingError('Please enter a valid phone number (at least 10 digits).')
+      return
+    }
+    if (clientEmail.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clientEmail.trim())) {
+      setBookingError('Please enter a valid email address.')
       return
     }
     setBookingError('')
@@ -230,7 +240,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                   </div>
                   <div className="ct8-book-field">
                     <label>Phone</label>
-                    <input placeholder="+91 00000 00000" value={clientPhone} onChange={e => setClientPhone(e.target.value)} />
+                    <input placeholder="+91 00000 00000" type="tel" inputMode="tel" value={clientPhone} onChange={e => setClientPhone(e.target.value)} />
                   </div>
                 </div>
 
