@@ -110,7 +110,8 @@ export async function GET() {
       .from('therapists')
       .select(
         'razorpay_key_id, payments_enabled, webhook_verified, razorpay_updated_at, ' +
-        'razorpay_oauth_merchant_id, razorpay_oauth_scope, razorpay_oauth_connected_at'
+        'razorpay_oauth_merchant_id, razorpay_oauth_scope, razorpay_oauth_connected_at, ' +
+        'razorpay_oauth_health, razorpay_oauth_health_error, razorpay_oauth_health_checked_at'
       )
       .eq('id', user.id)
       .single()
@@ -128,6 +129,9 @@ export async function GET() {
         merchant_id:  data.razorpay_oauth_merchant_id  ?? null,
         scope:        data.razorpay_oauth_scope        ?? null,
         connected_at: data.razorpay_oauth_connected_at ?? null,
+        health:       data.razorpay_oauth_health         ?? 'unknown',
+        health_error: data.razorpay_oauth_health_error   ?? null,
+        health_checked_at: data.razorpay_oauth_health_checked_at ?? null,
       },
     })
   } catch (err: unknown) {

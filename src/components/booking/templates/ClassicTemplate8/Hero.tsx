@@ -1,158 +1,149 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { ArrowRight, ArrowDown } from 'lucide-react'
 import type { TherapistProfile } from '../templateUtils'
-import { resolveImage, resolveCT8Content } from '../templateUtils'
+import { resolveCT8Content, resolveImage, DEFAULT_PROFILE_IMAGE } from '../templateUtils'
 
-// Persona here means "which mode is this site in" — the OWNER's identity
-// (a psychology student building a portfolio vs. a practicing
-// professional's client-facing site) — not "which client is visiting."
-// Toggling it swaps the hero framing/CTAs and retints the accent color;
-// the new portfolio sections (Education, Research, Experience, Skills,
-// Certifications, Recommendations) are the ones that actually matter in
-// student mode, while Services/Booking still matter in professional mode.
-//
-// v4 — premium/editorial pass: no icons, no colored pills, no gradient
-// text. A serif display headline, thin-underline text tabs for the
-// persona switch, and a plain numeric stat row. Color is used in exactly
-// one place (the primary button's hover state) — everything else is
-// ink / paper / hairline.
+// v6 — same dark, bold "developer portfolio" pass as before, now split
+// into a two-column layout: photo on the left, the "Hii, I'm [Name]"
+// identity block + copy + CTAs on the right (left-aligned), instead of
+// everything centered with no photo at all.
 export type Persona = 'student' | 'professional' | null
 
 interface HeroProps {
   therapist: TherapistProfile
-  persona: Persona
-  setPersona: (p: Persona) => void
 }
 
-export default function Hero({ therapist, persona, setPersona }: HeroProps) {
+export default function Hero({ therapist }: HeroProps) {
   const ct8 = resolveCT8Content(therapist.profile_content?.classic8)
   const name = therapist.name || 'Your Name'
-  const cred = therapist.credentials || 'Clinical Psychologist'
   const photo = resolveImage(therapist.image)
+  const resumeUrl = ct8.hero.resumeUrl?.trim()
 
-  const eyebrow =
-    persona === 'student' ? ct8.hero.eyebrowStudent :
-    persona === 'professional' ? ct8.hero.eyebrowProfessional :
-    ct8.hero.eyebrowDefault
-
-  const sub =
-    persona === 'student' ? ct8.hero.subStudent :
-    persona === 'professional' ? ct8.hero.subProfessional :
-    ct8.hero.subDefault ||
-    therapist.bio ||
-    'From classroom training to real client work — a page that grows with wherever I am right now.'
-
-  const headline =
-    persona === 'student'
-      ? <>Psychology student, <em>building real experience</em></>
-      : persona === 'professional'
-        ? <>Support that fits <em>your season of life</em></>
-        : <>From classroom <em>to practice</em></>
-
-  const primaryCta = persona === 'student' ? 'View My Work' : 'Book a Session'
-  const ghostCta    = persona === 'student' ? 'Download Resume' : 'About Me'
-
-  const researchCount    = ct8.research.length
-  const experienceCount  = ct8.clinicalExperience.length
-  const exp              = therapist.experience ?? 8
-  const reviews           = therapist.totalReviews ?? 200
-
-  const marqueeItems = (
-    therapist.specialties?.length ? therapist.specialties : ['Anxiety', 'Depression', 'Relationships', 'Burnout', 'Life Transitions', 'Self-Esteem']
-  )
-
-  function handlePrimaryCta() {
-    if (persona === 'student') {
-      document.getElementById('research')?.scrollIntoView({ behavior: 'smooth' })
-    } else {
-      document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })
+  // Auto-fit the name onto as few lines as possible. Bases are tuned
+  // smaller than the old centered/full-width version since the name now
+  // lives inside the right-hand column (roughly half the page width), not
+  // the full page.
+  //
+  // isMac: macOS (Safari/Chrome) renders this font measurably wider than
+  // Windows does for the same CSS -- there's no CSS-only way to target
+  // "macOS" specifically (unlike Safari-vs-Chrome, which has @supports
+  // hacks), so this is detected client-side via navigator and applied as
+  // an extra shrink factor, leaving Windows sizing completely untouched.
+  // Starts false (matches server-rendered HTML) and flips after mount --
+  // avoids a hydration mismatch at the cost of one negligible reflow.
+  const [isMac, setIsMac] = useState(false)
+  useEffect(() => {
+    if (typeof navigator !== 'undefined') {
+      setIsMac(/Macintosh|MacIntel/.test(navigator.userAgent) && !/iPhone|iPad|iPod/.test(navigator.userAgent))
     }
+  }, [])
+
+  const nameLen = Math.max(name.length, 1)
+  const fitFactor = Math.min(1.35, Math.max(0.45, 7 / nameLen)) * (isMac ? 0.75 : 1)
+  const nameFontSize = `clamp(${Math.round(40 * fitFactor)}px, ${(9.5 * fitFactor).toFixed(2)}vw, ${Math.round(104 * fitFactor)}px)`
+
+  // Split into words so each word is its own non-breakable unit (wrapped
+  // in white-space: nowrap below) -- this is what actually guarantees
+  // "Vansh" can never split into "VAN" / "SH" the way it did on Mac's
+  // renderer, regardless of exactly why that browser measured it
+  // differently. The line CAN still wrap BETWEEN words (first/last name),
+  // just never inside one.
+  const nameWords = name.split(' ').filter(Boolean)
+
+  const eyebrow = ct8.hero.eyebrowDefault
+
+  function scrollToAbout() {
+    document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })
   }
-  function handleGhostCta() {
-    if (persona === 'student') {
-      document.getElementById('footer')?.scrollIntoView({ behavior: 'smooth' })
-    } else {
-      document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })
-    }
+  function scrollToNext() {
+    document.getElementById('about')?.scrollIntoView({ behavior: 'smooth' })
   }
 
   return (
-    <section id="hero" className="ct8-hero-premium">
-      <div className="ct8-hero-premium-inner">
-        <div className="ct8-persona-tabs" role="group" aria-label="Which mode is this site in?">
-          <button
-            type="button"
-            className={`ct8-persona-tab ${persona === 'student' ? 'active' : ''}`}
-            onClick={() => setPersona(persona === 'student' ? null : 'student')}
-          >
-            Student Portfolio
-          </button>
-          <button
-            type="button"
-            className={`ct8-persona-tab ${persona === 'professional' ? 'active' : ''}`}
-            onClick={() => setPersona(persona === 'professional' ? null : 'professional')}
-          >
-            Practicing Professional
-          </button>
+    <section id="hero" className="ct8-hero-premium ct8-hero-dark">
+      <div className="ct8-hero-dark-inner ct8-hero-dark-inner--split">
+        <div className="ct8-hero-dark-grid">
+          <div className="ct8-hero-photo-orbit">
+            <span className="ct8-hero-photo-glow" aria-hidden="true" />
+            <div className="ct8-hero-photo-ring-wrap">
+              <div className="ct8-hero-dark-grid-photo">
+                <img
+                  src={photo}
+                  alt={name}
+                  onError={e => {
+                    const img = e.currentTarget
+                    if (img.src !== DEFAULT_PROFILE_IMAGE) img.src = DEFAULT_PROFILE_IMAGE
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="ct8-hero-dark-grid-content">
+            <p className="ct8-hero-greeting-prefix">Hello,</p>
+
+            <h1 className="ct8-hero-dark-name" style={{ fontSize: nameFontSize }}>
+              <span className="ct8-name-word">
+                <span className="ct8-name-letter" style={{ ['--i' as string]: 0 }}>I&rsquo;m</span>
+              </span>{' '}
+              {nameWords.map((word, wi) => (
+                <span key={wi} className="ct8-name-word">
+                  {word.split('').map((ch, ci) => (
+                    <span key={ci} className="ct8-name-letter" style={{ ['--i' as string]: wi * 12 + ci + 1 }}>
+                      {ch}
+                    </span>
+                  ))}
+                </span>
+              )).reduce((acc, el, i) => i === 0 ? [el] : [...acc, ' ', el], [] as React.ReactNode[])}
+            </h1>
+
+            <p className="ct8-hero-tagline">{eyebrow}</p>
+
+            {therapist.city && <p className="ct8-hero-dark-eyebrow ct8-hero-dark-eyebrow--from">From {therapist.city}</p>}
+
+            <div className="ct8-hero-dark-ctas">
+              <a
+                className="ct8-hero-pill-btn"
+                href={resumeUrl || '#about'}
+                target={resumeUrl ? '_blank' : undefined}
+                rel={resumeUrl ? 'noopener noreferrer' : undefined}
+                download={!!resumeUrl}
+                onClick={e => { if (!resumeUrl) { e.preventDefault(); scrollToAbout() } }}
+              >
+                Download Resume <ArrowDown size={16} strokeWidth={2.4} />
+              </a>
+              <button className="ct8-hero-pill-btn ct8-hero-pill-btn--ghost" onClick={scrollToAbout}>
+                About Me <ArrowRight size={16} strokeWidth={2.4} />
+              </button>
+            </div>
+          </div>
         </div>
 
-        <span className="ct8-hero-premium-eyebrow">{eyebrow}</span>
+        <span className="ct8-hero-dark-divider" aria-hidden="true" />
 
-        <h1 className="ct8-hero-premium-headline">{headline}</h1>
-
-        <div className="ct8-hero-premium-cred">
-          <span className="ct8-hero-premium-cred-avatar"><img src={photo} alt={name} /></span>
-          {name}
-          <span className="ct8-hero-premium-cred-sep">·</span>
-          {cred}
-          {therapist.city && <><span className="ct8-hero-premium-cred-sep">·</span>{therapist.city}</>}
-        </div>
-
-        <p className="ct8-hero-bio">{sub}</p>
-
-        <div className="ct8-hero-ctas">
-          <button className="ct8-hero-premium-btn" onClick={handlePrimaryCta}>{primaryCta}</button>
-          <button className="ct8-hero-premium-link" onClick={handleGhostCta}>{ghostCta}</button>
-        </div>
-
-        <div className="ct8-hero-stats">
-          {persona === 'professional' ? (
-            <>
-              <div className="ct8-hero-stat">
-                <span className="ct8-hero-stat-num">{exp}+</span>
-                <span className="ct8-hero-stat-lbl">Years Practice</span>
-              </div>
-              <div className="ct8-hero-stat-divider" />
-              <div className="ct8-hero-stat">
-                <span className="ct8-hero-stat-num">{reviews}+</span>
-                <span className="ct8-hero-stat-lbl">Sessions</span>
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="ct8-hero-stat">
-                <span className="ct8-hero-stat-num">{researchCount || 2}</span>
-                <span className="ct8-hero-stat-lbl">Research Projects</span>
-              </div>
-              <div className="ct8-hero-stat-divider" />
-              <div className="ct8-hero-stat">
-                <span className="ct8-hero-stat-num">{experienceCount || 2}</span>
-                <span className="ct8-hero-stat-lbl">Placements</span>
-              </div>
-            </>
-          )}
-        </div>
+        <button type="button" className="ct8-hero-dark-scroll" onClick={scrollToNext} aria-label="Scroll down">
+          Scroll Down
+          <ArrowDown size={13} strokeWidth={2.2} />
+        </button>
       </div>
 
-      <div className="ct8-hero-marquee-wrap">
-        <div className="ct8-hero-marquee-track">
-          {[...marqueeItems, ...marqueeItems].map((item, i) => (
-            <span key={i} className="ct8-hero-marquee-item">
-              {item} <span aria-hidden="true">·</span>
-            </span>
-          ))}
+
+
+{/* 
+
+      {therapist.specialties?.length ? (
+        <div className="ct8-hero-marquee-wrap">
+          <div className="ct8-hero-marquee-track">
+            {[...therapist.specialties, ...therapist.specialties].map((item, i) => (
+              <span key={i} className="ct8-hero-marquee-item">
+                {item} <span aria-hidden="true">{'·'}</span>
+              </span>
+            ))}
+          </div>
         </div>
-      </div>
+      ) : null} */}
     </section>
   )
 }

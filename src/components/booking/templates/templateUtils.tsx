@@ -666,6 +666,10 @@ export interface CT8Content {
     subDefault?: string
     subStudent?: string
     subProfessional?: string
+    // A real, downloadable resume/CV link (PDF, Google Drive share link,
+    // etc.) for student-mode's "Download Resume" CTA. Empty by default --
+    // the button gracefully falls back to scrolling to About when unset.
+    resumeUrl?: string
   }
   services?: EditableService[]
   faq?: EditableFAQ[]
@@ -687,12 +691,13 @@ export interface CT8RecommendationItem { quote: string; name: string; role: stri
 
 export const DEFAULT_CT8_CONTENT: Required<CT8Content> = {
   hero: {
-    eyebrowDefault: 'Psychology Student & Practicing Professional',
+    eyebrowDefault: 'Psychology Student with growing hands-on experience in therapy, clinical research, and real client care — bridging academic training with practical, real-world psychological support.',
     eyebrowStudent: 'Psychology Student \u00b7 Portfolio',
     eyebrowProfessional: 'Practicing Clinical Psychologist',
-    subDefault: 'From classroom training to real client work \u2014 a page that grows with wherever I am right now.',
+    subDefault: 'From classroom training to real client work .',
     subStudent: 'Currently training in clinical psychology \u2014 here\u2019s my education, research, supervised experience, and the skills I\u2019ve built along the way.',
     subProfessional: 'Confidential, structured support that fits around your career, deadlines, and responsibilities.',
+    resumeUrl: '',
   },
   services: [
     { name: 'Student Support Session', desc: 'A shorter, budget-friendly session focused on exam stress, adjustment, relationships, and finding your footing \u2014 built around a student schedule and budget.', price: '600', duration_mins: 30, audience: 'student', forWhom: ['Exam Stress', 'Adjustment', 'Relationships'] },
@@ -705,6 +710,9 @@ export const DEFAULT_CT8_CONTENT: Required<CT8Content> = {
     { q: 'Do I have to pick \u201cstudent\u201d or \u201cprofessional\u201d \u2014 what if I\u2019m both?', a: 'Not at all \u2014 the toggle above is just to tailor the page to you. Everyone can book any session type that fits their actual needs.' },
     { q: 'Is everything I share confidential?', a: 'Yes, within the standard clinical limits (risk of serious harm, or legal requirement). This applies equally whether you\u2019re a student or a working professional.' },
     { q: 'How many sessions will I need?', a: 'It depends entirely on what you\u2019re working through. Some come for a focused handful of sessions around one issue (common for students around exam time); others continue for longer-term work.' },
+    { q: 'Do you offer online sessions, or only in-person?', a: 'Sessions are available online via a secure video call, which most students and busy professionals prefer for the flexibility. In-person sessions can be arranged on request if that suits you better.' },
+    { q: 'What happens in the first session?', a: 'The first session is mostly about understanding what’s brought you here and what you’re hoping for — no pressure to have it all figured out. We’ll also agree on a loose plan for how we work together going forward.' },
+    { q: 'What is your cancellation or rescheduling policy?', a: 'You can reschedule or cancel up to 24 hours before your session at no charge. This is especially flexible for students around exam periods — just message ahead of time.' },
   ],
   education: [
     { degree: 'M.A. Clinical Psychology', institution: 'University of Delhi', year: '2024 \u2013 2026 (expected)', details: 'Coursework in psychopathology, psychometrics, and psychotherapy techniques.' },

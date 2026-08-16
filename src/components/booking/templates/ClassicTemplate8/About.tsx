@@ -1,85 +1,86 @@
 'use client'
 
-import { GraduationCap } from 'lucide-react'
+import { BadgeCheck, Star, Users, Award } from 'lucide-react'
 import type { TherapistProfile } from '../templateUtils'
-import { resolveImage, DEFAULT_PROFILE_IMAGE } from '../templateUtils'
+import { resolveImage } from '../templateUtils'
 
 interface AboutProps { therapist: TherapistProfile }
 
 export default function About({ therapist }: AboutProps) {
-  const name = therapist.name || 'Your Name'
-  const photo = resolveImage(therapist.image)
   const bio =
     therapist.bio ||
     'I work with people at very different stages of life — some still in school or college, others deep into their careers — and I believe both deserve support that actually fits their reality, not a one-size-fits-all approach.'
-  const education = (therapist.education || ['M.Phil Clinical Psychology', 'RCI Licensed Psychologist']).map(
-    (e: unknown) =>
-      typeof e === 'string'
-        ? e
-        : [(e as { degree?: string }).degree, (e as { institution?: string }).institution, (e as { year?: string | number }).year]
-            .filter(Boolean)
-            .join(' — ')
-  )
-  const certs = therapist.certifications || ['Cognitive Behavioral Therapy (CBT)', 'Mindfulness-Based Approaches']
   const langs = therapist.languages || ['English', 'Hindi']
-  const exp = therapist.experience ?? 8
-  const cred = therapist.credentials || 'Clinical Psychologist'
+  const photoSrc = resolveImage(therapist.image)
+  const credentialLabel = therapist.credentials?.trim() || 'Licensed Practitioner'
+
+  const stats = [
+    therapist.experience ? { icon: <Award size={17} strokeWidth={2.2} />, num: `${therapist.experience}+`, lbl: therapist.experience === 1 ? 'Year Exp.' : 'Years Exp.' } : null,
+    therapist.rating ? { icon: <Star size={17} strokeWidth={2.2} />, num: therapist.rating.toFixed(1), lbl: 'Rating' } : null,
+    therapist.totalReviews ? { icon: <Users size={17} strokeWidth={2.2} />, num: `${therapist.totalReviews}+`, lbl: 'Sessions' } : null,
+  ].filter(Boolean) as { icon: React.ReactNode; num: string; lbl: string }[]
+
+  const creds = [
+    therapist.credentials?.trim(),
+    ...(therapist.certifications ?? []).slice(0, 3),
+  ].filter(Boolean) as string[]
 
   return (
-    <section id="about" className="ct8-section">
+    <section id="about" className="ct8-section" style={{ background: '#FFFFFF' }}>
       <div className="ct8-container ct8-about-grid ct8-about-grid--with-photo">
         <div>
-          <div className="ct8-about-photo-wrap">
-            <img
-              src={photo}
-              alt={name}
-              className="ct8-about-photo"
-              onError={e => {
-                // If the stored image URL is broken/unreachable, fall back to
-                // the shared default profile image rather than showing a
-                // broken-image icon on a public-facing page.
-                const img = e.currentTarget
-                if (img.src !== DEFAULT_PROFILE_IMAGE) img.src = DEFAULT_PROFILE_IMAGE
-              }}
-            />
-
+          <div className="ct8-about-photo-orbit">
+            <span className="ct8-about-photo-glow" aria-hidden="true" />
+            <span className="ct8-about-photo-ring" aria-hidden="true" />
+            <div className="ct8-about-photo-wrap">
+              <img className="ct8-about-photo" src={photoSrc} alt={therapist.name || 'Therapist portrait'} />
+            </div>
+            <span className="ct8-about-photo-badge">
+              <span className="ct8-about-photo-badge-icon"><BadgeCheck size={14} strokeWidth={2.4} /></span>
+              {credentialLabel}
+            </span>
           </div>
-
         </div>
 
         <div>
-          <div className="ct8-section-head" style={{ margin: '0 0 1.6rem' }}>
+          <div className="ct8-section-head" style={{ margin: '0 0 1.5rem' }}>
             <span className="ct8-eyebrow">About Me</span>
-            <h2 className="ct8-heading ct8-section-title">Support that meets you<br />where you actually are</h2>
           </div>
-          <p className="ct8-about-body">{bio}</p>
-          <div className="ct8-chip-wrap" style={{ marginBottom: '1.6rem' }}>
+
+          <div className="ct8-about-quote-wrap">
+            <span className="ct8-about-quote-mark" aria-hidden="true">&ldquo;</span>
+            <p className="ct8-about-body ct8-about-body--lead">{bio}</p>
+          </div>
+
+          {stats.length > 0 && (
+            <div className="ct8-stat-row" style={{ gridTemplateColumns: `repeat(${stats.length}, 1fr)` }}>
+              {stats.map(s => (
+                <div key={s.lbl} className="ct8-card ct8-stat-box">
+                  <div className="ct8-stat-box-icon">{s.icon}</div>
+                  <div className="ct8-stat-box-num">{s.num}</div>
+                  <div className="ct8-stat-box-lbl">{s.lbl}</div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {creds.length > 0 && (
+            <div className="ct8-card ct8-cred-card">
+              <span className="ct8-cred-title">Credentials</span>
+              {creds.map((c, i) => (
+                <div key={i} className="ct8-cred-item">
+                  <span className="ct8-cred-dot" />
+                  <span className="ct8-cred-text">{c}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="ct8-chip-wrap" style={{ marginTop: '1.4rem' }}>
             {langs.map(l => (
               <span key={l} className="ct8-chip">{l}</span>
             ))}
           </div>
-
-          {/* <div className="ct8-card ct8-cred-card">
-            <span className="ct8-cred-title">Education & Credentials</span>
-            {education.map((e, i) => (
-              <div key={i} className="ct8-cred-item">
-                <span className="ct8-cred-dot" />
-                <span className="ct8-cred-text">{e}</span>
-              </div>
-            ))}
-            {certs.length > 0 && (
-              <>
-                <div style={{ height: 1, background: 'var(--line)', margin: '1rem 0' }} />
-                <span className="ct8-cred-title">Certifications</span>
-                {certs.map((c, i) => (
-                  <div key={i} className="ct8-cred-item">
-                    <span className="ct8-cred-dot" />
-                    <span className="ct8-cred-text">{c}</span>
-                  </div>
-                ))}
-              </>
-            )}
-          </div> */}
         </div>
       </div>
     </section>

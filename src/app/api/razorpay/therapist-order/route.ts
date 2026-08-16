@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceSupabaseClient } from '@/lib/supabase-server'
 import { decrypt } from '@/lib/encryption'
-import { getValidAccessToken } from '@/lib/razorpay-oauth'
+import { getValidAccessToken, markOAuthHealth } from '@/lib/razorpay-oauth'
 
 export async function POST(req: NextRequest) {
   try {
@@ -83,6 +83,12 @@ export async function POST(req: NextRequest) {
         accessToken = await getValidAccessToken(therapist_id)
       } catch (err) {
         console.error('[therapist-order] OAuth token unavailable:', err)
+        // The failure IS the health check -- record it immediately instead
+        // of waiting for a periodic check to notice. This is what makes
+        // the dashboard reflect a broken connection the moment it actually
+        // breaks, rather than a stale "Connected" badge that only checked
+        // whether a merchant_id exists.
+        await markOAuthHealth(therapist_id, 'broken', 'refresh_failed')
         return NextResponse.json({ error: 'Razorpay connection has expired -- ask the therapist to reconnect.' }, { status: 422 })
       }
       authHeader = `Bearer ${accessToken}`
@@ -123,6 +129,14 @@ export async function POST(req: NextRequest) {
     const rzpOrder = await rzpRes.json()
     if (!rzpRes.ok) {
       console.error('[therapist-order] Razorpay error:', rzpOrder)
+      // Same as above -- if this was an OAuth-connected therapist and
+      // Razorpay rejected the call as an auth problem (not a validation
+      // error like a bad amount), the connection itself is broken. Record
+      // it right here, at the actual failure point, instead of only
+      // finding out from a support message days later.
+      if (isOAuthConnected && (rzpRes.status === 401 || rzpOrder?.error?.code === 'BAD_REQUEST_ERROR')) {
+        await markOAuthHealth(therapist_id, 'broken', 'auth_failed')
+      }
       return NextResponse.json(
         { error: rzpOrder?.error?.description ?? 'Failed to create payment order.' },
         { status: 502 },
@@ -141,6 +155,12 @@ export async function POST(req: NextRequest) {
     if (paymentErr) {
       console.error('[therapist-order] Insert payment row failed:', paymentErr)
       return NextResponse.json({ error: 'Failed to record payment order.' }, { status: 500 })
+    }
+
+    // A successful order proves the connection genuinely works right now --
+    // clear any stale 'broken' status from an earlier failure.
+    if (isOAuthConnected) {
+      markOAuthHealth(therapist_id, 'healthy').catch(() => {})
     }
 
     return NextResponse.json({

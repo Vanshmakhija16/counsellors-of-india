@@ -10,8 +10,6 @@ export default function FAQ({ therapist }: FAQProps) {
   const ct8 = resolveCT8Content(therapist.profile_content?.classic8)
   const [openSet, setOpenSet] = useState<Set<number>>(new Set())
 
-  const allOpen = ct8.faq.length > 0 && openSet.size === ct8.faq.length
-
   function toggle(i: number) {
     setOpenSet(prev => {
       const next = new Set(prev)
@@ -19,10 +17,6 @@ export default function FAQ({ therapist }: FAQProps) {
       else next.add(i)
       return next
     })
-  }
-
-  function toggleAll() {
-    setOpenSet(allOpen ? new Set() : new Set(ct8.faq.map((_, i) => i)))
   }
 
   // Structured data so search engines can show these as rich FAQ results.
@@ -44,20 +38,8 @@ export default function FAQ({ therapist }: FAQProps) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
         />
       )}
-      <div className="ct8-container ct8-faq-grid">
-        <div className="ct8-section-head" style={{ margin: 0 }}>
-          <span className="ct8-eyebrow">FAQ</span>
-          <h2 className="ct8-heading ct8-section-title">Common<br /><em>questions</em></h2>
-          <p className="ct8-section-sub">
-            Whether you’re a student weighing the cost or a professional weighing the time — here’s what people usually ask first.
-          </p>
-          {ct8.faq.length > 1 && (
-            <button type="button" className="ct8-faq-expand-all" onClick={toggleAll}>
-              {allOpen ? 'Collapse all' : 'Expand all'}
-            </button>
-          )}
-        </div>
-
+      <div className="ct8-container">
+        <h2 className="ct8-heading ct8-faq-title">FAQs</h2>
         <div>
           {ct8.faq.map((faq, i) => {
             const isOpen = openSet.has(i)

@@ -14,7 +14,7 @@ const AVP = [
 
 // Kept in sync with the homepage's own hidden list — these usernames/names
 // never appear in either the homepage teaser or this full directory.
-const HIDDEN_THERAPISTS = ['ayush', 'harsh', 'himangi']
+const HIDDEN_THERAPISTS = ['ayush', 'harsh']
 
 function handleCardTiltMove(e: React.MouseEvent<HTMLAnchorElement>) {
   const card = e.currentTarget

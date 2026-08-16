@@ -61,7 +61,7 @@ export default function ClassicTemplate8({ therapist, bookedTimes = [], hiddenSe
       <main>
         {orderedIds.map(id => {
           switch (id) {
-            case 'hero':     return <Hero key={id} therapist={therapist} persona={persona} setPersona={setPersona} />
+            case 'hero':     return <Hero key={id} therapist={therapist} />
             case 'about':    return <About key={id} therapist={therapist} />
             case 'education':       return <Education key={id} therapist={therapist} />
             case 'research':        return <Research key={id} therapist={therapist} />

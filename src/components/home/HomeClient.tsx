@@ -1778,7 +1778,7 @@ export default function HomeClient({ tenant = DEFAULT_HOME_TENANT }: { tenant?: 
   // Homepage only ever teases the directory — real browsing (all
   // therapists, no cap) lives on /therapists. Hidden usernames/names are
   // filtered out of both the homepage teaser and the full directory.
-  const HIDDEN_THERAPISTS = ['ayush', 'harsh', 'himangi']
+  const HIDDEN_THERAPISTS = ['ayush', 'harsh']
   const visibleTherapists = useMemo(() => {
     const list = filtered.filter((t:any) => {
       const uname = (t.username || '').toLowerCase()

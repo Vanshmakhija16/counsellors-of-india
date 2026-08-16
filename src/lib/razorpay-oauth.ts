@@ -227,3 +227,126 @@ export function getOAuthWebhookSecret(): string {
   if (!secret) throw new Error('RAZORPAY_OAUTH_WEBHOOK_SECRET is not configured.')
   return secret
 }
+
+// ── Real connection health checks ────────────────────────────
+// "Connected" used to mean only "a merchant_id exists in the DB" -- that
+// never proves the token still WORKS. These write the real answer to
+// razorpay_oauth_health so the dashboard can show it, instead of a status
+// badge that can silently go stale for months.
+
+export type OAuthHealth = 'unknown' | 'healthy' | 'broken'
+
+interface HealthResult {
+  health: OAuthHealth
+  error: string | null
+}
+
+/** Human-readable, non-technical explanation for a broken connection, by cause. */
+const BROKEN_REASONS: Record<string, string> = {
+  refresh_failed:
+    'Razorpay rejected the stored connection when we tried to refresh it. This usually means the therapist revoked access from their Razorpay account, or their account was suspended.',
+  auth_failed:
+    'Razorpay rejected the connection ("Authentication failed"). This usually means the therapist revoked access via Razorpay Dashboard → Authorized Applications, their account was suspended, or they switched between Test and Live mode after connecting.',
+}
+
+/** Records the result of a health check (or a real booking failure) against a therapist's row. */
+export async function markOAuthHealth(therapistId: string, health: OAuthHealth, errorReasonKey?: keyof typeof BROKEN_REASONS | string): Promise<void> {
+  const db = createServiceSupabaseClient()
+  const errorText = health === 'broken'
+    ? (errorReasonKey ? (BROKEN_REASONS[errorReasonKey] ?? errorReasonKey) : 'Connection to Razorpay failed.')
+    : null
+
+  const { error } = await db
+    .from('therapists')
+    .update({
+      razorpay_oauth_health: health,
+      razorpay_oauth_health_error: errorText,
+      razorpay_oauth_health_checked_at: new Date().toISOString(),
+    })
+    .eq('id', therapistId)
+
+  if (error) console.error('[razorpay-oauth] Failed to record health status:', error)
+}
+
+/**
+ * Actually verifies the connection works by making a real, harmless,
+ * authenticated call to Razorpay (listing 1 payment -- same auth
+ * mechanism as order creation, so a pass here means order creation will
+ * also work). Refreshes the token first if needed. Records the result to
+ * the DB either way, so the dashboard reflects reality immediately.
+ */
+export async function checkOAuthHealth(therapistId: string): Promise<HealthResult> {
+  let accessToken: string
+  try {
+    accessToken = await getValidAccessToken(therapistId)
+  } catch (err) {
+    console.error('[razorpay-oauth] checkOAuthHealth: token refresh failed:', err)
+    await markOAuthHealth(therapistId, 'broken', 'refresh_failed')
+    return { health: 'broken', error: BROKEN_REASONS.refresh_failed }
+  }
+
+  try {
+    const res = await fetch('https://api.razorpay.com/v1/payments?count=1', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+
+    if (res.status === 401 || res.status === 403) {
+      await markOAuthHealth(therapistId, 'broken', 'auth_failed')
+      return { health: 'broken', error: BROKEN_REASONS.auth_failed }
+    }
+    if (!res.ok) {
+      // Some other Razorpay-side hiccup (5xx, rate limit) -- don't punish
+      // the therapist's connection status for a transient failure that
+      // isn't actually about their token.
+      console.warn('[razorpay-oauth] checkOAuthHealth: non-auth error from Razorpay:', res.status)
+      return { health: 'unknown', error: null }
+    }
+
+    await markOAuthHealth(therapistId, 'healthy')
+    return { health: 'healthy', error: null }
+  } catch (err) {
+    console.error('[razorpay-oauth] checkOAuthHealth: network error:', err)
+    return { health: 'unknown', error: null }
+  }
+}
+
+/**
+ * Self-service disconnect, keyed by the therapist's own id (used by the
+ * dashboard's "Disconnect" button) -- distinct from
+ * disconnectOAuthByMerchantId above, which is keyed by merchant id for the
+ * webhook path. Same manual-key-fallback logic: payments_enabled only
+ * turns off if there's no manual key configured as a fallback.
+ */
+export async function disconnectOAuthForTherapist(therapistId: string): Promise<void> {
+  const db = createServiceSupabaseClient()
+
+  const { data: therapist, error: findErr } = await db
+    .from('therapists')
+    .select('razorpay_key_id, razorpay_key_secret_encrypted')
+    .eq('id', therapistId)
+    .maybeSingle()
+
+  if (findErr) throw findErr
+
+  const hasManualKeys = !!(therapist?.razorpay_key_id && therapist?.razorpay_key_secret_encrypted)
+
+  const { error } = await db
+    .from('therapists')
+    .update({
+      razorpay_oauth_merchant_id: null,
+      razorpay_oauth_access_token_enc: null,
+      razorpay_oauth_refresh_token_enc: null,
+      razorpay_oauth_access_expires_at: null,
+      razorpay_oauth_refresh_expires_at: null,
+      razorpay_oauth_scope: null,
+      razorpay_oauth_connected_at: null,
+      razorpay_oauth_public_token: null,
+      razorpay_oauth_health: 'unknown',
+      razorpay_oauth_health_error: null,
+      razorpay_oauth_health_checked_at: null,
+      ...(hasManualKeys ? {} : { payments_enabled: false }),
+    })
+    .eq('id', therapistId)
+
+  if (error) throw error
+}
