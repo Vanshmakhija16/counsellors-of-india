@@ -1,0 +1,21 @@
+version: 1
+
+frontend:
+  phases:
+    preBuild:
+      commands:
+        - npm ci
+
+    build:
+      commands:
+        - env | grep -e SUPABASE_URL_IN -e SUPABASE_ANON_KEY_IN -e SUPABASE_SERVICE_ROLE_KEY_IN >> .env.production
+        - npm run build
+
+  artifacts:
+    baseDirectory: .next
+    files:
+      - '**/*'
+
+  cache:
+    paths:
+      - node_modules/**/*
