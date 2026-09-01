@@ -1,4 +1,5 @@
 version: 1
+
 frontend:
   phases:
     preBuild:
@@ -7,9 +8,21 @@ frontend:
 
     build:
       commands:
+        # Supabase environment variables
         - echo "NEXT_PUBLIC_SUPABASE_URL=$NEXT_PUBLIC_SUPABASE_URL" >> .env.production
         - echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY" >> .env.production
         - echo "SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY" >> .env.production
+
+        # Razorpay OAuth environment variables
+        - if [ -n "$RAZORPAY_OAUTH_CLIENT_ID" ]; then echo "RAZORPAY_OAUTH_CLIENT_ID exists"; else echo "RAZORPAY_OAUTH_CLIENT_ID MISSING"; fi
+        - if [ -n "$RAZORPAY_OAUTH_CLIENT_SECRET" ]; then echo "RAZORPAY_OAUTH_CLIENT_SECRET exists"; else echo "RAZORPAY_OAUTH_CLIENT_SECRET MISSING"; fi
+        - if [ -n "$RAZORPAY_OAUTH_REDIRECT_URI" ]; then echo "RAZORPAY_OAUTH_REDIRECT_URI exists"; else echo "RAZORPAY_OAUTH_REDIRECT_URI MISSING"; fi
+
+        - env | grep -e RAZORPAY_OAUTH_CLIENT_ID >> .env.production
+        - env | grep -e RAZORPAY_OAUTH_CLIENT_SECRET >> .env.production
+        - env | grep -e RAZORPAY_OAUTH_REDIRECT_URI >> .env.production
+
+        # Build Next.js application
         - npm run build
 
   artifacts:
