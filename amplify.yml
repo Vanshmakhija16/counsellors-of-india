@@ -22,6 +22,10 @@ frontend:
         - env | grep -e RAZORPAY_OAUTH_CLIENT_SECRET >> .env.production
         - env | grep -e RAZORPAY_OAUTH_REDIRECT_URI >> .env.production
 
+        # Encryption key
+        - if [ -n "$ENCRYPTION_KEY" ]; then echo "ENCRYPTION_KEY exists"; else echo "ENCRYPTION_KEY MISSING"; fi
+        - echo "ENCRYPTION_KEY=$ENCRYPTION_KEY" >> .env.production
+
         # Build Next.js application
         - npm run build
 
