@@ -1,11 +1,14 @@
 /**
  * API Route: GET /api/razorpay/oauth/connect
  *
- * Starts the "Connect with Razorpay" flow. Requires an authenticated
- * therapist (cookie session). Generates a random CSRF `state`, stashes it
- * in a short-lived httpOnly cookie, and redirects to Razorpay's consent
- * screen. The callback route verifies the state cookie matches before
- * exchanging the auth code.
+ * Starts the "Connect with Razorpay" OAuth flow.
+ *
+ * Flow:
+ * 1. Verify therapist is logged in
+ * 2. Generate CSRF state
+ * 3. Store state in secure httpOnly cookie
+ * 4. Generate Razorpay authorization URL
+ * 5. Redirect therapist to Razorpay
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -14,95 +17,527 @@ import { cookies } from 'next/headers'
 import crypto from 'crypto'
 import { buildAuthorizationUrl } from '@/lib/razorpay-oauth'
 
-const STATE_COOKIE = 'rzp_oauth_state'
-const STATE_TTL_SECONDS = 10 * 60 // 10 minutes -- plenty for a consent-screen redirect
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
-// Fallback origin used only if the request somehow arrives with no
-// forwarded-host info at all -- should not happen in normal operation.
+const STATE_COOKIE = 'rzp_oauth_state'
+const STATE_TTL_SECONDS = 10 * 60
+
 const FALLBACK_ORIGIN = 'https://www.counsellorsofindia.com'
 
 /**
- * Canonical public origin for this flow. Deliberately NOT derived from
- * request headers (Host / X-Forwarded-Host) -- on Azure App Service those
- * can reflect the container's own internal hostname:port instead of the
- * public domain, which was sending therapists to unreachable URLs like
- * https://19d7e45db8a1:8080/...
+ * Always use the canonical public origin.
  *
- * Also deliberately NOT NEXT_PUBLIC_APP_URL -- that prefix gets inlined at
- * build time by webpack, which is what broke forgot-password (baked in
- * localhost:3000). APP_ORIGIN is a plain server-side env var, read from
- * process.env at request time inside this server-only route file, so it's
- * never bundled to the client and never "baked in".
+ * Do NOT use Host / X-Forwarded-Host here because AWS/Amplify
+ * may provide an internal hostname.
  */
 function getSafeOrigin(): string {
-  return process.env.APP_ORIGIN ?? FALLBACK_ORIGIN
+  const origin = process.env.APP_ORIGIN
+
+  if (origin) {
+    return origin.replace(/\/$/, '')
+  }
+
+  return FALLBACK_ORIGIN
 }
 
+/**
+ * Get currently authenticated Supabase user.
+ */
 async function getUser() {
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (cs) => cs.forEach(({ name, value, options }) => cookieStore.set(name, value, options)),
-      },
+  try {
+    const cookieStore = await cookies()
+
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          getAll() {
+            return cookieStore.getAll()
+          },
+
+          setAll(cookiesToSet) {
+            try {
+              cookiesToSet.forEach(({ name, value, options }) => {
+                cookieStore.set(name, value, options)
+              })
+            } catch {
+              // Ignore cookie mutation errors in server context.
+            }
+          },
+        },
+      }
+    )
+
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser()
+
+    if (error) {
+      console.error(
+        '[razorpay/oauth/connect] Supabase auth error:',
+        error.message
+      )
+
+      return null
     }
-  )
-  const { data: { user }, error } = await supabase.auth.getUser()
-  return error ? null : user
+
+    return user
+  } catch (error) {
+    console.error(
+      '[razorpay/oauth/connect] Failed to get authenticated user:',
+      error
+    )
+
+    return null
+  }
 }
 
+/**
+ * GET /api/razorpay/oauth/connect
+ */
 export async function GET(req: NextRequest) {
-  const safeOrigin = getSafeOrigin()
+  console.log(
+    '============================================================'
+  )
 
-  // -- Canonicalize host BEFORE setting the state cookie --
-  // The redirect_uri we send to Razorpay (buildAuthorizationUrl -> getRedirectUri())
-  // is fixed to a single host. The state cookie we set below has no explicit
-  // Domain attribute, so it's host-only. If a therapist starts this flow on a
-  // different host than the one baked into redirect_uri (e.g. apex
-  // counsellorsofindia.com vs www.counsellorsofindia.com -- both are valid,
-  // simultaneously-live hosts per src/lib/tenants/in.ts, with no canonical
-  // redirect enforced anywhere), the cookie gets set on the wrong host and
-  // will never be sent back on the callback request -> state_mismatch.
-  // Forcing this redirect first guarantees the cookie is always set on
-  // exactly the host Razorpay will return the browser to.
-  const currentHost = req.headers.get('host')
-  const canonicalHost = new URL(safeOrigin).host
-  if (currentHost && currentHost !== canonicalHost) {
-    console.warn('[razorpay/oauth/connect] Non-canonical host, redirecting.', { currentHost, canonicalHost })
-    return NextResponse.redirect(new URL(req.nextUrl.pathname + req.nextUrl.search, safeOrigin))
+  console.log(
+    '[razorpay/oauth/connect] REQUEST RECEIVED'
+  )
+
+  console.log(
+    '[razorpay/oauth/connect] URL:',
+    req.url
+  )
+
+  console.log(
+    '[razorpay/oauth/connect] TIME:',
+    new Date().toISOString()
+  )
+
+  try {
+    const safeOrigin = getSafeOrigin()
+
+    console.log(
+      '[razorpay/oauth/connect] Safe origin:',
+      safeOrigin
+    )
+
+    /**
+     * ---------------------------------------------------------
+     * ENVIRONMENT DEBUG
+     * ---------------------------------------------------------
+     */
+
+    console.log(
+      '[razorpay/oauth/connect] Environment check:',
+      {
+        hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+
+        hasSupabaseAnonKey:
+          !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+
+        hasAppOrigin:
+          !!process.env.APP_ORIGIN,
+
+        hasRazorpayClientId:
+          !!process.env.RAZORPAY_OAUTH_CLIENT_ID,
+
+        hasRazorpayClientSecret:
+          !!process.env.RAZORPAY_OAUTH_CLIENT_SECRET,
+
+        hasRazorpayRedirectUri:
+          !!process.env.RAZORPAY_OAUTH_REDIRECT_URI,
+
+        lambdaVersion:
+          process.env.AWS_LAMBDA_FUNCTION_VERSION ??
+          'unknown',
+
+        lambdaFunction:
+          process.env.AWS_LAMBDA_FUNCTION_NAME ??
+          'unknown',
+      }
+    )
+
+    /**
+     * ---------------------------------------------------------
+     * CANONICAL HOST CHECK
+     * ---------------------------------------------------------
+     */
+
+    const currentHost = req.headers.get('host')
+
+    const canonicalHost = new URL(safeOrigin).host
+
+    console.log(
+      '[razorpay/oauth/connect] Host information:',
+      {
+        currentHost,
+        canonicalHost,
+      }
+    )
+
+    /**
+     * If user accesses:
+     *
+     * https://counsellorsofindia.com/...
+     *
+     * instead of:
+     *
+     * https://www.counsellorsofindia.com/...
+     *
+     * redirect them to the canonical domain first.
+     */
+
+    if (
+      currentHost &&
+      currentHost !== canonicalHost
+    ) {
+      console.warn(
+        '[razorpay/oauth/connect] NON-CANONICAL HOST'
+      )
+
+      console.warn(
+        '[razorpay/oauth/connect] Redirecting to:',
+        safeOrigin
+      )
+
+      const canonicalUrl = new URL(
+        req.nextUrl.pathname +
+          req.nextUrl.search,
+        safeOrigin
+      )
+
+      const redirectResponse =
+        NextResponse.redirect(canonicalUrl)
+
+      redirectResponse.headers.set(
+        'Cache-Control',
+        'no-store, no-cache, must-revalidate, proxy-revalidate'
+      )
+
+      redirectResponse.headers.set(
+        'Pragma',
+        'no-cache'
+      )
+
+      redirectResponse.headers.set(
+        'Expires',
+        '0'
+      )
+
+      return redirectResponse
+    }
+
+    /**
+     * ---------------------------------------------------------
+     * AUTHENTICATION CHECK
+     * ---------------------------------------------------------
+     */
+
+    console.log(
+      '[razorpay/oauth/connect] Checking authenticated user...'
+    )
+
+    const user = await getUser()
+
+    if (!user) {
+      console.warn(
+        '[razorpay/oauth/connect] No authenticated user'
+      )
+
+      const loginUrl = new URL(
+        '/login',
+        safeOrigin
+      )
+
+      loginUrl.searchParams.set(
+        'redirect',
+        '/dashboard/payments'
+      )
+
+      console.log(
+        '[razorpay/oauth/connect] Redirecting to login:',
+        loginUrl.toString()
+      )
+
+      const loginResponse =
+        NextResponse.redirect(loginUrl)
+
+      loginResponse.headers.set(
+        'Cache-Control',
+        'no-store, no-cache, must-revalidate, proxy-revalidate'
+      )
+
+      return loginResponse
+    }
+
+    console.log(
+      '[razorpay/oauth/connect] Authenticated user:',
+      {
+        id: user.id,
+        email: user.email ?? 'no-email',
+      }
+    )
+
+    /**
+     * ---------------------------------------------------------
+     * RAZORPAY ENVIRONMENT CHECK
+     * ---------------------------------------------------------
+     */
+
+    if (!process.env.RAZORPAY_OAUTH_CLIENT_ID) {
+      console.error(
+        '[razorpay/oauth/connect] ❌ RAZORPAY_OAUTH_CLIENT_ID IS MISSING'
+      )
+
+      const errorResponse = NextResponse.json(
+        {
+          error:
+            'RAZORPAY_OAUTH_CLIENT_ID is not configured.',
+          debug: {
+            hasClientId:
+              !!process.env.RAZORPAY_OAUTH_CLIENT_ID,
+
+            hasClientSecret:
+              !!process.env.RAZORPAY_OAUTH_CLIENT_SECRET,
+
+            hasRedirectUri:
+              !!process.env.RAZORPAY_OAUTH_REDIRECT_URI,
+          },
+        },
+        {
+          status: 500,
+        }
+      )
+
+      errorResponse.headers.set(
+        'Cache-Control',
+        'no-store, no-cache, must-revalidate, proxy-revalidate'
+      )
+
+      return errorResponse
+    }
+
+    if (!process.env.RAZORPAY_OAUTH_CLIENT_SECRET) {
+      console.error(
+        '[razorpay/oauth/connect] ❌ RAZORPAY_OAUTH_CLIENT_SECRET IS MISSING'
+      )
+
+      const errorResponse = NextResponse.json(
+        {
+          error:
+            'RAZORPAY_OAUTH_CLIENT_SECRET is not configured.',
+        },
+        {
+          status: 500,
+        }
+      )
+
+      errorResponse.headers.set(
+        'Cache-Control',
+        'no-store, no-cache, must-revalidate, proxy-revalidate'
+      )
+
+      return errorResponse
+    }
+
+    /**
+     * ---------------------------------------------------------
+     * GENERATE CSRF STATE
+     * ---------------------------------------------------------
+     */
+
+    const state = crypto
+      .randomBytes(24)
+      .toString('hex')
+
+    console.log(
+      '[razorpay/oauth/connect] OAuth state generated'
+    )
+
+    /**
+     * ---------------------------------------------------------
+     * BUILD RAZORPAY AUTHORIZATION URL
+     * ---------------------------------------------------------
+     */
+
+    console.log(
+      '[razorpay/oauth/connect] Building Razorpay authorization URL...'
+    )
+
+    let authorizationUrl: string
+
+    try {
+      authorizationUrl =
+        buildAuthorizationUrl(state)
+    } catch (error) {
+      console.error(
+        '[razorpay/oauth/connect] ❌ buildAuthorizationUrl FAILED:',
+        error
+      )
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Failed to build Razorpay authorization URL'
+
+      const errorResponse = NextResponse.json(
+        {
+          error: message,
+        },
+        {
+          status: 500,
+        }
+      )
+
+      errorResponse.headers.set(
+        'Cache-Control',
+        'no-store, no-cache, must-revalidate, proxy-revalidate'
+      )
+
+      return errorResponse
+    }
+
+    console.log(
+      '[razorpay/oauth/connect] Authorization URL generated'
+    )
+
+    /**
+     * NEVER print the complete authorization URL in production
+     * because it contains the OAuth state.
+     *
+     * We only log the destination hostname/path.
+     */
+
+    try {
+      const parsedAuthorizationUrl =
+        new URL(authorizationUrl)
+
+      console.log(
+        '[razorpay/oauth/connect] Razorpay OAuth destination:',
+        {
+          host: parsedAuthorizationUrl.host,
+          pathname: parsedAuthorizationUrl.pathname,
+        }
+      )
+    } catch {
+      console.warn(
+        '[razorpay/oauth/connect] Authorization URL could not be parsed for logging'
+      )
+    }
+
+    /**
+     * ---------------------------------------------------------
+     * CREATE REDIRECT RESPONSE
+     * ---------------------------------------------------------
+     */
+
+    const response =
+      NextResponse.redirect(
+        authorizationUrl
+      )
+
+    /**
+     * Prevent CloudFront / Amplify from caching
+     * the OAuth response.
+     */
+
+    response.headers.set(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate'
+    )
+
+    response.headers.set(
+      'Pragma',
+      'no-cache'
+    )
+
+    response.headers.set(
+      'Expires',
+      '0'
+    )
+
+    /**
+     * ---------------------------------------------------------
+     * SAVE STATE COOKIE
+     * ---------------------------------------------------------
+     */
+
+    response.cookies.set(
+      STATE_COOKIE,
+      state,
+      {
+        httpOnly: true,
+
+        secure: true,
+
+        sameSite: 'lax',
+
+        maxAge: STATE_TTL_SECONDS,
+
+        path: '/api/razorpay/oauth',
+      }
+    )
+
+    console.log(
+      '[razorpay/oauth/connect] OAuth state cookie set'
+    )
+
+    console.log(
+      '[razorpay/oauth/connect] ✅ REDIRECTING TO RAZORPAY'
+    )
+
+    console.log(
+      '============================================================'
+    )
+
+    return response
+
+  } catch (error) {
+    /**
+     * ---------------------------------------------------------
+     * GLOBAL ERROR HANDLER
+     * ---------------------------------------------------------
+     */
+
+    console.error(
+      '[razorpay/oauth/connect] ❌ UNHANDLED ERROR:',
+      error
+    )
+
+    const message =
+      error instanceof Error
+        ? error.message
+        : 'Unknown error'
+
+    const errorResponse =
+      NextResponse.json(
+        {
+          error: message,
+        },
+        {
+          status: 500,
+        }
+      )
+
+    errorResponse.headers.set(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate'
+    )
+
+    errorResponse.headers.set(
+      'Pragma',
+      'no-cache'
+    )
+
+    errorResponse.headers.set(
+      'Expires',
+      '0'
+    )
+
+    return errorResponse
   }
-
-  const user = await getUser()
-  if (!user) {
-    const loginUrl = new URL('/login', safeOrigin)
-    loginUrl.searchParams.set('redirect', '/dashboard/payments')
-    return NextResponse.redirect(loginUrl)
-  }
-
-  const state = crypto.randomBytes(24).toString('hex')
-  const authorizationUrl = buildAuthorizationUrl(state)
-
-  // -- TEMPORARY DEBUG LOGGING: remove once the flow is confirmed fixed --
-  // console.log('[razorpay/oauth/connect] debug', {
-  //   generatedState: state,
-  //   redirectUriSentToRazorpay: new URL(authorizationUrl).searchParams.get('redirect_uri'),
-  //   host: req.headers.get('host'),
-  //   xForwardedHost: req.headers.get('x-forwarded-host'),
-  //   xForwardedProto: req.headers.get('x-forwarded-proto'),
-  //   safeOrigin,
-  // })
-
-  const response = NextResponse.redirect(authorizationUrl)
-  response.cookies.set(STATE_COOKIE, state, {
-    httpOnly: true,
-    secure: true,
-    sameSite: 'lax', // 'lax' (not 'strict') so the cookie survives the cross-site redirect back from Razorpay
-    maxAge: STATE_TTL_SECONDS,
-    path: '/api/razorpay/oauth',
-  })
-
-  return response
 }
