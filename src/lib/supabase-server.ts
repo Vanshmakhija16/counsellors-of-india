@@ -102,6 +102,11 @@ export async function createServerSupabaseClient() {
  * in Phase 2/3 of MULTI_COUNTRY_EXPANSION_POA.md, not automatically here.
  */
 export function createServiceSupabaseClient() {
+  console.log('[SUPABASE ENV CHECK]', {
+    url: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+    serviceRole: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+  })
+
   return createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
