@@ -181,23 +181,31 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Payment verified but appointment update failed.' }, { status: 500 })
     }
 
-    // Fire-and-forget -- a notification failure must never affect the
-    // payment-verified response the client is waiting on. Channel (email
-    // vs WhatsApp) is decided inside by the therapist's plan.
-    notifyBookingConfirmed({
-      plan:           therapist.plan,
-      clientName:     appointment.client_name,
-      clientEmail:    appointment.client_email,
-      clientPhone:    appointment.client_phone,
-      therapistName:  therapist.full_name ?? 'Your Therapist',
-      therapistEmail: therapist.email ?? null,
-      therapistPhone: therapist.whatsapp || therapist.phone || null,
-      meetLink:       therapist.meet_link ?? null,
-      serviceName:    appointment.service_name ?? null,
-      scheduledAt:    appointment.scheduled_at,
-      durationMins:   appointment.duration_mins ?? null,
-      amountPaid:     appointment.service_price ?? null,
-    }).catch(e => console.error('[therapist-verify] notifyBookingConfirmed failed:', e))
+    // Awaited (not fire-and-forget) -- on AWS Amplify's Lambda-based SSR,
+    // the execution environment can freeze/terminate the instant the
+    // response below is returned, killing any unawaited work (SMTP send,
+    // WhatsApp API call) mid-flight. Wrapped in try/catch so a notification
+    // failure still never affects the payment-verified response the client
+    // is waiting on. Channel (email vs WhatsApp) is decided inside by the
+    // therapist's plan.
+    try {
+      await notifyBookingConfirmed({
+        plan:           therapist.plan,
+        clientName:     appointment.client_name,
+        clientEmail:    appointment.client_email,
+        clientPhone:    appointment.client_phone,
+        therapistName:  therapist.full_name ?? 'Your Therapist',
+        therapistEmail: therapist.email ?? null,
+        therapistPhone: therapist.whatsapp || therapist.phone || null,
+        meetLink:       therapist.meet_link ?? null,
+        serviceName:    appointment.service_name ?? null,
+        scheduledAt:    appointment.scheduled_at,
+        durationMins:   appointment.duration_mins ?? null,
+        amountPaid:     appointment.service_price ?? null,
+      })
+    } catch (e) {
+      console.error('[therapist-verify] notifyBookingConfirmed failed:', e)
+    }
 
     return NextResponse.json({
       verified: true,

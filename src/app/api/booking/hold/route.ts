@@ -54,14 +54,14 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const {
       therapist_id, client_name, client_email, client_phone,
-      scheduled_at, duration_mins, service_name,
+      scheduled_at, duration_mins, service_name, pro_bono,
     } = body
 
     // ── Validate ─────────────────────────────────────────────────────────
-    if (!therapist_id || !client_name || !client_email || !client_phone || !scheduled_at) {
+    if (!therapist_id || !client_name || !client_phone || !scheduled_at) {
       return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 })
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(client_email)) {
+    if (client_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(client_email)) {
       return NextResponse.json({ error: 'Invalid email address.' }, { status: 400 })
     }
 
@@ -82,6 +82,44 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Therapist not found.' }, { status: 404 })
     }
 
+    const isProBonoTemplate = therapist.template_id === 'classic8' || therapist.template_id === 't8'
+    const isProBono = isProBonoTemplate
+
+    if (!isProBono && !client_email) {
+      return NextResponse.json({ error: 'Missing required fields.' }, { status: 400 })
+    }
+
+    if (pro_bono === true && !isProBono) {
+      return NextResponse.json({ error: 'Invalid pro-bono booking request.' }, { status: 400 })
+    }
+
+    if (isProBono) {
+      const dayStart = new Date(`${normalizedAt.slice(0, 10)}T00:00:00.000Z`)
+      const dayEnd = new Date(dayStart)
+      dayEnd.setUTCDate(dayEnd.getUTCDate() + 1)
+
+      const { data: dailyBookings } = await supabase
+        .from('appointments')
+        .select('client_email, client_phone')
+        .gte('scheduled_at', dayStart.toISOString())
+        .lt('scheduled_at', dayEnd.toISOString())
+        .not('status', 'in', '("cancelled","payment_failed","expired")')
+
+      const email = client_email.trim().toLowerCase()
+      const phone = client_phone.replace(/\D/g, '')
+      const userBookingCount = (dailyBookings ?? []).filter(booking =>
+        (email && booking.client_email?.trim().toLowerCase() === email) ||
+        (phone && booking.client_phone?.replace(/\D/g, '') === phone)
+      ).length
+
+      if (userBookingCount >= 2) {
+        return NextResponse.json(
+          { error: 'You can book up to two pro bono sessions per day.', code: 'DAILY_PRO_BONO_LIMIT_REACHED' },
+          { status: 429 }
+        )
+      }
+    }
+
     // ── Monthly booking limit enforcement ──────────────────────────────
     // Starter plan: max 10 confirmed bookings per calendar month.
     // Pro plan: unlimited.
@@ -89,7 +127,7 @@ export async function POST(req: NextRequest) {
     const planKey = (therapist.plan ?? 'starter').toLowerCase()
     const limit   = PLAN_LIMITS[planKey] ?? 10
 
-    if (limit !== Infinity) {
+    if (!isProBono && limit !== Infinity) {
       const now        = new Date()
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
       const monthEnd   = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString()
@@ -116,6 +154,7 @@ export async function POST(req: NextRequest) {
     }
 
     const resolved = resolveBookingPrice(therapist, service_name, duration_mins)
+    if (isProBono) resolved.priceInr = 0
     if (resolved.priceInr == null) {
       return NextResponse.json(
         { error: 'This therapist has not configured a payable or free session price.' },
@@ -260,22 +299,30 @@ export async function POST(req: NextRequest) {
 
       const therapistName = th?.full_name ?? 'Your Therapist'
 
-      // Fire-and-forget so a notification failure never breaks the booking
-      // response. Channel (email vs WhatsApp) is decided inside by the
-      // therapist's plan -- see lib/booking-notifications.ts.
-      notifyBookingConfirmed({
-        plan:            therapist.plan,
-        clientName:      client_name,
-        clientEmail:     client_email,
-        clientPhone:     client_phone,
-        therapistName,
-        therapistEmail:  th?.email ?? null,
-        therapistPhone:  th?.whatsapp || th?.phone || null,
-        meetLink:        th?.meet_link ?? null,
-        serviceName:     resolved.serviceName ?? null,
-        scheduledAt:     normalizedAt,
-        durationMins:    resolved.durationMins,
-      }).catch(e => console.error('[booking/hold] notifyBookingConfirmed failed:', e))
+      // Awaited (not fire-and-forget) -- on AWS Amplify's Lambda-based SSR,
+      // the execution environment can freeze/terminate the instant the
+      // response below is returned, killing any unawaited work (SMTP send,
+      // WhatsApp API call) mid-flight. This used to "work" on Azure App
+      // Service only because that process kept running in the background
+      // after the response was sent. Wrapped in try/catch so a notification
+      // failure still never fails the booking response itself.
+      try {
+        await notifyBookingConfirmed({
+          plan:            therapist.plan,
+          clientName:      client_name,
+          clientEmail:     client_email,
+          clientPhone:     client_phone,
+          therapistName,
+          therapistEmail:  th?.email ?? null,
+          therapistPhone:  th?.whatsapp || th?.phone || null,
+          meetLink:        th?.meet_link ?? null,
+          serviceName:     resolved.serviceName ?? null,
+          scheduledAt:     normalizedAt,
+          durationMins:    resolved.durationMins,
+        })
+      } catch (e) {
+        console.error('[booking/hold] notifyBookingConfirmed failed:', e)
+      }
 
       return NextResponse.json({ free: true, appointment_id: appointmentId })
     }

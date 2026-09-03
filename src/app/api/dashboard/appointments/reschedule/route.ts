@@ -22,7 +22,8 @@
  *   changes, the old time is simply no longer in anyone's booked set.
  *   If inform_client is true, notifies both client AND therapist via
  *   notifyBookingRescheduled() (email on Starter, WhatsApp on Pro) --
- *   fire-and-forget, same as every other notification call site.
+ *   awaited before the response is returned (see the "Notify" block
+ *   below for why), same as every other notification call site.
  */
 
 import { NextRequest, NextResponse } from 'next/server'
@@ -216,7 +217,12 @@ export async function POST(req: NextRequest) {
       throw updateErr
     }
 
-    // ── Notify (fire-and-forget) ─────────────────────────────────────────
+    // ── Notify ───────────────────────────────────────────────────────────
+    // Awaited (not fire-and-forget) -- on AWS Amplify's Lambda-based SSR,
+    // the execution environment can freeze/terminate the instant the
+    // response below is returned, killing any unawaited work (SMTP send,
+    // WhatsApp API call) mid-flight. Wrapped in try/catch so a notification
+    // failure still never fails the reschedule response itself.
     if (inform_client) {
       const { data: therapist } = await db
         .from('therapists')
@@ -226,19 +232,23 @@ export async function POST(req: NextRequest) {
 
       const therapistName = therapist?.full_name ?? 'Your Therapist'
 
-      notifyBookingRescheduled({
-        plan:            therapist?.plan,
-        clientName:      appointment.client_name,
-        clientEmail:     appointment.client_email ?? '',
-        clientPhone:     appointment.client_phone,
-        therapistName,
-        therapistEmail:  therapist?.email ?? null,
-        therapistPhone:  therapist?.whatsapp || therapist?.phone || null,
-        meetLink:        therapist?.meet_link ?? null,
-        serviceName:     appointment.service_name ?? null,
-        newScheduledAt:  normalizedAt,
-        durationMins:    appointment.duration_mins,
-      }).catch(e => console.error('[dashboard/appointments/reschedule] notify failed:', e))
+      try {
+        await notifyBookingRescheduled({
+          plan:            therapist?.plan,
+          clientName:      appointment.client_name,
+          clientEmail:     appointment.client_email ?? '',
+          clientPhone:     appointment.client_phone,
+          therapistName,
+          therapistEmail:  therapist?.email ?? null,
+          therapistPhone:  therapist?.whatsapp || therapist?.phone || null,
+          meetLink:        therapist?.meet_link ?? null,
+          serviceName:     appointment.service_name ?? null,
+          newScheduledAt:  normalizedAt,
+          durationMins:    appointment.duration_mins,
+        })
+      } catch (e) {
+        console.error('[dashboard/appointments/reschedule] notify failed:', e)
+      }
     }
 
     return NextResponse.json({ appointment: updated })

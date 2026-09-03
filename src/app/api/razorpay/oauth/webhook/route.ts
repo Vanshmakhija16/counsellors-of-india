@@ -39,19 +39,31 @@ function verifySignature(rawBody: string, signature: string | null, secret: stri
 }
 
 export async function POST(req: NextRequest) {
+  console.log('============================================================')
+  console.log('[razorpay/oauth/webhook] REQUEST RECEIVED')
+  console.log('[razorpay/oauth/webhook] TIME:', new Date().toISOString())
+
   const rawBody = await req.text()
   const signature = req.headers.get('x-razorpay-signature')
+
+  console.log('[razorpay/oauth/webhook] Has signature header:', !!signature)
+  console.log('[razorpay/oauth/webhook] Raw body length:', rawBody.length)
 
   let secret: string
   try {
     secret = getOAuthWebhookSecret()
+    console.log('[razorpay/oauth/webhook] Webhook secret loaded, length:', secret.length)
   } catch (err) {
     console.error('[razorpay/oauth/webhook] Webhook secret not configured:', err)
     return NextResponse.json({ error: 'Webhook not configured' }, { status: 500 })
   }
 
-  if (!verifySignature(rawBody, signature, secret)) {
+  const sigValid = verifySignature(rawBody, signature, secret)
+  console.log('[razorpay/oauth/webhook] Signature valid:', sigValid)
+
+  if (!sigValid) {
     console.error('[razorpay/oauth/webhook] Invalid signature -- rejecting.')
+    console.log('============================================================')
     return NextResponse.json({ error: 'Invalid signature' }, { status: 400 })
   }
 
@@ -59,8 +71,13 @@ export async function POST(req: NextRequest) {
   try {
     event = JSON.parse(rawBody)
   } catch {
+    console.error('[razorpay/oauth/webhook] Invalid JSON body.')
+    console.log('============================================================')
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 })
   }
+
+  console.log('[razorpay/oauth/webhook] Event type:', event.event)
+  console.log('[razorpay/oauth/webhook] Account ID (merchant):', event.account_id)
 
   try {
     if (event.event === 'account.app.authorization_revoked') {
@@ -85,6 +102,10 @@ export async function POST(req: NextRequest) {
       const razorpayPaymentId = paymentEntity?.id
       const amountPaise = paymentEntity?.amount
 
+      console.log('[razorpay/oauth/webhook] payment.captured details:', {
+        merchantId, razorpayOrderId, razorpayPaymentId, amountPaise,
+      })
+
       if (!merchantId || !razorpayOrderId || !razorpayPaymentId || amountPaise === undefined) {
         console.warn('[razorpay/oauth/webhook] payment.captured missing required fields.')
       } else {
@@ -96,11 +117,14 @@ export async function POST(req: NextRequest) {
           .eq('razorpay_order_id', razorpayOrderId)
           .maybeSingle()
 
+        console.log('[razorpay/oauth/webhook] payment row lookup:', { found: !!paymentRow, error: paymentErr?.message, status: paymentRow?.status })
+
         if (paymentErr) {
           console.error('[razorpay/oauth/webhook] payment lookup failed:', paymentErr)
         } else if (!paymentRow) {
           console.warn('[razorpay/oauth/webhook] payment.captured for unknown order:', razorpayOrderId)
         } else if (paymentRow.status === 'paid') {
+          console.log('[razorpay/oauth/webhook] Already paid -- no-op (duplicate delivery).')
           // Already confirmed (webhooks can be delivered more than once) -- no-op.
         } else {
           // Defense in depth: confirm the account_id that captured this
@@ -112,6 +136,8 @@ export async function POST(req: NextRequest) {
             .eq('id', paymentRow.therapist_id)
             .eq('razorpay_oauth_merchant_id', merchantId)
             .maybeSingle()
+
+          console.log('[razorpay/oauth/webhook] Owner check (merchant_id matches therapist):', { matched: !!ownerCheck, therapistId: paymentRow.therapist_id, merchantId })
 
           if (!ownerCheck) {
             console.error('[razorpay/oauth/webhook] account_id does not match payment\'s therapist -- refusing to mark paid.', {
@@ -157,20 +183,31 @@ export async function POST(req: NextRequest) {
                 ])
 
                 if (notifyAppt && notifyTherapist) {
-                  notifyBookingConfirmed({
-                    plan:           notifyTherapist.plan,
-                    clientName:     notifyAppt.client_name,
-                    clientEmail:    notifyAppt.client_email,
-                    clientPhone:    notifyAppt.client_phone,
-                    therapistName:  notifyTherapist.full_name ?? 'Your Therapist',
-                    therapistEmail: notifyTherapist.email ?? null,
-                    therapistPhone: notifyTherapist.whatsapp || notifyTherapist.phone || null,
-                    meetLink:       notifyTherapist.meet_link ?? null,
-                    serviceName:    notifyAppt.service_name ?? null,
-                    scheduledAt:    notifyAppt.scheduled_at,
-                    durationMins:   notifyAppt.duration_mins ?? null,
-                    amountPaid:     notifyAppt.service_price ?? null,
-                  }).catch(e => console.error('[razorpay/oauth/webhook] notifyBookingConfirmed failed:', e))
+                  // Awaited (not fire-and-forget) -- on AWS Amplify's
+                  // Lambda-based SSR, the execution environment can
+                  // freeze/terminate the instant the response below is
+                  // returned to Razorpay, killing any unawaited work (SMTP
+                  // send, WhatsApp API call) mid-flight. Wrapped in
+                  // try/catch so a notification failure still never
+                  // affects the 200 we return to Razorpay.
+                  try {
+                    await notifyBookingConfirmed({
+                      plan:           notifyTherapist.plan,
+                      clientName:     notifyAppt.client_name,
+                      clientEmail:    notifyAppt.client_email,
+                      clientPhone:    notifyAppt.client_phone,
+                      therapistName:  notifyTherapist.full_name ?? 'Your Therapist',
+                      therapistEmail: notifyTherapist.email ?? null,
+                      therapistPhone: notifyTherapist.whatsapp || notifyTherapist.phone || null,
+                      meetLink:       notifyTherapist.meet_link ?? null,
+                      serviceName:    notifyAppt.service_name ?? null,
+                      scheduledAt:    notifyAppt.scheduled_at,
+                      durationMins:   notifyAppt.duration_mins ?? null,
+                      amountPaid:     notifyAppt.service_price ?? null,
+                    })
+                  } catch (e) {
+                    console.error('[razorpay/oauth/webhook] notifyBookingConfirmed failed:', e)
+                  }
                 }
               }
             }
@@ -179,10 +216,12 @@ export async function POST(req: NextRequest) {
       }
     }
     // Other event types: acknowledged, no action needed yet.
-
+    console.log('[razorpay/oauth/webhook] ✅ DONE -- returning 200')
+    console.log('============================================================')
     return NextResponse.json({ received: true })
   } catch (err) {
     console.error('[razorpay/oauth/webhook] Handler error:', err)
+    console.log('============================================================')
     // Still 200 -- Razorpay will retry on non-2xx, and a DB hiccup here
     // shouldn't cause a retry storm. Logged above for follow-up.
     return NextResponse.json({ received: true, warning: 'Processing error, logged.' })
