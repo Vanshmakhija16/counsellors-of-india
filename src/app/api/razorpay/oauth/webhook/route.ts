@@ -11,14 +11,19 @@
  *   columns immediately so we stop trying to use a dead token instead of
  *   waiting to discover it on the next failed API call.
  *
- *   payment.captured -- the ONLY way we confirm an OAuth-connected
- *   therapist's payment as paid. OAuth never gives us the therapist's
- *   key_secret (only an access token), so therapist-verify/route.ts cannot
- *   run the usual client-side HMAC signature check for these therapists --
- *   there's no secret on our side to check it with. Instead we trust THIS
- *   webhook, which Razorpay signs with our OWN RAZORPAY_OAUTH_WEBHOOK_SECRET
- *   (a secret we configured ourselves and fully control), and flip the
- *   payment/appointment to paid from here.
+ *   payment.captured / order.paid -- the ONLY way we confirm an
+ *   OAuth-connected therapist's payment as paid. OAuth never gives us the
+ *   therapist's key_secret (only an access token), so therapist-verify/
+ *   route.ts cannot run the usual client-side HMAC signature check for
+ *   these therapists -- there's no secret on our side to check it with.
+ *   Instead we trust THIS webhook, which Razorpay signs with our OWN
+ *   RAZORPAY_OAUTH_WEBHOOK_SECRET (a secret we configured ourselves and
+ *   fully control), and flip the payment/appointment to paid from here.
+ *   Both events carry the same `payload.payment.entity` shape, so one
+ *   handler covers both -- Razorpay may deliver either (or both, for the
+ *   same payment) depending on which events are checked in the webhook's
+ *   dashboard config; the paymentRow.status === 'paid' guard below makes
+ *   handling both idempotent/safe.
  *
  * Other event types are acknowledged (200) but ignored.
  */
@@ -93,7 +98,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    if (event.event === 'payment.captured') {
+    if (event.event === 'payment.captured' || event.event === 'order.paid') {
       const paymentEntity = event.payload?.payment?.entity as
         | { id?: string; order_id?: string; amount?: number }
         | undefined
@@ -102,12 +107,12 @@ export async function POST(req: NextRequest) {
       const razorpayPaymentId = paymentEntity?.id
       const amountPaise = paymentEntity?.amount
 
-      console.log('[razorpay/oauth/webhook] payment.captured details:', {
-        merchantId, razorpayOrderId, razorpayPaymentId, amountPaise,
+      console.log('[razorpay/oauth/webhook] payment confirmation details:', {
+        eventType: event.event, merchantId, razorpayOrderId, razorpayPaymentId, amountPaise,
       })
 
       if (!merchantId || !razorpayOrderId || !razorpayPaymentId || amountPaise === undefined) {
-        console.warn('[razorpay/oauth/webhook] payment.captured missing required fields.')
+        console.warn('[razorpay/oauth/webhook] payment confirmation missing required fields.')
       } else {
         const db = createServiceSupabaseClient()
 
@@ -122,7 +127,7 @@ export async function POST(req: NextRequest) {
         if (paymentErr) {
           console.error('[razorpay/oauth/webhook] payment lookup failed:', paymentErr)
         } else if (!paymentRow) {
-          console.warn('[razorpay/oauth/webhook] payment.captured for unknown order:', razorpayOrderId)
+          console.warn('[razorpay/oauth/webhook] payment confirmation for unknown order:', razorpayOrderId)
         } else if (paymentRow.status === 'paid') {
           console.log('[razorpay/oauth/webhook] Already paid -- no-op (duplicate delivery).')
           // Already confirmed (webhooks can be delivered more than once) -- no-op.
@@ -144,7 +149,7 @@ export async function POST(req: NextRequest) {
               razorpayOrderId, merchantId, therapistId: paymentRow.therapist_id,
             })
           } else if (Number(amountPaise) !== Number(paymentRow.amount_paise)) {
-            console.error('[razorpay/oauth/webhook] Amount mismatch on payment.captured -- refusing to mark paid.', {
+            console.error('[razorpay/oauth/webhook] Amount mismatch on payment confirmation -- refusing to mark paid.', {
               razorpayOrderId, expected: paymentRow.amount_paise, got: amountPaise,
             })
           } else {
