@@ -17,10 +17,14 @@ frontend:
         - if [ -n "$RAZORPAY_OAUTH_CLIENT_ID" ]; then echo "RAZORPAY_OAUTH_CLIENT_ID exists"; else echo "RAZORPAY_OAUTH_CLIENT_ID MISSING"; fi
         - if [ -n "$RAZORPAY_OAUTH_CLIENT_SECRET" ]; then echo "RAZORPAY_OAUTH_CLIENT_SECRET exists"; else echo "RAZORPAY_OAUTH_CLIENT_SECRET MISSING"; fi
         - if [ -n "$RAZORPAY_OAUTH_REDIRECT_URI" ]; then echo "RAZORPAY_OAUTH_REDIRECT_URI exists"; else echo "RAZORPAY_OAUTH_REDIRECT_URI MISSING"; fi
+        - if [ -n "$RAZORPAY_OAUTH_WEBHOOK_SECRET" ]; then echo "RAZORPAY_OAUTH_WEBHOOK_SECRET exists"; else echo "RAZORPAY_OAUTH_WEBHOOK_SECRET MISSING"; fi
+        - if [ -n "$RAZORPAY_WEBHOOK_SECRET" ]; then echo "RAZORPAY_WEBHOOK_SECRET exists"; else echo "RAZORPAY_WEBHOOK_SECRET MISSING"; fi
 
         - env | grep -e RAZORPAY_OAUTH_CLIENT_ID >> .env.production
         - env | grep -e RAZORPAY_OAUTH_CLIENT_SECRET >> .env.production
         - env | grep -e RAZORPAY_OAUTH_REDIRECT_URI >> .env.production
+        - env | grep -e RAZORPAY_OAUTH_WEBHOOK_SECRET >> .env.production
+        - env | grep -e RAZORPAY_WEBHOOK_SECRET >> .env.production
 
         # Encryption key
         - if [ -n "$ENCRYPTION_KEY" ]; then echo "ENCRYPTION_KEY exists"; else echo "ENCRYPTION_KEY MISSING"; fi
