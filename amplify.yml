@@ -13,6 +13,37 @@ frontend:
         - echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$NEXT_PUBLIC_SUPABASE_ANON_KEY" >> .env.production
         - echo "SUPABASE_SERVICE_ROLE_KEY=$SUPABASE_SERVICE_ROLE_KEY" >> .env.production
 
+        # Supabase environment variables — India tenant explicit override
+        # (getCredsForPrefix('IN') prefers these if set, falling back to the
+        # unprefixed vars above only when these are absent)
+        - if [ -n "$SUPABASE_URL_IN" ]; then echo "SUPABASE_URL_IN exists"; else echo "SUPABASE_URL_IN MISSING"; fi
+        - if [ -n "$SUPABASE_ANON_KEY_IN" ]; then echo "SUPABASE_ANON_KEY_IN exists"; else echo "SUPABASE_ANON_KEY_IN MISSING"; fi
+        - if [ -n "$SUPABASE_SERVICE_ROLE_KEY_IN" ]; then echo "SUPABASE_SERVICE_ROLE_KEY_IN exists"; else echo "SUPABASE_SERVICE_ROLE_KEY_IN MISSING"; fi
+
+        - env | grep -e SUPABASE_URL_IN >> .env.production
+        - env | grep -e SUPABASE_ANON_KEY_IN >> .env.production
+        - env | grep -e SUPABASE_SERVICE_ROLE_KEY_IN >> .env.production
+
+        # App URL / auth environment variables
+        - if [ -n "$APP_ORIGIN" ]; then echo "APP_ORIGIN exists"; else echo "APP_ORIGIN MISSING"; fi
+        - if [ -n "$NEXTAUTH_URL" ]; then echo "NEXTAUTH_URL exists"; else echo "NEXTAUTH_URL MISSING"; fi
+        - if [ -n "$NEXT_PUBLIC_APP_URL" ]; then echo "NEXT_PUBLIC_APP_URL exists"; else echo "NEXT_PUBLIC_APP_URL MISSING"; fi
+
+        - env | grep -e APP_ORIGIN >> .env.production
+        - env | grep -e NEXTAUTH_URL >> .env.production
+        - env | grep -e NEXT_PUBLIC_APP_URL >> .env.production
+
+        # Razorpay (direct/manual-key) environment variables
+        - if [ -n "$RAZORPAY_KEY_ID" ]; then echo "RAZORPAY_KEY_ID exists"; else echo "RAZORPAY_KEY_ID MISSING"; fi
+        - if [ -n "$RAZORPAY_KEY_SECRET" ]; then echo "RAZORPAY_KEY_SECRET exists"; else echo "RAZORPAY_KEY_SECRET MISSING"; fi
+        - if [ -n "$NEXT_PUBLIC_RAZORPAY_KEY_ID" ]; then echo "NEXT_PUBLIC_RAZORPAY_KEY_ID exists"; else echo "NEXT_PUBLIC_RAZORPAY_KEY_ID MISSING"; fi
+        - if [ -n "$NEXT_PUBLIC_RAZORPAY_MODE" ]; then echo "NEXT_PUBLIC_RAZORPAY_MODE exists"; else echo "NEXT_PUBLIC_RAZORPAY_MODE MISSING"; fi
+
+        - env | grep -e RAZORPAY_KEY_ID >> .env.production
+        - env | grep -e RAZORPAY_KEY_SECRET >> .env.production
+        - env | grep -e NEXT_PUBLIC_RAZORPAY_KEY_ID >> .env.production
+        - env | grep -e NEXT_PUBLIC_RAZORPAY_MODE >> .env.production
+
         # Razorpay OAuth environment variables
         - if [ -n "$RAZORPAY_OAUTH_CLIENT_ID" ]; then echo "RAZORPAY_OAUTH_CLIENT_ID exists"; else echo "RAZORPAY_OAUTH_CLIENT_ID MISSING"; fi
         - if [ -n "$RAZORPAY_OAUTH_CLIENT_SECRET" ]; then echo "RAZORPAY_OAUTH_CLIENT_SECRET exists"; else echo "RAZORPAY_OAUTH_CLIENT_SECRET MISSING"; fi
@@ -25,6 +56,39 @@ frontend:
         - env | grep -e RAZORPAY_OAUTH_REDIRECT_URI >> .env.production
         - env | grep -e RAZORPAY_OAUTH_WEBHOOK_SECRET >> .env.production
         - env | grep -e RAZORPAY_WEBHOOK_SECRET >> .env.production
+
+        # SMTP (email notifications) environment variables
+        - if [ -n "$SMTP_HOST" ]; then echo "SMTP_HOST exists"; else echo "SMTP_HOST MISSING"; fi
+        - if [ -n "$SMTP_PORT" ]; then echo "SMTP_PORT exists"; else echo "SMTP_PORT MISSING"; fi
+        - if [ -n "$SMTP_USER" ]; then echo "SMTP_USER exists"; else echo "SMTP_USER MISSING"; fi
+        - if [ -n "$SMTP_PASS" ]; then echo "SMTP_PASS exists"; else echo "SMTP_PASS MISSING"; fi
+
+        - env | grep -e SMTP_HOST >> .env.production
+        - env | grep -e SMTP_PORT >> .env.production
+        - env | grep -e SMTP_SECURE >> .env.production
+        - env | grep -e SMTP_USER >> .env.production
+        - env | grep -e SMTP_PASS >> .env.production
+        - env | grep -e SMTP_FROM >> .env.production
+
+        # GetGabs (WhatsApp notifications) environment variables
+        - if [ -n "$GETGABS_API_KEY" ]; then echo "GETGABS_API_KEY exists"; else echo "GETGABS_API_KEY MISSING"; fi
+        - if [ -n "$GETGABS_SENDER" ]; then echo "GETGABS_SENDER exists"; else echo "GETGABS_SENDER MISSING"; fi
+        - if [ -n "$GETGABS_CLIENT_CAMPAIGN_ID" ]; then echo "GETGABS_CLIENT_CAMPAIGN_ID exists"; else echo "GETGABS_CLIENT_CAMPAIGN_ID MISSING"; fi
+        - if [ -n "$GETGABS_THERAPIST_CAMPAIGN_ID" ]; then echo "GETGABS_THERAPIST_CAMPAIGN_ID exists"; else echo "GETGABS_THERAPIST_CAMPAIGN_ID MISSING"; fi
+
+        - env | grep -e GETGABS_API_KEY >> .env.production
+        - env | grep -e GETGABS_SENDER >> .env.production
+        - env | grep -e GETGABS_CLIENT_CAMPAIGN_ID >> .env.production
+        - env | grep -e GETGABS_THERAPIST_CAMPAIGN_ID >> .env.production
+
+        # WhatsApp API version + plan pricing environment variables
+        - if [ -n "$WHATSAPP_API_VERSION" ]; then echo "WHATSAPP_API_VERSION exists"; else echo "WHATSAPP_API_VERSION MISSING"; fi
+        - if [ -n "$PLAN_PRICE_PRO_INR" ]; then echo "PLAN_PRICE_PRO_INR exists"; else echo "PLAN_PRICE_PRO_INR MISSING"; fi
+        - if [ -n "$PLAN_PRICE_STARTER_INR" ]; then echo "PLAN_PRICE_STARTER_INR exists"; else echo "PLAN_PRICE_STARTER_INR MISSING"; fi
+
+        - env | grep -e WHATSAPP_API_VERSION >> .env.production
+        - env | grep -e PLAN_PRICE_PRO_INR >> .env.production
+        - env | grep -e PLAN_PRICE_STARTER_INR >> .env.production
 
         # Encryption key
         - if [ -n "$ENCRYPTION_KEY" ]; then echo "ENCRYPTION_KEY exists"; else echo "ENCRYPTION_KEY MISSING"; fi
