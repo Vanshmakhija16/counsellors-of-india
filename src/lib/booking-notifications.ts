@@ -56,6 +56,7 @@ interface EmailParams {
  * therapist too. Uses the same SMTP/nodemailer setup as /api/contact.
  */
 export async function sendBookingConfirmationEmails(params: EmailParams): Promise<void> {
+  const startedAt = Date.now()
   console.log('[booking-notifications] sendBookingConfirmationEmails() called with:', {
     clientEmail:    params.clientEmail,
     therapistEmail: params.therapistEmail,
@@ -64,17 +65,22 @@ export async function sendBookingConfirmationEmails(params: EmailParams): Promis
   })
 
   // Check SMTP env vars are actually present BEFORE trying to send --
-  // this is the #1 reason emails silently don't go out.
+  // this is the #1 reason emails silently don't go out. Logging the
+  // resolved port/secure values (not just presence) too, since a wrong
+  // port/secure combo is the #2 reason (e.g. port 465 with secure=false).
   const smtpConfig = {
-    host:   process.env.SMTP_HOST,
-    port:   process.env.SMTP_PORT,
-    secure: process.env.SMTP_SECURE,
-    user:   process.env.SMTP_USER,
-    pass:   process.env.SMTP_PASS ? '(set)' : '(MISSING)',
+    host:         process.env.SMTP_HOST,
+    port:         process.env.SMTP_PORT,
+    portNumber:   Number(process.env.SMTP_PORT),
+    secureRaw:    process.env.SMTP_SECURE,
+    secureParsed: process.env.SMTP_SECURE === 'true',
+    user:         process.env.SMTP_USER,
+    pass:         process.env.SMTP_PASS ? `(set, ${process.env.SMTP_PASS.length} chars)` : '(MISSING)',
+    from:         process.env.SMTP_FROM || '(using default From)',
   }
   console.log('[booking-notifications] SMTP config:', smtpConfig)
   if (!process.env.SMTP_HOST || !process.env.SMTP_PORT || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
-    console.error('[booking-notifications] SMTP env vars missing -- emails will NOT send. Check .env.local / Azure app settings.')
+    console.error('[booking-notifications] SMTP env vars missing -- emails will NOT send. Check Amplify environment variables (Console -> App -> Environment variables), NOT just .env.local -- .env.local is not deployed.')
   }
 
   const { formattedDate, formattedTime } = formatDateTime(params.scheduledAt)
@@ -89,8 +95,37 @@ export async function sendBookingConfirmationEmails(params: EmailParams): Promis
     port:   Number(process.env.SMTP_PORT),
     secure: process.env.SMTP_SECURE === 'true',
     auth:   { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    // Lambda cold starts + some SMTP providers throttling/blocking
+    // unfamiliar IPs can make the initial connection hang far longer than
+    // a normal server would ever wait -- cap it explicitly so a stuck
+    // connection fails fast (and logs clearly) instead of silently eating
+    // the rest of the Lambda's execution time.
+    connectionTimeout: 10_000,
+    greetingTimeout:   10_000,
+    socketTimeout:     15_000,
   })
   const FROM = process.env.SMTP_FROM || 'Counsellors of India <support@counsellorsofindia.com>'
+
+  // Explicit connectivity check BEFORE attempting to send -- this is the
+  // single most useful line in these logs for diagnosing "WhatsApp sent,
+  // email didn't": if this fails or times out, the problem is SMTP
+  // connectivity/credentials, not application logic (Lambda's outbound IP
+  // being blocked/throttled by the SMTP provider is a common cause after
+  // moving off a fixed-IP host like Azure App Service).
+  const verifyStartedAt = Date.now()
+  try {
+    await transporter.verify()
+    console.log('[booking-notifications] SMTP verify() OK in', Date.now() - verifyStartedAt, 'ms')
+  } catch (err: any) {
+    console.error('[booking-notifications] SMTP verify() FAILED after', Date.now() - verifyStartedAt, 'ms:', {
+      message: err?.message, code: err?.code, command: err?.command,
+      response: err?.response, responseCode: err?.responseCode,
+    })
+    // Don't return early -- still attempt the actual send below in case
+    // verify() itself is unsupported/blocked by this provider but sending
+    // still works (some providers behave this way); the error above is
+    // what tells us verify specifically failed.
+  }
 
   function meetLinkBlock(): string {
     if (!params.meetLink) {
@@ -136,10 +171,13 @@ export async function sendBookingConfirmationEmails(params: EmailParams): Promis
   ${signOff}
 </body></html>`,
     }).then(info => {
-      console.log('[booking-notifications] client email sent OK:', { to: params.clientEmail, messageId: info.messageId })
+      console.log('[booking-notifications] client email sent OK:', { to: params.clientEmail, messageId: info.messageId, accepted: info.accepted, rejected: info.rejected })
       return info
     }).catch(err => {
-      console.error('[booking-notifications] client email FAILED:', { to: params.clientEmail, error: err?.message ?? err })
+      console.error('[booking-notifications] client email FAILED:', {
+        to: params.clientEmail, message: err?.message, code: err?.code,
+        command: err?.command, response: err?.response, responseCode: err?.responseCode,
+      })
       throw err
     })
   )
@@ -161,10 +199,13 @@ export async function sendBookingConfirmationEmails(params: EmailParams): Promis
   ${signOff}
 </body></html>`,
       }).then(info => {
-        console.log('[booking-notifications] therapist email sent OK:', { to: params.therapistEmail, messageId: info.messageId })
+        console.log('[booking-notifications] therapist email sent OK:', { to: params.therapistEmail, messageId: info.messageId, accepted: info.accepted, rejected: info.rejected })
         return info
       }).catch(err => {
-        console.error('[booking-notifications] therapist email FAILED:', { to: params.therapistEmail, error: err?.message ?? err })
+        console.error('[booking-notifications] therapist email FAILED:', {
+          to: params.therapistEmail, message: err?.message, code: err?.code,
+          command: err?.command, response: err?.response, responseCode: err?.responseCode,
+        })
         throw err
       })
     )
@@ -173,7 +214,7 @@ export async function sendBookingConfirmationEmails(params: EmailParams): Promis
   }
 
   await Promise.all(sends)
-  console.log('[booking-notifications] sendBookingConfirmationEmails() finished.')
+  console.log('[booking-notifications] sendBookingConfirmationEmails() finished in', Date.now() - startedAt, 'ms')
 }
 
 interface NotifyBookingConfirmedParams {
