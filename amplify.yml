@@ -24,6 +24,18 @@ frontend:
         - env | grep -e SUPABASE_ANON_KEY_IN >> .env.production
         - env | grep -e SUPABASE_SERVICE_ROLE_KEY_IN >> .env.production
 
+        # Supabase environment variables — US tenant
+        # (getCredsForPrefix('US') requires these; no fallback exists for US
+        # like there is for IN, so these must be set before
+        # counsellorsofamerica.com can serve real traffic)
+        - if [ -n "$SUPABASE_URL_US" ]; then echo "SUPABASE_URL_US exists"; else echo "SUPABASE_URL_US MISSING"; fi
+        - if [ -n "$SUPABASE_ANON_KEY_US" ]; then echo "SUPABASE_ANON_KEY_US exists"; else echo "SUPABASE_ANON_KEY_US MISSING"; fi
+        - if [ -n "$SUPABASE_SERVICE_ROLE_KEY_US" ]; then echo "SUPABASE_SERVICE_ROLE_KEY_US exists"; else echo "SUPABASE_SERVICE_ROLE_KEY_US MISSING"; fi
+
+        - env | grep -e SUPABASE_URL_US >> .env.production
+        - env | grep -e SUPABASE_ANON_KEY_US >> .env.production
+        - env | grep -e SUPABASE_SERVICE_ROLE_KEY_US >> .env.production
+
         # App URL / auth environment variables
         - if [ -n "$APP_ORIGIN" ]; then echo "APP_ORIGIN exists"; else echo "APP_ORIGIN MISSING"; fi
         - if [ -n "$NEXTAUTH_URL" ]; then echo "NEXTAUTH_URL exists"; else echo "NEXTAUTH_URL MISSING"; fi
@@ -89,6 +101,25 @@ frontend:
         - env | grep -e WHATSAPP_API_VERSION >> .env.production
         - env | grep -e PLAN_PRICE_PRO_INR >> .env.production
         - env | grep -e PLAN_PRICE_STARTER_INR >> .env.production
+
+        # PayPal environment variables — US tenant
+        # (paypal.ts's getPayPalCreds('US') requires the first two; MODE
+        # defaults to sandbox if unset, so set it explicitly to 'live' only
+        # once you're ready for real charges)
+        - if [ -n "$PAYPAL_CLIENT_ID_US" ]; then echo "PAYPAL_CLIENT_ID_US exists"; else echo "PAYPAL_CLIENT_ID_US MISSING"; fi
+        - if [ -n "$PAYPAL_CLIENT_SECRET_US" ]; then echo "PAYPAL_CLIENT_SECRET_US exists"; else echo "PAYPAL_CLIENT_SECRET_US MISSING"; fi
+        - if [ -n "$PAYPAL_MODE_US" ]; then echo "PAYPAL_MODE_US exists"; else echo "PAYPAL_MODE_US MISSING (defaults to sandbox)"; fi
+
+        - env | grep -e PAYPAL_CLIENT_ID_US >> .env.production
+        - env | grep -e PAYPAL_CLIENT_SECRET_US >> .env.production
+        - env | grep -e PAYPAL_MODE_US >> .env.production
+
+        # USD plan pricing — US tenant (pricing.ts's getPlanPriceUsd)
+        - if [ -n "$PLAN_PRICE_STARTER_USD" ]; then echo "PLAN_PRICE_STARTER_USD exists"; else echo "PLAN_PRICE_STARTER_USD MISSING"; fi
+        - if [ -n "$PLAN_PRICE_PRO_USD" ]; then echo "PLAN_PRICE_PRO_USD exists"; else echo "PLAN_PRICE_PRO_USD MISSING"; fi
+
+        - env | grep -e PLAN_PRICE_STARTER_USD >> .env.production
+        - env | grep -e PLAN_PRICE_PRO_USD >> .env.production
 
         # Encryption key
         - if [ -n "$ENCRYPTION_KEY" ]; then echo "ENCRYPTION_KEY exists"; else echo "ENCRYPTION_KEY MISSING"; fi
