@@ -15,7 +15,13 @@ interface Props {
   insights: InsightItem[]
 }
 
+// Insights v3 — a large "lead story" card for the first insight, with the
+// rest laid out as smaller cards in a grid underneath. Same premium
+// bordered-surface treatment as the Services cards (soft lift + glow on
+// hover), just scaled up for the featured piece.
 export default function Insights({ insights }: Props) {
+  const [featured, ...rest] = insights
+
   return (
     <section
       id="insights"
@@ -23,77 +29,68 @@ export default function Insights({ insights }: Props) {
       style={{ background: 'var(--ink-0)' }}
     >
       <div className="mx-auto max-w-[1080px]">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-px" style={{ background: 'var(--ink-3)' }}>
-          {insights.map((it) => (
-            <article
-              key={it.number}
-              className="group flex flex-col p-7 lg:p-9 cursor-pointer transition-colors"
-              style={{ background: 'var(--ink-0)', minHeight: 360 }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = 'var(--ink-1)')}
-              onMouseLeave={(e) => (e.currentTarget.style.background = 'var(--ink-0)')}
-            >
-              <div className="flex items-center justify-between mb-6">
-                <span
-                  className="ct2-mono"
-                  style={{ fontSize: 11, color: 'var(--gold)', letterSpacing: '0.18em' }}
-                >
-                  ⌗ {it.number}
-                </span>
-                <span
-                  className="ct2-mono"
-                  style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.14em' }}
-                >
-                  {it.category.toUpperCase()}
-                </span>
-              </div>
-
-              <h3
-                className="ct2-serif"
-                style={{
-                  fontSize: 26,
-                  lineHeight: 1.2,
-                  color: 'var(--bone)',
-                  marginBottom: 16,
-                  flexGrow: 0,
-                }}
-              >
-                {it.title}
-              </h3>
-
-              <p
-                style={{
-                  color: 'var(--bone)',
-                  opacity: 0.7,
-                  fontSize: 14,
-                  lineHeight: 1.7,
-                  flexGrow: 1,
-                }}
-              >
-                {it.excerpt}
-              </p>
-
-              <div
-                className="flex items-center justify-between mt-8 pt-5"
-                style={{ borderTop: '1px solid var(--ink-3)' }}
-              >
-                <span
-                  className="ct2-mono"
-                  style={{ fontSize: 10, letterSpacing: '0.14em', color: 'var(--mute)' }}
-                >
-                  {it.date.toUpperCase()} · {it.readingTime.toUpperCase()}
-                </span>
-                <ArrowUpRight
-                  size={18}
-                  style={{ color: 'var(--gold)' }}
-                  className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1"
-                />
-              </div>
-            </article>
-          ))}
+        <div className="text-center mb-16 ct2-rise">
+          <h2
+            className="ct2-serif"
+            style={{ fontSize: 'clamp(30px, 3.9vw, 46px)', lineHeight: 1.12, color: 'var(--bone)' }}
+          >
+            Insights
+          </h2>
         </div>
 
+        {featured && (
+          <article className="ct2-insight-featured ct2-rise mb-6 lg:mb-7">
+            {/* <span className="ct2-insight-featured-tag">{featured.category.toUpperCase()}</span> */}
+            <h3 className="ct2-serif ct2-insight-featured-title">{featured.title}</h3>
+            <p className="ct2-insight-featured-excerpt">{featured.excerpt}</p>
+            <div className="ct2-insight-featured-footer">
+              <span className="ct2-insight-featured-meta">
+                {featured.date.toUpperCase()} · {featured.readingTime.toUpperCase()}
+              </span>
+              <ArrowUpRight size={20} style={{ color: 'var(--gold)' }} />
+            </div>
+          </article>
+        )}
+
+        {rest.length > 0 && (
+          <div className="ct2-insight-grid">
+            {rest.map((it) => (
+              <article key={it.number} className="ct2-insight-card group flex flex-col p-7 lg:p-8 cursor-pointer">
+                <span
+                  className="ct2-mono"
+                  style={{ fontSize: 10, color: 'var(--gold)', letterSpacing: '0.16em', marginBottom: 14, display: 'block' }}
+                >
+                  {/* {it.category.toUpperCase()} */}
+                </span>
+
+                <h3 className="ct2-serif" style={{ fontSize: 22, lineHeight: 1.22, color: 'var(--bone)', marginBottom: 14 }}>
+                  {it.title}
+                </h3>
+
+                <p style={{ color: 'var(--mute)', fontSize: 13.5, lineHeight: 1.7, flexGrow: 1 }}>
+                  {it.excerpt}
+                </p>
+
+                <div
+                  className="flex items-center justify-between mt-7 pt-4"
+                  style={{ borderTop: '1px solid var(--ink-3)' }}
+                >
+                  <span className="ct2-mono" style={{ fontSize: 10, letterSpacing: '0.1em', color: 'var(--mute)' }}>
+                    {it.date.toUpperCase()} · {it.readingTime.toUpperCase()}
+                  </span>
+                  <ArrowUpRight
+                    size={16}
+                    style={{ color: 'var(--gold)' }}
+                    className="transition-transform group-hover:translate-x-1 group-hover:-translate-y-1"
+                  />
+                </div>
+              </article>
+            ))}
+          </div>
+        )}
+
         <div className="flex justify-center mt-14">
-          <button className="ct2-btn-ghost">All writing →</button>
+          {/* <button className="ct2-btn-ghost">All writing →</button> */}
         </div>
       </div>
     </section>

@@ -1,8 +1,8 @@
 'use client'
 
-import { useEffect, useState, type RefObject } from 'react'
+import type { RefObject } from 'react'
 import type { TherapistProfile } from '../templateUtils'
-import { resolveImage } from '../templateUtils'
+import { resolveImage, getInitials } from '../templateUtils'
 import { ArrowDownRight } from 'lucide-react'
 
 interface HeroProps {
@@ -22,6 +22,7 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
   const nameParts = hasTitle ? allParts.slice(1) : allParts
   const firstName = nameParts[0] ?? ''
   const lastName = nameParts.slice(1).join(' ')
+  const initials = getInitials(fullName)
 
   function scrollToBook() {
     document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })
@@ -34,111 +35,128 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
     <section
       id="home"
       ref={heroRef}
-      className=" relative overflow-hidden px-6 lg:px-12 flex items-center"
+      className="ct2-hero relative overflow-hidden px-6 lg:px-12 flex items-center"
       style={{
-        minHeight: '660px',
-        height: 'clamp(560px, 75vh, 800px)',
+        paddingTop: 96,
         background:
-          'radial-gradient(ellipse 70% 55% at 18% 8%, rgba(201,163,90,0.13) 0%, transparent 55%), radial-gradient(ellipse 55% 45% at 92% 88%, rgba(201,138,138,0.07) 0%, transparent 60%), var(--ink-0)',
+          'radial-gradient(ellipse 70% 55% at 18% 8%, rgba(185,128,121,0.14) 0%, transparent 55%), radial-gradient(ellipse 55% 45% at 92% 88%, rgba(166,107,92,0.08) 0%, transparent 60%), var(--ink-0)',
       }}
     >
+      <style>{`
+        .ct2-hero { min-height: 680px; height: clamp(620px, 80vh, 860px); }
+        @media (max-width: 1023px) {
+          .ct2-hero { height: 100dvh; min-height: 100dvh; }
+        }
+        .ct2-hero-photo-mobile { width: 100%; max-width: 320px; }
+        @media (max-width: 380px) {
+          .ct2-hero-photo-mobile { max-width: 190px; }
+          .ct2-hero-tagline { font-size: 32px !important; }
+        }
+        /* Foldable cover screens (e.g. Galaxy Z Fold) are narrower than an
+           iPhone SE but much taller/narrower in aspect ratio — target them
+           separately so they don't inherit the SE's smaller image. */
+        @media (max-width: 380px) and (min-aspect-ratio: 2/1) {
+          .ct2-hero-photo-mobile { max-width: 260px; }
+        }
+      `}</style>
       <div className="ct2-grain" />
-
-      {/* Faint bg letter */}
-      <div
-        aria-hidden
-        className="ct2-serif-soft hidden lg:block pointer-events-none select-none absolute"
-        style={{
-          right: '-2vw', top: '12%',
-          fontSize: '38vw', lineHeight: 0.85,
-          color: 'var(--bone)', opacity: 0.025, letterSpacing: '-0.06em',
-        }}
-      >
-        {firstName[0] ?? 'T'}
-      </div>
 
       <div
         className={`relative z-10 mx-auto max-w-[1080px] w-full transition-opacity duration-700 ${
           heroLoaded ? 'opacity-100' : 'opacity-0'
         }`}
       >
-        <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_0.9fr] gap-8 lg:gap-16 items-center">
-          {/* LEFT — headline */}
-          <div>
-            <h1
-              className="ct2-serif"
+        <div className="grid grid-cols-1 lg:grid-cols-[1.5fr_0.9fr] gap-10 lg:gap-8 items-center">
+          {/* LEFT — quote + CTA */}
+          <div className="order-2 lg:order-1 flex flex-col items-start text-left pl-4 lg:pl-0">
+            <p
+              className="ct2-tagline-font ct2-word ct2-hero-tagline"
               style={{
-                fontSize: 'clamp(36px, 7vw, 110px)',
-                lineHeight: 0.92,
+                fontSize: 'clamp(40px, 5.2vw, 70px)',
+                lineHeight: 1.12,
                 color: 'var(--bone)',
-                letterSpacing: '-0.035em',
-                fontWeight: 350,
+                letterSpacing: '-0.02em',
+                fontWeight: 400,
+                maxWidth: '16ch',
               }}
             >
-              {title && (
-                <span
-                  className="ct2-word ct2-serif-soft block"
-                  style={{
-                    fontSize: 'clamp(14px, 1.4vw, 22px)',
-                    color: 'var(--mute)', letterSpacing: '0.02em',
-                    marginBottom: '0.4em', lineHeight: 1,
-                  }}
-                >
-                  {title}
-                </span>
-              )}
-              <span className="ct2-word inline" style={{ animationDelay: '0.05s' }}>{firstName}</span>
-              {lastName && (
-                <span
-                  className="ct2-word ct2-serif-soft inline"
-                  style={{ color: 'var(--gold)', fontSize: '0.92em', marginLeft: '0.3em' }}
-                >
-                  {lastName}
-                </span>
-              )}
-            </h1>
+              {therapist.tagline?.trim() ||
+                'Healing begins when you feel safe to be yourself.'}
+            </p>
 
-            <div className="mt-5 lg:mt-6 flex flex-col gap-4 items-start">
-              <p
-                className="ct2-serif-soft"
-                style={{
-                  fontSize: 'clamp(16px, 1.8vw, 24px)',
-                  lineHeight: 1.4, color: 'var(--bone)', maxWidth: '32ch',
-                }}
+            <div className="mt-9 flex flex-row flex-wrap gap-3 justify-start">
+              <button
+                onClick={scrollToBook}
+                className="ct2-hero-cta"
               >
-                {therapist.tagline?.trim() ||
-                  'A quiet, deliberate space for difficult feelings without performance, without shortcuts.You can express you feeligns fearlessly, no one here will judge you. '}
-              </p>
-              <div className="flex flex-row flex-wrap gap-3">
-                {/* <button onClick={scrollToBook} className="ct2-btn-primary">
-                  Reserve a session <ArrowDownRight size={16} />
-                </button> */}
-                <button onClick={scrollToAbout} className="ct2-btn-ghost">
-                  About the practice
-                </button>
-              </div>
+                Book appointment
+              </button>
             </div>
           </div>
 
-          {/* RIGHT — portrait */}
-          <aside className="hidden lg:flex flex-col">
-            <div
-              className="relative overflow-hidden"
-              style={{
-                borderRadius: 4,
-                border: '1px solid var(--ink-3)',
-                aspectRatio: '4 / 3.5',
-                background: 'var(--ink-2)',
-                maxHeight: '55vh',
-              }}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={resolveImage(therapist.image)}
-                alt={fullName}
-                className="w-full h-full object-cover"
-                style={{ filter: 'grayscale(0.2) contrast(1.06)', objectPosition: 'center 15%' }}
-              />
+          {/* RIGHT — portrait, with a floating availability badge. Shown above the
+              text on mobile (smaller), beside it on desktop (full size). */}
+          <aside className="order-1 lg:order-2 flex flex-col items-center">
+            <div className="relative lg:hidden -mt-10 ct2-hero-photo-mobile">
+              <div
+                className="relative"
+                style={{
+                  borderRadius: '48% 52% 55% 45% / 45% 48% 52% 55%',
+                  aspectRatio: '1 / 1.08',
+                  width: '100%',
+                  padding: 5,
+                  background: 'linear-gradient(135deg, rgba(185,128,121,0.35), rgba(166,107,92,0.08) 60%, transparent)',
+                }}
+              >
+                <div
+                  className="relative overflow-hidden w-full h-full"
+                  style={{
+                    borderRadius: '48% 52% 55% 45% / 45% 48% 52% 55%',
+                    border: '1px solid var(--ink-3)',
+                    background: 'var(--ink-2)',
+                    boxShadow: '0 20px 40px -20px rgba(42,36,32,0.32)',
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={resolveImage(therapist.image)}
+                    alt={fullName}
+                    className="w-full h-full object-cover"
+                    style={{ filter: 'grayscale(0.2) contrast(1.06)', objectPosition: 'center 15%' }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="hidden lg:block relative" style={{ width: '100%', maxWidth: 420 }}>
+              <div
+                className="relative"
+                style={{
+                  borderRadius: '48% 52% 55% 45% / 45% 48% 52% 55%',
+                  aspectRatio: '1 / 1.08',
+                  width: '100%',
+                  padding: 6,
+                  background: 'linear-gradient(135deg, rgba(185,128,121,0.35), rgba(166,107,92,0.08) 60%, transparent)',
+                }}
+              >
+                <div
+                  className="relative overflow-hidden w-full h-full"
+                  style={{
+                    borderRadius: '48% 52% 55% 45% / 45% 48% 52% 55%',
+                    border: '1px solid var(--ink-3)',
+                    background: 'var(--ink-2)',
+                    boxShadow: '0 30px 60px -28px rgba(42,36,32,0.32)',
+                  }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={resolveImage(therapist.image)}
+                    alt={fullName}
+                    className="w-full h-full object-cover"
+                    style={{ filter: 'grayscale(0.2) contrast(1.06)', objectPosition: 'center 15%' }}
+                  />
+                </div>
+              </div>
             </div>
           </aside>
         </div>
@@ -150,17 +168,17 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
           className="absolute left-0 right-0 bottom-0 z-10 overflow-hidden"
           style={{
             borderTop: '1px solid var(--ink-3)',
-            background: 'rgba(11,13,14,0.7)',
+            background: 'rgba(249,244,241,0.78)',
             backdropFilter: 'blur(8px)',
           }}
         >
-          <div className="ct2-marquee-track py-3">
+          {/* <div className="ct2-marquee-track py-3">
             {[...therapist.specialties, ...therapist.specialties, ...therapist.specialties].map((s, i) => (
               <span key={i} className="ct2-serif" style={{ fontSize: 18, color: i % 2 === 0 ? 'var(--bone)' : 'var(--mute)', fontStyle: i % 3 === 0 ? 'italic' : 'normal' }}>
                 {s}<span style={{ color: 'var(--gold)', marginLeft: 20 }}>—</span>
               </span>
             ))}
-          </div>
+          </div> */}
         </div>
       )}
     </section>

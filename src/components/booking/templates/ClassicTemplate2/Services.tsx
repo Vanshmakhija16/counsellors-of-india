@@ -15,6 +15,10 @@ interface Props {
   defaultDurationMins?: number
 }
 
+function scrollToBooking() {
+  document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' })
+}
+
 export default function Services({ services, defaultDurationMins }: Props) {
   return (
     <section
@@ -23,87 +27,37 @@ export default function Services({ services, defaultDurationMins }: Props) {
       style={{ background: 'var(--ink-1)' }}
     >
       <div className="mx-auto max-w-[1080px]">
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-16">
-          <div>
-            <span className="ct2-eyebrow">— Services</span>
-          </div>
+        <div className="text-center mb-16 ct2-rise">
+          <h2
+            className="ct2-serif"
+            style={{ fontSize: 'clamp(30px, 3.9vw, 46px)', lineHeight: 1.12, color: 'var(--bone)' }}
+          >
+            Services
+          </h2>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-px" style={{ background: 'var(--ink-3)' }}>
-          {services.map((s) => (
-            <article
-              key={s.code}
-              className="ct2-card p-8 lg:p-10 group"
-              style={{ background: 'var(--ink-1)', borderRadius: 0, border: 'none' }}
-            >
-              <div className="flex items-start justify-between mb-6">
-                <span
-                  className="ct2-mono"
-                  style={{ fontSize: 11, color: 'var(--gold)', letterSpacing: '0.18em' }}
-                >
-                  ◇ {s.code}
-                </span>
-                <span
-                  className="ct2-mono"
-                  style={{ fontSize: 10, color: 'var(--mute)', letterSpacing: '0.16em' }}
-                >
-                  {s.kind.toUpperCase()}
-                </span>
-              </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-10 max-w-[1080px] mx-auto">
+          {services.map((s, i) => (
+            <article key={s.code} className="ct2-service-card ct2-rise" style={{ animationDelay: `${i * 70}ms` }}>
+              <h3 className="ct2-serif ct2-service-title">{s.title}</h3>
+              <p className="ct2-service-desc">{s.desc}</p>
 
-              <h3
-                className="ct2-serif"
-                style={{
-                  fontSize: 32,
-                  lineHeight: 1.15,
-                  color: 'var(--bone)',
-                  marginBottom: 16,
-                }}
-              >
-                {s.title}
-              </h3>
-
-              <p
-                style={{
-                  color: 'var(--bone)',
-                  opacity: 0.78,
-                  fontSize: 15,
-                  lineHeight: 1.7,
-                  maxWidth: '46ch',
-                }}
-              >
-                {s.desc}
-              </p>
-
-              <div className="flex flex-wrap items-center gap-2 mt-7">
-                {s.forWhom.map((w) => (
-                  <span
-                    key={w}
-                    style={{
-                      padding: '5px 11px',
-                      border: '1px solid var(--ink-3)',
-                      color: 'var(--mute)',
-                      fontSize: 11,
-                      letterSpacing: '0.04em',
-                    }}
-                  >
-                    {w}
-                  </span>
-                ))}
-              </div>
-
-              <div
-                className="ct2-mono"
-                style={{
-                  marginTop: 18,
-                  paddingTop: 14,
-                  borderTop: '1px solid var(--ink-3)',
-                  fontSize: 11,
-                  letterSpacing: '0.1em',
-                  color: 'var(--gold)',
-                }}
-              >
-                {(s.duration_mins ?? defaultDurationMins ?? 50)} MIN SESSION
+              <div className="ct2-service-footer">
+                <div className="flex items-baseline justify-between">
+                  <div>
+                    {s.price ? (
+                      <span className="ct2-serif ct2-service-price">{s.price}</span>
+                    ) : (
+                      <span className="ct2-mono ct2-service-contact"> PRICING</span>
+                    )}
+                    <div className="ct2-mono ct2-service-duration">
+                      {(s.duration_mins ?? defaultDurationMins ?? 50)} MIN SESSION
+                    </div>
+                  </div>
+                  <button type="button" className="ct2-service-cta" onClick={scrollToBooking}>
+                    Book →
+                  </button>
+                </div>
               </div>
             </article>
           ))}
