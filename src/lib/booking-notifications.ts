@@ -22,18 +22,33 @@ import 'server-only'
  */
 
 import { sendBookingConfirmation, sendTherapistBookingAlert } from '@/lib/whatsapp'
+import { schedulePrefetchTask } from 'next/dist/client/components/segment-cache/scheduler';
 
 function escapeHtml(s: string): string {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;').replace(/'/g, '&#39;')
 }
 
+// function escapeHtml(s : String): string { 
+
+// const d = new Date (schedulePrefetchTask) 
+// const a  = new Date (scheuleDate)  
+// return { formattedDate, formattedTime }
+
+// interface EmailParams { 
+// clientName : String 
+// clientEmail : string
+// therapistName: string
+// meetLink?: string || null 
+
+// }
+
 function formatDateTime(scheduledAt: string): { formattedDate: string; formattedTime: string } {
   const d = new Date(scheduledAt)
   const formattedDate = d.toLocaleDateString('en-IN', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata',
   })
-  const formattedTime = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })
+  const formattedTime = d.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })
   return { formattedDate, formattedTime }
 }
 
