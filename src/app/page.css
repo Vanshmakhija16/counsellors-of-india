@@ -115,7 +115,7 @@ font-family: "Times New Roman", Times, serif;font-size:16px;font-weight:900;
 .logo-pip{
   width:8px;height:8px;border-radius:50%;
   background:var(--wn-saffron,#FF9933);flex-shrink:0;
-  box-shadow:0 0 0 3px rgba(255,153,51,.2);
+  box-shadow:0 0 0 3px color-mix(in srgb, var(--wn-saffron, #FF9933) 20%, transparent);
 }
 .logo-img{height:38px;width:auto;display:block;object-fit:contain;flex-shrink:0}
 .nav-mid{
@@ -153,11 +153,11 @@ font-family: "Times New Roman", Times, serif;font-size:16px;font-weight:900;
 .nav.scrolled .btn-line:hover{background:rgba(31,28,24,.05);color:var(--ink);border-color:rgba(31,28,24,.22)}
 .btn-dark{
   background:var(--paper,#fff);color:var(--wn-saffron-deep,#E07A12);border-color:var(--wn-saffron,#FF9933);
-  box-shadow:0 8px 20px -8px rgba(255,153,51,.35);
+  box-shadow:0 8px 20px -8px color-mix(in srgb, var(--wn-saffron, #FF9933) 35%, transparent);
 }
-.btn-dark:hover{background:var(--wn-saffron,#FF9933);color:#fff;transform:translateY(-1px);box-shadow:0 10px 26px -6px rgba(255,153,51,.5)}
+.btn-dark:hover{background:var(--wn-saffron,#FF9933);color:#fff;transform:translateY(-1px);box-shadow:0 10px 26px -6px color-mix(in srgb, var(--wn-saffron, #FF9933) 50%, transparent)}
 .btn-gold{background:var(--wn-saffron,#FF9933);color:#fff}
-.btn-gold:hover{background:var(--wn-saffron-deep,#E07A12);transform:translateY(-1px);box-shadow:0 10px 26px -6px rgba(255,153,51,.45)}
+.btn-gold:hover{background:var(--wn-saffron-deep,#E07A12);transform:translateY(-1px);box-shadow:0 10px 26px -6px color-mix(in srgb, var(--wn-saffron, #FF9933) 45%, transparent)}
 .btn-line{background:transparent;color:var(--ink2);border:1px solid var(--border)}
 .btn-line:hover{border-color:var(--ink);color:var(--ink);background:rgba(19,20,15,.03)}
 
@@ -1247,7 +1247,7 @@ font-family: "Times New Roman", Times, serif;font-size:16px;font-weight:900;
   width:800px;
   height:800px;
   border-radius:50%;
-  background:radial-gradient(circle,rgba(255,153,51,.10) 0%,transparent 60%);
+  background:radial-gradient(circle,color-mix(in srgb, var(--wn-saffron, #FF9933) 10%, transparent) 0%,transparent 60%);
   pointer-events:none;
 }
 
@@ -1311,7 +1311,7 @@ font-family: "Times New Roman", Times, serif;font-size:16px;font-weight:900;
   display:inline-flex;
   align-items:center;
   gap:8px;
-  box-shadow:0 14px 34px -12px rgba(255,153,51,.6);
+  box-shadow:0 14px 34px -12px color-mix(in srgb, var(--wn-saffron, #FF9933) 60%, transparent);
 }
 
 .final-btn:hover{
@@ -1694,7 +1694,7 @@ max-width:none;
   transition: all 0.35s ease;
 }
   .menu-btn span{
-  background: #ff9933;
+  background: var(--wn-saffron, #ff9933);
 }
 
 /* OPEN ANIMATION */
@@ -2013,7 +2013,7 @@ padding:
   height: 6px;
   border-radius: 999px;
   background: #138808;
-  box-shadow: 0 0 0 3px rgba(255,153,51,.22);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--wn-saffron, #FF9933) 22%, transparent);
   animation: pulseDot 2.4s ease-in-out infinite;
 }
 
@@ -2069,7 +2069,7 @@ padding:
 }
 .hero-msg em{
   font-style: italic;
-  color: #ff9933;
+  color: var(--wn-saffron, #ff9933);
   /* // color: var(--wn-sage-deep); */
   font-weight: 400;
   font-variation-settings: 'SOFT' 100, 'WONK' 1;
@@ -2887,7 +2887,7 @@ padding:
 .hero-main-title-rotating{
   display:block;
   text-align:center;
-  color:#ff9933;
+  color:var(--wn-saffron,#ff9933);
   opacity:1;
   transition:opacity .3s ease;
   font-weight:700;
@@ -2938,7 +2938,7 @@ padding:
 .hero-main-title-rotating{
   display:block;
   text-align:center;
-  color:#ff9933;
+  color:var(--wn-saffron,#ff9933);
   opacity:1;
   transition:opacity .3s ease;
   font-weight:100;
@@ -2978,12 +2978,12 @@ padding:
   transition:transform .25s ease, box-shadow .25s ease, background .25s ease, color .25s ease;
 }
 .hero-main-btn-primary{
-  background:#ff9933;
+  background:var(--wn-accent,#ff9933);
   color:#fff;
   box-shadow:0 20px 40px rgba(255,153,51,.22);
 }
 .hero-main-btn-primary:hover{
-  background:#e67f10;
+  background:color-mix(in srgb, var(--wn-accent,#ff9933) 82%, black);
   transform:translateY(-1px);
 }
 .hero-main-btn-secondary{
@@ -3687,10 +3687,10 @@ padding:
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 0 4px 14px -4px rgba(120,86,30,.18);
 }
-.td-card-av img{ width: 100%; height: 100%; object-fit: cover; object-position: top center; display: block; }
+.td-card-av img{ width: 100%; height: 100%; border-radius: inherit; object-fit: cover; object-position: top center; display: block; }
 .td-card-av span{
   font-family: var(--display);
   font-style: italic;
@@ -3700,7 +3700,7 @@ padding:
 }
 .td-card-verified{
   position: absolute;
-  bottom: -4px;
+  bottom: -2px;
   right: -4px;
   width: 20px;
   height: 20px;
@@ -3712,6 +3712,7 @@ padding:
   justify-content: center;
   border: 2px solid #FBF9F4;
   box-shadow: 0 2px 6px rgba(120,86,30,.28);
+  z-index: 999;
 }
 .td-card-id{ flex: 1; min-width: 0; padding-top: 2px; }
 .td-card-name{
@@ -4908,8 +4909,8 @@ padding:
   --gap: clamp(2.4rem, 5vw, 4rem);   /* vertical gap between steps */
   --node: clamp(50px, 5vw, 64px);    /* node diameter */
   /* brand theme accent = saffron (the page's primary colour, 73 uses) */
-  --tl-accent: #FF9933;
-  --tl-accent-deep: #E07A12;
+  --tl-accent: #E63328;
+  --tl-accent-deep: #B8241B;
   position: relative;
   max-width: 1000px;
   margin: clamp(1.5rem, 4vw, 3rem) auto 0;
@@ -4932,7 +4933,7 @@ padding:
   inset: 0 0 auto 0;
   height: calc(var(--fill) * 100%);
   background: linear-gradient(180deg, var(--tl-accent) 0%, var(--tl-accent-deep) 100%);
-  box-shadow: 0 0 16px rgba(255,153,51,.55);
+  box-shadow: 0 0 16px rgba(230,51,40,.55);
   transition: height .15s linear;
 }
 
@@ -4975,7 +4976,7 @@ padding:
   color: color-mix(in srgb, var(--tl-accent) calc(var(--lit, 0) * 100%), var(--ink3));
   box-shadow:
     0 6px 16px -8px rgba(19,20,15,.18),
-    0 0 calc(var(--lit, 0) * 22px) rgba(255,153,51,calc(var(--lit,0) * .35));
+    0 0 calc(var(--lit, 0) * 22px) rgba(230,51,40,calc(var(--lit,0) * .35));
 }
 .how-v2 .how-tl-node-icon{ width: 46%; height: 46%; display: block; }
 .how-v2 .how-tl-node-icon svg{ width: 100%; height: 100%; }
@@ -4985,7 +4986,7 @@ padding:
   min-width: 0;
   padding: clamp(1.1rem, 2vw, 1.6rem) clamp(1.3rem, 2.4vw, 2rem);
   border-radius: 18px;
-  background: linear-gradient(180deg, rgba(255,153,51,.06), rgba(255,255,255,.6));
+  background: linear-gradient(180deg, rgba(230,51,40,.06), rgba(255,255,255,.6));
   border: 1px solid rgba(19,20,15,.07);
   box-shadow: 0 18px 40px -30px rgba(19,20,15,.28);
   opacity: calc(.35 + .65 * var(--lit));
@@ -5008,10 +5009,10 @@ padding:
   top: 50%;
   width: clamp(1rem, 2.4vw, 2.2rem);
   height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(255,153,51,calc(.2 + var(--lit,0) * .5)));
+  background: linear-gradient(90deg, transparent, rgba(230,51,40,calc(.2 + var(--lit,0) * .5)));
   transform: translateY(-50%);
 }
-.how-v2 .how-tl-step:nth-child(odd) .how-tl-body::after{ right: calc(-1 * clamp(1rem,2.4vw,2.4rem)); background: linear-gradient(270deg, transparent, rgba(255,153,51,calc(.2 + var(--lit,0) * .5))); }
+.how-v2 .how-tl-step:nth-child(odd) .how-tl-body::after{ right: calc(-1 * clamp(1rem,2.4vw,2.4rem)); background: linear-gradient(270deg, transparent, rgba(230,51,40,calc(.2 + var(--lit,0) * .5))); }
 .how-v2 .how-tl-step:nth-child(even) .how-tl-body::after{ left: calc(-1 * clamp(1rem,2.4vw,2.4rem)); }
 
 .how-v2 .how-tl-num{
@@ -7918,9 +7919,9 @@ section#experience.texp {
   transform: translateX(3px);
 }
 .texp-tab.tab-in.on {
-  background: linear-gradient(135deg, #FF9933 0%, #E07A12 100%);
+  background: linear-gradient(135deg, var(--tenant-accent, #FF9933) 0%, var(--tenant-accent-deep, #E07A12) 100%);
   border-color: transparent;
-  box-shadow: 0 8px 24px -8px rgba(255,153,51,.55), 0 1px 0 rgba(255,255,255,.2) inset;
+  box-shadow: 0 8px 24px -8px color-mix(in srgb, var(--tenant-accent, #FF9933) 55%, transparent), 0 1px 0 rgba(255,255,255,.2) inset;
   transform: translateX(3px);
 }
 .texp-tab:focus{ outline: none; }
@@ -8293,12 +8294,12 @@ section#experience.texp {
   transform-origin:top left;pointer-events:none;
 }
 
-/* nav — solid saffron pill CTA, mirrors Tosea's high-contrast button */
+/* nav — solid brand-color pill CTA, mirrors Tosea's high-contrast button */
 .nav .btn-dark{
-  background:#ffffff;color:#ff9933;border:1px solid #FF9933;
+  background:#ffffff;color:var(--nav-cta-color, var(--wn-saffron,#ff9933));border:1px solid var(--nav-cta-color, var(--wn-saffron,#FF9933));
   box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 8px 22px -8px rgba(255,153,51,.6);
 }
-.nav .btn-dark:hover{ background:#ff9933;border-color:#ff9933; }
+.nav .btn-dark:hover{ background:var(--nav-cta-color, var(--wn-saffron,#ff9933));border-color:var(--nav-cta-color, var(--wn-saffron,#ff9933)); }
 
 @media (max-width:760px){
   .hero-bn{ padding:7.5rem 20px 4rem; min-height:auto; }
@@ -8376,11 +8377,11 @@ section#experience.texp {
 }
 /* dark text reads cleanly on the light ivory pill in both states */
 .nav .btn-dark{ border-radius:20px !important; }
-.nav .logo-img{ height:99px !important; width:auto !important; opacity:1 !important; }
+.nav .logo-img{ height:50px !important; width:auto !important; opacity:1 !important; }
 .nav .logo{ color:var(--ink) !important; }
 .nav .logo-tagline{ color:var(--ink2) !important; }
 .nav .nav-a{ color:var(--ink2) !important; }
-.nav .nav-a:hover{ color:#E07A12 !important; }
+.nav .nav-a:hover{ color:var(--wn-saffron,#E07A12) !important; }
 .nav .btn-light{ color:var(--ink2) !important; }
 .nav .btn-light:hover{ background:rgba(31,26,20,.06) !important; color:var(--ink) !important; }
 .nav-mobile-title{ color:var(--ink) !important; }
@@ -8388,7 +8389,7 @@ section#experience.texp {
 .nav.scrolled .logo{ color:var(--ink) !important; }
 .nav.scrolled .logo-tagline{ color:var(--ink2) !important; }
 .nav.scrolled .nav-a{ color:var(--ink2) !important; }
-.nav.scrolled .nav-a:hover{ color:#e98216 !important; }
+.nav.scrolled .nav-a:hover{ color:var(--wn-saffron-deep,#e98216) !important; }
 .nav.scrolled .btn-light{ color:var(--ink2) !important; }
 .nav.scrolled .btn-light:hover{ background:rgba(31,26,20,.08) !important; color:var(--ink) !important; }
 .nav.scrolled .nav-mobile-title{ color:var(--ink) !important; }
@@ -8697,5 +8698,19 @@ section#experience.texp {
     width: 100%;
     border-radius: 0 0 22px 22px;
   }
+}
+
+/* ── Pricing CTA buttons — tenant-aware brand color instead of hardcoded
+   saffron, so the US portal's pricing CTAs pick up Old Glory Blue instead
+   of staying orange. See HomeClient.tsx's Pricing section. ── */
+.pricing-cta-filled{
+  background: var(--wn-saffron, #FF9933);
+}
+.pricing-cta-filled:hover{
+  background: var(--wn-saffron-deep, #E07A12);
+}
+.pricing-cta-ghost:hover{
+  border-color: var(--wn-saffron, #FF9933) !important;
+  color: var(--wn-saffron, #FF9933) !important;
 }
 

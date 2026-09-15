@@ -613,7 +613,7 @@ html, body {
 }
 @keyframes fr-letter-wave {
   0%   { color: rgba(255,255,255,0.92); }
-  45%  { color: #FF9933; }
+  45%  { color: var(--wn-saffron, #FF9933); }
   100% { color: rgba(255,255,255,0.92); }
 }
 @media (prefers-reduced-motion: reduce) {

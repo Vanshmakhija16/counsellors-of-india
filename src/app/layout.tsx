@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter, Plus_Jakarta_Sans, Fraunces } from 'next/font/google'
+import { Inter, Plus_Jakarta_Sans, Fraunces, Instrument_Sans } from 'next/font/google'
 import './globals.css'
 import WhatsAppFab from '@/components/layout/WhatsAppFab'
 import { getCurrentTenant } from '@/lib/tenants/server'
@@ -10,6 +10,15 @@ const jakarta = Plus_Jakarta_Sans({
   variable: '--font-jakarta',
   subsets: ['latin'],
   weight: ['500', '600', '700', '800'],
+})
+
+// Used for the admin panel tables -- an editorial, slightly-condensed sans
+// that pairs with Fraunces/Instrument Serif elsewhere on the site, so the
+// admin panel reads as premium rather than a generic dashboard font.
+const instrumentSans = Instrument_Sans({
+  variable: '--font-instrument-sans',
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700'],
 })
 
 const inter = Inter({
@@ -112,11 +121,43 @@ export default async function RootLayout({
   // anon key only (non-secret), safe to hand down into a client provider so
   // client-side auth/data calls target the right tenant's Supabase project.
   const { url, anonKey } = await getPublicSupabaseCredsForTenant()
+  const tenant = await getCurrentTenant()
+
+  // ── Site-wide brand color, threaded as CSS custom properties ──────────
+  // page.css's several :root blocks define these exact variable names
+  // hardcoded to saffron (--gold/--gold2, and the --wn-saffron*/--wn-sage*
+  // family — "sage" is a leftover name from an earlier design, its actual
+  // value has always been saffron). An inline style on <html> beats any
+  // stylesheet's :root rule in the cascade regardless of import order, so
+  // setting them here overrides page.css's hardcoded values for every
+  // page that imports it, without editing page.css itself. India's
+  // tenant config holds those exact same hex codes, so this is a no-op
+  // for the live India site.
+  const rgb = hexToRgb(tenant.primaryColor)
+  const brandVars = {
+    '--gold': tenant.primaryColorDark,
+    '--gold2': tenant.primaryColor,
+    '--gold-bg': `rgba(${rgb}, 0.07)`,
+    '--gold-line': `rgba(${rgb}, 0.24)`,
+    '--wn-saffron': tenant.primaryColor,
+    '--wn-saffron-deep': tenant.primaryColorDark,
+    '--wn-saffron-soft': tenant.primaryColorSoft,
+    '--wn-saffron-tint': `rgba(${rgb}, 0.1)`,
+    '--wn-sage': tenant.primaryColor,
+    '--wn-sage-deep': tenant.primaryColorDark,
+    '--wn-sage-soft': tenant.primaryColorSoft,
+    '--wn-sage-tint': `rgba(${rgb}, 0.08)`,
+    // Secondary accent for hover/interactive states — falls back to the
+    // dark brand shade for tenants (like India) that don't set a distinct
+    // accentColor, so this is a no-op unless a tenant opts in.
+    '--wn-accent': tenant.accentColor ?? tenant.primaryColorDark,
+  } as React.CSSProperties
 
   return (
     <html
       lang="en"
-      className={`${jakarta.variable} ${inter.variable} ${fraunces.variable} antialiased`}
+      className={`${jakarta.variable} ${inter.variable} ${fraunces.variable} ${instrumentSans.variable} antialiased`}
+      style={brandVars}
       suppressHydrationWarning
     >
       <body
@@ -130,4 +171,14 @@ export default async function RootLayout({
       </body>
     </html>
   )
+}
+
+/** '#3C3B6E' -> '60, 59, 110', for building rgba(...) strings from a
+ *  tenant's hex brand color. */
+function hexToRgb(hex: string): string {
+  const clean = hex.replace('#', '')
+  const r = parseInt(clean.slice(0, 2), 16)
+  const g = parseInt(clean.slice(2, 4), 16)
+  const b = parseInt(clean.slice(4, 6), 16)
+  return `${r}, ${g}, ${b}`
 }
