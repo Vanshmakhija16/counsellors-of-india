@@ -1488,19 +1488,18 @@ max-width:none;
 .nav .btn-line:hover{color:var(--ink);background:rgba(19,20,15,.05);border-color:transparent}
 .nav .btn-dark{
   position:relative;overflow:hidden;z-index:0;
-  background:transparent;color:#ff9933;border:1px solid var(--wn-saffron,#FF9933);
-  box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 6px 18px -6px rgba(255,153,51,.55);
+  background:transparent;color:var(--nav-cta-color, var(--wn-saffron,#ff9933));border:1px solid var(--nav-cta-color, var(--wn-saffron,#FF9933));
 }
 .nav .btn-dark::before{
   content:'';
   position:absolute;inset:0;
-  background:#FF9933;
+  background:var(--nav-cta-color, var(--wn-saffron,#FF9933));
   transform:scaleY(0);transform-origin:bottom;
   transition:transform 0.35s cubic-bezier(0.22,0.87,0.36,1);
   z-index:-1;
 }
 .nav .btn-dark:hover::before{transform:scaleY(1);}
-.nav .btn-dark:hover{color:white;transform:translateY(-1px);box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 10px 24px -8px rgba(255,153,51,.55);}
+.nav .btn-dark:hover{color:white;transform:translateY(-1px);}
 @media(max-width:980px){.nav .nav-mid,.nav .nav-r{display:none}}
 
 
@@ -6480,7 +6479,7 @@ padding:
 .texp-chrome-url em{
 
     font-style: italic;
-  color: #ff9933;
+  color: var(--tenant-accent, #ff9933);
   /* // color: var(--wn-sage-deep); */
   font-weight: 400;
   font-variation-settings: 'SOFT' 100, 'WONK' 1;
@@ -8297,7 +8296,6 @@ section#experience.texp {
 /* nav — solid brand-color pill CTA, mirrors Tosea's high-contrast button */
 .nav .btn-dark{
   background:#ffffff;color:var(--nav-cta-color, var(--wn-saffron,#ff9933));border:1px solid var(--nav-cta-color, var(--wn-saffron,#FF9933));
-  box-shadow:0 1px 0 rgba(255,255,255,.25) inset,0 8px 22px -8px rgba(255,153,51,.6);
 }
 .nav .btn-dark:hover{ background:var(--nav-cta-color, var(--wn-saffron,#ff9933));border-color:var(--nav-cta-color, var(--wn-saffron,#ff9933)); }
 

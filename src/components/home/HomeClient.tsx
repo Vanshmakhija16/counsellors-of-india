@@ -919,7 +919,7 @@ function LiveTemplateExperience({ domainDisplay }: { domainDisplay: string }) {
   return (
     <section id="experience" className="texp" ref={sectionRef}>
       <div className="texp-head">
-        <h2 className="texp-h">Explore <em>Templates</em> 
+        <h2 className="texp-h">Explore <em></em> 
           {/* ,<em>your way</em> */}
           </h2>
         <div style={{marginBottom:'32px'}} />
