@@ -6,35 +6,35 @@ import type { TenantConfig } from './types'
 export const usTenant: TenantConfig = {
   id: 'us',
   domains: [
-    'counsellorsofamerica.com',
-    'www.counsellorsofamerica.com',
+    'counselorsofamerica.com',
+    'www.counselorsofamerica.com',
     // local testing via Windows hosts file, per the POA:
-    // 127.0.0.1  counsellorsofamerica.local
+    // 127.0.0.1  counselorsofamerica.local
     'counsellorsofamerica.local',
   ],
   brandName: 'Counsellors of America',
   brandShort: 'Counsellors',
   currency: 'USD',
   currencySymbol: '$',
-  paymentGateway: 'stripe',
+  paymentGateway: 'paypal',
   defaultTimezone: 'America/New_York',
   supabaseEnvPrefix: 'US',
-  isLive: false,
+  isLive: true,
 
-  siteUrl: 'https://www.counsellorsofamerica.com',
+  siteUrl: 'https://www.counselorsofamerica.com',
   metaTitle: 'Counsellors of America | Website Builder for Therapists',
   metaTitleTemplate: '%s | Counsellors of America',
   metaDescription:
     'Start getting therapy clients online. Build your website, take bookings & collect payments in under 10 minutes.',
   ogDescription:
-    'Counsellors of America – therapist website builder showing profile, booking and secure Stripe payments.',
+    'Counsellors of America – therapist website builder showing profile, booking and secure PayPal payments.',
   keywords: [
     'therapist website builder',
     'counselor profile website',
     'online booking for therapists',
     'private practice management software',
     'psychologist website builder',
-    'Stripe therapy payments',
+    'PayPal therapy payments',
     'counsellors of America',
   ],
   ogLocale: 'en_US',
@@ -88,10 +88,24 @@ export const usTenant: TenantConfig = {
     },
   ],
 
+  
   defaultCountryIso: 'US',
 
   // TEMP: no dedicated America logo asset exists yet, so reuse the India
   // mark for now rather than showing a text/monogram fallback. Swap this
   // to a real America-specific logo path once one exists.
-  logoPath: '/coi.png',
+  logoPath: '/COA2.png',
+
+  // Old Glory Blue -- see the isUs branch in src/app/signup/page.tsx for
+  // the earlier, narrower signup-page-only version of this; this makes it
+  // the site-wide brand color instead, threaded via RootLayout.
+  primaryColor: '#3C3B6E',
+  primaryColorDark: '#2A2952',
+  primaryColorSoft: '#C9C8E0',
+
+  // Old Glory Red — used only for hover/interactive accents (nav link
+  // hover, active states) so those moments read as "America" rather than
+  // just a darker blue. Everything else (buttons, badges, underlines)
+  // still uses the primary blue above.
+  accentColor: '#B22234',
 }
