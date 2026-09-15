@@ -82,6 +82,13 @@ export async function POST(req: NextRequest) {
         last_plan_payment_gateway: 'paypal',
         last_plan_payment_ref: capture.id,
         plan_activated_at: new Date().toISOString(),
+        // Every plan activation/renewal gets a fresh 1-year expiry from
+        // right now -- mirrors razorpay/upgrade-plan/route.ts exactly, so
+        // PayPal-paid US plans expire and get re-billed on the same
+        // 1-year cadence as India's, instead of never expiring.
+        subscription_expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        subscription_status: 'active',
+        subscription_plan: targetPlan,
         ...(targetPlan === 'pro'
           ? { pro_switches_used: 0, pro_switch_cycle_start: new Date().toISOString() }
           : {}),

@@ -41,4 +41,11 @@ export const ukTenant: TenantConfig = {
   ],
 
   defaultCountryIso: 'GB',
+
+  // TEMP: no UK-specific brand color decided yet -- keep India's saffron
+  // as a safe, harmless default. Revisit alongside real branding/copy in
+  // Phase 11.
+  primaryColor: '#FF9933',
+  primaryColorDark: '#E07A12',
+  primaryColorSoft: '#FFD9B0',
 }

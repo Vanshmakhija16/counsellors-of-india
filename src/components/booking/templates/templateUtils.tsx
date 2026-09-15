@@ -412,7 +412,8 @@ export const UNAVAILABLE = ['10:30 AM', '1:00 PM', '3:30 PM']
 
 export const SAMPLE_THERAPIST: TherapistProfile = {
   name: 'Dr. Vansh Makhija', credentials: 'M.Phil Clinical Psychology · RCI Licensed', city: 'Mumbai',
-  bio: `I'm a licensed clinical psychologist with over 8 years of experience helping individuals navigate anxiety, depression, relationship challenges, and life transitions.`,
+  bio: `I'm a licensed clinical psychologist with over 8 years of experience helping individuals navigate anxiety, 
+  depression, relationship challenges, and life transitions  Taking the first step toward therapy requires immense courage. If you are feeling overwhelmed by anxiety, feeling the heavy weight of depression, navigating a difficult life transition, or struggling to connect in your relationships, please know that you do not have to carry this alone.I am a licensed clinical psychologist with over eight years of dedicated experience helping individuals understand their struggles, discover their innate resilience, and build deeply fulfilling lives.`,
   fee: 1500, sessionDuration: 50, rating: 4.9, totalReviews: 127,
   specialties: ['Anxiety', 'Depression', 'Relationships', 'Grief', 'Self-Esteem', 'Work Stress'],
   languages: ['English', 'Hindi', 'Marathi'], experience: 8,
@@ -686,7 +687,7 @@ export interface CT8Content {
 export interface CT8EducationItem { degree: string; institution: string; year: string; details?: string }
 export interface CT8ResearchItem { title: string; type: string; year: string; description: string; link?: string }
 export interface CT8ExperienceItem { role: string; organization: string; duration: string; description: string }
-export interface CT8CertificationItem { title: string; issuer: string; year: string }
+export interface CT8CertificationItem { title: string; issuer: string; year: string; image?: string }
 export interface CT8RecommendationItem { quote: string; name: string; role: string }
 
 export const DEFAULT_CT8_CONTENT: Required<CT8Content> = {
@@ -715,24 +716,26 @@ export const DEFAULT_CT8_CONTENT: Required<CT8Content> = {
     { q: 'What is your cancellation or rescheduling policy?', a: 'You can reschedule or cancel up to 24 hours before your session at no charge. This is especially flexible for students around exam periods — just message ahead of time.' },
   ],
   education: [
-    { degree: 'M.A. Clinical Psychology', institution: 'University of Delhi', year: '2024 \u2013 2026 (expected)', details: 'Coursework in psychopathology, psychometrics, and psychotherapy techniques.' },
+    { degree: 'M.A. Clinical Psychology', institution: 'University of Delhi', year: '2024 \u2013 2026 ', details: 'Coursework in psychopathology, psychometrics, and psychotherapy techniques.' },
     { degree: 'B.A. (Hons) Psychology', institution: 'Lady Shri Ram College', year: '2021 \u2013 2024', details: 'Graduated with distinction; final-year project on adolescent anxiety.' },
+    { degree: 'Senior Secondary (Class XII) \u2014 Science with Psychology', institution: 'Delhi Public School', year: '2019 \u2013 2021', details: 'Completed higher secondary education with Psychology as an elective subject, which first sparked an interest in the field.' },
   ],
   research: [
     { title: 'Anxiety and Academic Performance in Undergraduate Students', type: 'Undergraduate Thesis', year: '2024', description: 'A mixed-methods study examining the relationship between test anxiety and academic outcomes across 120 undergraduate students.' },
     { title: 'Attachment Styles and Social Media Use', type: 'Research Project', year: '2023', description: 'Class research project exploring correlations between attachment style and social media dependency in young adults.' },
   ],
   clinicalExperience: [
-    { role: 'Clinical Intern', organization: 'City Mental Health Clinic', duration: 'Jun 2025 \u2013 Present', description: 'Supervised intake assessments and co-facilitated group therapy sessions under a licensed clinical psychologist.' },
     { role: 'Volunteer Counsellor', organization: 'University Student Wellness Centre', duration: 'Jan 2024 \u2013 May 2025', description: 'Provided peer support and first-contact listening sessions for students under faculty supervision.' },
+    { role: 'Clinical Intern', organization: 'City Mental Health Clinic', duration: 'Jun 2025 \u2013 Present', description: 'Supervised intake assessments and co-facilitated group therapy sessions under a licensed clinical psychologist.' },
   ],
   skills: {
     clinical: ['CBT (in training)', 'Motivational Interviewing', 'Psychometric Testing', 'Case Formulation'],
     technical: ['SPSS', 'R (basic)', 'Qualtrics', 'Academic Writing'],
   },
   certifications: [
-    { title: 'Foundations of CBT', issuer: 'Beck Institute (online)', year: '2025' },
-    { title: 'Psychological First Aid', issuer: 'WHO / NIMHANS', year: '2024' },
+    { title: 'Foundations of CBT', issuer: 'Beck Institute (online)', year: '2025', image: '/certificate1.png' },
+    { title: 'Psychological First Aid', issuer: 'WHO / NIMHANS', year: '2024', image: '/certificate2.jpg' },
+    { title: 'Advanced Clinical Workshop', issuer: 'City Mental Health Clinic', year: '2024', image: '/certificate3.jpg' },
   ],
   recommendations: [
     { quote: 'One of the most diligent students I\u2019ve supervised \u2014 genuinely curious about the \u201cwhy\u201d behind every case, not just the \u201chow.\u201d', name: 'Dr. A. Sharma', role: 'Thesis Supervisor, University of Delhi' },

@@ -90,6 +90,13 @@ export const caTenant: TenantConfig = {
 
   defaultCountryIso: 'CA',
 
+  // TEMP: no Canada-specific brand color decided yet -- keep India's
+  // saffron as a safe, harmless default. Revisit alongside real
+  // branding/copy in Phase 11.
+  primaryColor: '#FF9933',
+  primaryColorDark: '#E07A12',
+  primaryColorSoft: '#FFD9B0',
+
   // TEMP: no dedicated Canada logo asset exists yet, so reuse the India
   // mark for now rather than showing a text/monogram fallback. Swap this
   // to a real Canada-specific logo path once one exists.

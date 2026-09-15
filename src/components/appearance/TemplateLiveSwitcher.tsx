@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import { Sparkles, Check, Lock, ChevronLeft, ChevronRight } from 'lucide-react'
-import { TEMPLATES, type TemplateId } from '@/lib/template'
+import { TEMPLATES, type TemplateId, type Template } from '@/lib/template'
 
 const META: Record<TemplateId, { slug: string; t: string }> = {
   classic:  { slug: 'classic',  t: 't1' },
@@ -29,6 +29,12 @@ interface Props {
   hideArrows?: boolean
   frameHeight?: number
   profileContent?: Record<string, unknown>
+  /** Which templates to actually list/cycle through -- defaults to every
+   *  template (the original behaviour) so existing call sites are
+   *  unaffected. Pass a plan-filtered subset (see canUseTemplate() in
+   *  lib/template.ts) to hide templates the current plan can't use, e.g.
+   *  SetupWizard passing only the 6 Starter-tier templates. */
+  templates?: Template[]
 }
 
 export default function TemplateLiveSwitcher({
@@ -36,7 +42,7 @@ export default function TemplateLiveSwitcher({
   brandColor, onSelect, onLockedAttempt,
   active: controlledActive, onActiveChange, hideTabs = false,
   hideActionBar = false, hideArrows = false, frameHeight = 680,
-  profileContent,
+  profileContent, templates = TEMPLATES,
 }: Props) {
   const [internalActive, setInternalActive] = useState<TemplateId>(selectedTemplate)
   const active = controlledActive ?? internalActive
@@ -51,7 +57,7 @@ export default function TemplateLiveSwitcher({
   const [containerWidth, setContainerWidth] = useState(0)
 
   const meta = META[active]
-  const activeTpl = TEMPLATES.find(t => t.id === active)!
+  const activeTpl = templates.find(t => t.id === active) ?? TEMPLATES.find(t => t.id === active)!
 
   useEffect(() => {
     // Measure iframe wrapper width — this is the actual available space
@@ -90,10 +96,10 @@ export default function TemplateLiveSwitcher({
   const canSelect = !isLocked || active === committedTemplate
   const isCurrentSelection = active === selectedTemplate
 
-  const activeIndex = TEMPLATES.findIndex(t => t.id === active)
+  const activeIndex = templates.findIndex(t => t.id === active)
   const step = (dir: 1 | -1) => {
-    const next = (activeIndex + dir + TEMPLATES.length) % TEMPLATES.length
-    setActive(TEMPLATES[next].id)
+    const next = (activeIndex + dir + templates.length) % templates.length
+    setActive(templates[next].id)
   }
 
   function buildSrc(templateId: TemplateId) {
@@ -112,7 +118,7 @@ export default function TemplateLiveSwitcher({
       {/* ── Left sidebar tabs ── */}
       {!hideTabs && (
         <div className="flex flex-col gap-1 p-2 border-r border-[#ede9e4] bg-[#fafaf9] w-44 shrink-0">
-          {TEMPLATES.map((t, i) => {
+          {templates.map((t, i) => {
             const on = active === t.id
             const selected = t.id === selectedTemplate
             const committed = t.id === committedTemplate

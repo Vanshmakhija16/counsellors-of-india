@@ -64,13 +64,14 @@ export default function ClassicTemplate8({ therapist, bookedTimes = [], hiddenSe
             case 'hero':     return <Hero key={id} therapist={therapist} />
             case 'about':    return <About key={id} therapist={therapist} />
             case 'education':       return <Education key={id} therapist={therapist} />
-            case 'research':        return <Research key={id} therapist={therapist} />
-            case 'experience':      return <Experience key={id} therapist={therapist} />
-            case 'skills':          return <Skills key={id} therapist={therapist} />
+            // case 'research':        return <Research key={id} therapist={therapist} />
+          //  case 'experience':      return <Experience key={id} therapist={therapist} />
             case 'certifications':  return <Certifications key={id} therapist={therapist} />
-            case 'recommendations': return <Recommendations key={id} therapist={therapist} />
-            case 'services': return <Services key={id} therapist={therapist} persona={persona} />
+            // case 'recommendations': return <Recommendations key={id} therapist={therapist} />
+            // case 'services': return <Services key={id} therapist={therapist} persona={persona} />
             case 'faq':      return <FAQ key={id} therapist={therapist} />
+                        // case 'skills':          return <Skills key={id} therapist={therapist} />
+
             case 'booking':  return <Booking key={id} therapist={therapist} bookedTimes={bookedTimes} />
             case 'footer':   return <Footer key={id} therapist={therapist} />
             default: return null

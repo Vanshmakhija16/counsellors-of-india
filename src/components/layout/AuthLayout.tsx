@@ -28,6 +28,33 @@ interface AuthLayoutProps {
    *  than login's — widen the left column's container to match instead of
    *  clipping it down to login's narrower max-width. */
   wide?: boolean
+  /** Tenant accent color for CTAs, focus rings, and the right panel's
+   *  shapes/monogram. Defaults to the saffron brand color so any call
+   *  site that doesn't pass this renders exactly what it did before.
+   *  Exposed to children as the --auth-accent / --auth-accent-dark CSS
+   *  variables, so form fields (e.g. SignupPageClient) can reference
+   *  var(--auth-accent) instead of hardcoding the hex themselves. */
+  accentColor?: string
+  accentColorDark?: string
+  /** Right brand panel's background gradient. Defaults to the original
+   *  warm brown/saffron gradient so any tenant that doesn't pass this
+   *  renders exactly what it did before. */
+  panelBackground?: string
+  /** Color the right panel's "See how it works" link turns to on hover.
+   *  Defaults to accentColorDark (the original behavior) — pass a
+   *  different color to make the hover state stand out against a
+   *  differently-themed panel background. */
+  panelAccent?: string
+  /** Extra classes applied to the logo+title+topLink header block (e.g.
+   *  'mt-8' to nudge it down). Scoped per-page rather than shared, since
+   *  login and signup want independent vertical positioning here —
+   *  defaults to unset so nothing shifts unless a page opts in. */
+  headerClassName?: string
+  /** Extra classes applied to the whole left-column content wrapper
+   *  (header + form together) — e.g. 'mt-10' to nudge the entire left
+   *  side down a bit for a specific tenant. Separate from headerClassName,
+   *  which only nudges the header block on its own. Defaults to unset. */
+  contentClassName?: string
 }
 
 /**
@@ -42,27 +69,31 @@ interface AuthLayoutProps {
  * texture instead of a flat gradient. Collapses to a single column (form
  * only, panel hidden) on mobile.
  */
-export default function AuthLayout({ children, title, brandName = 'Counsellors of India', tagline, logoPath, journeySlot, topLink, stepLabel, wide }: AuthLayoutProps) {
+export default function AuthLayout({ children, title, brandName = 'Counsellors of India', tagline, logoPath, journeySlot, topLink, stepLabel, wide, accentColor = '#FF9933', accentColorDark = '#C2650A', panelBackground = 'linear-gradient(155deg, #2A160A 0%, #4A2410 42%, #8A4A1F 100%)', panelAccent, headerClassName = '', contentClassName = '' }: AuthLayoutProps) {
   const initial = brandName.split(' ').map(w => w[0]).slice(0, 1).join('')
+  const resolvedPanelAccent = panelAccent ?? accentColorDark
 
   return (
-    <main className="min-h-screen lg:h-screen grid lg:grid-cols-[46%_54%] lg:overflow-hidden" style={{ background: '#FFFFFF' }}>
+    <main
+      className="min-h-screen lg:h-screen grid lg:grid-cols-[46%_54%] lg:overflow-hidden"
+      style={{ background: '#FFFFFF', ['--auth-accent' as string]: accentColor, ['--auth-accent-dark' as string]: accentColorDark }}
+    >
 
       {/* ── LEFT — the form ── */}
       <div
         className="flex items-start justify-center px-6 sm:px-10 lg:px-14 py-6 lg:py-10 lg:h-screen lg:overflow-y-auto [&::-webkit-scrollbar]:hidden"
         style={{ background: '#FFFFFF', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
-        <div className={`w-full ${wide ? 'max-w-2xl' : 'max-w-md'}`}>
+        <div className={`w-full ${wide ? 'max-w-2xl' : 'max-w-md'} ${contentClassName}`}>
 
-          <div className="flex items-center justify-center lg:justify-start gap-3 mb-1">
+          <div className={`flex items-center justify-center lg:justify-start gap-3 ${headerClassName}`}>
             <Link href="/" className="inline-flex items-center shrink-0 group">
               {logoPath ? (
-                <img src={logoPath} alt={brandName} className="h-28 w-auto" />
+                <img src={logoPath} alt={brandName} className="h-16 w-auto" />
               ) : (
                 <span
                   className="inline-flex w-7 h-7 rounded-full items-center justify-center shrink-0"
-                  style={{ background: 'linear-gradient(135deg,#FF9933,#C2650A)' }}
+                  style={{ background: `linear-gradient(135deg, var(--auth-accent), var(--auth-accent-dark))` }}
                 >
                   <span className="text-white text-xs font-black">{initial}</span>
                 </span>
@@ -98,7 +129,8 @@ export default function AuthLayout({ children, title, brandName = 'Counsellors o
       <div
         className="hidden lg:flex flex-col relative overflow-hidden px-14 pt-0 pb-10"
         style={{
-          background: 'linear-gradient(155deg, #2A160A 0%, #4A2410 42%, #8A4A1F 100%)',
+          background: panelBackground,
+          ['--auth-panel-accent' as string]: resolvedPanelAccent,
         }}
       >
         {/* Bold abstract shapes bleeding off-canvas — solid fills instead of
@@ -107,8 +139,8 @@ export default function AuthLayout({ children, title, brandName = 'Counsellors o
           className="absolute -right-32 -top-32 w-[600px] h-[600px] pointer-events-none"
           viewBox="0 0 600 600" fill="none" aria-hidden="true"
         >
-          <circle cx="300" cy="300" r="300" fill="#FF9933" fillOpacity="0.14" />
-          <circle cx="300" cy="300" r="220" fill="#FF9933" fillOpacity="0.10" />
+          <circle cx="300" cy="300" r="300" style={{ fill: 'var(--auth-accent-dark)', fillOpacity: 0.14 }} />
+          <circle cx="300" cy="300" r="220" style={{ fill: 'var(--auth-accent-dark)', fillOpacity: 0.10 }} />
         </svg>
         <svg
           className="absolute -left-32 -bottom-40 w-[520px] h-[520px] pointer-events-none"
@@ -116,7 +148,7 @@ export default function AuthLayout({ children, title, brandName = 'Counsellors o
         >
           <path
             d="M40 480C160 460 120 300 240 250C340 208 380 100 320 20C480 60 520 220 460 320C400 420 260 460 40 480Z"
-            fill="#C2650A" fillOpacity="0.22"
+            style={{ fill: 'var(--auth-accent-dark)', fillOpacity: 0.22 }}
           />
         </svg>
 
@@ -145,7 +177,10 @@ export default function AuthLayout({ children, title, brandName = 'Counsellors o
 
           <Link
             href="/#how"
-            className="inline-flex items-center gap-1.5 text-sm font-semibold text-white underline decoration-current decoration-2 underline-offset-4 hover:text-[#FFD9A8] transition"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-white underline decoration-current decoration-2 underline-offset-4 transition"
+            style={{ ['--tw-text-opacity' as string]: 1 }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'var(--auth-panel-accent)')}
+            onMouseLeave={e => (e.currentTarget.style.color = '')}
           >
             See how it works <ArrowRight size={14} />
           </Link>

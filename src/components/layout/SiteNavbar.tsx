@@ -10,9 +10,19 @@ import { useTherapist } from '@/lib/useTherapist'
 // yet renders byte-for-byte what it did before.
 export interface SiteNavbarTenant {
   brandName: string
+  logoPath?: string
+  // Overrides the "List your practice" CTA's border/fill color (resting
+  // state + hover fill). Falls back to the site's default saffron
+  // (--wn-saffron) when omitted, so India's navbar is unaffected. Scoped
+  // as a CSS variable directly on <nav> (see --nav-cta-color usage in
+  // page.css's FINAL .nav .btn-dark override) rather than relying on the
+  // indirect <html>-level --wn-saffron threading in layout.tsx, since that
+  // path goes through a :root{--wn-saffron:#FF9933} redeclaration in
+  // page.css first and was not reliably resolving to the tenant color.
+  ctaColor?: string
 }
 
-const DEFAULT_TENANT: SiteNavbarTenant = { brandName: 'Counsellors of India' }
+const DEFAULT_TENANT: SiteNavbarTenant = { brandName: 'Counsellors of India', logoPath: '/coi.png' }
 
 // The real site navbar (logo, section links, mobile sidebar, auth-aware
 // CTA) — shared by the homepage and any other marketing/directory page so
@@ -61,23 +71,64 @@ export default function SiteNavbar({ tenant = DEFAULT_TENANT }: { tenant?: SiteN
     return () => window.removeEventListener('scroll', fn)
   }, [])
 
+  // In-page section links ("/#therapists" etc.) rely on the browser's
+  // native anchor jump by default, which computes the target's position
+  // once, at click-time, against whatever the layout happens to be right
+  // then. From the very top of the homepage, sections below (therapist
+  // cards loaded async, iframes, images) are often still resizing the
+  // page, so that one-shot calculation lands short/long. Lenis (the smooth
+  // -scroll library the homepage uses) caches its own document-height
+  // measurement too, which goes stale the same way. Intercepting the click
+  // lets us force a fresh measurement and scroll right at that moment
+  // instead of trusting a calculation from whenever Lenis/the browser last
+  // measured the page.
+  function handleHashNavClick(e: React.MouseEvent<HTMLAnchorElement>) {
+    const href = e.currentTarget.getAttribute('href') ?? ''
+    const hashIdx = href.indexOf('#')
+    if (hashIdx === -1) return // not a hash link -- let it navigate normally
+
+    const targetPath = href.slice(0, hashIdx) || '/'
+    const currentPath = window.location.pathname
+    // Only intercept when we're already on the page the hash lives on --
+    // otherwise let Next.js/the browser do the normal cross-page navigation
+    // (can't scroll to an element that isn't in the DOM yet).
+    if (targetPath !== currentPath && targetPath !== '') return
+
+    const id = href.slice(hashIdx + 1)
+    const target = document.getElementById(id)
+    if (!target) return // fall back to native jump if we somehow can't find it
+
+    e.preventDefault()
+    const lenis = (window as any).__lenis
+    if (lenis) {
+      lenis.resize() // re-measure the document now, not from whenever it last checked
+      lenis.scrollTo(target, { duration: 1 })
+    } else {
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    }
+    window.history.pushState(null, '', href)
+  }
+
   return (
     <>
-      <nav className={`nav site-topnav ${scrolled ? 'scrolled' : ''}`}>
+      <nav
+        className={`nav site-topnav ${scrolled ? 'scrolled' : ''}`}
+        style={tenant.ctaColor ? ({ ['--nav-cta-color' as any]: tenant.ctaColor } as React.CSSProperties) : undefined}
+      >
         <div className="nav-inner">
           <Link href="/" className="logo">
-            <img src="/coi.png" alt="" className="logo-img" />
+            <img src={tenant.logoPath ?? '/coi.png'} alt="" className="logo-img" />
             <span className="logo-tagline">{brandFirst}{brandRest ? <><br />of {brandRest}</> : null}</span>
           </Link>
 
           <span className="nav-mobile-title">{tenant.brandName}</span>
 
           <div className="nav-mid">
-            <a href="/#experience" className="nav-a">Templates</a>
-            <a href="/#templates" className="nav-a">Demo</a>
-            <a href="/#how" className="nav-a">Steps </a>
-            <a href="/#therapists" className="nav-a">Therapists</a>
-            <a href="/#pricing" className="nav-a">Pricing</a>
+            <a href="/#experience" className="nav-a" onClick={handleHashNavClick}>Templates</a>
+            <a href="/#templates" className="nav-a" onClick={handleHashNavClick}>Demo</a>
+            <a href="/#how" className="nav-a" onClick={handleHashNavClick}>Steps </a>
+            <a href="/#therapists" className="nav-a" onClick={handleHashNavClick}>Therapists</a>
+            <a href="/#pricing" className="nav-a" onClick={handleHashNavClick}>Pricing</a>
           </div>
 
           <div className="nav-r">
@@ -139,11 +190,11 @@ export default function SiteNavbar({ tenant = DEFAULT_TENANT }: { tenant?: SiteN
         </div>
 
         <div className="sidebar-links">
-          <a href="/#templates">Demo</a>
-          <a href="/#experience">Templates</a>
-          <a href="/#how">Steps</a>
-          <a href="/#therapists">Therapists</a>
-          <a href="/#pricing">Pricing</a>
+          <a href="/#templates" onClick={handleHashNavClick}>Demo</a>
+          <a href="/#experience" onClick={handleHashNavClick}>Templates</a>
+          <a href="/#how" onClick={handleHashNavClick}>Steps</a>
+          <a href="/#therapists" onClick={handleHashNavClick}>Therapists</a>
+          <a href="/#pricing" onClick={handleHashNavClick}>Pricing</a>
         </div>
 
         <div className="sidebar-card">

@@ -1,14 +1,24 @@
 import Logo from '../ui/Logo'
 import Link from 'next/link'
 
-export default function Footer() {
+export interface FooterTenant {
+  brandName: string
+  footerTagline?: string
+}
+
+const DEFAULT_TENANT: FooterTenant = {
+  brandName: 'Counsellors of India',
+  footerTagline: 'Practice management built for Indian therapists and counsellors.',
+}
+
+export default function Footer({ tenant = DEFAULT_TENANT }: { tenant?: FooterTenant } = {}) {
   return (
     <footer className="bg-white border-t border-gray-100 mt-auto">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 flex flex-col md:flex-row justify-between gap-6">
         <div>
-          <Logo size="sm" />
+          <Logo size="sm" brandName={tenant.brandName} />
           <p className="text-sm text-gray-500 mt-2 max-w-xs">
-            Practice management built for Indian therapists and counsellors.
+            {tenant.footerTagline ?? DEFAULT_TENANT.footerTagline}
           </p>
         </div>
         <div className="flex gap-10 text-sm text-gray-500">
@@ -25,7 +35,7 @@ export default function Footer() {
         </div>
       </div>
       <div className="border-t border-gray-100 py-4 text-center text-xs text-gray-400">
-        © {new Date().getFullYear()} Counsellors of India. All rights reserved.
+        © {new Date().getFullYear()} {tenant.brandName}. All rights reserved.
       </div>
     </footer>
   )

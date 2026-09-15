@@ -16,6 +16,7 @@ import DraggableDock from '@/components/appearance/DraggableDock'
 import { Save, Lock, Check, AlertCircle, Sparkles, Pencil, LayoutList, X, GripVertical, ArrowLeft, ChevronLeft, ChevronRight, Image as ImageIcon, ChevronUp, ChevronDown, Globe } from 'lucide-react'
 import type { ProfileContent, CT1Content, CT2Content, CT3Content, CT4Content, CT5Content, CT6Content, CT8Content } from '@/components/booking/templates/templateUtils'
 import dynamic from 'next/dynamic'
+import { useTenantAccent } from '@/lib/useTenantAccent'
 
 const CT1ContentEditor = dynamic(() => import('../../../components/appearance/CT1ContentEditor'), { ssr: false })
 const CT2ContentEditor = dynamic(() => import('../../../components/appearance/CT2ContentEditor'), { ssr: false })
@@ -32,7 +33,9 @@ const TEMPLATE_TPARAM: Record<TemplateId, string> = {
 
 const STARTER_TEMPLATE_LOCK_DAYS = 365
 
-// Brand saffron — keep primary actions on-theme regardless of selected color.
+// Brand saffron (India default) -- see useTenantAccent() inside the
+// component below, which shadows this with the tenant-aware color for
+// every `BRAND` reference in this file.
 const BRAND = '#ff9933'
 
 function addDays(date: Date, days: number) {
@@ -53,6 +56,7 @@ function formatLockDate(iso: string | null) {
 export default function AppearancePage() {
   const supabase = useSupabaseClient()
   const router   = useRouter()
+  const { accent: BRAND, accentDark: BRAND_DARK } = useTenantAccent()
 
   const [profile,          setProfile]          = useState<TherapistProfile | null>(null)
   const [currentPlan,      setCurrentPlan]      = useState<string>('free')
@@ -286,7 +290,7 @@ export default function AppearancePage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f9f8f6]">
+    <div className="min-h-screen bg-[#f9f8f6]" style={{ '--brand': BRAND, '--brand-dark': BRAND_DARK } as React.CSSProperties}>
       {/* ── Header — persistent action bar ────────────────────────── */}
       <div
         data-dock-bounds
@@ -314,7 +318,7 @@ export default function AppearancePage() {
               type="button"
               aria-label="Previous template"
               onClick={() => stepTemplate(-1)}
-              className="h-8 w-8 rounded-lg border border-[#e8e4df] bg-white flex items-center justify-center text-[#6b7280] hover:bg-[#fff7ee] hover:border-[#FF9933] hover:text-[#C46800] transition"
+              className="h-8 w-8 rounded-lg border border-[#e8e4df] bg-white flex items-center justify-center text-[#6b7280] hover:bg-[#fff7ee] hover:border-[var(--brand)] hover:text-[var(--brand-dark)] transition"
             >
               <ChevronLeft size={16} />
             </button>
@@ -322,7 +326,7 @@ export default function AppearancePage() {
               type="button"
               aria-label="Next template"
               onClick={() => stepTemplate(1)}
-              className="h-8 w-8 rounded-lg border border-[#e8e4df] bg-white flex items-center justify-center text-[#6b7280] hover:bg-[#fff7ee] hover:border-[#FF9933] hover:text-[#C46800] transition"
+              className="h-8 w-8 rounded-lg border border-[#e8e4df] bg-white flex items-center justify-center text-[#6b7280] hover:bg-[#fff7ee] hover:border-[var(--brand)] hover:text-[var(--brand-dark)] transition"
             >
               <ChevronRight size={16} />
             </button>
@@ -492,7 +496,7 @@ export default function AppearancePage() {
 
               <button
                 onClick={() => setEditMode('content')}
-                className="w-full flex items-center gap-4 p-4 rounded-2xl border border-[#e8e4df] bg-white hover:border-[#FF9933] hover:shadow-sm transition text-left"
+                className="w-full flex items-center gap-4 p-4 rounded-2xl border border-[#e8e4df] bg-white hover:border-[var(--brand)] hover:shadow-sm transition text-left"
               >
                 <span className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
                   style={{ background: `${BRAND}14`, color: BRAND }}>
@@ -507,7 +511,7 @@ export default function AppearancePage() {
 
               <button
                 onClick={() => setEditMode('sections')}
-                className="w-full flex items-center gap-4 p-4 rounded-2xl border border-[#e8e4df] bg-white hover:border-[#FF9933] hover:shadow-sm transition text-left"
+                className="w-full flex items-center gap-4 p-4 rounded-2xl border border-[#e8e4df] bg-white hover:border-[var(--brand)] hover:shadow-sm transition text-left"
               >
                 <span className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0"
                   style={{ background: `${BRAND}14`, color: BRAND }}>

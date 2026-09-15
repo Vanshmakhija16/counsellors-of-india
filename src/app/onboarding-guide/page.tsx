@@ -16,7 +16,12 @@ export default async function OnboardingGuidePage() {
   const tenant = await getCurrentTenant()
   return (
     <div className="flex min-h-screen flex-col bg-[#FFFCF8]">
-      <SiteNav tenant={{ brandName: tenant.brandName }} />
+      <SiteNav tenant={{
+        brandName: tenant.brandName,
+        logoPath: tenant.logoPath,
+        primaryColor: tenant.primaryColor,
+        primaryColorDark: tenant.primaryColorDark,
+      }} />
 
       {/* Hero */}
       <section className="relative overflow-hidden px-6 pt-28 pb-16">
@@ -59,7 +64,7 @@ export default async function OnboardingGuidePage() {
         </div>
       </section>
 
-      <SiteFooter tenant={{ brandName: tenant.brandName, footerTagline: tenant.footerTagline }} />
+      <SiteFooter tenant={{ brandName: tenant.brandName, footerTagline: tenant.footerTagline, logoPath: tenant.logoPath }} />
     </div>
   )
 }

@@ -32,10 +32,10 @@ export const demoProfiles: Record<string, any> = {
   },
   classic2: {
     id: 'demo-classic2',
-    name: 'Vikram Nair',
+    name: 'Vikram Gupta',
     credentials: 'MSc Psychotherapy, Certified Trauma Specialist',
-    bio: 'Working with adults navigating life transitions, identity, and the complexity of modern relationships. My practice is rooted in depth psychology and relational work.',
-    image: '/template2.png',
+    bio: 'Working with adults navigating life transitions, identity, and the complexity of modern relationships.',
+    image: '/template4.png',
     location: 'Kochi, Kerala',
     experience: 9,
     fee: 1500,
@@ -49,7 +49,7 @@ export const demoProfiles: Record<string, any> = {
     instagram: '',
     linkedin: '',
     website: '',
-    tagline: 'Depth psychology for a complex world.',
+    tagline: 'Healing begins when you feel safe to be yourself.',
     approach_text: 'Integrating relational psychotherapy with CBT and ACT — meeting you where you are.',
     education: [
       { degree: 'MSc Psychotherapy', institution: 'Christ University, Bangalore', year: '2015' },

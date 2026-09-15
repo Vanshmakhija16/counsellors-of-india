@@ -7,9 +7,11 @@ import {
   LayoutDashboard, Calendar, LogOut,
   Clock, User,
   ExternalLink, X, Menu,
-  CreditCard, FileText, ChevronDown,
+  CreditCard, FileText, ChevronDown,ChevronRight,
 } from 'lucide-react'
 import { useSupabaseClient } from '@/components/providers/TenantSupabaseProvider'
+import { CoiPageGate } from '@/components/ui/CoiLoader'
+import { useTenantAccent } from '@/lib/useTenantAccent'
 
 const NAV_MAIN = [
   { label: 'Dashboard',       href: '/dashboard',              icon: LayoutDashboard, match: 'exact'  as const },
@@ -32,15 +34,14 @@ const NAV_BOTTOM = [
   // { label: 'Settings', href: '/dashboard/settings',  icon: Settings,   match: 'prefix' as const },
 ]
 
-const SAFFRON = '#FF9933'
 const INK     = '#1a1614'
 const NO_NAV_PREFIXES = ['/dashboard/appearance/live-preview']
 
 function SideLink({
-  label, href, active, icon: Icon, onClick,
+  label, href, active, icon: Icon, onClick, accent,
 }: {
   label: string; href: string; active: boolean
-  icon: React.ElementType; onClick?: () => void
+  icon: React.ElementType; onClick?: () => void; accent: string
 }) {
   return (
     <Link
@@ -48,14 +49,14 @@ function SideLink({
       onClick={onClick}
       className="flex items-center gap-3.5 px-4 py-3 text-[15px] font-semibold transition-colors duration-150 rounded-lg"
       style={active
-        ? { color: SAFFRON, background: 'rgba(255,153,51,0.07)' }
+        ? { color: accent, background: `color-mix(in srgb, ${accent} 7%, transparent)` }
         : { color: '#6b6560' }
       }
     >
       <Icon
         size={17}
         strokeWidth={active ? 2.2 : 1.8}
-        style={{ flexShrink: 0, color: active ? SAFFRON : '#a09890' }}
+        style={{ flexShrink: 0, color: active ? accent : '#a09890' }}
       />
       {label}
     </Link>
@@ -66,6 +67,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const pathname = usePathname()
   const router   = useRouter()
   const supabase = useSupabaseClient()
+  const { accent, accentDark } = useTenantAccent()
 
   const [gate,       setGate]       = useState<'checking' | 'ok'>('checking')
   const [therapist,  setTherapist]  = useState<{ full_name?: string; username?: string; plan?: string; email?: string } | null>(null)
@@ -136,15 +138,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       : pathname === href
   }
 
-  if (gate === 'checking') return (
-    <div className="min-h-screen flex items-center justify-center" style={{ background: '#fff' }}>
-      <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin"
-        style={{ borderColor: SAFFRON, borderTopColor: 'transparent' }} />
-    </div>
-  )
-
-  if (noNav) return <>{children}</>
-
   const firstName = therapist?.full_name?.trim().split(/\s+/)
     .filter(p => !/^(dr|mr|mrs|ms|miss|mx|prof)\.?$/i.test(p))[0] ?? 'Account'
   const initials = therapist?.full_name
@@ -182,6 +175,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {...item}
               active={isActive(item.href, item.match)}
               onClick={onClose}
+              accent={accent}
             />
           ))}
         </div>
@@ -193,6 +187,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               {...item}
               active={isActive(item.href, item.match)}
               onClick={onClose}
+              accent={accent}
             />
           ))}
           {therapist?.username && (
@@ -219,12 +214,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           aria-expanded={profileMenuOpen}
           className="flex items-center gap-3 w-full rounded-lg -mx-1.5 px-1.5 py-1 text-left transition hover:bg-[#f7f4f0]"
         >
-          <span
+          {/* <span
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[12px] font-bold text-white"
             style={{ background: 'linear-gradient(135deg,#FF9933,#C2650A)' }}
           >
             {initials}
-          </span>
+          </span> */}
           <div className="min-w-0 flex-1">
             <p className="text-[13px] font-bold truncate" style={{ color: INK }}>{firstName}</p>
             {therapist?.email ? (
@@ -238,15 +233,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               href="/pricing"
               onClick={e => e.stopPropagation()}
               className="shrink-0 px-3 py-1.5 rounded-lg text-[11px] font-bold text-white transition hover:brightness-95"
-              style={{ background: SAFFRON }}
+              style={{ background: accent }}
             >
               Upgrade
             </Link>
           ) : (
-            <ChevronDown
-              size={15}
+            <ChevronRight
+              size={18}
               className="shrink-0 transition-transform"
-              style={{ color: '#a09890', transform: profileMenuOpen ? 'rotate(180deg)' : 'none' }}
+              style={{ color: '#ffffff', backgroundColor: accent, transform: profileMenuOpen ? 'rotate(270deg)' : 'none' }}
             />
           )}
         </button>
@@ -269,11 +264,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     </div>
   )
 
+  if (noNav) return <CoiPageGate ready={gate === 'ok'}>{children}</CoiPageGate>
+
   return (
-    <div
-      className="min-h-screen flex"
-      style={{ background: '#f7f4f0', fontFamily: "'Plus Jakarta Sans','Inter',system-ui,sans-serif" }}
-    >
+    <CoiPageGate ready={gate === 'ok'}>
+      <div
+        className="min-h-screen flex"
+        style={{ background: '#f7f4f0', fontFamily: "'Plus Jakarta Sans','Inter',system-ui,sans-serif" }}
+      >
       {/* Desktop sidebar */}
       <aside
         className="hidden lg:block fixed top-0 left-0 h-screen w-[260px] z-30 border-r"
@@ -332,7 +330,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 <Link
                   href="/pricing"
                   className="shrink-0 rounded-lg px-4 py-2 text-[13px] font-bold text-white transition hover:brightness-95"
-                  style={{ background: SAFFRON }}
+                  style={{ background: accentDark }}
                 >
                   View plans
                 </Link>
@@ -343,5 +341,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </main>
       </div>
     </div>
+    </CoiPageGate>
   )
 }

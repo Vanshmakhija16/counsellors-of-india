@@ -34,6 +34,12 @@ export default function Services({ therapist, persona }: ServicesProps) {
       })
     : ct8.services
 
+  // Whichever card sits in the middle of the row visually "floats" above
+  // its neighbours (pricing-table style) — a fixed layout position, not
+  // tied to which service happens to be persona-featured, so the card
+  // that lifts stays predictable even as sort order changes above.
+  const floatingIndex = Math.floor((services.length - 1) / 2)
+
   return (
     <section id="services" className="ct8-section ct8-section-alt">
       <div className="ct8-container">
@@ -46,38 +52,34 @@ export default function Services({ therapist, persona }: ServicesProps) {
           </p>
         </div>
 
-        <div className="ct8-bento-grid">
+        <div className="ct8-services-grid">
           {services.map((s, i) => {
             const price = s.price != null ? Number(s.price) : therapist.fee
             const duration = s.duration_mins ?? defaultDuration
             const audience = s.audience ?? 'both'
-            // "Featured" means matches the visitor's own active persona (or
-            // is open to everyone) — not just whichever service happens to
-            // sit first in the array. With no persona selected, nothing is
-            // singled out as dark/featured; every card reads the same way.
-            const featured = persona ? (audience === persona || audience === 'both') : false
+            const isFloating = services.length > 1 && i === floatingIndex
 
             return (
               <div
                 key={i}
-                className={`ct8-card ct8-bento-tile ct8-reveal${featured ? ' ct8-bento-tile--dark' : ''}`}
+                className={`ct8-service-card ct8-reveal${isFloating ? ' ct8-service-card--floating' : ''}`}
               >
-                <span className="ct8-bento-label">{BADGE_LABEL[audience]}</span>
-                <h3 className="ct8-bento-title">{s.name}</h3>
-                <p className="ct8-bento-desc">{s.desc}</p>
+                <span className="ct8-service-badge">{BADGE_LABEL[audience]}</span>
+                <h3 className="ct8-service-title">{s.name}</h3>
+                <p className="ct8-service-desc">{s.desc}</p>
 
-                <div className="ct8-bento-meta" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px' }}>
-                  {price != null ? (
-                    <span>
-                      From <b style={{ color: featured ? '#fff' : 'var(--ink)' }}>₹{Number(price).toLocaleString('en-IN')}</b> &middot; {duration} min
-                    </span>
-                  ) : (
-                    <span style={{ color: featured ? 'rgba(255,255,255,0.65)' : 'var(--ink-soft)' }}>Contact for pricing</span>
-                  )}
-                  <button className="ct8-bento-link" style={{ marginTop: 0 }} onClick={scrollToBooking}>
-                    Book now <ArrowUpRight size={14} />
-                  </button>
-                </div>
+                {price != null ? (
+                  <div className="ct8-service-price-row">
+                    <span className="ct8-service-price">₹{Number(price).toLocaleString('en-IN')}</span>
+                    <span className="ct8-service-price-unit">/ {duration} min session</span>
+                  </div>
+                ) : (
+                  <div className="ct8-service-price-contact">Contact for pricing</div>
+                )}
+
+                <button className="ct8-service-cta" onClick={scrollToBooking}>
+                  Book now <ArrowUpRight size={15} />
+                </button>
               </div>
             )
           })}

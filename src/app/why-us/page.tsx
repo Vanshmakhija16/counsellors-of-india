@@ -49,7 +49,12 @@ export default async function WhyUsPage() {
       }}
       className="flex min-h-screen flex-col"
     >
-      <SiteNav tenant={{ brandName: tenant.brandName }} />
+      <SiteNav tenant={{
+        brandName: tenant.brandName,
+        logoPath: tenant.logoPath,
+        primaryColor: tenant.primaryColor,
+        primaryColorDark: tenant.primaryColorDark,
+      }} />
 
       {/* ─────────────────────────────────────────────────────
           HERO
@@ -313,7 +318,7 @@ export default async function WhyUsPage() {
         </div>
       </section>
 
-      <SiteFooter tenant={{ brandName: tenant.brandName, footerTagline: tenant.footerTagline }} />
+      <SiteFooter tenant={{ brandName: tenant.brandName, footerTagline: tenant.footerTagline, logoPath: tenant.logoPath }} />
     </div>
   )
 }

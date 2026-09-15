@@ -52,7 +52,7 @@ export default async function BlogPostPage({ params }: Props) {
 
   return (
     <div className="flex flex-col blog-post-shell" style={{ background: PAPER }}>
-      <SiteNavbar tenant={{ brandName: tenant.brandName }} />
+      <SiteNavbar tenant={{ brandName: tenant.brandName, logoPath: tenant.logoPath }} />
 
       {/* Exactly one viewport tall — nav + back-link + book fit here with
           no scrolling needed. Footer lives below this box as normal

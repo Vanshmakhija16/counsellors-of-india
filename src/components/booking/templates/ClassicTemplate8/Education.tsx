@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { GraduationCap, BookOpen, Award, School, Briefcase } from 'lucide-react'
 import type { TherapistProfile } from '../templateUtils'
 import { resolveCT8Content, type CT8EducationItem, type CT8ExperienceItem } from '../templateUtils'
@@ -36,13 +36,13 @@ function startYear(item: CT8EducationItem): number {
   return match ? parseInt(match[0], 10) : 0
 }
 
-// A journey node is either a single education milestone, or one combined
-// "Experience" node summarizing every clinicalExperience entry — always
-// appended last, so the icon row reads: school → college → masters →
-// experience.
+// A timeline node is a single education milestone OR a single clinical-
+// experience entry — each gets its own node (own icon, own left/right slot)
+// so the alternating zig-zag stays consistent all the way down instead of
+// dumping every experience entry into one crowded node at the end.
 type JourneyNode =
-  | { kind: 'education'; label: string; icon: typeof GraduationCap; data: CT8EducationItem }
-  | { kind: 'experience'; label: string; icon: typeof GraduationCap; data: CT8ExperienceItem[] }
+  | { kind: 'education'; icon: typeof GraduationCap; data: CT8EducationItem }
+  | { kind: 'experience'; icon: typeof GraduationCap; data: CT8ExperienceItem }
 
 export default function Education({ therapist }: EducationProps) {
   const ct8 = resolveCT8Content(therapist.profile_content?.classic8)
@@ -52,15 +52,34 @@ export default function Education({ therapist }: EducationProps) {
 
   const orderedEdu = [...eduItems].sort((a, b) => getEduPriority(a) - getEduPriority(b) || startYear(a) - startYear(b))
   const nodes: JourneyNode[] = [
-    ...orderedEdu.map((e): JourneyNode => ({ kind: 'education', label: `${e.degree} — ${e.institution}`, icon: getEduIcon(e), data: e })),
-    ...(expItems.length > 0 ? [{ kind: 'experience', label: 'Clinical experience', icon: Briefcase, data: expItems } as JourneyNode] : []),
+    ...orderedEdu.map((e): JourneyNode => ({ kind: 'education', icon: getEduIcon(e), data: e })),
+    ...expItems.map((x): JourneyNode => ({ kind: 'experience', icon: Briefcase, data: x })),
   ]
 
-  // Nothing selected until the visitor actually clicks an icon — no detail
-  // card shown up front, and hovering only highlights (via CSS), it does
-  // not open the panel.
-  const [selected, setSelected] = useState<number | null>(null)
-  const active = selected !== null ? nodes[selected] : null
+  // The connecting line should stop exactly at the last node's icon (the
+  // final experience entry) instead of running the full height of the
+  // container — which would drag it through that item's description text
+  // below the icon. Measured on mount/resize since item heights (and thus
+  // the last icon's position) vary with content and viewport width.
+  const journeyRef = useRef<HTMLDivElement | null>(null)
+  const iconRefs = useRef<(HTMLSpanElement | null)[]>([])
+  const [lineHeight, setLineHeight] = useState<number | null>(null)
+
+  useEffect(() => {
+    const measure = () => {
+      const container = journeyRef.current
+      const lastIcon = iconRefs.current[nodes.length - 1]
+      if (!container || !lastIcon) return
+      const containerTop = container.getBoundingClientRect().top
+      const iconRect = lastIcon.getBoundingClientRect()
+      setLineHeight(iconRect.top - containerTop + iconRect.height / 2)
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    const ro = new ResizeObserver(measure)
+    if (journeyRef.current) ro.observe(journeyRef.current)
+    return () => { window.removeEventListener('resize', measure); ro.disconnect() }
+  }, [nodes.length])
 
   return (
     <section id="education" className="ct8-section ct8-section-alt">
@@ -68,60 +87,55 @@ export default function Education({ therapist }: EducationProps) {
         <div className="ct8-section-head">
           <span className="ct8-eyebrow">Education</span>
           <h2 className="ct8-heading ct8-section-title">Academic background</h2>
-          <p className="ct8-section-sub">Tap an icon to see the story behind it.</p>
+          <p className="ct8-section-sub">School to practice, one step at a time.</p>
         </div>
 
-        <div className="ct8-journey ct8-reveal">
-          <div className="ct8-journey-track">
-            {nodes.map((n, i) => {
-              const Icon = n.icon
-              const isActive = selected === i
-              return (
-                <button
-                  key={i}
-                  type="button"
-                  className={`ct8-journey-node-wrap${isActive ? ' active' : ''}`}
-                  onClick={() => setSelected(prev => (prev === i ? null : i))}
-                  aria-pressed={isActive}
-                  aria-label={n.label}
-                >
-                  <span className="ct8-journey-node">
-                    <Icon size={32} strokeWidth={1.8} />
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-
-          {active && (
-            <div key={selected} className="ct8-card ct8-journey-detail">
-              {active.kind === 'education' ? (
-                <>
-                  <span className="ct8-bento-label ct8-journey-detail-year">{active.data.year}</span>
-                  <h3 className="ct8-journey-detail-degree">{active.data.degree}</h3>
-                  <p className="ct8-journey-detail-inst">{active.data.institution}</p>
-                  {active.data.details && <p className="ct8-journey-detail-desc">{active.data.details}</p>}
-                </>
-              ) : (
-                <>
-                  <span className="ct8-bento-label ct8-journey-detail-year">Experience</span>
-                  <h3 className="ct8-journey-detail-degree">Clinical &amp; supervised experience</h3>
-                  <div className="ct8-journey-exp-list">
-                    {active.data.map((x, i) => (
-                      <div key={i} className="ct8-journey-exp-item">
-                        <div className="ct8-journey-exp-head">
-                          <span className="ct8-journey-exp-role">{x.role}</span>
-                          <span className="ct8-journey-exp-duration">{x.duration}</span>
-                        </div>
-                        <p className="ct8-journey-detail-inst" style={{ margin: '0.2rem 0 0.4rem' }}>{x.organization}</p>
-                        <p className="ct8-journey-detail-desc">{x.description}</p>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-            </div>
-          )}
+        {/* Scroll-revealed, alternating (zig-zag) timeline — no boxes, no
+            click interaction. Each milestone sits directly on the page,
+            fading in as it scrolls into view, alternating left/right of a
+            central connecting line so it reads as one continuous path
+            rather than a row of clickable icons. */}
+        <div className="ct8-journey-alt" ref={journeyRef}>
+          <div
+            className="ct8-journey-alt-line"
+            aria-hidden="true"
+            style={lineHeight != null ? { height: lineHeight, bottom: 'auto' } : undefined}
+          />
+          {nodes.map((n, i) => {
+            const Icon = n.icon
+            const side = i % 2 === 0 ? 'right' : 'left'
+            return (
+              <div key={i} className={`ct8-journey-alt-item ct8-journey-alt-item--${side} ct8-reveal`}>
+                <span
+                  className="ct8-journey-alt-icon"
+                  ref={(el) => { iconRefs.current[i] = el }}
+                ><Icon size={22} strokeWidth={1.9} /></span>
+                <div className="ct8-journey-alt-content">
+                  {n.kind === 'education' ? (
+                    <>
+                      <span className="ct8-journey-alt-year">
+                        <span className="ct8-journey-alt-year-num">{n.data.year}</span>
+                        <span className="ct8-journey-alt-year-rule" aria-hidden="true" />
+                      </span>
+                      <h3 className="ct8-journey-alt-title">{n.data.degree}</h3>
+                      <p className="ct8-journey-alt-inst">{n.data.institution}</p>
+                      {n.data.details && <p className="ct8-journey-alt-desc">{n.data.details}</p>}
+                    </>
+                  ) : (
+                    <>
+                      <span className="ct8-journey-alt-year">
+                        <span className="ct8-journey-alt-year-num">{n.data.duration}</span>
+                        <span className="ct8-journey-alt-year-rule" aria-hidden="true" />
+                      </span>
+                      <h3 className="ct8-journey-alt-title">{n.data.role}</h3>
+                      <p className="ct8-journey-alt-inst">{n.data.organization}</p>
+                      <p className="ct8-journey-alt-desc">{n.data.description}</p>
+                    </>
+                  )}
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
     </section>

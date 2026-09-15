@@ -38,14 +38,10 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
   const [clientPhone, setClientPhone] = useState('')
   const [bookingError, setBookingError] = useState('')
   const [booked, setBooked] = useState(false)
-  const [limitReached, setLimitReached] = useState(false)
 
   const { book, loading: bookingLoading } = useBooking({
     onSuccess: () => setBooked(true),
-    onError: msg => {
-      if (msg === 'NO_SLOTS_AVAILABLE') { setLimitReached(true); return }
-      setBookingError(msg)
-    },
+    onError: msg => setBookingError(msg),
     onSlotsRefresh: fresh => {
       setBookedTimes(fresh)
       setSelectedDay(null)
@@ -103,7 +99,8 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
       client_phone: clientPhone,
       scheduled_at: selectedSlotIso,
       duration_mins: therapist.sessionDuration ?? 50,
-      service_price: typeof therapist.fee === 'number' && therapist.fee > 0 ? therapist.fee : 500,
+      service_price: 0,
+      pro_bono: true,
     })
   }
 
@@ -111,7 +108,6 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
     ? selectedDay.dateObj.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })
     : ''
   const duration = therapist.sessionDuration ?? 50
-  const feeLabel = therapist.fee ? `₹${therapist.fee.toLocaleString('en-IN')}` : null
 
   // Auto-detect the visitor's own timezone (Calendly does the same) so the
   // displayed slots are unambiguous regardless of where the client is
@@ -133,7 +129,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
     <section id="book" className="ct8-section ct8-section-alt">
       <div className="ct8-container">
         <div className="ct8-section-head">
-          <span className="ct8-eyebrow">Book a Session</span>
+          <span className="ct8-eyebrow">Book a Pro bono Session</span>
           <h2 className="ct8-heading ct8-section-title">
             Begin, whenever<br /><em>you&apos;re ready</em>
           </h2>
@@ -150,13 +146,10 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
             <div className="ct8-success-icon" style={{ margin: '0 auto 1rem' }}><Check size={26} strokeWidth={1.5} /></div>
             <h3 className="ct8-heading ct8-success-title">Session Confirmed</h3>
             <p className="ct8-success-body">
-              A confirmation has been sent to <strong style={{ color: 'var(--accent)' }}>{clientEmail}</strong>.
+              {clientEmail
+                ? <>A confirmation has been sent to <strong style={{ color: 'var(--accent)' }}>{clientEmail}</strong>.</>
+                : 'Your session has been confirmed.'}
             </p>
-          </div>
-        ) : limitReached ? (
-          <div className="ct8-card" style={{ padding: '2.5rem', textAlign: 'center', maxWidth: 420 }}>
-            <h3 className="ct8-heading ct8-success-title">No slots left</h3>
-            <p className="ct8-success-body">New times open soon — please check back or reach out directly.</p>
           </div>
         ) : (
           <div className={`ct8-book-card${showDetails ? ' ct8-book-card--details' : selectedDay ? ' ct8-book-card--with-times' : ''}`}>
@@ -166,7 +159,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
               <h3 className="ct8-book-title">{duration} Minute Session</h3>
               <div className="ct8-book-meta-row"><Clock size={15} /> {duration} min</div>
               <div className="ct8-book-meta-row"><Video size={15} /> Online · In-Person</div>
-              {feeLabel && <div className="ct8-book-meta-row">{feeLabel} per session</div>}
+              <div className="ct8-book-meta-row">Pro bono</div>
 
               {selectedDay && selectedSlot && (
                 <div className="ct8-book-confirm-box">
@@ -248,17 +241,9 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                   <p style={{ color: '#c0483f', fontSize: 12, fontWeight: 500, marginTop: '0.5rem' }}>⚠ {bookingError}</p>
                 )}
 
-                {therapist.fee != null && therapist.fee > 0 && (
-                  <p style={{ fontSize: 12, color: 'var(--ink-soft)', margin: '0.8rem 0 0', lineHeight: 1.5 }}>
-                    You will be charged <strong style={{ color: 'var(--accent)' }}>₹{therapist.fee.toLocaleString()}</strong> before your booking is confirmed.
-                  </p>
-                )}
-
                 <button className="ct8-btn-primary ct8-btn-full" style={{ marginTop: '1.4rem' }} onClick={handleConfirm} disabled={bookingLoading}>
                   {bookingLoading ? (
                     <><Loader2 size={13} className="animate-spin" /> Processing…</>
-                  ) : therapist.fee != null && therapist.fee > 0 ? (
-                    <>Pay ₹{therapist.fee.toLocaleString()} & Confirm</>
                   ) : (
                     <>Confirm Session</>
                   )}

@@ -10,9 +10,10 @@ interface NavbarProps {
 }
 
 const LINKS = [
-  { id: 'about',    label: 'About' },
-  { id: 'services', label: 'Services' },
-  { id: 'faq',      label: 'FAQ' },
+  { id: 'about',          label: 'About' },
+  { id: 'education',      label: 'Education' },
+  { id: 'certifications', label: 'Certifications' },
+  { id: 'faq',            label: 'FAQ' },
 ]
 
 export default function Navbar({ therapist, scrollTo }: NavbarProps) {

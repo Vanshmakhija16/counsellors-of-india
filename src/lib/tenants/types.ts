@@ -12,7 +12,7 @@
 
 export type TenantId = 'in' | 'us' | 'ca' | 'uk' | 'au'
 
-export type PaymentGateway = 'razorpay_payu' | 'stripe'
+export type PaymentGateway = 'razorpay_payu' | 'stripe' | 'paypal'
 
 /** One pricing tier shown on the homepage's "See our Plans" section. */
 export interface PricingPlan {
@@ -119,4 +119,30 @@ export interface TenantConfig {
    *  brand mark) fall back to a text/monogram treatment when this is
    *  unset, rather than ever fabricating a placeholder logo image. */
   logoPath?: string
+
+  // ── Site-wide brand color ──────────────────────────────────────────
+  // Threaded into the DOM as CSS custom properties by RootLayout (see
+  // layout.tsx) so every page's CSS -- globals.css, page.css, and any
+  // component's own scoped <style> block -- can reference them instead of
+  // hardcoding India's saffron. India's values below are byte-for-byte
+  // the hex codes that were previously hardcoded directly in page.css's
+  // :root blocks (--gold/--gold2 and the --wn-saffron*/--wn-sage*
+  // family), so wiring this up changes nothing about the live India site.
+
+  /** Primary brand accent — buttons, links, badges, active nav states. */
+  primaryColor: string
+  /** Deeper shade of primaryColor — hover/pressed states. */
+  primaryColorDark: string
+  /** Light tint of primaryColor — used as a solid fill for soft
+   *  backgrounds (badges, subtle highlights) where a translucent overlay
+   *  wouldn't give enough contrast against a light page background. */
+  primaryColorSoft: string
+
+  /** Optional secondary accent, distinct from the primary brand color —
+   *  used for hover/interactive states where the tenant wants a different
+   *  hue rather than just a darker shade of primaryColor (e.g. America's
+   *  flag red for link hovers, separate from the Old Glory Blue used
+   *  everywhere else). Falls back to primaryColorDark when unset — see
+   *  layout.tsx's --wn-accent wiring. */
+  accentColor?: string
 }

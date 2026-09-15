@@ -214,7 +214,7 @@ export default function Hero({ therapist, scrollTo }: HeroProps) {
             {therapist.image && <img src={therapist.image} alt={therapist.name || 'Therapist portrait'} />}
             <div className="ct7-hero-badge">
               <span className="ct7-hero-badge-dot" />
-              Accepting new clients
+              {/* Accepting new clients */}
             </div>
 
             {therapist.experience ? (

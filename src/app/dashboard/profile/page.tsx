@@ -22,6 +22,7 @@ import {
   Sparkles, Lock, Check, AlertCircle, GripVertical, ChevronUp, ChevronDown,
   CalendarClock, Palette, ListChecks, Video,
 } from 'lucide-react'
+import { useTenantAccent } from '@/lib/useTenantAccent'
 
 const CT1ContentEditor = dynamic(() => import('@/components/appearance/CT1ContentEditor'), { ssr: false })
 const CT2ContentEditor = dynamic(() => import('@/components/appearance/CT2ContentEditor'), { ssr: false })
@@ -30,6 +31,11 @@ const CT4ContentEditor = dynamic(() => import('@/components/appearance/CT4Conten
 const CT5ContentEditor = dynamic(() => import('@/components/appearance/CT5ContentEditor'), { ssr: false })
 const CT6ContentEditor = dynamic(() => import('@/components/appearance/CT6ContentEditor'), { ssr: false })
 
+// India default -- ProfilePage() below shadows this with useTenantAccent()'s
+// tenant-aware color for every JS `BRAND` reference. The many literal
+// bg-[#ff9933]/text-[#ff9933]/etc Tailwind classes throughout this file are
+// switched to var(--brand)/var(--brand-dark), fed by the same hook via a
+// CSS custom property on the root wrapper div.
 const BRAND = '#ff9933'
 const INK = '#171412'
 const STARTER_TEMPLATE_LOCK_DAYS = 365
@@ -122,6 +128,7 @@ export default function ProfilePage() {
   const supabase = createClient()
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
+  const { accent: BRAND, accentDark: BRAND_DARK } = useTenantAccent()
 
   const [tab, setTab] = useState<TabId>('basic')
   const [userId, setUserId] = useState<string | null>(null)
@@ -402,12 +409,12 @@ export default function ProfilePage() {
 
   if (loading) return (
     <div className="flex min-h-64 items-center justify-center">
-      <div className="h-6 w-6 animate-spin rounded-full border-2 border-[#FF9933] border-t-transparent" />
+      <div className="h-6 w-6 animate-spin rounded-full border-2 border-t-transparent" style={{ borderColor: BRAND, borderTopColor: 'transparent' }} />
     </div>
   )
 
   return (
-    <div className="w-full" style={{ fontFamily: "'Plus Jakarta Sans','Inter',system-ui,sans-serif" }}>
+    <div className="w-full" style={{ fontFamily: "'Plus Jakarta Sans','Inter',system-ui,sans-serif", '--brand': BRAND, '--brand-dark': BRAND_DARK } as React.CSSProperties}>
 
       {saveError && (
         <div className="mb-5 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
@@ -427,7 +434,7 @@ export default function ProfilePage() {
               onClick={() => setTab(id)}
               className="relative flex shrink-0 items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition"
               style={active
-                ? { background: '#eaf6ef', color: '#ff9933', boxShadow: 'inset 0 0 0 1px #9bd1b3' }
+                ? { background: '#eaf6ef', color: BRAND, boxShadow: 'inset 0 0 0 1px #9bd1b3' }
                 : { color: '#6f665d' }}
             >
               <Icon size={15} />
@@ -450,7 +457,7 @@ export default function ProfilePage() {
           <section className="rounded-lg border border-[#eadfd2] bg-white">
             <div className="border-b border-[#ece7df] p-5">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#eaf6ef] text-[#ff9933]"><User size={18} /></div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#eaf6ef] text-[var(--brand)]"><User size={18} /></div>
                 <div>
                   <h2 className="text-base font-semibold text-[#171412]">Identity</h2>
                   <p className="text-sm text-[#766c62]">Name, photo, credentials, location, and how clients contact you.</p>
@@ -464,14 +471,14 @@ export default function ProfilePage() {
                     {photoPreview ? <img src={photoPreview} alt="Profile" className="h-full w-full object-cover" /> : <User size={22} className="text-[#8b8278]" />}
                   </div>
                   <button type="button" onClick={() => fileRef.current?.click()}
-                    className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-white bg-[#ff9933] text-white shadow-sm transition hover:bg-[#176344]">
+                    className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full border border-white bg-[var(--brand)] text-white shadow-sm transition hover:brightness-95">
                     <Camera size={11} />
                   </button>
                   <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-[#171412]">Profile photo</p>
-                  <button type="button" onClick={() => fileRef.current?.click()} className="text-xs font-semibold text-[#c2650a] hover:underline">Change photo</button>
+                  <button type="button" onClick={() => fileRef.current?.click()} className="text-xs font-semibold text-[var(--brand-dark)] hover:underline">Change photo</button>
                 </div>
               </div>
               <div className="grid gap-5 md:grid-cols-2">
@@ -530,14 +537,16 @@ export default function ProfilePage() {
           <section className="rounded-lg border border-[#eadfd2] bg-white">
             <div className="border-b border-[#ece7df] p-5">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#fff1df] text-[#c2650a]"><Briefcase size={18} /></div>
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#eaf6ef] text-[var(--brand)]"><Briefcase size={18} /></div>
                 <div><h2 className="text-base font-semibold text-[#171412]">Practice details</h2><p className="text-sm text-[#766c62]">Session pricing, duration, experience, and mode.</p></div>
               </div>
             </div>
             <div className="grid gap-5 p-5 md:grid-cols-2">
               <label className="space-y-1.5">
                 <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[#8b8278]"><IndianRupee size={12} /> Session fee</span>
-                <input type="number" value={form.fee_per_session} onChange={e => setForm({ ...form, fee_per_session: e.target.value })} placeholder="1500"
+                <input type="text" inputMode="numeric" pattern="[0-9]*" value={form.fee_per_session}
+                  onChange={e => setForm({ ...form, fee_per_session: e.target.value.replace(/\D/g, '') })}
+                  onWheel={e => e.currentTarget.blur()} placeholder="1500"
                   className="h-11 w-full rounded-lg border border-[#ded8ce] bg-[#fffdfb] px-4 text-sm text-[#171412] outline-none transition placeholder:text-[#aaa197] focus:border-[#171412]" />
               </label>
               <label className="space-y-1.5">
@@ -599,11 +608,11 @@ export default function ProfilePage() {
                     const active = form.specialties.includes(s)
                     return <button key={s} type="button" onClick={() => toggleSpecialty(s)}
                       className="rounded-full border px-3 py-1.5 text-xs font-semibold transition"
-                      style={active ? { background: '#eaf6ef', color: '#ff9933', borderColor: '#9bd1b3' } : { background: '#fffdfb', color: '#6f665d', borderColor: '#ded8ce' }}>{s}</button>
+                      style={active ? { background: '#eaf6ef', color: BRAND, borderColor: '#9bd1b3' } : { background: '#fffdfb', color: '#6f665d', borderColor: '#ded8ce' }}>{s}</button>
                   })}
                   {form.specialties.filter(s => !SPECIALTIES_LIST.includes(s)).map(s => (
                     <button key={s} type="button" onClick={() => toggleSpecialty(s)}
-                      className="rounded-full border border-[#9bd1b3] bg-[#eaf6ef] px-3 py-1.5 text-xs font-semibold text-[#ff9933]">{s} x</button>
+                      className="rounded-full border border-[#9bd1b3] bg-[#eaf6ef] px-3 py-1.5 text-xs font-semibold text-[var(--brand)]">{s} x</button>
                   ))}
                 </div>
                 <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
@@ -611,7 +620,7 @@ export default function ProfilePage() {
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomSpecialty() } }} placeholder="Add another specialty"
                     className="h-10 rounded-lg border border-[#ded8ce] bg-[#fffdfb] px-4 text-sm text-[#171412] outline-none transition placeholder:text-[#aaa197] focus:border-[#171412]" />
                   <button type="button" onClick={addCustomSpecialty} disabled={!customSpecialty.trim()}
-                    className="h-10 rounded-lg bg-[#ff9933] px-4 text-sm font-semibold text-white transition hover:bg-[#176344] disabled:opacity-50">Add</button>
+                    className="h-10 rounded-lg bg-[var(--brand)] px-4 text-sm font-semibold text-white transition hover:brightness-95 disabled:opacity-50">Add</button>
                 </div>
               </div>
               <div>
@@ -624,11 +633,11 @@ export default function ProfilePage() {
                     const active = form.languages.includes(l)
                     return <button key={l} type="button" onClick={() => toggleLanguage(l)}
                       className="rounded-full border px-3 py-1.5 text-xs font-semibold transition"
-                      style={active ? { background: '#fff1df', color: '#c2650a', borderColor: '#f0bd82' } : { background: '#fffdfb', color: '#6f665d', borderColor: '#ded8ce' }}>{l}</button>
+                      style={active ? { background: '#eaf6ef', color: BRAND, borderColor: '#9bd1b3' } : { background: '#fffdfb', color: '#6f665d', borderColor: '#ded8ce' }}>{l}</button>
                   })}
                   {form.languages.filter(l => !LANGUAGES_LIST.includes(l)).map(l => (
                     <button key={l} type="button" onClick={() => toggleLanguage(l)}
-                      className="rounded-full border border-[#f0bd82] bg-[#fff1df] px-3 py-1.5 text-xs font-semibold text-[#c2650a]">{l} x</button>
+                      className="rounded-full border border-[#9bd1b3] bg-[#eaf6ef] px-3 py-1.5 text-xs font-semibold text-[var(--brand)]">{l} x</button>
                   ))}
                 </div>
                 <div className="mt-3 grid gap-2 sm:grid-cols-[1fr_auto]">
@@ -636,7 +645,7 @@ export default function ProfilePage() {
                     onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCustomLanguage() } }} placeholder="Add another language"
                     className="h-10 rounded-lg border border-[#ded8ce] bg-[#fffdfb] px-4 text-sm text-[#171412] outline-none transition placeholder:text-[#aaa197] focus:border-[#171412]" />
                   <button type="button" onClick={addCustomLanguage} disabled={!customLanguage.trim()}
-                    className="h-10 rounded-lg bg-[#ff9933] px-4 text-sm font-semibold text-white transition hover:bg-[#176344] disabled:opacity-50">Add</button>
+                    className="h-10 rounded-lg bg-[var(--brand)] px-4 text-sm font-semibold text-white transition hover:brightness-95 disabled:opacity-50">Add</button>
                 </div>
               </div>
             </div>
@@ -658,7 +667,7 @@ export default function ProfilePage() {
               ].map(({ key, label, icon: Icon, placeholder }) => (
                 <label key={key} className="space-y-1.5">
                   <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8b8278]">{label}</span>
-                  <div className="flex h-11 items-center gap-3 rounded-lg border border-[#ded8ce] bg-[#fffdfb] px-3 transition focus-within:border-[#ff9933] focus-within:ring-2 focus-within:ring-[#d9efe3]">
+                  <div className="flex h-11 items-center gap-3 rounded-lg border border-[#ded8ce] bg-[#fffdfb] px-3 transition focus-within:border-[var(--brand)] focus-within:ring-2 focus-within:ring-[#d9efe3]">
                     <Icon size={15} className="shrink-0 text-[#8b8278]" />
                     <input value={(form as any)[key]} onChange={e => setForm({ ...form, [key]: e.target.value })}
                       placeholder={placeholder} className="min-w-0 flex-1 bg-transparent text-sm text-[#171412] outline-none placeholder:text-[#aaa197]" />
@@ -685,7 +694,7 @@ export default function ProfilePage() {
                   <button type="button" onClick={() => setCropSrc(null)}
                     className="h-10 rounded-lg border border-[#ded8ce] px-4 text-sm font-semibold text-[#6f665d] transition hover:bg-[#f6f2ec]">Cancel</button>
                   <button type="button" onClick={applyCrop}
-                    className="h-10 rounded-lg bg-[#ff9933] px-4 text-sm font-bold text-[#24170a] transition hover:bg-[#f08a22]">Apply crop</button>
+                    className="h-10 rounded-lg bg-[var(--brand)] px-4 text-sm font-bold text-[#24170a] transition hover:brightness-95">Apply crop</button>
                 </div>
               </div>
             </div>
@@ -697,7 +706,7 @@ export default function ProfilePage() {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-[#6f665d]">Save to update your public website and booking details.</p>
               <button type="button" onClick={handleSaveBasic} disabled={savingBasic}
-                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[#ff9933] px-5 text-sm font-bold text-[#171412] transition hover:brightness-95 disabled:opacity-60">
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-[var(--brand)] px-5 text-sm font-bold text-[#171412] transition hover:brightness-95 disabled:opacity-60">
                 {savingBasic ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#171412]/30 border-t-[#171412]" /> : savedBasic ? <CheckCircle size={15} /> : <Save size={15} />}
                 {savedBasic ? 'Saved' : 'Save basic info'}
               </button>

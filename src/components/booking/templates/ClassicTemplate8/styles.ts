@@ -89,7 +89,7 @@ export const ct8Styles = `
   .ct8-section-alt { background: var(--paper-2); }
 
   .ct8-section-head { max-width: 640px; margin: 0 0 2.75rem; }
-  .ct8-section-title { font-size: clamp(30px, 3.8vw, 46px); font-weight: 800; letter-spacing: -0.025em; line-height: 1.08; margin: 0.85rem 0 0; position: relative; padding-top: 1.1rem; }
+  .ct8-section-title { font-size: clamp(30px, 3.8vw, 46px); font-weight: 800; letter-spacing: -0.025em; line-height: 1.08; margin: 1.4rem 0 0; position: relative; padding-top: 1.7rem; }
   .ct8-section-title::before {
     content: ''; position: absolute; top: 0; left: 0;
     width: 38px; height: 3px; border-radius: 2px; background: var(--accent);
@@ -537,8 +537,41 @@ export const ct8Styles = `
   .ct8-about-grid { display: grid; grid-template-columns: 1.1fr 0.9fr; gap: clamp(2rem, 5vw, 3.5rem); align-items: start; }
   .ct8-about-grid--with-photo { grid-template-columns: 0.8fr 1.2fr; align-items: center; }
   @media (max-width: 860px) { .ct8-about-grid, .ct8-about-grid--with-photo { grid-template-columns: 1fr; } }
+  /* Bio-only layout (no photo/stats/credentials) — single centered
+     column instead of the two-column grid, so there's no leftover empty
+     space where the photo used to sit. Capped width keeps justified text
+     (below) from stretching into ugly, overly-wide gaps between words. */
+  .ct8-about-solo { max-width: 760px; margin: 0 auto; text-align: center; }
+  .ct8-about-solo .ct8-section-head { display: flex; flex-direction: column; align-items: center; margin-left: auto; margin-right: auto; }
+  .ct8-about-solo .ct8-about-quote-wrap { text-align: left; }
+  /* Section fills the full viewport height, with the bio block vertically
+     centered inside it — so About reads as its own full-screen "page"
+     rather than a normal content-height section. min-height (not height)
+     so very long bios still don't get clipped on short viewports. */
+  .ct8-about-vh {
+    min-height: 100vh;
+    display: flex; align-items: center;
+    box-sizing: border-box;
+  }
+  .ct8-about-vh > .ct8-container { width: 100%; }
+  /* Certifications — same full-viewport-height treatment as About, so the
+     carousel section reads as its own full-screen "page" while scrolling. */
+  .ct8-cert-section-vh {
+    min-height: 100vh;
+    display: flex; align-items: center;
+    box-sizing: border-box;
+  }
+  .ct8-cert-section-vh > .ct8-container { width: 100%; }
   .ct8-about-body { font-size: 15.5px; line-height: 1.8; color: var(--ink-soft); margin: 0 0 1.8rem; }
   .ct8-about-body--lead { font-size: 17px; line-height: 1.85; color: var(--ink); font-weight: 450; }
+  /* Justified text — both edges align evenly (not ragged-right), with a
+     touch of hyphenation so word-spacing doesn't stretch awkwardly on the
+     last few lines. */
+  .ct8-about-body--justify {
+    text-align: justify;
+    text-align-last: left; /* keeps the final line left-aligned, not stretched full-width */
+    -webkit-hyphens: auto; hyphens: auto;
+  }
   .ct8-about-quote-wrap { position: relative; margin: 0 0 1.8rem; }
   .ct8-about-quote-mark {
     position: absolute; top: -1.6rem; left: -0.3rem; z-index: 0;
@@ -559,6 +592,49 @@ export const ct8Styles = `
   .ct8-cred-text { font-size: 13.5px; color: var(--ink-soft); line-height: 1.5; }
   .ct8-chip-wrap { display: flex; flex-wrap: wrap; gap: 8px; }
   .ct8-chip { display: inline-flex; padding: 6px 14px; border-radius: 100px; border: 1px solid var(--line-strong); font-size: 12.5px; color: var(--ink-soft); background: var(--paper); }
+
+  /* Languages — elegant typographic showcase instead of plain chips.
+     Large italic serif names separated by dot dividers, each fading/
+     rising in with a slight per-item stagger, and an accent underline
+     that sweeps in on hover. Reads as a considered detail rather than a
+     generic tag list. */
+  .ct8-lang-showcase { margin-top: clamp(2rem, 5vh, 3rem); display: flex; flex-direction: column; align-items: center; gap: 0.9rem; }
+  .ct8-lang-showcase-label {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-soft);
+  }
+  .ct8-lang-showcase-label svg { color: var(--accent); }
+  .ct8-lang-showcase-list { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center; }
+  .ct8-lang-showcase-item {
+    position: relative;
+    font-family: 'Fraunces', Georgia, serif; font-style: italic; font-weight: 500;
+    font-size: clamp(20px, 2.4vw, 28px); line-height: 1.3; color: var(--ink);
+    padding: 0 0.6rem; cursor: default;
+    opacity: 0; transform: translateY(8px);
+    animation: ct8-lang-in 0.6s var(--ease) forwards;
+    animation-delay: calc(var(--i) * 90ms);
+    transition: color 0.25s var(--ease);
+  }
+  .ct8-lang-showcase-item::after {
+    content: ''; position: absolute; left: 0.6rem; right: 0.6rem; bottom: -2px; height: 2px;
+    background: var(--accent); transform: scaleX(0); transform-origin: left center;
+    transition: transform 0.3s var(--ease);
+  }
+  .ct8-lang-showcase-item:hover { color: var(--accent); }
+  .ct8-lang-showcase-item:hover::after { transform: scaleX(1); }
+  .ct8-lang-showcase-item:not(:last-child)::before {
+    content: '';
+    position: absolute; right: -3px; top: 50%; transform: translateY(-50%);
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--accent);
+  }
+  @keyframes ct8-lang-in {
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .ct8-lang-showcase-item { animation: none; opacity: 1; transform: none; }
+  }
 
   /* ── Services ── uses the shared bento system below (.ct8-bento-grid /
      .ct8-bento-tile) ── */
@@ -766,73 +842,77 @@ export const ct8Styles = `
      (in the About block) rather than redefining them.
      ──────────────────────────────────────────────────────── */
 
-  /* Education — interactive icon journey. Icon-only nodes (no connecting
-     line, no captions) — hovering/tapping reveals that milestone's details
-     in a single shared detail card below. The final node summarizes
-     clinical experience, so the row reads school → degrees → practice. */
-  .ct8-journey { margin-top: 0.5rem; }
-  .ct8-journey-track {
-    position: relative;
-    display: flex; justify-content: center; align-items: center;
-    flex-wrap: wrap;
-    gap: clamp(1.4rem, 4vw, 2.6rem);
-    margin-bottom: clamp(2rem, 5vw, 3rem);
+  /* Education — scroll-revealed, alternating (zig-zag) timeline. No
+     boxes, no click/hover interaction: each milestone sits directly on
+     the page and fades/rises in (via the shared .ct8-reveal observer) as
+     it scrolls into view, alternating left/right of a central connecting
+     line — school → college → masters → experience read top to bottom. */
+  .ct8-journey-alt { position: relative; display: flex; flex-direction: column; gap: clamp(5rem, 11vw, 8rem); padding: 0.5rem 0; }
+  .ct8-journey-alt-line {
+    position: absolute; left: 50%; top: 4px; bottom: 4px; width: 1px;
+    background: var(--line-strong); transform: translateX(-50%);
   }
-  .ct8-journey-node-wrap {
-    position: relative; z-index: 1;
-    display: flex; flex-direction: column; align-items: center;
-    background: none; border: none; cursor: pointer; padding: 0;
+  .ct8-journey-alt-item {
+    position: relative; width: 50%; box-sizing: border-box;
   }
-  .ct8-journey-node {
-    width: 84px; height: 84px; border-radius: 50%; flex-shrink: 0;
+  .ct8-journey-alt-item--left  { align-self: flex-start; text-align: right; padding-right: clamp(2.2rem, 4vw, 3.2rem); }
+  .ct8-journey-alt-item--right { align-self: flex-end;   text-align: left;  padding-left:  clamp(2.2rem, 4vw, 3.2rem); }
+  .ct8-journey-alt-icon {
+    position: absolute; top: 0;
+    width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    background: var(--card); border: 2px solid var(--line-strong); color: var(--ink-soft);
-    transition: all 0.25s var(--ease);
+    background: var(--accent); color: var(--accent-ink);
+    box-shadow: 0 0 0 6px var(--paper-2);
+    z-index: 1;
   }
-  .ct8-journey-node-wrap:hover .ct8-journey-node,
-  .ct8-journey-node-wrap:focus-visible .ct8-journey-node {
-    border-color: var(--accent); color: var(--accent);
+  .ct8-journey-alt-item--left  .ct8-journey-alt-icon { right: -26px; }
+  .ct8-journey-alt-item--right .ct8-journey-alt-icon { left: -26px; }
+  .ct8-journey-alt-year {
+    display: inline-flex; align-items: baseline; gap: 14px;
+    margin-bottom: 0.2rem;
   }
-  .ct8-journey-node-wrap.active .ct8-journey-node {
-    background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
-    box-shadow: 0 8px 20px -6px var(--accent); transform: scale(1.08);
+  .ct8-journey-alt-year-num {
+    font-family: 'Fraunces', Georgia, serif; font-style: italic; font-weight: 600;
+    font-size: clamp(17px, 1.9vw, 20px); line-height: 1; letter-spacing: 0.01em;
+    color: var(--accent);
+  }
+  .ct8-journey-alt-year-rule {
+    width: clamp(30px, 4vw, 48px); height: 1px; flex-shrink: 0;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
+  .ct8-journey-alt-item--left .ct8-journey-alt-year { flex-direction: row-reverse; }
+  .ct8-journey-alt-item--left .ct8-journey-alt-year-rule { background: linear-gradient(90deg, transparent, var(--accent)); }
+  .ct8-journey-alt-title {
+    font-family: 'Fraunces', Georgia, serif; font-style: italic; font-weight: 500;
+    font-size: clamp(24px, 2.6vw, 30px); line-height: 1.28; color: var(--ink);
+    margin: 0.85rem 0 0.3rem;
+  }
+  .ct8-journey-alt-inst { font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: 17px; color: var(--accent); margin: 0 0 0.8rem; }
+  .ct8-journey-alt-desc { font-size: 16px; line-height: 1.75; color: var(--ink-soft); margin: 0; }
+  .ct8-journey-alt-item--left .ct8-journey-exp-head { justify-content: flex-end; flex-direction: row-reverse; }
+
+  @media (max-width: 760px) {
+    .ct8-journey-alt-line { left: 26px; transform: none; }
+    .ct8-journey-alt-item,
+    .ct8-journey-alt-item--left,
+    .ct8-journey-alt-item--right {
+      width: 100%; align-self: flex-start; text-align: left;
+      padding-left: clamp(3.4rem, 12vw, 4rem); padding-right: 0;
+    }
+    .ct8-journey-alt-item--left .ct8-journey-alt-icon,
+    .ct8-journey-alt-item--right .ct8-journey-alt-icon { left: 0; right: auto; }
+    .ct8-journey-alt-item--left .ct8-journey-alt-year { flex-direction: row; }
+    .ct8-journey-alt-item--left .ct8-journey-alt-year-rule { background: linear-gradient(90deg, var(--accent), transparent); }
+    .ct8-journey-alt-item--left .ct8-journey-exp-head { justify-content: space-between; flex-direction: row; }
   }
 
-  .ct8-journey-detail {
-    position: relative; overflow: hidden;
-    padding: 1.8rem clamp(1.6rem, 4vw, 2.4rem);
-    animation: ct8-journey-fade 0.35s var(--ease);
-  }
-  .ct8-journey-detail::before {
-    content: ''; position: absolute; top: 0; left: 0; bottom: 0; width: 4px; background: var(--accent);
-  }
-  @keyframes ct8-journey-fade {
-    from { opacity: 0; transform: translateY(6px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  .ct8-journey-detail-year {
-    display: inline-flex; padding: 3px 11px; border-radius: 100px;
-    background: var(--accent-soft); color: var(--accent);
-  }
-  .ct8-journey-detail-degree {
-    font-family: 'Fraunces', Georgia, serif; font-weight: 500;
-    font-size: clamp(20px, 2.2vw, 26px); line-height: 1.25; color: var(--ink);
-    margin: 0.7rem 0 0.2rem;
-  }
-  .ct8-journey-detail-inst { font-size: 14.5px; font-weight: 600; color: var(--ink-soft); margin: 0 0 0.8rem; }
-  .ct8-journey-detail-desc { font-size: 14.5px; line-height: 1.7; color: var(--ink-soft); margin: 0; max-width: 70ch; }
-  @media (prefers-reduced-motion: reduce) {
-    .ct8-journey-detail { animation: none; }
-  }
-
-  /* Experience node's detail body — stacked mini-entries within the same
-     shared detail card used by education milestones. */
+  /* Experience node's stacked mini-entries — reused within an alt-item. */
   .ct8-journey-exp-list { display: flex; flex-direction: column; gap: 1.1rem; margin-top: 0.9rem; }
   .ct8-journey-exp-item { padding-top: 1.1rem; border-top: 1px solid var(--line); }
   .ct8-journey-exp-item:first-child { padding-top: 0; border-top: none; }
   .ct8-journey-exp-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
-  .ct8-journey-exp-role { font-family: 'Manrope', sans-serif; font-weight: 700; font-size: 15.5px; color: var(--ink); }
-  .ct8-journey-exp-duration { font-family: 'Manrope', sans-serif; font-size: 11.5px; font-weight: 700; color: var(--ink-soft); white-space: nowrap; }
+  .ct8-journey-exp-role { font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-style: italic; font-size: 18px; color: var(--ink); }
+  .ct8-journey-exp-duration { font-family: 'Manrope', sans-serif; font-size: 12.5px; font-weight: 700; color: var(--ink-soft); white-space: nowrap; }
 
   /* Education — vertical timeline. Marker + year pill both use --accent,
      so this automatically re-tints with the student/professional persona
@@ -905,7 +985,7 @@ export const ct8Styles = `
     color: var(--ink); display: block;
   }
 
-  /* Certifications — compact grid */
+  /* Certifications — compact grid (legacy, kept for reference/compat) */
   .ct8-cert-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 1.1rem; }
   .ct8-cert-card { padding: 1.4rem 1.5rem; }
   .ct8-cert-year {
@@ -914,6 +994,80 @@ export const ct8Styles = `
   }
   .ct8-cert-title { font-size: 15.5px; margin: 0.4rem 0 0.15rem; line-height: 1.35; }
   .ct8-cert-issuer { font-size: 12.5px; color: var(--ink-soft); margin: 0; }
+
+  /* Certifications — swipeable rectangular carousel. Native horizontal
+     scroll with CSS scroll-snap does the actual swiping (touch, trackpad,
+     and mouse-drag-to-scroll all just work); the arrow buttons and dots
+     are a layer on top that nudge the same scroll container by one card. */
+  .ct8-cert-carousel { position: relative; }
+  .ct8-cert-track {
+    display: flex; gap: 44px;
+    overflow-x: auto; overflow-y: hidden;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 4px 4px 1.4rem;
+    margin: -4px -4px -1.4rem;
+  }
+  .ct8-cert-track::-webkit-scrollbar { display: none; }
+  .ct8-cert-slide {
+    flex: 0 0 auto;
+    width: min(340px, 62vw);
+    scroll-snap-align: center;
+    display: flex; flex-direction: column;
+  }
+  .ct8-cert-slide-frame {
+    position: relative; width: 100%; aspect-ratio: 16 / 10;
+    border-radius: var(--radius); overflow: hidden;
+    box-shadow: var(--shadow-md);
+  }
+  .ct8-cert-slide-img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ct8-cert-slide-placeholder { width: 100%; height: 100%; background: var(--paper-2); }
+  .ct8-cert-slide-meta { padding: 1rem 0.2rem 0; }
+  .ct8-cert-slide-year {
+    font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 700;
+    letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent);
+  }
+  .ct8-cert-slide-title { font-family: 'Fraunces', Georgia, serif; font-weight: 500; font-size: 18px; color: var(--ink); margin: 0.4rem 0 0.15rem; line-height: 1.3; }
+  .ct8-cert-slide-issuer { font-size: 13px; color: var(--ink-soft); margin: 0; }
+
+  .ct8-cert-nav {
+    position: absolute; top: calc(50% - 0.9rem); z-index: 2;
+    width: 42px; height: 42px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--card); border: 1px solid var(--line-strong); color: var(--ink);
+    box-shadow: var(--shadow-md); cursor: pointer;
+    transition: all 0.2s var(--ease);
+  }
+  .ct8-cert-nav:hover { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  .ct8-cert-nav--prev { left: -14px; }
+  .ct8-cert-nav--next { right: -14px; }
+  @media (max-width: 700px) {
+    .ct8-cert-nav { display: none; }
+  }
+
+  .ct8-cert-dots { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 0.6rem; }
+  .ct8-cert-dot {
+    width: 7px; height: 7px; border-radius: 50%; padding: 0; border: none; cursor: pointer;
+    background: var(--line-strong); transition: all 0.2s var(--ease);
+  }
+  .ct8-cert-dot--active { background: var(--accent); width: 20px; border-radius: 4px; }
+
+  /* Mobile: stack certificates in a single column instead of the
+     horizontal swipeable carousel -- easier to read/scroll on a small
+     screen than a side-scroll strip. Desktop carousel (track/nav/dots)
+     stays completely untouched above this breakpoint. */
+  @media (max-width: 700px) {
+    .ct8-cert-track {
+      flex-direction: column;
+      overflow: visible;
+      scroll-snap-type: none;
+      padding: 0; margin: 0;
+      gap: 1.5rem;
+    }
+    .ct8-cert-slide { width: min(300px, 82vw); margin: 0 auto; scroll-snap-align: none; }
+    .ct8-cert-dots { display: none; }
+  }
 
   /* ───────────────────────────────────────────────────────────────
      Shared bento grid ── used by every content section except Hero, About,
@@ -1010,4 +1164,97 @@ export const ct8Styles = `
     font-family: 'Fraunces', Georgia, serif; font-size: 38px; line-height: 1; color: var(--line-strong);
     display: block; margin-bottom: -0.3rem;
   }
+
+  /* ───────────────────────────────────────────────────────────────
+     Services — premium pricing-style cards, distinct from the shared
+     bento tiles used elsewhere. Three columns on desktop with the
+     center card visually "floating" above its neighbours (raised,
+     scaled up, deeper shadow) the way a highlighted pricing plan does —
+     independent of which service happens to be persona-featured, so the
+     layout stays stable even as featured/dark styling reorders content. */
+  .ct8-services-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: clamp(1.5rem, 3vw, 2.25rem);
+    align-items: center;
+    padding-top: 0.5rem;
+  }
+  @media (max-width: 900px) {
+    .ct8-services-grid { grid-template-columns: 1fr; }
+  }
+
+  .ct8-service-card {
+    position: relative;
+    background:
+      radial-gradient(ellipse 220px 140px at 20% -10%, var(--accent-soft), transparent 65%),
+      var(--card);
+    border: 1px solid var(--line);
+    border-radius: calc(var(--radius) + 4px);
+    padding: clamp(1.9rem, 2.6vw, 2.4rem) clamp(1.6rem, 2.2vw, 2rem) 1.9rem;
+    display: flex; flex-direction: column;
+    box-shadow: var(--shadow-sm);
+    transition: transform 0.35s var(--ease), box-shadow 0.35s var(--ease), border-color 0.35s var(--ease);
+  }
+  .ct8-service-card::before {
+    content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 46px; height: 3px; border-radius: 0 0 3px 3px;
+    background: linear-gradient(90deg, var(--accent), var(--student));
+    opacity: 0.85;
+  }
+  .ct8-service-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--line-strong); }
+
+  /* The floating center card — lifted above its neighbours, scaled up
+     slightly, with a stronger shadow and its own accent-tinted border so
+     it reads as the natural focal point of the row without needing to be
+     the persona-featured/dark card. Desktop only: on the stacked mobile
+     layout every card is equal width, so "floating" would just look like
+     a misaligned card. */
+  .ct8-service-card--floating {
+    box-shadow: 0 24px 60px -18px rgba(46,42,34,0.28), var(--shadow-md);
+    border-color: var(--accent);
+  }
+  @media (min-width: 901px) {
+    .ct8-service-card--floating {
+      transform: translateY(-22px) scale(1.045);
+      z-index: 2;
+    }
+    .ct8-service-card--floating:hover { transform: translateY(-26px) scale(1.045); }
+  }
+
+  .ct8-service-badge {
+    display: inline-flex; align-self: flex-start;
+    padding: 5px 13px; border-radius: 100px;
+    background: var(--accent-soft); color: var(--accent);
+    font-family: 'Manrope', sans-serif; font-size: 10.5px; font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    margin-bottom: 1.1rem;
+  }
+  .ct8-service-title {
+    font-family: 'Fraunces', Georgia, serif; font-style: italic; font-weight: 500;
+    font-size: clamp(21px, 2.1vw, 24px); line-height: 1.25; color: var(--ink);
+    margin: 0 0 0.7rem;
+  }
+  .ct8-service-desc { font-size: 13.5px; line-height: 1.7; color: var(--ink-soft); margin: 0 0 1.6rem; flex: 1; }
+
+  .ct8-service-price-row {
+    display: flex; align-items: baseline; gap: 6px;
+    padding-top: 1.3rem; margin-bottom: 1.3rem;
+    border-top: 1px solid var(--line);
+  }
+  .ct8-service-price {
+    font-family: 'Fraunces', Georgia, serif; font-weight: 600; font-size: 30px; color: var(--ink); line-height: 1;
+  }
+  .ct8-service-price-unit { font-size: 12.5px; color: var(--ink-soft); font-weight: 500; }
+  .ct8-service-price-contact { font-size: 13.5px; color: var(--ink-soft); padding-top: 1.3rem; margin-bottom: 1.3rem; border-top: 1px solid var(--line); }
+
+  .ct8-service-cta {
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; padding: 13px 20px; border-radius: 100px; border: none; cursor: pointer;
+    background: var(--accent); color: var(--accent-ink);
+    font-family: 'Manrope', sans-serif; font-weight: 700; font-size: 13px;
+    letter-spacing: 0.02em;
+    box-shadow: 0 10px 22px -10px var(--accent);
+    transition: transform 0.2s var(--ease), box-shadow 0.2s var(--ease);
+  }
+  .ct8-service-cta:hover { transform: translateY(-2px); box-shadow: 0 14px 26px -8px var(--accent); }
 `

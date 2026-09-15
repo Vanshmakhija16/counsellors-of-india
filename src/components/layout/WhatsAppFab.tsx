@@ -157,10 +157,10 @@ export default function WhatsAppFab() {
             style={{
               width: 44,
               height: 44,
-              background: '#FF9933',
+              background: 'var(--wn-saffron, #FF9933)',
               boxShadow: demoHovered
-                ? '0 10px 22px -8px rgba(255,153,51,.5), 0 2px 6px -2px rgba(31,28,24,.14)'
-                : '0 6px 16px -8px rgba(255,153,51,.38), 0 1px 4px -1px rgba(31,28,24,.1)',
+                ? '0 10px 22px -8px color-mix(in srgb, var(--wn-saffron, #FF9933) 50%, transparent), 0 2px 6px -2px rgba(31,28,24,.14)'
+                : '0 6px 16px -8px color-mix(in srgb, var(--wn-saffron, #FF9933) 38%, transparent), 0 1px 4px -1px rgba(31,28,24,.1)',
               transform: demoHovered ? 'translateY(-2px)' : 'none',
               cursor: 'pointer',
             }}

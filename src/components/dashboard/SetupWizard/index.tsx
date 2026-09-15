@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react'
 import { createClient } from '@/lib/supabase'
-import { TEMPLATES, type TemplateId } from '@/lib/template'
+import { TEMPLATES, canUseTemplate, type TemplateId } from '@/lib/template'
 import Logo from '@/components/ui/Logo'
 import TemplateLiveSwitcher from '@/components/appearance/TemplateLiveSwitcher'
 import {
@@ -12,9 +12,13 @@ import {
 } from 'lucide-react'
 import type { Area } from 'react-easy-crop'
 import dynamic from 'next/dynamic'
+import { useTenantAccent } from '@/lib/useTenantAccent'
 
 const Cropper = dynamic(() => import('react-easy-crop'), { ssr: false })
 
+// India default -- see useTenantAccent() inside SetupWizard() below, which
+// shadows this with the tenant-aware color for the whole component tree
+// (including VerticalStepper, which receives it as the `brand` prop).
 const BRAND = '#FF9933'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -43,7 +47,7 @@ const STEPS = [
   { icon: Rocket,      label: 'Publish',        desc: 'Go live instantly'             },
 ]
 
-function VerticalStepper({ current }: { current: number }) {
+function VerticalStepper({ current, brand }: { current: number; brand: string }) {
   return (
     <aside
       className="hidden lg:flex flex-col shrink-0 w-64 px-8 py-10 border-r"
@@ -74,10 +78,10 @@ function VerticalStepper({ current }: { current: number }) {
                   className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 z-10"
                   style={{
                     background: done    ? '#22c55e'
-                              : active  ? BRAND
+                              : active  ? brand
                               : '#F0EBE3',
-                    border: active ? `3px solid ${BRAND}33` : done ? '3px solid #22c55e33' : '2px dashed #D9CFC4',
-                    boxShadow: active ? `0 0 0 5px ${BRAND}18` : 'none',
+                    border: active ? `3px solid ${brand}33` : done ? '3px solid #22c55e33' : '2px dashed #D9CFC4',
+                    boxShadow: active ? `0 0 0 5px ${brand}18` : 'none',
                   }}
                 >
                   {done
@@ -121,7 +125,7 @@ function VerticalStepper({ current }: { current: number }) {
                 {active && (
                   <span
                     className="inline-flex items-center gap-1 mt-2 text-[10px] font-bold px-2 py-0.5 rounded-full"
-                    style={{ background: `${BRAND}18`, color: BRAND }}
+                    style={{ background: `${brand}18`, color: brand }}
                   >
                     ● In progress
                   </span>
@@ -178,20 +182,31 @@ interface Props {
   therapistId: string; username: string
   existingName?: string; existingPhoto?: string
   existingBio?: string; existingFee?: string
+  /** Therapist's current plan -- gates which templates are offered in
+   *  step 1. Defaults to 'starter' (the safer/more restrictive default)
+   *  if the caller doesn't have it yet. */
+  plan?: string
   onComplete: () => void
 }
 
 export default function SetupWizard({
   therapistId, username, existingName = '', existingPhoto = '',
-  existingBio = '', existingFee = '', onComplete,
+  existingBio = '', existingFee = '', plan = 'starter', onComplete,
 }: Props) {
   const supabase = createClient()
   const fileRef  = useRef<HTMLInputElement>(null)
+  const { accent: BRAND } = useTenantAccent()
 
   const [step, setStep] = useState(0)
 
-  // Step 1
-  const [selectedTemplate, setSelectedTemplate] = useState<TemplateId>('classic')
+  // Step 1 -- only offer templates this plan can actually use (e.g. 6 of
+  // the 8 for Starter; every template for Pro). Falls back to selecting
+  // the first ALLOWED template if the plan can't use the original
+  // hardcoded 'classic' default for some reason.
+  const availableTemplates = TEMPLATES.filter(t => canUseTemplate(t, plan))
+  const [selectedTemplate, setSelectedTemplate] = useState<TemplateId>(
+    availableTemplates.some(t => t.id === 'classic') ? 'classic' : (availableTemplates[0]?.id ?? 'classic')
+  )
 
   // Step 2
   const [name,      setName]      = useState(existingName)
@@ -216,7 +231,7 @@ export default function SetupWizard({
   const filledFields  = [name.trim(), bio.trim(), fee.trim(), photo, hasMinService].filter(Boolean).length
   const progress      = Math.round((filledFields / 5) * 100)
   const liveUrl       = `counsellorsofindia.com/${username}`
-  const hasSelectedTemplate = TEMPLATES.some(t => t.id === selectedTemplate)
+  const hasSelectedTemplate = availableTemplates.some(t => t.id === selectedTemplate)
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0]; if (!file) return
@@ -274,7 +289,7 @@ export default function SetupWizard({
 
   return (
     <div className="fixed inset-0 z-[9999] flex flex-col"
-      style={{ background: '#FFFCF8', fontFamily: "'Plus Jakarta Sans','Inter',system-ui,sans-serif" }}>
+      style={{ background: '#FFFCF8', fontFamily: "'Plus Jakarta Sans','Inter',system-ui,sans-serif", '--brand': BRAND } as React.CSSProperties}>
 
       {/* ── Mobile top bar (shown only on small screens) ── */}
       <div className="lg:hidden shrink-0 flex items-center justify-between px-5 py-3 border-b"
@@ -295,7 +310,7 @@ export default function SetupWizard({
       <div className="flex flex-1 overflow-hidden">
 
         {/* ── Left: vertical stepper ── */}
-        <VerticalStepper current={step} />
+        <VerticalStepper current={step} brand={BRAND} />
 
         {/* ── Right: scrollable step content ── */}
         <div className="flex-1 overflow-y-auto">
@@ -332,6 +347,7 @@ export default function SetupWizard({
                 hideTabs={false}
                 hideActionBar={false}
                 frameHeight={420}
+                templates={availableTemplates}
               />
             </div>
           )}
@@ -412,7 +428,7 @@ export default function SetupWizard({
                 {/* Name */}
                 <div>
                   <label className="block text-sm font-semibold text-[#1c1c1e] mb-1.5">Full name <span style={{ color: BRAND }}>*</span></label>
-                  <input className="w-full h-11 px-4 rounded-xl border border-[#e8e4df] text-sm text-[#1c1c1e] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#FF9933] focus:border-transparent bg-white transition"
+                  <input className="w-full h-11 px-4 rounded-xl border border-[#e8e4df] text-sm text-[#1c1c1e] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent bg-white transition"
                     placeholder="e.g. Dr. Priya Sharma" value={name} onChange={e => setName(e.target.value)} />
                   <p className="text-xs text-[#9ca3af] mt-1">Include your title — clients trust "Dr." or "Counsellor" prefixes</p>
                 </div>
@@ -421,7 +437,7 @@ export default function SetupWizard({
                 <div>
                   <label className="block text-sm font-semibold text-[#1c1c1e] mb-1.5">Bio <span style={{ color: BRAND }}>*</span></label>
                   <textarea rows={4}
-                    className="w-full px-4 py-3 rounded-xl border border-[#e8e4df] text-sm text-[#1c1c1e] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#FF9933] focus:border-transparent resize-none bg-white transition"
+                    className="w-full px-4 py-3 rounded-xl border border-[#e8e4df] text-sm text-[#1c1c1e] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent resize-none bg-white transition"
                     placeholder="I help adults navigate anxiety, burnout, and relationship stress…"
                     value={bio} onChange={e => setBio(e.target.value)} />
                   <p className="text-xs text-[#9ca3af] mt-1">2–4 sentences. Speak directly to the client.</p>
@@ -433,7 +449,7 @@ export default function SetupWizard({
                   <div className="relative">
                     <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9ca3af] text-sm">₹</span>
                     <input type="number"
-                      className="w-full h-11 pl-8 pr-4 rounded-xl border border-[#e8e4df] text-sm text-[#1c1c1e] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#FF9933] focus:border-transparent bg-white transition"
+                      className="w-full h-11 pl-8 pr-4 rounded-xl border border-[#e8e4df] text-sm text-[#1c1c1e] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent bg-white transition"
                       placeholder="1500" value={fee} onChange={e => setFee(e.target.value)} />
                   </div>
                 </div>
@@ -508,7 +524,7 @@ export default function SetupWizard({
                       style={{ borderColor: '#E5E0D9', background: '#fff' }}>
                       <p className="text-xs font-bold uppercase tracking-widest text-[#9ca3af]">What you're publishing</p>
                       {[
-                        { label: 'Template', value: TEMPLATES.find(t => t.id === selectedTemplate)?.name ?? selectedTemplate },
+                        { label: 'Template', value: (TEMPLATES.find(t => t.id === selectedTemplate) ?? availableTemplates[0])?.name ?? selectedTemplate },
                         { label: 'Name',     value: name },
                         { label: 'Fee',      value: `₹${fee} / session` },
                         { label: 'Services', value: `${services.filter(s => s.name.trim()).length} service(s)` },
@@ -522,7 +538,7 @@ export default function SetupWizard({
                       ))}
                     </div>
                     {pubError && <p className="text-sm text-red-600 bg-red-50 px-4 py-2 rounded-xl mb-4">{pubError}</p>}
-                    <p className="text-xs text-[#9ca3af]">Your public page at <strong className='text-[#ff9933]'> {liveUrl}</strong> will update instantly.</p>
+                    <p className="text-xs text-[#9ca3af]">Your public page at <strong style={{ color: BRAND }}> {liveUrl}</strong> will update instantly.</p>
                   </div>
                 </>
               ) : (

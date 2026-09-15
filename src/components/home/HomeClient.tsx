@@ -1568,14 +1568,21 @@ function FaqItem({ q, a, idx }: { q: string; a: string; idx: number }) {
 // did before for anyone whose request resolves to the 'in' tenant.
 export interface HomeTenant {
   brandName: string
+  logoPath?: string
   currencySymbol: string
   siteUrl: string
   footerTagline: string
   plans: typeof PLANS_DATA
+  // "List your practice" nav CTA + other saffron-highlight accents
+  // (e.g. the selected template tab in "Explore Templates") -- see
+  // SiteNavbarTenant.ctaColor and the --tenant-accent CSS var below.
+  ctaColor?: string
+  ctaColorDark?: string
 }
 
 const DEFAULT_HOME_TENANT: HomeTenant = {
   brandName: 'Counsellors of India',
+  logoPath: '/coi.png',
   currencySymbol: '₹',
   siteUrl: 'https://www.counsellorsofindia.com',
   footerTagline:
@@ -1663,7 +1670,13 @@ export default function HomeClient({ tenant = DEFAULT_HOME_TENANT }: { tenant?: 
       let rafId = 0
       const raf = (time: number) => { lenis.raf(time); rafId = requestAnimationFrame(raf) }
       rafId = requestAnimationFrame(raf)
-      cleanup = () => { cancelAnimationFrame(rafId); lenis.destroy() }
+      // Exposed globally so in-page nav links (SiteNavbar) can force a fresh
+      // lenis.resize() + controlled scrollTo at click-time -- see the
+      // handleHashNavClick comment in SiteNavbar for why the native anchor
+      // jump alone isn't reliable while async content (therapist cards,
+      // iframes, images) is still resizing the page above the target.
+      ;(window as any).__lenis = lenis
+      cleanup = () => { cancelAnimationFrame(rafId); lenis.destroy(); delete (window as any).__lenis }
     })()
 
     return () => { cancelled = true; cleanup?.() }
@@ -1797,13 +1810,23 @@ export default function HomeClient({ tenant = DEFAULT_HOME_TENANT }: { tenant?: 
 
 
   return (
-    <div className="pg">
+    <div
+      className="pg"
+      style={
+        tenant.ctaColor
+          ? ({
+              ['--tenant-accent' as any]: tenant.ctaColor,
+              ['--tenant-accent-deep' as any]: tenant.ctaColorDark ?? tenant.ctaColor,
+            } as React.CSSProperties)
+          : undefined
+      }
+    >
       
       {previewT && <PreviewModal t={previewT} onClose={()=>setPreviewT(null)}/>}
 
 
 {/* ───────────────────────────── NAVBAR ───────────────────────────── */}
-<SiteNavbar tenant={{ brandName: tenant.brandName }} />
+<SiteNavbar tenant={{ brandName: tenant.brandName, logoPath: tenant.logoPath, ctaColor: tenant.ctaColor }} />
 
 
       {/* ── HERO ── */}
@@ -1935,7 +1958,7 @@ export default function HomeClient({ tenant = DEFAULT_HOME_TENANT }: { tenant?: 
               .td-viewall-arrow {
                 display: inline-flex; align-items: center; justify-content: center;
                 width: 30px; height: 30px; border-radius: 50%; margin-top: 4px;
-                background: #FF9933; color: #fff; font-size: 14px;
+                background: var(--wn-saffron, #FF9933); color: #fff; font-size: 14px;
                 transition: transform 200ms ease;
               }
               .td-viewall-overlay:hover .td-viewall-arrow { transform: translateX(3px); }
@@ -2094,20 +2117,23 @@ export default function HomeClient({ tenant = DEFAULT_HOME_TENANT }: { tenant?: 
                     rv ${i === 0 ? 'price-anim-left' : 'price-anim-right'}
                     relative flex flex-col h-full rounded-[18px] bg-white p-5 sm:p-6 transition-all duration-300
                     ${p.hi
-                      ? 'border border-[#FF9933] shadow-[0_14px_36px_rgba(255,153,51,0.13)] lg:scale-[1.015]'
-                      : 'border border-[#ECE5D9] shadow-sm hover:shadow-lg hover:border-[#FF9933]/30'}
+                      ? 'border shadow-[0_14px_36px_rgba(255,153,51,0.13)] lg:scale-[1.015]'
+                      : 'border border-[#ECE5D9] shadow-sm hover:shadow-lg'}
                   `}
+                  style={p.hi ? { borderColor: 'var(--wn-saffron)' } : undefined}
+                  onMouseEnter={!p.hi ? (e) => { e.currentTarget.style.borderColor = 'var(--wn-saffron)' } : undefined}
+                  onMouseLeave={!p.hi ? (e) => { e.currentTarget.style.borderColor = '' } : undefined}
                 >
                   {p.recommended && (
-                    <div className="absolute left-1/2 -translate-x-1/2 -top-2.5 px-3 py-1 rounded-full text-[10px] font-semibold bg-[#FF9933] text-white shadow-md whitespace-nowrap">
+                    <div className="absolute left-1/2 -translate-x-1/2 -top-2.5 px-3 py-1 rounded-full text-[10px] font-semibold text-white shadow-md whitespace-nowrap" style={{ background: 'var(--wn-saffron)' }}>
                       Most Popular
                     </div>
                   )}
 
                   <div className="mb-4">
                     <div className="flex items-center gap-1.5">
-                      {p.id === 'pro' && <Crown size={13} className="text-[#FF9933]" />}
-                      {p.id === 'starter' && <Rocket size={13} className="text-[#FF9933]" />}
+                      {p.id === 'pro' && <Crown size={13} style={{ color: 'var(--wn-saffron)' }} />}
+                      {p.id === 'starter' && <Rocket size={13} style={{ color: 'var(--wn-saffron)' }} />}
                       <h3
                         className="text-[15px] text-[#1F1C18]"
                         style={{ fontFamily: "'Fraunces','Instrument Serif',serif", fontWeight: 500 }}
@@ -2131,10 +2157,8 @@ export default function HomeClient({ tenant = DEFAULT_HOME_TENANT }: { tenant?: 
 
                   <Link
                     href={ctaHref}
-                    className={`h-10 rounded-lg inline-flex items-center justify-center gap-1.5 text-[12.5px] font-medium transition ${
-                      p.ctaStyle === 'filled'
-                        ? 'bg-[#FF9933] hover:bg-[#E07A12] text-white'
-                        : 'border border-[#ECE5D9] text-[#1F1C18] hover:border-[#FF9933] hover:text-[#FF9933]'
+                    className={`h-10 rounded-lg inline-flex items-center justify-center gap-1.5 text-[12.5px] font-medium transition pricing-cta ${
+                      p.ctaStyle === 'filled' ? 'pricing-cta-filled text-white' : 'pricing-cta-ghost border border-[#ECE5D9] text-[#1F1C18]'
                     }`}
                   >
                     {ctaLabel}
@@ -2144,7 +2168,7 @@ export default function HomeClient({ tenant = DEFAULT_HOME_TENANT }: { tenant?: 
                   <ul className="mt-4 mb-0 flex-1 space-y-2">
                     {p.feats.map((f) => (
                       <li key={f} className="flex items-start gap-2">
-                        <span className="mt-[3px] shrink-0 text-[#FF9933] text-[13px] leading-none">•</span>
+                        <span className="mt-[3px] shrink-0 text-[13px] leading-none" style={{ color: 'var(--wn-saffron)' }}>•</span>
                         <span className="text-[12px] leading-snug text-[#3D3A33]">{f}</span>
                       </li>
                     ))}
@@ -2209,7 +2233,7 @@ export default function HomeClient({ tenant = DEFAULT_HOME_TENANT }: { tenant?: 
   
       </section>
 
-      <SiteFooter tenant={{ brandName: tenant.brandName, footerTagline: tenant.footerTagline }} />
+      <SiteFooter tenant={{ brandName: tenant.brandName, footerTagline: tenant.footerTagline, logoPath: tenant.logoPath }} />
 
       <FooterReveal wordmark={tenant.brandName} />
 

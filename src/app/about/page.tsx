@@ -52,7 +52,7 @@ export default async function AboutPage() {
       }}
       className="flex min-h-screen flex-col"
     >
-      <SiteNav tenant={{ brandName: tenant.brandName }} />
+      <SiteNav tenant={{ brandName: tenant.brandName, logoPath: tenant.logoPath, primaryColor: tenant.primaryColor, primaryColorDark: tenant.primaryColorDark }} />
 
       {/* ─────────────────────────────────────────────────────
           HERO
@@ -103,7 +103,7 @@ export default async function AboutPage() {
                 <Link
                   href="/signup"
                   className="inline-flex items-center gap-2 text-[15px] font-semibold transition-opacity hover:opacity-60"
-                  style={{ color: '#FF9933' }}
+                  style={{ color: tenant.primaryColor }}
                 >
                   List your practice
                   <ArrowUpRight size={15} strokeWidth={2.2} />
@@ -334,7 +334,7 @@ export default async function AboutPage() {
             <Link
               href="/signup"
               className="inline-flex items-center gap-2 text-[15px] font-semibold transition-opacity hover:opacity-60"
-              style={{ color: '#FF9933' }}
+              style={{ color: tenant.primaryColor }}
             >
               List your practice
               <ArrowUpRight size={15} strokeWidth={2.2} />
@@ -344,7 +344,7 @@ export default async function AboutPage() {
         </div>
       </section>
 
-      <SiteFooter tenant={{ brandName: tenant.brandName, footerTagline: tenant.footerTagline }} />
+      <SiteFooter tenant={{ brandName: tenant.brandName, footerTagline: tenant.footerTagline, logoPath: tenant.logoPath }} />
     </div>
   )
 }

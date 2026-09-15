@@ -1,6 +1,6 @@
 'use client'
 
-import { BadgeCheck, Star, Users, Award } from 'lucide-react'
+import { BadgeCheck, Star, Users, Award, Globe } from 'lucide-react'
 import type { TherapistProfile } from '../templateUtils'
 import { resolveImage } from '../templateUtils'
 
@@ -26,9 +26,9 @@ export default function About({ therapist }: AboutProps) {
   ].filter(Boolean) as string[]
 
   return (
-    <section id="about" className="ct8-section" style={{ background: '#FFFFFF' }}>
-      <div className="ct8-container ct8-about-grid ct8-about-grid--with-photo">
-        <div>
+    <section id="about" className="ct8-section ct8-about-vh" style={{ background: '#FFFFFF' }}>
+      <div className="ct8-container ct8-about-solo">
+        {/* <div>
           <div className="ct8-about-photo-orbit">
             <span className="ct8-about-photo-glow" aria-hidden="true" />
             <span className="ct8-about-photo-ring" aria-hidden="true" />
@@ -40,7 +40,7 @@ export default function About({ therapist }: AboutProps) {
               {credentialLabel}
             </span>
           </div>
-        </div>
+        </div> */}
 
         <div>
           <div className="ct8-section-head" style={{ margin: '0 0 1.5rem' }}>
@@ -49,10 +49,10 @@ export default function About({ therapist }: AboutProps) {
 
           <div className="ct8-about-quote-wrap">
             <span className="ct8-about-quote-mark" aria-hidden="true">&ldquo;</span>
-            <p className="ct8-about-body ct8-about-body--lead">{bio}</p>
+            <p className="ct8-about-body ct8-about-body--lead ct8-about-body--justify">{bio}</p>
           </div>
 
-          {stats.length > 0 && (
+          {/* {stats.length > 0 && (
             <div className="ct8-stat-row" style={{ gridTemplateColumns: `repeat(${stats.length}, 1fr)` }}>
               {stats.map(s => (
                 <div key={s.lbl} className="ct8-card ct8-stat-box">
@@ -62,9 +62,9 @@ export default function About({ therapist }: AboutProps) {
                 </div>
               ))}
             </div>
-          )}
+          )} */}
 
-          {creds.length > 0 && (
+          {/* {creds.length > 0 && (
             <div className="ct8-card ct8-cred-card">
               <span className="ct8-cred-title">Credentials</span>
               {creds.map((c, i) => (
@@ -74,12 +74,18 @@ export default function About({ therapist }: AboutProps) {
                 </div>
               ))}
             </div>
-          )}
+          )} */}
 
-          <div className="ct8-chip-wrap" style={{ marginTop: '1.4rem' }}>
-            {langs.map(l => (
-              <span key={l} className="ct8-chip">{l}</span>
-            ))}
+          <div className="ct8-lang-showcase">
+            <span className="ct8-lang-showcase-label">
+              <Globe size={13} strokeWidth={2.3} /> Speaks
+            </span>
+            <div className="ct8-lang-showcase-list">
+              {langs.map((l, i) => (
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                <span key={l} className="ct8-lang-showcase-item" style={{ '--i': i } as any}>{l}</span>
+              ))}
+            </div>
           </div>
         </div>
       </div>

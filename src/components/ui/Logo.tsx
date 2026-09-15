@@ -8,6 +8,13 @@ interface LogoProps {
   showTagline?: boolean
   /** Disable the built-in homepage link when Logo is already wrapped in a Link */
   disableLink?: boolean
+  /** Tenant brand name, e.g. "Counsellors of America" on the US portal.
+   *  Defaults to India's original copy so any call site that doesn't pass
+   *  this yet renders exactly what it did before. */
+  brandName?: string
+  /** Mobile-only tagline text under the wordmark. Defaults to India's
+   *  original copy. */
+  tagline?: string
 }
 
 export default function Logo({
@@ -16,6 +23,8 @@ export default function Logo({
   subtitle,
   showTagline = false,
   disableLink = false,
+  brandName = 'Counsellors of India',
+  tagline = 'practice management for Indian therapists',
 }: LogoProps) {
 
   const sizes = {
@@ -31,9 +40,9 @@ export default function Logo({
           <h1
             className={`${sizes[size]} font-semibold text-gray-900 hover:opacity-80 transition`}
             style={{ fontFamily: 'var(--font-cormorant), serif' }}
-            aria-label="Counsellors of India – therapist website builder India"
+            aria-label={`${brandName} – therapist website builder`}
           >
-            Counsellors of India
+            {brandName}
           </h1>
           {/* Mobile-only tagline shown directly under wordmark */}
           {showTagline && (
@@ -41,7 +50,7 @@ export default function Logo({
               className="sm:hidden block text-[10px] text-gray-400 tracking-wide -mt-0.5"
               style={{ fontFamily: 'var(--font-inter), sans-serif' }}
             >
-              practice management for Indian therapists
+              {tagline}
             </span>
           )}
         </>
@@ -50,9 +59,9 @@ export default function Logo({
           <h1
             className={`${sizes[size]} font-semibold text-gray-900 hover:opacity-80 transition`}
             style={{ fontFamily: 'var(--font-cormorant), serif' }}
-            aria-label="Counsellors of India – therapist website builder India"
+            aria-label={`${brandName} – therapist website builder`}
           >
-            Counsellors of India
+            {brandName}
           </h1>
           {/* Mobile-only tagline shown directly under wordmark */}
           {showTagline && (
@@ -60,7 +69,7 @@ export default function Logo({
               className="sm:hidden block text-[10px] text-gray-400 tracking-wide -mt-0.5"
               style={{ fontFamily: 'var(--font-inter), sans-serif' }}
             >
-              practice management for Indian therapists
+              {tagline}
             </span>
           )}
         </Link>

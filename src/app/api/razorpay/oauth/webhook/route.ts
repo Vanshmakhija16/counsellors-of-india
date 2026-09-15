@@ -153,13 +153,27 @@ export async function POST(req: NextRequest) {
               razorpayOrderId, expected: paymentRow.amount_paise, got: amountPaise,
             })
           } else {
-            const { error: updatePaymentErr } = await db
+            // Atomic claim: the UPDATE's WHERE clause (id match AND status not
+            // already 'paid') is evaluated and applied by Postgres as one
+            // atomic operation per row. If payment.captured and order.paid
+            // arrive close enough together that both requests read
+            // paymentRow.status as "not yet paid" above, only ONE of these
+            // two concurrent UPDATEs can actually find + lock a matching row
+            // (Postgres serializes concurrent updates to the same row) --
+            // the other's WHERE clause finds nothing left to match. .select()
+            // tells us which one we were: empty rows back means we lost the
+            // race and must NOT send a duplicate notification.
+            const { data: claimedRows, error: updatePaymentErr } = await db
               .from('payments')
               .update({ razorpay_payment_id: razorpayPaymentId, status: 'paid' })
               .eq('id', paymentRow.id)
+              .neq('status', 'paid')
+              .select('id')
 
             if (updatePaymentErr) {
               console.error('[razorpay/oauth/webhook] Failed to mark payment paid:', updatePaymentErr)
+            } else if (!claimedRows || claimedRows.length === 0) {
+              console.log('[razorpay/oauth/webhook] Lost the race to a concurrent webhook delivery for the same payment -- skipping notification to avoid a duplicate send.', { razorpayOrderId, eventType: event.event })
             } else {
               const { error: apptErr } = await db
                 .from('appointments')

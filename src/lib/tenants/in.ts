@@ -9,6 +9,7 @@ export const inTenant: TenantConfig = {
   domains: [
     'counsellorsofindia.com',
     'www.counsellorsofindia.com',
+    'counsellorsofindia.local',
     // localhost and any unrecognized host fall back to 'in' in
     // src/lib/tenants/index.ts — listed here too for clarity/completeness.
     'localhost',
@@ -90,4 +91,11 @@ export const inTenant: TenantConfig = {
 
   defaultCountryIso: 'IN',
   logoPath: '/coi.png',
+
+  // Exact hex codes previously hardcoded directly in page.css's :root
+  // blocks (--gold/--gold2 and the --wn-saffron*/--wn-sage* family) --
+  // wiring these up via RootLayout changes nothing visually for India.
+  primaryColor: '#FF9933',
+  primaryColorDark: '#E07A12',
+  primaryColorSoft: '#FFD9B0',
 }

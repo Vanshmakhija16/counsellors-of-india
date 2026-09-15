@@ -11,12 +11,17 @@ import Link from 'next/link'
 export interface SiteFooterTenant {
   brandName: string
   footerTagline: string
+  /** Path to this tenant's logo image (e.g. '/coi.png', '/COA2.png').
+   *  Defaults to India's mark so any call site that doesn't pass this yet
+   *  renders exactly what it did before. */
+  logoPath?: string
 }
 
 const DEFAULT_TENANT: SiteFooterTenant = {
   brandName: 'Counsellors of India',
   footerTagline:
     'A calm, trusted home for every counselling practice in India, websites, bookings, and payments in one place.',
+  logoPath: '/coi.png',
 }
 
 const FOOTER_COLS = [
@@ -107,7 +112,7 @@ export default function SiteFooter({ tenant = DEFAULT_TENANT }: { tenant?: SiteF
         <div className="pfoot-top">
           <div className="pfoot-brand">
             <Link href="/" className="pfoot-logo">
-              <img src="/coi.png" alt="" className="pfoot-logo-img" />
+              <img src={tenant.logoPath ?? '/coi.png'} alt="" className="pfoot-logo-img" />
               <span>{brandFirst}{brandRest ? <><br/>of {brandRest}</> : null}</span>
             </Link>
             <p className="pfoot-tag">

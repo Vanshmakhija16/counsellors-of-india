@@ -11,6 +11,7 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
+import { useTenantAccent } from '@/lib/useTenantAccent'
 
 const SetupWizard = dynamic(
   () => import('@/components/dashboard/SetupWizard'),
@@ -24,7 +25,8 @@ const fraunces = Fraunces({
   variable: '--font-fraunces',
 })
 
-// ── Design tokens ─────────────────────────────────────────────────
+// ── Design tokens (India default -- see useTenantAccent() below for the
+//    tenant-aware SAFFRON/SAFFRON_DEEP override used throughout render) ──
 const SAFFRON      = '#FF9933'
 const SAFFRON_DEEP = '#C2650A'
 const INK          = '#171412'
@@ -52,6 +54,7 @@ function inferState(therapist: any): 'no-template' | 'no-content' | 'unpublished
 export default function DashboardPage() {
   const { therapist, loading } = useTherapist()
   const supabase = useSupabaseClient()
+  const { accent: SAFFRON, accentDark: SAFFRON_DEEP } = useTenantAccent()
 
   const [appointments, setAppointments] = useState<any[]>([])
   const [stats, setStats]   = useState({ total: 0, today: 0, pending: 0 })
@@ -160,6 +163,7 @@ export default function DashboardPage() {
         existingPhoto={(therapist as any).photo_url ?? ''}
         existingBio={therapist.bio ?? ''}
         existingFee={String((therapist as any).fee_per_session ?? '')}
+        plan={(therapist as any).plan ?? 'starter'}
         onComplete={() => setShowWizard(false)}
       />
     )
@@ -303,7 +307,6 @@ export default function DashboardPage() {
             <p className="text-[10px] font-bold uppercase tracking-widest mb-2"
               style={{ color: MUTED }}>Quick actions</p>
             {[
-              { label: 'Edit website content', href: '/dashboard/appearance', icon: Palette },
               { label: 'Set availaibility ', href: '/dashboard/availability', icon: Clock },
               { label: 'View all bookings', href: '/dashboard/appointments', icon: Calendar },
             ].map(({ label, href, icon: Icon }) => (

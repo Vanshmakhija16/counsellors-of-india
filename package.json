@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "supabase:gen-types": "npx supabase gen types typescript --schema public > src/lib/database.ts"
   },
   "dependencies": {
@@ -32,11 +34,11 @@
     "recharts": "^3.8.1",
     "resend": "^6.12.2",
     "server-only": "^0.0.1",
-    "stripe": "^22.3.2",
     "supabase": "^2.98.0",
     "zod": "^4.4.2"
   },
   "devDependencies": {
+    "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/nodemailer": "^8.0.0",

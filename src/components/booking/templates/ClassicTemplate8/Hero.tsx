@@ -121,12 +121,12 @@ export default function Hero({ therapist }: HeroProps) {
           </div>
         </div>
 
-        <span className="ct8-hero-dark-divider" aria-hidden="true" />
+        {/* <span className="ct8-hero-dark-divider" aria-hidden="true" /> */}
 
-        <button type="button" className="ct8-hero-dark-scroll" onClick={scrollToNext} aria-label="Scroll down">
+        {/* <button type="button" className="ct8-hero-dark-scroll" onClick={scrollToNext} aria-label="Scroll down">
           Scroll Down
           <ArrowDown size={13} strokeWidth={2.2} />
-        </button>
+        </button> */}
       </div>
 
 

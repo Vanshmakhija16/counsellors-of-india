@@ -7,6 +7,7 @@ import {
   CalendarOff, ChevronDown, Info,
   Sun, Sunset, Moon, Save,
 } from 'lucide-react'
+import { useTenantAccent } from '@/lib/useTenantAccent'
 
 // ── Types ──────────────────────────────────────────────────────────────────
 interface TimeRange { start: string; end: string }
@@ -54,6 +55,10 @@ const DEFAULT_SCHEDULE: WeekSchedule = {
   Sunday:    { enabled: false, ranges: [] },
 }
 
+// India-default fallbacks -- AvailabilitySettings() below shadows these
+// with useTenantAccent()'s tenant-aware values for everything it renders
+// directly; Toggle (a separate component) receives `brand` as a prop since
+// it can't see that local shadow.
 const BRAND       = '#FF9933'
 const BRAND_DARK  = '#C46800'
 const BRAND_LIGHT = '#FFF7EE'
@@ -92,7 +97,7 @@ function Dropdown({ value, onChange, options }: {
         onChange={e => onChange(Number(e.target.value))}
         className="w-full appearance-none h-10 pl-3 pr-9 rounded-xl border border-[#e8e4df]
           bg-white text-sm font-medium text-[#1c1c1e] focus:outline-none
-          focus:ring-2 focus:ring-[#FF993340] transition cursor-pointer"
+          focus:ring-2 focus:ring-[var(--brand-ring)] transition cursor-pointer"
       >
         {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
@@ -101,15 +106,15 @@ function Dropdown({ value, onChange, options }: {
   )
 }
 
-function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
+function Toggle({ on, onChange, brand = BRAND }: { on: boolean; onChange: () => void; brand?: string }) {
   return (
     <button
       type="button"
       onClick={onChange}
       role="switch"
       aria-checked={on}
-      className="w-10 h-[22px] rounded-full transition-all relative shrink-0 focus:outline-none focus:ring-2 focus:ring-[#FF993340]"
-      style={{ background: on ? BRAND : '#e5e7eb' }}
+      className="w-10 h-[22px] rounded-full transition-all relative shrink-0 focus:outline-none focus:ring-2 focus:ring-[var(--brand-ring)]"
+      style={{ background: on ? brand : '#e5e7eb' }}
     >
       <span
         className="absolute top-[2px] w-[18px] h-[18px] rounded-full bg-white shadow-sm transition-all"
@@ -131,6 +136,10 @@ function ColHeader({ title, subtitle }: { title: string; subtitle: string }) {
 // ── Main component ─────────────────────────────────────────────────────────
 export default function AvailabilitySettings() {
   const supabase = createClient()
+  const { accent: BRAND, accentDark: BRAND_DARK } = useTenantAccent()
+  const BRAND_LIGHT = `color-mix(in srgb, ${BRAND} 8%, white)`
+  const BRAND_BDR   = `color-mix(in srgb, ${BRAND} 35%, white)`
+  const BRAND_RING  = `${BRAND}40`
   const [schedule,   setSchedule]   = useState<WeekSchedule>(DEFAULT_SCHEDULE)
   const [duration,   setDuration]   = useState(50)
   const [buffer,     setBuffer]     = useState(0)
@@ -284,14 +293,14 @@ export default function AvailabilitySettings() {
   if (loading) return (
     <div className="flex items-center justify-center min-h-64 p-8">
       <div className="flex flex-col items-center gap-3">
-        <div className="w-8 h-8 rounded-full border-2 border-[#FF9933] border-t-transparent animate-spin" />
+        <div className="w-8 h-8 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: BRAND, borderTopColor: 'transparent' }} />
         <p className="text-sm text-[#9ca3af]">Loading your schedule…</p>
       </div>
     </div>
   )
 
   return (
-    <div className="-mx-5 sm:-mx-8 -my-8 min-h-screen bg-[#faf9f7]">
+    <div className="-mx-5 sm:-mx-8 -my-8 min-h-screen bg-[#faf9f7]" style={{ '--brand': BRAND, '--brand-dark': BRAND_DARK, '--brand-ring': BRAND_RING } as React.CSSProperties}>
 
       {/* ── Sticky header ──────────────────────────────────────────────── */}
       <div className="sticky top-0 z-20 bg-white border-b border-[#ede9e4] px-6 py-3.5 flex items-center justify-between gap-3">
@@ -303,8 +312,11 @@ export default function AvailabilitySettings() {
         </div>
         <div className="flex items-center gap-2">
           {dirty && (
-            <span className="hidden sm:flex items-center gap-1.5 text-xs font-medium text-amber-600 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-full">
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400 shrink-0" />
+            <span
+              className="hidden sm:flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border"
+              style={{ color: BRAND_DARK, background: BRAND_LIGHT, borderColor: BRAND_BDR }}
+            >
+              <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: BRAND }} />
               Unsaved
             </span>
           )}
@@ -371,7 +383,7 @@ export default function AvailabilitySettings() {
               </div>
 
               {/* Live summary */}
-              <div className="rounded-xl border border-[#F5D9B0] bg-[#FFF7EE] p-4 space-y-2">
+              <div className="rounded-xl border p-4 space-y-2" style={{ borderColor: BRAND_BDR, background: BRAND_LIGHT }}>
                 {[
                   { label: 'Each session',  value: `${duration} min` },
                   { label: 'Buffer',        value: buffer > 0 ? `${buffer} min` : 'None' },
@@ -379,8 +391,8 @@ export default function AvailabilitySettings() {
                   { label: 'Active days',   value: `${enabledDays} days` },
                 ].map(row => (
                   <div key={row.label} className="flex items-center justify-between text-xs">
-                    <span className="text-[#9A5200]">{row.label}</span>
-                    <span className="font-bold text-[#C46800]">{row.value}</span>
+                    <span style={{ color: BRAND_DARK }}>{row.label}</span>
+                    <span className="font-bold" style={{ color: BRAND_DARK }}>{row.value}</span>
                   </div>
                 ))}
               </div>
@@ -421,11 +433,13 @@ export default function AvailabilitySettings() {
                             value={ex.date}
                             onChange={e => updateException(i, { date: e.target.value })}
                             className="flex-1 h-8 px-2 rounded-lg border border-[#e8e4df] text-xs text-[#1c1c1e]
-                              focus:outline-none focus:ring-2 focus:ring-[#FF993340] bg-white transition"
+                              focus:outline-none focus:ring-2 focus:ring-[var(--brand-ring)] bg-white transition"
                           />
                           <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 ${
-                            ex.type === 'off' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-[#FFF7EE] text-[#C46800] border border-[#F5D9B0]'
-                          }`}>
+                            ex.type === 'off' ? 'bg-red-50 text-red-600 border border-red-100' : ''
+                          }`}
+                            style={ex.type === 'custom' ? { background: BRAND_LIGHT, color: BRAND_DARK, borderWidth: 1, borderStyle: 'solid', borderColor: BRAND_BDR } : undefined}
+                          >
                             {ex.type === 'off' ? 'Day off' : 'Custom'}
                           </span>
                           <button onClick={() => removeException(i)} className="text-[#d1d5db] hover:text-red-400 transition shrink-0">
@@ -436,11 +450,11 @@ export default function AvailabilitySettings() {
                           <div className="flex items-center gap-2">
                             <input type="time" value={ex.ranges?.[0]?.start ?? '10:00'}
                               onChange={e => updateExceptionRange(i, 'start', e.target.value)}
-                              className="h-8 px-2 rounded-lg border border-[#e8e4df] text-xs text-[#1c1c1e] focus:outline-none focus:ring-2 focus:ring-[#FF993340] bg-white w-24" />
+                              className="h-8 px-2 rounded-lg border border-[#e8e4df] text-xs text-[#1c1c1e] focus:outline-none focus:ring-2 focus:ring-[var(--brand-ring)] bg-white w-24" />
                             <span className="text-[#9ca3af] text-xs">to</span>
                             <input type="time" value={ex.ranges?.[0]?.end ?? '14:00'}
                               onChange={e => updateExceptionRange(i, 'end', e.target.value)}
-                              className="h-8 px-2 rounded-lg border border-[#e8e4df] text-xs text-[#1c1c1e] focus:outline-none focus:ring-2 focus:ring-[#FF993340] bg-white w-24" />
+                              className="h-8 px-2 rounded-lg border border-[#e8e4df] text-xs text-[#1c1c1e] focus:outline-none focus:ring-2 focus:ring-[var(--brand-ring)] bg-white w-24" />
                           </div>
                         )}
                       </div>
@@ -482,7 +496,7 @@ export default function AvailabilitySettings() {
   className="w-full flex items-center gap-3 px-5 py-3.5 text-left transition hover:bg-[#faf9f7] cursor-pointer"
   style={isActive ? { background: BRAND_LIGHT } : {}}
 >
-  <Toggle on={!!on} onChange={() => toggleDay(day)} />
+  <Toggle on={!!on} onChange={() => toggleDay(day)} brand={BRAND} />
 
   <span className="flex-1 text-[14px] font-semibold" style={{ color: on ? '#1c1c1e' : '#9ca3af' }}>
   {DAY_SHORT[di]}
@@ -513,7 +527,7 @@ export default function AvailabilitySettings() {
                               value={range.start}
                               onChange={e => updateRange(day, ri, 'start', e.target.value)}
                               className="h-8 px-2 rounded-lg border border-[#e8e4df] text-xs text-[#1c1c1e]
-                                focus:outline-none focus:ring-2 focus:ring-[#FF993340] bg-white w-[88px] transition"
+                                focus:outline-none focus:ring-2 focus:ring-[var(--brand-ring)] bg-white w-[88px] transition"
                             />
                             <span className="text-[#9ca3af] text-xs">–</span>
                             <input
@@ -521,7 +535,7 @@ export default function AvailabilitySettings() {
                               value={range.end}
                               onChange={e => updateRange(day, ri, 'end', e.target.value)}
                               className="h-8 px-2 rounded-lg border border-[#e8e4df] text-xs text-[#1c1c1e]
-                                focus:outline-none focus:ring-2 focus:ring-[#FF993340] bg-white w-[79px] transition"
+                                focus:outline-none focus:ring-2 focus:ring-[var(--brand-ring)] bg-white w-[79px] transition"
                             />
                             {/* <span className="text-[4px] font-medium ml-auto shrink-0" style={{ color: BRAND_DARK }}>
                               {generateSlots([range], duration, buffer).length}

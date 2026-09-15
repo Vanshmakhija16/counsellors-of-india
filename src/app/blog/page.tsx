@@ -220,7 +220,7 @@ export default async function BlogPage() {
 
   return (
     <div className="flex min-h-screen flex-col" style={{ background: PAPER }}>
-      <SiteNavbar tenant={{ brandName: tenant.brandName }} />
+      <SiteNavbar tenant={{ brandName: tenant.brandName, logoPath: tenant.logoPath }} />
 
       {/* ── Hero: faint ruled-notebook lines + paper grain ─────────────── */}
       <section
@@ -457,7 +457,7 @@ export default async function BlogPage() {
         </section>
       )}
 
-      <SiteFooter tenant={{ brandName: tenant.brandName, footerTagline: tenant.footerTagline }} />
+      <SiteFooter tenant={{ brandName: tenant.brandName, footerTagline: tenant.footerTagline, logoPath: tenant.logoPath }} />
         <FooterReveal wordmark={tenant.brandName} />
   
     </div>

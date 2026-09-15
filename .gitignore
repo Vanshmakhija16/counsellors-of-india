@@ -12,6 +12,10 @@
 
 # testing
 /coverage
+/test-results
+/playwright-report
+/blob-report
+/playwright/.cache
 
 # next.js
 /.next/
@@ -33,6 +37,10 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 .env.local
+
+# Amplify exported env var dumps — contain live secrets, never commit
+amplify-env.json
+amplify-branch-env.json
 
 # vercel
 .vercel

@@ -33,17 +33,44 @@ export interface SignupPageClientProps {
    *  Undefined for tenants without a logo asset yet — AuthLayout falls
    *  back to a monogram/wordmark in that case. */
   logoPath?: string
+  /** Tenant accent colors threaded through to AuthLayout as CSS variables
+   *  (--auth-accent / --auth-accent-dark). This form's own buttons, focus
+   *  rings, and status colors reference those same variables instead of
+   *  hardcoding saffron, so passing a different accent here re-themes the
+   *  whole signup page. Defaults to the saffron brand color. */
+  accentColor?: string
+  accentColorDark?: string
+  /** Color specifically for the JourneyProgress step tracker (top of the
+   *  right panel) -- independent of accentColorDark so the tracker can be
+   *  themed differently from the panel's background shapes / hover link,
+   *  which still use accentColorDark. Defaults to accentColorDark if not
+   *  passed, so existing call sites are unaffected. */
+  journeyAccentColor?: string
+  /** Nudges the entire left-column content down a bit — currently used
+   *  for the American portal only. Passed through to AuthLayout's
+   *  contentClassName. */
+  contentClassName?: string
+  /** Classes for the logo+title+topLink header block — controls its own
+   *  vertical position AND the gap before the form below it (include both
+   *  a margin-top and margin-bottom utility). Defaults to the original
+   *  'mt-8 mb-1' spacing; overridden per-tenant from page.tsx. */
+  headerClassName?: string
+  /** Right brand panel background gradient — tenant override. */
+  panelBackground?: string
+  /** Right panel link hover color — tenant override. */
+  panelAccent?: string
 }
 
 export default function SignupPageClient(props: SignupPageClientProps) {
+  const headerClassName = props.headerClassName ?? 'mt-8 mb-1'
   return (
-    <Suspense fallback={<AuthLayout title="Create your account" brandName={props.brandName} tagline={props.tagline} logoPath={props.logoPath}><div className="bg-white rounded-2xl border border-[#ece5d9] shadow-sm p-8"><div className="h-64" /></div></AuthLayout>}>
-      <SignupForm {...props} />
+    <Suspense fallback={<AuthLayout title="Create your account" brandName={props.brandName} tagline={props.tagline} logoPath={props.logoPath} accentColor={props.accentColor} accentColorDark={props.accentColorDark} panelBackground={props.panelBackground} panelAccent={props.panelAccent} headerClassName={headerClassName} contentClassName={props.contentClassName}><div className="bg-white rounded-2xl border border-[#ece5d9] shadow-sm p-8"><div className="h-64" /></div></AuthLayout>}>
+      <SignupForm {...props} headerClassName={headerClassName} />
     </Suspense>
   )
 }
 
-function SignupForm({ defaultCountryIso, domainDisplay, brandName, tagline, logoPath }: SignupPageClientProps) {
+function SignupForm({ defaultCountryIso, domainDisplay, brandName, tagline, logoPath, accentColor, accentColorDark, journeyAccentColor, contentClassName, headerClassName, panelBackground, panelAccent }: SignupPageClientProps) {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const supabase     = useSupabaseClient()
@@ -304,7 +331,14 @@ function SignupForm({ defaultCountryIso, domainDisplay, brandName, tagline, logo
     // arrives, so an invalid inbox can never complete signup.
     const { error: otpErr } = await supabase.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: true },
+      options: {
+        shouldCreateUser: true,
+        // If the person clicks the emailed link instead of typing the
+        // 6-digit code, send them to our callback route (not the site
+        // root) with a flag telling it this is a signup, not a
+        // password-reset — see src/app/auth/callback/route.ts.
+        emailRedirectTo: `${window.location.origin}/auth/callback?next=signup`,
+      },
     })
 
     // A rate-limit / "already registered" error here means a code was ALREADY
@@ -408,7 +442,7 @@ function SignupForm({ defaultCountryIso, domainDisplay, brandName, tagline, logo
 
   const usernameBorder =
     usernameStatus === 'taken'     ? 'border-red-300'   :
-    usernameStatus === 'available' ? 'border-[#FF9933]' :
+    usernameStatus === 'available' ? 'border-[var(--auth-accent)]' :
     'border-[#e8e4df]'
 
 return ( 
@@ -419,11 +453,17 @@ return (
   brandName={brandName}
   tagline={tagline}
   logoPath={logoPath}
-  journeySlot={<JourneyProgress current="account" />}
+  accentColor={accentColor}
+  accentColorDark={accentColorDark}
+  headerClassName={headerClassName}
+  contentClassName={contentClassName}
+  panelBackground={panelBackground}
+  panelAccent={panelAccent}
+  journeySlot={<JourneyProgress current="account" accentColor={journeyAccentColor ?? accentColorDark} />}
   topLink={
     <span>
       Already have an account?{' '}
-      <Link href="/login" className="text-[#E07A12] font-semibold hover:underline">
+      <Link href="/login" className="font-semibold hover:underline" style={{ color: 'var(--auth-accent-dark)' }}>
         Sign in
       </Link>
     </span>
@@ -444,7 +484,7 @@ return (
      sm:p-8
    "
  >
-{fromDemo && ( <div className="mb-5 flex items-start gap-3 rounded-xl border border-[#F3D9B0] bg-[#FBF3E6] px-4 py-3"> <Sparkles size={16} className="text-[#FF9933] mt-0.5 shrink-0" /> <p className="text-xs text-[#7a5a1e] leading-relaxed">
+{fromDemo && ( <div className="mb-5 flex items-start gap-3 rounded-xl border border-[#F3D9B0] bg-[#FBF3E6] px-4 py-3"> <Sparkles size={16} className="shrink-0 mt-0.5" style={{ color: 'var(--auth-accent)' }} /> <p className="text-xs text-[#7a5a1e] leading-relaxed">
 Your demo site is saved. Finish signing up and we'll set it up
 with the design and details you chose. </p> </div>
 )}
@@ -473,11 +513,12 @@ with the design and details you chose. </p> </div>
           onKeyDown={e => handleOtpKeyDown(i, e)}
           onFocus={e => e.target.select()}
           aria-label={`Digit ${i + 1}`}
-          className={`w-12 h-14 sm:w-13 sm:h-16 text-center text-2xl font-bold rounded-xl border-2 caret-[#FF9933] focus:outline-none focus:ring-4 focus:ring-[#FF9933]/15 focus:border-[#FF9933] focus:scale-105 transition-all duration-150 shadow-sm ${
+          className={`w-12 h-14 sm:w-13 sm:h-16 text-center text-2xl font-bold rounded-xl border-2 focus:outline-none focus:ring-4 focus:scale-105 transition-all duration-150 shadow-sm ${
             char
-              ? 'text-[#1F1C18] bg-[#FFF6EC] border-[#FF9933]'
+              ? 'text-[#1F1C18] bg-[color-mix(in_srgb,var(--auth-accent)_8%,white)] border-[var(--auth-accent)]'
               : 'text-[#1F1C18] bg-white border-[#e8e4df]'
           }`}
+          style={{ caretColor: 'var(--auth-accent)', ['--tw-ring-color' as string]: 'color-mix(in srgb, var(--auth-accent) 15%, transparent)', borderColor: char ? 'var(--auth-accent)' : undefined }}
         />
       ))}
     </div>
@@ -516,7 +557,8 @@ with the design and details you chose. </p> </div>
         type="submit"
         fullWidth
         loading={loading}
-        className="bg-[#FF9933]! hover:bg-[#E07A12]! text-white! h-12! rounded-xl! shadow-lg shadow-[#FF9933]/25"
+        className="bg-[var(--auth-accent-dark)]! hover:bg-[color-mix(in_srgb,var(--auth-accent-dark)_82%,black)]! text-white! h-12! rounded-xl! shadow-lg"
+        style={{ ['--tw-shadow-color' as string]: 'var(--auth-accent-dark)' }}
       >
         Verify & create account
       </Button>
@@ -528,15 +570,16 @@ with the design and details you chose. </p> </div>
         disabled={resendIn > 0 || otpSending}
         onClick={async () => {
           setOtpSending(true); setOtpError('')
-          const { error: rErr } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true } })
+          const { error: rErr } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo: `${window.location.origin}/auth/callback?next=signup` } })
           if (rErr) setOtpError(rErr.message); else setResendIn(45)
           setOtpSending(false)
         }}
         className={`inline-flex items-center gap-1.5 font-medium transition-colors ${
           resendIn > 0
             ? 'text-[#B3ABA0] cursor-default'
-            : 'text-[#E07A12] hover:underline disabled:opacity-40'
+            : 'hover:underline disabled:opacity-40'
         }`}
+        style={resendIn > 0 ? { color: '#B3ABA0' } : { color: 'var(--auth-accent-dark)' }}
       >
         {resendIn > 0 ? (
           <>
@@ -580,8 +623,8 @@ with the design and details you chose. </p> </div>
       cursor-pointer
       focus:outline-none
       focus:ring-2
-      focus:ring-[#FF9933]/50
     "
+    style={{ ['--tw-ring-color' as string]: 'color-mix(in srgb, var(--auth-accent) 50%, transparent)' }}
   >
     {PREFIXES.map((p) => (
       <option key={p} value={p}>
@@ -621,8 +664,8 @@ with the design and details you chose. </p> </div>
             placeholder-[#6b7280]
             focus:outline-none
             focus:ring-2
-            focus:ring-[#FF9933]/50
           "
+          style={{ ['--tw-ring-color' as string]: 'color-mix(in srgb, var(--auth-accent) 50%, transparent)' }}
         />
       </div>
     </div>
@@ -636,7 +679,7 @@ with the design and details you chose. </p> </div>
         Choose your public web address
       </label>
 
-      <div className={`flex items-stretch h-11 rounded-lg border overflow-hidden focus-within:ring-2 focus-within:ring-[#FF9933]/50 ${usernameBorder}`}>
+      <div className={`flex items-stretch h-11 rounded-lg border overflow-hidden focus-within:ring-2 ${usernameBorder}`} style={{ ['--tw-ring-color' as string]: 'color-mix(in srgb, var(--auth-accent) 50%, transparent)' }}>
         <span className="flex items-center pl-4 pr-1 text-sm font-medium text-[#6E685F] bg-[#FAFAF8] border-r border-[#e8e4df] whitespace-nowrap select-none">
           {domainDisplay}
         </span>
@@ -663,7 +706,7 @@ with the design and details you chose. </p> </div>
               <Loader size={13} className="animate-spin text-[#9C9388]" strokeWidth={2.5} />
             )}
             {usernameStatus === 'available' && (
-              <CheckCircle size={14} className="text-[#FF9933]" strokeWidth={2.5} />
+              <CheckCircle size={14} style={{ color: 'var(--auth-accent)' }} strokeWidth={2.5} />
             )}
             {usernameStatus === 'taken' && (
               <XCircle size={14} className="text-red-500" strokeWidth={2.5} />
@@ -703,8 +746,10 @@ with the design and details you chose. </p> </div>
       required
       value={email}
       onChange={(e) => setEmail(e.target.value)}
-      placeholder="priya@example.com"
-      className="h-10!"
+      placeholder="Enter your email here..."
+      // className="h-10!"
+                className="flex-1 h-10 px-4 rounded-lg border border-[#e8e4df] text-sm text-[#1c1c1e] placeholder-[#6b7280] focus:outline-none focus:ring-2"
+
     />
 
     {/* Phone — country-code picker defaults to the current portal's
@@ -721,10 +766,11 @@ with the design and details you chose. </p> </div>
           required
           value={phone}
           onChange={(e) => handlePhoneChange(e.target.value)}
-          placeholder="Mobile number, or +country code"
+          placeholder="Enter your mobile number here...."
           inputMode="tel"
           maxLength={16}
-          className="flex-1 h-10 px-4 rounded-lg border border-[#e8e4df] text-sm text-[#1c1c1e] placeholder-[#6b7280] focus:outline-none focus:ring-2 focus:ring-[#FF9933]/50"
+          className="flex-1 h-10 px-4 rounded-lg border border-[#e8e4df] text-sm text-[#1c1c1e] placeholder-[#6b7280] focus:outline-none focus:ring-2"
+          style={{ ['--tw-ring-color' as string]: 'color-mix(in srgb, var(--auth-accent) 50%, transparent)' }}
         />
       </div>
     </div>
@@ -764,7 +810,8 @@ with the design and details you chose. </p> </div>
   <Button
     type="submit"
     fullWidth
-    className="bg-[#FF9933]! hover:bg-[#E07A12]! text-white! h-11! rounded-xl! shadow-lg shadow-[#FF9933]/25"
+    className="bg-[var(--auth-accent-dark)]! hover:bg-[color-mix(in_srgb,var(--auth-accent-dark)_82%,black)]! text-white! h-11! rounded-xl! shadow-lg"
+    style={{ ['--tw-shadow-color' as string]: 'var(--auth-accent-dark)' }}
   >
     Next
   </Button>
@@ -779,7 +826,7 @@ with the design and details you chose. </p> </div>
   </label>
 
   <div className="relative group">
-    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#B3ABA0] group-focus-within:text-[#FF9933] transition-colors pointer-events-none">
+    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#B3ABA0] transition-colors pointer-events-none group-focus-within:[color:var(--auth-accent)]">
       <Lock size={16} strokeWidth={2} />
     </span>
 
@@ -809,11 +856,11 @@ with the design and details you chose. </p> </div>
         transition-all
         duration-150
         focus:outline-none
-        focus:border-[#FF9933]
+        focus:border-[var(--auth-accent)]
         focus:ring-4
-        focus:ring-[#FF9933]/12
-        focus:shadow-[0_2px_8px_rgba(255,153,51,0.1)]
+        focus:shadow-[0_2px_8px_rgba(0,0,0,0.06)]
       "
+      style={{ ['--tw-ring-color' as string]: 'color-mix(in srgb, var(--auth-accent) 12%, transparent)' }}
     />
 
     <button
@@ -932,7 +979,8 @@ with the design and details you chose. </p> </div>
     type="submit"
     fullWidth
     loading={loading}
-    className="bg-[#FF9933]! hover:bg-[#E07A12]! text-white! h-11! rounded-xl! shadow-lg shadow-[#FF9933]/25"
+    className="bg-[var(--auth-accent-dark)]! hover:bg-[color-mix(in_srgb,var(--auth-accent-dark)_82%,black)]! text-white! h-11! rounded-xl! shadow-lg"
+    style={{ ['--tw-shadow-color' as string]: 'var(--auth-accent-dark)' }}
   >
     Create account
   </Button>

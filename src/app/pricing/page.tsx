@@ -42,6 +42,21 @@ function isTestPriceEmail(email: string) {
   return TEST_PRICE_EMAILS.has(email.trim().toLowerCase())
 }
 
+// America-only accent re-theme. Every color below that used to be a
+// hardcoded saffron hex (#FF9933 / #E07A12) is now driven by these two
+// variables instead — Tailwind's bg-[#hex] arbitrary-value classes can't
+// take a runtime variable (they're statically extracted at build time), so
+// every one of those spots was switched to an inline `style` reading these
+// values. India (and every other tenant) still renders the exact same
+// saffron it always has, since ACCENT_BY_TENANT falls back to it.
+const ACCENT_BY_TENANT: Record<TenantId, { accent: string; accentDark: string; accentSoft: string }> = {
+  in: { accent: '#FF9933', accentDark: '#E07A12', accentSoft: 'rgba(255,153,51,.08)' },
+  us: { accent: '#3C3B6E', accentDark: '#2E2D57', accentSoft: 'rgba(60,59,110,.08)' }, // Old Glory Blue
+  ca: { accent: '#FF9933', accentDark: '#E07A12', accentSoft: 'rgba(255,153,51,.08)' },
+  uk: { accent: '#FF9933', accentDark: '#E07A12', accentSoft: 'rgba(255,153,51,.08)' },
+  au: { accent: '#FF9933', accentDark: '#E07A12', accentSoft: 'rgba(255,153,51,.08)' },
+}
+
 const plans = [
   {
     id: 'starter',
@@ -124,6 +139,7 @@ function PricingPageInner() {
   const tenant = getTenantConfig(tenantId) // reserved for future tenant-specific copy/branding on this page
   const gateway = GATEWAY_BY_TENANT[tenantId]
   const PLAN_PRICE = tenantId === 'in' ? PLAN_PRICE_INR : PLAN_PRICE_USD
+  const { accent, accentDark, accentSoft } = ACCENT_BY_TENANT[tenantId]
 
   const redirectAfter = searchParams.get('redirect') ?? '/dashboard'
 
@@ -261,7 +277,7 @@ const highest =
   if (pageLoading) {
     return (
       <main className="min-h-screen bg-[#F6F3EE] flex items-center justify-center">
-        <div className="w-6 h-6 border-2 border-[#FF9933] border-t-transparent rounded-full animate-spin" />
+        <div className="w-6 h-6 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: accent, borderTopColor: 'transparent' }} />
       </main>
     )
   }
@@ -273,7 +289,7 @@ const highest =
       className="min-h-screen px-4 py-14 sm:py-16"
       style={{
         background:
-          'radial-gradient(ellipse 60% 45% at 80% 8%, rgba(255,153,51,.08) 0%, transparent 60%),' +
+          `radial-gradient(ellipse 60% 45% at 80% 8%, ${accentSoft} 0%, transparent 60%),` +
           'radial-gradient(ellipse 55% 50% at 10% 95%, rgba(255,217,176,.18) 0%, transparent 65%),' +
           'linear-gradient(180deg,#F6F3EE 0%,#F1ECE3 100%)',
       }}
@@ -283,7 +299,9 @@ const highest =
         type="button"
         onClick={goBack}
         aria-label="Close and go back"
-        className="fixed top-5 right-5 sm:top-6 sm:right-6 z-50 h-11 w-11 rounded-full flex items-center justify-center bg-white/90 backdrop-blur border border-[#e8e1d6] text-[#6E685F] shadow-sm hover:text-[#1F1C18] hover:border-[#FF9933] hover:bg-white transition"
+        className="fixed top-5 right-5 sm:top-6 sm:right-6 z-50 h-11 w-11 rounded-full flex items-center justify-center bg-white/90 backdrop-blur border border-[#e8e1d6] text-[#6E685F] shadow-sm hover:text-[#1F1C18] hover:bg-white transition"
+        onMouseEnter={e => (e.currentTarget.style.borderColor = accent)}
+        onMouseLeave={e => (e.currentTarget.style.borderColor = '')}
       >
         <X size={18} />
       </button>
@@ -294,22 +312,22 @@ const highest =
             the initial signup journey — not for existing users upgrading
             from inside the dashboard/appearance settings. */}
         {(!currentPlan || currentPlan === 'free') && (
-          <JourneyProgress current="plan" className="max-w-[420px]" />
+          <JourneyProgress current="plan" className="max-w-[420px]" accentColor={accentDark} />
         )}
 
         {/* Header */}
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.2em] text-[#FF9933] mb-4">
-            <span className="w-5 h-px bg-[#FF9933]" />
+          <div className="inline-flex items-center gap-2.5 text-[11px] font-semibold uppercase tracking-[0.2em] mb-4" style={{ color: accent }}>
+            <span className="w-5 h-px" style={{ background: accent }} />
             {comingFrom?.includes('appearance') ? 'Unlock premium' : 'Plans & pricing'}
-            <span className="w-5 h-px bg-[#FF9933]" />
+            <span className="w-5 h-px" style={{ background: accent }} />
           </div>
           <h1
             className="text-[#1F1C18] font-normal tracking-tight"
             style={{ fontFamily: "'Fraunces','Instrument Serif',Georgia,serif", fontSize: 'clamp(2.2rem,4.6vw,3.4rem)', lineHeight: 1.05 }}
           >
             Choose the plan that<br className="hidden sm:block" />{' '}
-            <em style={{ fontStyle: 'italic', color: '#FF9933' }}>grows with you.</em>
+            <em style={{ fontStyle: 'italic', color: accent }}>grows with you.</em>
           </h1>
           <p className="text-[#6E685F] text-[15px] font-light leading-relaxed max-w-md mx-auto mt-4">
             {/* Start free and upgrade whenever you're ready. No lock-in — switch or cancel anytime from your dashboard. */}
@@ -318,7 +336,7 @@ const highest =
             <p className="mt-5 text-sm text-[#6E685F]">
               Already have an account?{' '}
               <Link href={`/login?redirect=${encodeURIComponent(`/pricing?redirect=${encodeURIComponent(redirectAfter)}`)}`}
-                className="text-[#E07A12] font-medium hover:underline">
+                className="font-medium hover:underline" style={{ color: accentDark }}>
                 Log in
               </Link>
             </p>
@@ -382,24 +400,16 @@ const highest =
             p-5 sm:p-6
             transition-all
             duration-300
-
-            ${
-              plan.highlight
-                ? `
-                  border border-[#FF9933]
-                  shadow-[0_14px_36px_rgba(255,153,51,0.13)]
-                  lg:scale-[1.015]
-                `
-                : `
-                  border border-[#ECE5D9]
-                  shadow-sm
-                  hover:shadow-lg
-                  hover:border-[#FF9933]/30
-                `
-            }
-
-            ${isActive ? 'ring-2 ring-[#FF9933]/20' : ''}
+            ${plan.highlight ? 'lg:scale-[1.015]' : 'hover:shadow-lg'}
+            ${!plan.highlight ? 'border border-[#ECE5D9] shadow-sm' : 'shadow-[var(--pricing-highlight-shadow)] border'}
           `}
+          style={
+            plan.highlight
+              ? { borderColor: accent, ['--pricing-highlight-shadow' as string]: `0 14px 36px ${accentSoft.replace(',.08)', ',.13)')}` }
+              : undefined
+          }
+          onMouseEnter={e => { if (!plan.highlight) e.currentTarget.style.borderColor = accent + '4D' }}
+          onMouseLeave={e => { if (!plan.highlight) e.currentTarget.style.borderColor = '' }}
         >
           {plan.badge && (
             <div
@@ -413,11 +423,11 @@ const highest =
                 rounded-full
                 text-[10px]
                 font-semibold
-                bg-[#FF9933]
                 text-white
                 shadow-md
                 whitespace-nowrap
               "
+              style={{ background: accent }}
             >
               {plan.badge}
             </div>
@@ -426,10 +436,10 @@ const highest =
           <div className="mb-4">
             <div className="flex items-center gap-1.5">
               {plan.id === 'pro' && (
-                <Crown size={13} className="text-[#FF9933]" />
+                <Crown size={13} style={{ color: accent }} />
               )}
               {plan.id === 'starter' && (
-                <Rocket size={13} className="text-[#FF9933]" />
+                <Rocket size={13} style={{ color: accent }} />
               )}
 
               <h2
@@ -476,22 +486,20 @@ const highest =
             loading={isBusy}
             onClick={() => handleSelectPlan(plan.id)}
             disabled={isActive}
-            className={
+            className={`h-10 rounded-lg ${plan.highlight ? 'text-white!' : ''}`}
+            style={
               plan.highlight
-                ? `
-                  h-10
-                  rounded-lg
-                  bg-[#FF9933]!
-                  hover:bg-[#E07A12]!
-                  text-white!
-                `
-                : `
-                  h-10
-                  rounded-lg
-                  hover:border-[#FF9933]!
-                  hover:text-[#FF9933]!
-                `
+                ? { background: accent }
+                : { }
             }
+            onMouseEnter={e => {
+              if (plan.highlight) e.currentTarget.style.background = accentDark
+              else { e.currentTarget.style.borderColor = accent; e.currentTarget.style.color = accent }
+            }}
+            onMouseLeave={e => {
+              if (plan.highlight) e.currentTarget.style.background = accent
+              else { e.currentTarget.style.borderColor = ''; e.currentTarget.style.color = '' }
+            }}
           >
             {isActive ? (
               <>
@@ -517,7 +525,7 @@ const highest =
                 key={feature}
                 className="flex items-start gap-2"
               >
-                <span className="mt-[3px] shrink-0 text-[#FF9933] text-[13px] leading-none">•</span>
+                <span className="mt-[3px] shrink-0 text-[13px] leading-none" style={{ color: accent }}>•</span>
 
                 <span className="text-[12px] leading-snug text-[#3D3A33]">
                   {feature}
@@ -547,7 +555,7 @@ const highest =
               <p className="flex items-center justify-center gap-1.5 text-[10.5px] text-gray-400">
                 <ShieldCheck
                   size={11}
-                  className="text-[#FF9933]"
+                  style={{ color: accent }}
                 />
                 Secure payment via {gateway === 'razorpay' ? 'Razorpay' : gateway === 'paypal' ? 'PayPal' : 'PayU'}
               </p>

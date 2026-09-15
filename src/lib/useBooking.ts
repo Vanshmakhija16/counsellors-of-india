@@ -28,6 +28,7 @@ export interface BookingPayload {
   duration_mins: number
   service_name?: string | null
   service_price?: number | null
+  pro_bono?: boolean
 }
 
 interface UseBookingOptions {

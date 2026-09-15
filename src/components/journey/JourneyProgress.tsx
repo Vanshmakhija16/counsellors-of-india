@@ -2,7 +2,7 @@
 
 import { Check } from 'lucide-react'
 
-const BRAND = '#FF9933'
+const DEFAULT_BRAND = '#FF9933'
 
 export type JourneyStep = 'account' | 'plan' | 'payment' | 'build'
 
@@ -16,6 +16,10 @@ const STEPS: { id: JourneyStep; label: string }[] = [
 interface Props {
   current: JourneyStep
   className?: string
+  /** Tenant accent color for the active step's circle/glow/label —
+   *  defaults to saffron so any call site that doesn't pass this renders
+   *  exactly what it did before. Completed steps stay green regardless. */
+  accentColor?: string
 }
 
 /**
@@ -25,8 +29,9 @@ interface Props {
  * dashboard's SetupWizard — link that page's onComplete to a similar visual
  * if you ever surface this strip inside the wizard too.
  */
-export default function JourneyProgress({ current, className = '' }: Props) {
+export default function JourneyProgress({ current, className = '', accentColor = DEFAULT_BRAND }: Props) {
   const currentIndex = STEPS.findIndex(s => s.id === current)
+  const BRAND = accentColor
 
   return (
     <div className={`w-full max-w-md mx-auto mb-8 ${className}`}>

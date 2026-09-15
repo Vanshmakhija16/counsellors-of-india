@@ -14,10 +14,13 @@ export default async function Home() {
 
   const tenant: HomeTenant = {
     brandName:      config.brandName,
+    logoPath:       config.logoPath,
     currencySymbol: config.currencySymbol,
     siteUrl:        config.siteUrl,
     footerTagline:  config.footerTagline,
     plans:          config.plans,
+    ctaColor:       config.primaryColor,
+    ctaColorDark:   config.primaryColorDark,
   }
 
   return <HomeClient tenant={tenant} />

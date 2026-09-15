@@ -32,7 +32,12 @@ export default async function ContactPage() {
   const tenant = await getCurrentTenant()
   return (
     <div className="flex min-h-screen flex-col bg-[#FFFCF8]">
-      <SiteNav tenant={{ brandName: tenant.brandName }} />
+      <SiteNav tenant={{
+        brandName: tenant.brandName,
+        logoPath: tenant.logoPath,
+        primaryColor: tenant.primaryColor,
+        primaryColorDark: tenant.primaryColorDark,
+      }} />
 
       {/* Hero + form, single composed section for tighter visual rhythm */}
       <section className="relative overflow-hidden px-6 pt-28 pb-24">
@@ -81,7 +86,7 @@ export default async function ContactPage() {
         </div>
       </section>
 
-      <SiteFooter tenant={{ brandName: tenant.brandName, footerTagline: tenant.footerTagline }} />
+      <SiteFooter tenant={{ brandName: tenant.brandName, footerTagline: tenant.footerTagline, logoPath: tenant.logoPath }} />
     </div>
   )
 }

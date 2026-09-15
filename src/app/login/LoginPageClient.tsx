@@ -17,17 +17,38 @@ export interface LoginPageClientProps {
    *  Undefined for tenants without a logo asset yet — AuthLayout falls
    *  back to a monogram/wordmark in that case. */
   logoPath?: string
+  /** Tenant accent colors threaded through to AuthLayout as CSS variables
+   *  (--auth-accent / --auth-accent-dark) — same pattern as
+   *  SignupPageClient. This form's own links/button reference those
+   *  variables instead of hardcoding saffron, so passing a different
+   *  accent here re-themes the whole login page. Defaults to saffron. */
+  accentColor?: string
+  accentColorDark?: string
+  /** Nudges the entire left-column content down a bit — currently used
+   *  for the American portal only. Passed through to AuthLayout's
+   *  contentClassName. */
+  contentClassName?: string
+  /** Classes for the logo+title+topLink header block — controls its own
+   *  vertical position AND the gap before the form below it (include both
+   *  a margin-top and margin-bottom utility). Defaults to the original
+   *  'mt-8 mb-1' spacing; overridden per-tenant from page.tsx. */
+  headerClassName?: string
+  /** Right brand panel background gradient — tenant override. */
+  panelBackground?: string
+  /** Right panel link hover color — tenant override. */
+  panelAccent?: string
 }
 
 export default function LoginPageClient(props: LoginPageClientProps) {
+  const headerClassName = props.headerClassName ?? 'mt-8 mb-1'
   return (
-    <Suspense fallback={<AuthLayout title="Welcome back" brandName={props.brandName} tagline={props.tagline} logoPath={props.logoPath}><div className="bg-white rounded-2xl border border-[#ece5d9] shadow-sm p-8"><div className="h-64" /></div></AuthLayout>}>
-      <LoginForm {...props} />
+    <Suspense fallback={<AuthLayout title="Welcome back" brandName={props.brandName} tagline={props.tagline} logoPath={props.logoPath} accentColor={props.accentColor} accentColorDark={props.accentColorDark} panelBackground={props.panelBackground} panelAccent={props.panelAccent} headerClassName={headerClassName} contentClassName={props.contentClassName}><div className="bg-white rounded-2xl border border-[#ece5d9] shadow-sm p-8"><div className="h-64" /></div></AuthLayout>}>
+      <LoginForm {...props} headerClassName={headerClassName} />
     </Suspense>
   )
 }
 
-function LoginForm({ brandName, tagline, logoPath }: LoginPageClientProps) {
+function LoginForm({ brandName, tagline, logoPath, accentColor, accentColorDark, contentClassName, headerClassName, panelBackground, panelAccent }: LoginPageClientProps) {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const supabase     = useSupabaseClient()
@@ -69,12 +90,19 @@ try {
       brandName={brandName}
       tagline={tagline}
       logoPath={logoPath}
+      accentColor={accentColor}
+      accentColorDark={accentColorDark}
+      headerClassName={headerClassName}
+      contentClassName={contentClassName}
+      panelBackground={panelBackground}
+      panelAccent={panelAccent}
       topLink={
         <span>
           Don&apos;t have an account?{' '}
           <Link
             href={`/signup${redirectTo !== '/dashboard' ? `?redirect=${encodeURIComponent(redirectTo)}` : ''}`}
-            className="text-[#E07A12] font-semibold hover:underline"
+            className="font-semibold hover:underline"
+            style={{ color: 'var(--auth-accent-dark)' }}
           >
             Create account
           </Link>
@@ -94,7 +122,8 @@ try {
             required
             value={email}
             onChange={e => setEmail(e.target.value)}
-            placeholder="priya@example.com"
+            placeholder="Enter your email here..."
+            className="placeholder:text-sm"
           />
 
           <div className="space-y-1.5">
@@ -102,7 +131,8 @@ try {
               <label className="text-sm font-medium text-gray-500">Password</label>
               <Link
                 href={`/forgot-password${email ? `?email=${encodeURIComponent(email)}` : ''}`}
-                className="text-xs text-[#E07A12] hover:underline"
+                className="text-xs hover:underline"
+                style={{ color: 'var(--auth-accent-dark)' }}
               >
                 Forgot password?
               </Link>
@@ -151,7 +181,8 @@ try {
               type="submit"
               fullWidth
               loading={loading}
-              className="bg-[#FF9933]! hover:bg-[#E07A12]! text-white! h-11! rounded-xl! shadow-lg shadow-[#FF9933]/25"
+              className="bg-[var(--auth-accent-dark)]! hover:bg-[color-mix(in_srgb,var(--auth-accent-dark)_82%,black)]! text-white! h-11! rounded-xl! shadow-lg"
+              style={{ ['--tw-shadow-color' as string]: 'var(--auth-accent-dark)' }}
             >
               Sign in
             </Button>

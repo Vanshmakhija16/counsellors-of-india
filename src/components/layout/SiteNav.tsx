@@ -9,17 +9,21 @@ import { Menu, X } from 'lucide-react'
 // full server-only TenantConfig. Default is India's exact original copy.
 export interface SiteNavTenant {
   brandName: string
+  logoPath?: string
+  /** Tenant brand color — defaults to India's saffron so any call site
+   *  that doesn't pass these yet renders exactly what it did before. */
+  primaryColor?: string
+  primaryColorDark?: string
 }
 
-const DEFAULT_TENANT: SiteNavTenant = { brandName: 'Counsellors of India' }
+const DEFAULT_TENANT: SiteNavTenant = { brandName: 'Counsellors of India', logoPath: '/coi.png' }
 
-// ── Shared design tokens — same warm-paper / saffron language as the blog
-// pages, so the nav now reads as one coherent site instead of homepage's
-// nav and this one being two unrelated designs. ─────────────────────────
+// ── Shared design tokens — same warm-paper language as the blog pages,
+// so the nav reads as one coherent site instead of two unrelated
+// designs. SAFFRON/SAFFRON_DEEP now come from the tenant prop instead
+// (see SiteNavTenant above) so this nav re-themes per-tenant. ──────────
 const INK = '#2B3B37'
 const INK_MUT = '#6B7570'
-const SAFFRON = '#FF9933'
-const SAFFRON_DEEP = '#E07A12'
 const RULE = '#E4DCC9'
 
 // Real site pages, not homepage in-page anchors — a visitor on /blog or
@@ -48,6 +52,8 @@ export default function SiteNav({ tenant = DEFAULT_TENANT }: { tenant?: SiteNavT
   const pathname = usePathname()
   const isActive = (href: string) => pathname === href
   const [brandFirst, brandRest] = tenant.brandName.split(' of ')
+  const SAFFRON = tenant.primaryColor ?? 'var(--wn-saffron, #FF9933)'
+  const SAFFRON_DEEP = tenant.primaryColorDark ?? 'var(--wn-saffron-deep, #E07A12)'
 
   useEffect(() => {
     let ticking = false
@@ -84,7 +90,7 @@ export default function SiteNav({ tenant = DEFAULT_TENANT }: { tenant?: SiteNavT
       <nav className={`sitenav ${scrolled ? 'is-scrolled' : ''}`}>
         <div className="sitenav-inner">
           <Link href="/" className="sitenav-logo">
-            <img src="/coi.png" alt="" className="sitenav-logo-img" />
+            <img src={tenant.logoPath ?? '/coi.png'} alt="" className="sitenav-logo-img" />
             <span className="sitenav-logo-text">
               {brandFirst}{brandRest ? <><br />of {brandRest}</> : null}
             </span>
@@ -131,7 +137,7 @@ export default function SiteNav({ tenant = DEFAULT_TENANT }: { tenant?: SiteNavT
       >
         <div className="sitenav-sheet-top">
           <Link href="/" className="sitenav-sheet-brand" onClick={() => setMenuOpen(false)}>
-            <img src="/coi.png" alt="" className="sitenav-sheet-brand-img" />
+            <img src={tenant.logoPath ?? '/coi.png'} alt="" className="sitenav-sheet-brand-img" />
             <span>{tenant.brandName}</span>
           </Link>
           <button
@@ -255,9 +261,13 @@ export default function SiteNav({ tenant = DEFAULT_TENANT }: { tenant?: SiteNavT
           font-weight: 600;
           text-decoration: none;
           white-space: nowrap;
-          transition: background .2s ease, transform .2s ease;
+          transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
         }
-        .sitenav-cta:hover{ background: #1c2825; transform: translateY(-1px); }
+        .sitenav-cta:hover{
+          background: ${SAFFRON};
+          transform: translateY(-1px);
+          box-shadow: 0 12px 18px -12px color-mix(in srgb, ${SAFFRON} 70%, transparent);
+        }
 
         .sitenav-menu-btn{
           display: none;
@@ -365,9 +375,9 @@ export default function SiteNav({ tenant = DEFAULT_TENANT }: { tenant?: SiteNavT
           text-decoration: none;
           transition: background .2s ease, color .2s ease;
         }
-        .sitenav-sheet-link:hover{ background: rgba(255, 153, 51, 0.08); }
+        .sitenav-sheet-link:hover{ background: color-mix(in srgb, ${SAFFRON} 10%, transparent); }
         .sitenav-sheet-link.is-active{
-          background: rgba(255, 153, 51, 0.1);
+          background: color-mix(in srgb, ${SAFFRON} 12%, transparent);
           color: ${SAFFRON_DEEP};
         }
 
@@ -382,6 +392,12 @@ export default function SiteNav({ tenant = DEFAULT_TENANT }: { tenant?: SiteNavT
           font-size: 14px;
           font-weight: 600;
           text-decoration: none;
+          transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
+        }
+        .sitenav-sheet-cta:hover{
+          background: ${SAFFRON};
+          transform: translateY(-1px);
+          box-shadow: 0 12px 18px -12px color-mix(in srgb, ${SAFFRON} 70%, transparent);
         }
 
         @media (prefers-reduced-motion: reduce){

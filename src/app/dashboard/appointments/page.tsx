@@ -13,6 +13,7 @@ import {
   type AppointmentStatus,
 } from '@/lib/clinical/appointments'
 import RescheduleModal from '@/components/dashboard/RescheduleModal'
+import { useTenantAccent } from '@/lib/useTenantAccent'
 
 type Tab = AppointmentStatus | 'all'
 
@@ -24,6 +25,7 @@ const TABS: { key: Tab; label: string }[] = [
 ]
 
 export default function AppointmentsPage() {
+  const { accent: BRAND, accentDark: BRAND_DARK, accentSoft: BRAND_SOFT } = useTenantAccent()
   const [appointments, setAppointments] = useState<Appointment[]>([])
   const [loading, setLoading] = useState(true)
   const [err, setErr] = useState<string | null>(null)
@@ -101,7 +103,7 @@ export default function AppointmentsPage() {
   }
 
   return (
-    <div className="p-5 sm:p-8 max-w-6xl">
+    <div className="p-5 sm:p-8 max-w-6xl" style={{ '--brand': BRAND, '--brand-dark': BRAND_DARK, '--brand-soft': BRAND_SOFT } as React.CSSProperties}>
       <div className="mb-6 flex items-start justify-between gap-4">
         <div>
           <h1
@@ -116,24 +118,24 @@ export default function AppointmentsPage() {
         </div>
       </div>
 
-      {/* Filters row */}
-      <div className="mb-5 grid gap-3 sm:grid-cols-[1fr_180px_auto]">
-        <div className="relative">
+      {/* Filters + tabs — all in one row (wraps on narrow screens) */}
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <div className="relative w-[280px] max-w-full">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af]" />
           <input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by name, email, or phone"
-            className="w-full h-11 pl-9 pr-4 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#FF9933] focus:border-transparent"
+            className="w-full h-11 pl-9 pr-4 rounded-full border border-gray-200 bg-white text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
           />
         </div>
-        <div className="relative">
+        <div className="relative w-[180px] max-w-full">
           <Calendar size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9ca3af] pointer-events-none" />
           <input
             type="date"
             value={dateFrom}
             onChange={(e) => setDateFrom(e.target.value)}
-            className="w-full h-11 pl-9 pr-3 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#FF9933] focus:border-transparent"
+            className="w-full h-11 pl-9 pr-3 rounded-full border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent"
           />
         </div>
         {(search || dateFrom) && (
@@ -145,10 +147,9 @@ export default function AppointmentsPage() {
             Clear
           </button>
         )}
-      </div>
 
-      {/* Tabs */}
-      <div className="flex gap-2 mb-5 flex-wrap">
+        <div className="hidden sm:block w-px h-7 bg-[#e8e4df] mx-1" />
+
         {TABS.map((t) => {
           const active = tab === t.key
           return (
@@ -158,8 +159,8 @@ export default function AppointmentsPage() {
               onClick={() => setTab(t.key)}
               className={`px-4 h-9 rounded-full text-xs font-medium border transition ${
                 active
-                  ? 'bg-[#1c1c1e] text-white border-[#1c1c1e]'
-                  : 'bg-white text-[#6b7280] border-[#e8e4df] hover:border-[#FF9933]'
+                  ? 'bg-white text-[var(--brand)] border-[var(--brand)] border-2'
+                  : 'bg-white text-[#6b7280] border-[#e8e4df] hover:border-[var(--brand)]'
               }`}
             >
               {t.label} ({counts[t.key]})
@@ -171,7 +172,7 @@ export default function AppointmentsPage() {
       <div className="bg-white rounded-xl border border-[#e8e4df] overflow-hidden">
         {loading ? (
           <div className="flex justify-center py-20">
-            <div className="animate-spin w-6 h-6 rounded-full border-2 border-[#FF9933] border-t-transparent" />
+            <div className="animate-spin w-6 h-6 rounded-full border-2 border-[var(--brand)] border-t-transparent" />
           </div>
         ) : err ? (
           <div className="p-6 text-sm text-red-700">{err}</div>
@@ -190,29 +191,31 @@ export default function AppointmentsPage() {
         ) : (
           <ul className="divide-y divide-[#e8e4df]">
             {filtered.map((apt) => (
-              <li key={apt.id} className="px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-                <div className="w-10 h-10 rounded-full bg-[#FFEFD9] text-[#9A5200] flex items-center justify-center shrink-0">
-                  <User size={16} />
+              <li key={apt.id} className="px-4 sm:px-5 py-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+                <div className="flex items-start gap-3 sm:contents">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0" style={{ background: BRAND_SOFT, color: BRAND_DARK }}>
+                    <User size={16} />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="text-sm font-semibold text-[#1c1c1e] truncate">{apt.client_name}</p>
+                      <StatusPill status={apt.status} />
+                    </div>
+                    <div className="mt-0.5 flex items-center flex-wrap gap-x-3 gap-y-0.5 text-xs text-[#6b7280]">
+                      <span className="inline-flex items-center gap-1">
+                        <Calendar size={12} /> {formatDate(apt.scheduled_at)}
+                      </span>
+                      <span className="inline-flex items-center gap-1">
+                        <Clock size={12} /> {formatTime(apt.scheduled_at)} · {apt.duration_mins} min
+                      </span>
+                      {apt.client_email && <span className="truncate">{apt.client_email}</span>}
+                      {apt.client_phone && <span>{apt.client_phone}</span>}
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <p className="text-sm font-semibold text-[#1c1c1e] truncate">{apt.client_name}</p>
-                    <StatusPill status={apt.status} />
-                  </div>
-                  <div className="mt-0.5 flex items-center flex-wrap gap-x-3 gap-y-0.5 text-xs text-[#6b7280]">
-                    <span className="inline-flex items-center gap-1">
-                      <Calendar size={12} /> {formatDate(apt.scheduled_at)}
-                    </span>
-                    <span className="inline-flex items-center gap-1">
-                      <Clock size={12} /> {formatTime(apt.scheduled_at)} · {apt.duration_mins} min
-                    </span>
-                    {apt.client_email && <span>{apt.client_email}</span>}
-                    {apt.client_phone && <span>{apt.client_phone}</span>}
-                  </div>
-                </div>
-
-                <div className="flex items-center flex-wrap gap-2 shrink-0 pl-12 sm:pl-0">
+                <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:gap-2 shrink-0">
                   {/* Every status is reachable from every other status — not just the
                       "natural" next step — so a therapist can freely correct a
                       mis-click at any time (e.g. jump straight from Completed
@@ -222,7 +225,7 @@ export default function AppointmentsPage() {
                       type="button"
                       onClick={() => setStatus(apt, 'upcoming')}
                       disabled={updatingId === apt.id}
-                      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
+                      className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 w-full sm:w-auto"
                     >
                       Upcoming
                     </button>
@@ -232,7 +235,7 @@ export default function AppointmentsPage() {
                       type="button"
                       onClick={() => setReschedulingApt(apt)}
                       disabled={updatingId === apt.id}
-                      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50"
+                      className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg border border-gray-200 text-xs font-medium text-gray-700 hover:bg-gray-50 transition disabled:opacity-50 w-full sm:w-auto"
                     >
                       <RotateCw size={11} /> Reschedule
                     </button>
@@ -242,7 +245,8 @@ export default function AppointmentsPage() {
                       type="button"
                       onClick={() => setStatus(apt, 'completed')}
                       disabled={updatingId === apt.id}
-                      className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg bg-[#FF9933] text-white text-xs font-medium hover:bg-[#E07A12] transition disabled:opacity-50"
+                      className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg text-white text-xs font-medium transition disabled:opacity-50 w-full sm:w-auto hover:brightness-95"
+                      style={{ background: BRAND }}
                     >
                       {updatingId === apt.id ? <Loader2 size={11} className="animate-spin" /> : <CheckCircle size={11} />}
                       Mark complete
@@ -252,7 +256,7 @@ export default function AppointmentsPage() {
                     type="button"
                     onClick={() => handleDelete(apt)}
                     disabled={deletingId === apt.id}
-                    className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg border border-red-200 text-red-600 text-xs font-medium hover:bg-red-50 transition disabled:opacity-50"
+                    className="inline-flex items-center justify-center gap-1.5 h-8 px-3 rounded-lg border border-red-200 text-red-600 text-xs font-medium hover:bg-red-50 transition disabled:opacity-50 w-full sm:w-auto"
                   >
                     {deletingId === apt.id ? <Loader2 size={11} className="animate-spin" /> : <Trash2 size={11} />}
                     Delete

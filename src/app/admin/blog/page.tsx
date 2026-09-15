@@ -104,55 +104,55 @@ export default function AdminBlogPage() {
   }
 
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="p-8 max-w-5xl" style={{ fontFamily: 'var(--font-instrument-sans)' }}>
       <div className="flex items-center justify-between mb-8">
         <div>
           <h1
-            className="text-3xl font-semibold text-[#1c1c1e]"
+            className="text-3xl font-semibold text-[#F5F1EA]"
             style={{ fontFamily: 'var(--font-fraunces), serif' }}
           >
             Blog posts
           </h1>
-          <p className="text-sm text-[#6b7280] mt-1">Admin-only &middot; Write, edit, and publish journal posts</p>
+          <p className="text-sm text-[#9C9385] mt-1">Admin-only &middot; Write, edit, and publish journal posts</p>
         </div>
         <button
           onClick={() => { resetForm(); setShowForm(true) }}
-          className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg bg-[#354744] text-white text-sm font-medium hover:bg-[#1a2f2d] transition"
+          className="inline-flex items-center gap-1.5 h-10 px-4 rounded-lg bg-[#FF9933] text-[#1A1815] text-sm font-semibold hover:bg-[#FFA64D] transition"
         >
           <Plus size={15} /> New post
         </button>
       </div>
 
-      <div className="flex items-start gap-3 rounded-lg border border-[#e8e4df] bg-[#fdf8f6] px-4 py-3 mb-6">
-        <AlertCircle size={15} className="text-[#6b7280] mt-0.5 shrink-0" />
-        <div className="text-xs text-[#6b7280] space-y-1">
+      <div className="flex items-start gap-3 rounded-lg border border-white/[0.08] bg-white/[0.03] px-4 py-3 mb-6">
+        <AlertCircle size={15} className="text-[#7A7568] mt-0.5 shrink-0" />
+        <div className="text-xs text-[#9C9385] space-y-1">
           <p>
-            This area is gated by <code className="bg-gray-100 px-1 rounded">therapists.role = 'admin'</code>.
-            Only published posts appear on the public <code className="bg-gray-100 px-1 rounded">/blog</code> page.
-            Content is written in Markdown &mdash; use <code className="bg-gray-100 px-1 rounded">## heading</code>,{' '}
-            <code className="bg-gray-100 px-1 rounded">**bold**</code>, and blank lines between paragraphs.
+            This area is gated by <code className="bg-white/[0.08] text-[#C9C3B5] px-1 rounded">therapists.role = 'admin'</code>.
+            Only published posts appear on the public <code className="bg-white/[0.08] text-[#C9C3B5] px-1 rounded">/blog</code> page.
+            Content is written in Markdown &mdash; use <code className="bg-white/[0.08] text-[#C9C3B5] px-1 rounded">## heading</code>,{' '}
+            <code className="bg-white/[0.08] text-[#C9C3B5] px-1 rounded">**bold**</code>, and blank lines between paragraphs.
           </p>
           <p>
             Posts render in a page-flipping book reader, so write short, natural paragraphs
             (3&ndash;5 sentences, under ~80 words) rather than long blocks of text &mdash; break to a
             new paragraph whenever the idea shifts, vary sentence length, and add a{' '}
-            <code className="bg-gray-100 px-1 rounded">##</code>/<code className="bg-gray-100 px-1 rounded">###</code>{' '}
+            <code className="bg-white/[0.08] text-[#C9C3B5] px-1 rounded">##</code>/<code className="bg-white/[0.08] text-[#C9C3B5] px-1 rounded">###</code>{' '}
             subheading roughly every 300&ndash;400 words so each page has room to breathe.
           </p>
         </div>
       </div>
 
       {err && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 mb-4">{err}</div>
+        <div className="rounded-lg border border-red-500/30 bg-red-500/[0.08] px-4 py-3 text-sm text-red-400 mb-4">{err}</div>
       )}
 
       {showForm && (
-        <div className="bg-white rounded-xl border border-[#e8e4df] p-6 mb-6 space-y-4">
+        <div className="bg-[#18181B] rounded-xl border border-white/[0.08] p-6 mb-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-[#1c1c1e]" style={{ fontFamily: 'var(--font-fraunces), serif' }}>
+            <h2 className="text-sm font-semibold text-[#F5F1EA]" style={{ fontFamily: 'var(--font-fraunces), serif' }}>
               {editingId ? 'Edit post' : 'New post'}
             </h2>
-            <button onClick={resetForm} className="text-[#9ca3af] hover:text-[#1c1c1e]" aria-label="Close">
+            <button onClick={resetForm} className="text-[#7A7568] hover:text-[#F5F1EA]" aria-label="Close">
               <X size={16} />
             </button>
           </div>
@@ -182,21 +182,21 @@ export default function AdminBlogPage() {
             <input value={form.tags} onChange={(e) => setForm({ ...form, tags: e.target.value })} className={inputCls} placeholder="practice growth, marketing" />
           </Field>
 
-          <label className="flex items-center gap-2 text-sm text-[#1c1c1e] cursor-pointer">
-            <input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} className="w-4 h-4" />
+          <label className="flex items-center gap-2 text-sm text-[#F5F1EA] cursor-pointer">
+            <input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} className="w-4 h-4 accent-[#FF9933]" />
             Published (visible on the public /blog page)
           </label>
 
           {formErr && (
-            <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs text-red-700">{formErr}</div>
+            <div className="rounded-lg border border-red-500/30 bg-red-500/[0.08] px-3 py-2 text-xs text-red-400">{formErr}</div>
           )}
 
           <div className="flex justify-end gap-3 pt-2">
-            <button onClick={resetForm} className="h-10 px-4 rounded-lg border border-gray-200 text-sm font-medium text-gray-700 hover:bg-gray-50 transition">
+            <button onClick={resetForm} className="h-10 px-4 rounded-lg border border-white/[0.1] text-sm font-medium text-[#C9C3B5] hover:bg-white/[0.05] transition">
               Cancel
             </button>
             <button onClick={handleSave} disabled={saving}
-              className="h-10 px-5 rounded-lg bg-[#354744] text-white text-sm font-medium hover:bg-[#1a2f2d] disabled:opacity-40 flex items-center gap-2 transition">
+              className="h-10 px-5 rounded-lg bg-[#FF9933] text-[#1A1815] text-sm font-semibold hover:bg-[#FFA64D] disabled:opacity-40 flex items-center gap-2 transition">
               {saving ? <><Loader2 size={13} className="animate-spin" /> Saving&hellip;</> : 'Save post'}
             </button>
           </div>
@@ -205,42 +205,42 @@ export default function AdminBlogPage() {
 
       {loading ? (
         <div className="flex justify-center py-16">
-          <div className="animate-spin w-6 h-6 rounded-full border-2 border-[#a3b8b4] border-t-transparent" />
+          <div className="animate-spin w-6 h-6 rounded-full border-2 border-white/[0.15] border-t-[#FF9933]" />
         </div>
       ) : posts.length === 0 ? (
-        <div className="bg-white rounded-xl border border-[#e8e4df] px-6 py-16 text-center">
-          <PenLine size={28} className="text-[#e8e4df] mx-auto mb-3" />
-          <p className="text-sm text-[#6b7280]">No posts yet. Add one above.</p>
+        <div className="bg-[#18181B] rounded-xl border border-white/[0.08] px-6 py-16 text-center">
+          <PenLine size={28} className="text-white/[0.12] mx-auto mb-3" />
+          <p className="text-sm text-[#9C9385]">No posts yet. Add one above.</p>
         </div>
       ) : (
         <ul className="space-y-3">
           {posts.map((p) => (
-            <li key={p.id} className="bg-white rounded-xl border border-[#e8e4df] p-5 flex items-start gap-4">
-              <div className="w-9 h-9 rounded-lg bg-[#d4e4e1] text-[#2d4a47] flex items-center justify-center shrink-0">
+            <li key={p.id} className="bg-[#18181B] rounded-xl border border-white/[0.08] p-5 flex items-start gap-4">
+              <div className="w-9 h-9 rounded-lg bg-[#FF9933]/[0.12] text-[#FFB565] flex items-center justify-center shrink-0">
                 <PenLine size={16} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <p className="text-sm font-semibold text-[#1c1c1e]">{p.title}</p>
-                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border uppercase tracking-wide ${p.published ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`}>
+                  <p className="text-sm font-semibold text-[#F5F1EA]">{p.title}</p>
+                  <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border uppercase tracking-wide ${p.published ? 'bg-emerald-500/[0.12] text-emerald-400 border-emerald-500/30' : 'bg-white/[0.05] text-[#7A7568] border-white/[0.1]'}`}>
                     {p.published ? 'Published' : 'Draft'}
                   </span>
                 </div>
-                <p className="text-xs font-mono text-[#9ca3af]">/blog/{p.slug}</p>
-                {p.excerpt && <p className="text-xs text-[#6b7280] mt-1">{p.excerpt}</p>}
+                <p className="text-xs font-mono text-[#7A7568]">/blog/{p.slug}</p>
+                {p.excerpt && <p className="text-xs text-[#9C9385] mt-1">{p.excerpt}</p>}
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 <button onClick={() => handleTogglePublish(p)}
-                  className="h-8 w-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:text-[#2d4a47] hover:border-[#b8ceca] transition"
+                  className="h-8 w-8 rounded-lg border border-white/[0.1] flex items-center justify-center text-[#7A7568] hover:text-[#FFB565] hover:border-[#FF9933]/40 transition"
                   aria-label={p.published ? 'Unpublish' : 'Publish'} title={p.published ? 'Unpublish' : 'Publish'}>
                   {p.published ? <EyeOff size={13} /> : <Eye size={13} />}
                 </button>
                 <button onClick={() => startEdit(p)}
-                  className="h-8 px-3 rounded-lg border border-gray-200 flex items-center gap-1.5 text-xs font-medium text-gray-700 hover:bg-gray-50 transition">
+                  className="h-8 px-3 rounded-lg border border-white/[0.1] flex items-center gap-1.5 text-xs font-medium text-[#C9C3B5] hover:bg-white/[0.05] transition">
                   Edit
                 </button>
                 <button onClick={() => handleDelete(p)}
-                  className="h-8 w-8 rounded-lg border border-gray-200 flex items-center justify-center text-gray-400 hover:text-red-600 hover:border-red-200 transition">
+                  className="h-8 w-8 rounded-lg border border-white/[0.1] flex items-center justify-center text-[#7A7568] hover:text-red-400 hover:border-red-500/30 transition">
                   <Trash2 size={13} />
                 </button>
               </div>
@@ -252,12 +252,12 @@ export default function AdminBlogPage() {
   )
 }
 
-const inputCls = 'w-full px-3 py-2 rounded-lg border border-gray-200 bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#a3b8b4]'
+const inputCls = 'w-full px-3 py-2 rounded-lg border border-white/[0.1] bg-[#101012] text-sm text-[#F5F1EA] placeholder:text-[#7A7568] focus:outline-none focus:ring-2 focus:ring-[#FF9933]/40 focus:border-[#FF9933]/50'
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="block text-xs font-medium text-gray-600 mb-1.5">{label}</label>
+      <label className="block text-xs font-medium text-[#9C9385] mb-1.5">{label}</label>
       {children}
     </div>
   )
