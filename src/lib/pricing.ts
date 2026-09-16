@@ -33,8 +33,8 @@ const PLAN_PRICE_ENV: Record<string, string | undefined> = {
 }
 
 const DEFAULT_DEV_PLAN_PRICES_USD: Record<string, number> = {
-  starter: 19,
-  pro: 39,
+  starter: 180,
+  pro: 230,
 }
 
 const PLAN_PRICE_ENV_USD: Record<string, string | undefined> = {

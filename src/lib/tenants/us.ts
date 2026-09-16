@@ -1,8 +1,19 @@
+import { start } from 'repl'
 import type { TenantConfig } from './types'
 
 // America — first expansion tenant. Config exists and resolves correctly
 // via middleware, but isLive stays false until Phase 5 (branding/copy) and
 // Phase 6 (legal pages) are done — see MULTI_COUNTRY_EXPANSION_POA.md.
+
+
+const starterPrice = process.env.PLAN_PRICE_STARTER_USD ?? '180'
+const proPrice = process.env.PLAN_PRICE_PRO_USD ?? '230'
+
+
+if (!starterPrice || !proPrice) {
+  throw new Error('US pricing environment variables are missing')
+}
+
 export const usTenant: TenantConfig = {
   id: 'us',
   domains: [
@@ -50,8 +61,8 @@ export const usTenant: TenantConfig = {
       id: 'starter',
       name: 'Starter',
       tagline: 'Get started quickly',
-      price: '$19',
-      period: '/ month',
+      price: starterPrice,
+      period: '/ year',
       hi: false,
       recommended: false,
       feats: [
@@ -71,8 +82,8 @@ export const usTenant: TenantConfig = {
       id: 'pro',
       name: 'PRO',
       tagline: 'Best for growing practices',
-      price: '$39',
-      period: '/ month',
+      price: proPrice,
+      period: '/ year',
       hi: true,
       recommended: true,
       feats: [
@@ -95,6 +106,7 @@ export const usTenant: TenantConfig = {
   // mark for now rather than showing a text/monogram fallback. Swap this
   // to a real America-specific logo path once one exists.
   logoPath: '/COA2.png',
+  faviconPath: '/COA.png',
 
   // Old Glory Blue -- see the isUs branch in src/app/signup/page.tsx for
   // the earlier, narrower signup-page-only version of this; this makes it

@@ -99,15 +99,16 @@ export async function generateMetadata(): Promise<Metadata> {
       googleBot: { index: true, follow: true },
     },
 
-    // Site favicon / browser-tab icon — uses the real COI brand mark
-    // (same file already used for the navbar logo) instead of the stale
-    // default favicon.ico that was showing up in Google search results.
+    // Site favicon / browser-tab icon — uses this tenant's own logo mark
+    // when one exists (e.g. America's /COA2.png), falling back to the COI
+    // brand mark for tenants without a dedicated logo asset yet. Same file
+    // already used for the navbar logo, so the tab icon always matches.
     icons: {
       icon: [
-        { url: '/coi.png', type: 'image/png' },
+        { url: tenant.faviconPath ?? tenant.logoPath ?? '/coi.png', type: 'image/png' },
       ],
-      shortcut: '/coi.png',
-      apple: '/coi.png',
+      shortcut: tenant.faviconPath ?? tenant.logoPath ?? '/coi.png',
+      apple: tenant.faviconPath ?? tenant.logoPath ?? '/coi.png',
     },
   }
 }

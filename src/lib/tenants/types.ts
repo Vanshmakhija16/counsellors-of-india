@@ -120,6 +120,12 @@ export interface TenantConfig {
    *  unset, rather than ever fabricating a placeholder logo image. */
   logoPath?: string
 
+  /** Path (under /public) to this tenant's browser-tab favicon. Falls back
+   *  to logoPath, then to the COI mark, when unset — see layout.tsx's
+   *  generateMetadata(). Only needed when the favicon should differ from
+   *  the navbar logo (e.g. a simplified/cropped mark). */
+  faviconPath?: string
+
   // ── Site-wide brand color ──────────────────────────────────────────
   // Threaded into the DOM as CSS custom properties by RootLayout (see
   // layout.tsx) so every page's CSS -- globals.css, page.css, and any
