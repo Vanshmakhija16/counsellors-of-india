@@ -14,6 +14,12 @@ if (!starterPrice || !proPrice) {
   throw new Error('US pricing environment variables are missing')
 }
 
+// Homepage pricing cards (HomeClient.tsx) render `price` as a raw display
+// string, same as India's hardcoded '₹1,499' -- so USD needs its own $
+// prefix here rather than a bare number.
+const starterPriceDisplay = `$${starterPrice}`
+const proPriceDisplay = `$${proPrice}`
+
 export const usTenant: TenantConfig = {
   id: 'us',
   domains: [
@@ -61,7 +67,7 @@ export const usTenant: TenantConfig = {
       id: 'starter',
       name: 'Starter',
       tagline: 'Get started quickly',
-      price: starterPrice,
+      price: starterPriceDisplay,
       period: '/ year',
       hi: false,
       recommended: false,
@@ -82,7 +88,7 @@ export const usTenant: TenantConfig = {
       id: 'pro',
       name: 'PRO',
       tagline: 'Best for growing practices',
-      price: proPrice,
+      price: proPriceDisplay,
       period: '/ year',
       hi: true,
       recommended: true,
