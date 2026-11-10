@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import SiteNav from '@/components/layout/SiteNav'
 import SiteFooter from '@/components/layout/SiteFooter'
+import FooterReveal from '@/components/landing/FooterReveal'
 import { ArrowUpRight, ArrowRight, Check, X } from 'lucide-react'
 import { getCurrentTenant } from '@/lib/tenants/server'
 
@@ -40,6 +41,14 @@ const REASONS = [
 
 export default async function WhyUsPage() {
   const tenant = await getCurrentTenant()
+  // Accent colors: India keeps its original saffron values exactly; every
+  // other tenant (e.g. America) uses its own brand colors instead.
+  const isIndia = tenant.id === 'in'
+  const BRAND = isIndia ? '#FF9933' : tenant.primaryColor
+  const BRAND_LIGHT = isIndia ? '#FFB866' : tenant.primaryColor
+  const BRAND_DEEP = isIndia ? '#C97A1F' : tenant.primaryColorDark
+  const BRAND_LABEL = isIndia ? '#B4600F' : tenant.primaryColorDark
+  const BRAND_TINT = isIndia ? 'rgba(255,153,51,0.08)' : `color-mix(in srgb, ${tenant.primaryColor} 8%, transparent)`
   return (
     <div
       style={{
@@ -79,7 +88,7 @@ export default async function WhyUsPage() {
             style={{ maxWidth: '18ch', color: '#1C1814' }}
           >
             Stop paying for{' '}
-            <span style={{ color: '#FFB866', textDecoration: 'line-through', textDecorationColor: '#FFB866', textDecorationThickness: '2px' }}>
+            <span style={{ color: BRAND_LIGHT, textDecoration: 'line-through', textDecorationColor: BRAND_LIGHT, textDecorationThickness: '2px' }}>
               five different tools.
             </span>
           </h1>
@@ -102,19 +111,19 @@ export default async function WhyUsPage() {
                 <span key={tool} className="flex items-center gap-2.5">
                   <span
                     className="text-[14px] font-semibold"
-                    style={{ color: '#C97A1F', textDecoration: 'line-through', textDecorationColor: '#FF9933' }}
+                    style={{ color: BRAND_DEEP, textDecoration: 'line-through', textDecorationColor: BRAND }}
                   >
                     {tool}
                   </span>
                   {i < arr.length - 1 && (
-                    <span className="text-[13px] font-semibold" style={{ color: '#FF9933' }}>+</span>
+                    <span className="text-[13px] font-semibold" style={{ color: BRAND }}>+</span>
                   )}
                 </span>
               ))}
             </div>
 
             <div className="flex items-center gap-3">
-              <ArrowRight size={16} strokeWidth={2.2} style={{ color: '#FF9933' }} />
+              <ArrowRight size={16} strokeWidth={2.2} style={{ color: BRAND }} />
               <span className="text-[15px] font-bold" style={{ color: '#1C1814' }}>
                 One {tenant.brandName} account
               </span>
@@ -125,7 +134,7 @@ export default async function WhyUsPage() {
             <Link
               href="/signup"
               className="inline-flex items-center gap-2 text-[15px] font-semibold transition-opacity hover:opacity-60"
-              style={{ color: '#FF9933' }}
+              style={{ color: BRAND }}
             >
               List your practice
               <ArrowUpRight size={15} strokeWidth={2.2} />
@@ -180,10 +189,10 @@ export default async function WhyUsPage() {
             </span>
             <div
               className="flex items-center gap-2 rounded-t-2xl py-4 pl-8"
-              style={{ background: 'rgba(255,153,51,0.08)' }}
+              style={{ background: BRAND_TINT }}
             >
-              <span className="h-1.5 w-1.5 rounded-full" style={{ background: '#FF9933' }} />
-              <span className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: '#B4600F' }}>
+              <span className="h-1.5 w-1.5 rounded-full" style={{ background: BRAND }} />
+              <span className="text-[11px] font-semibold uppercase tracking-[0.14em]" style={{ color: BRAND_LABEL }}>
                 {tenant.brandName}
               </span>
             </div>
@@ -198,20 +207,20 @@ export default async function WhyUsPage() {
                   className="grid gap-3 sm:grid-cols-[140px_1fr_1.15fr] sm:items-stretch sm:gap-12"
                   style={{ borderBottom: isLast ? 'none' : '1px solid #DDD6CB' }}
                 >
-                  <div className="pt-6 text-[11px] font-semibold uppercase tracking-[0.1em] sm:pb-6" style={{ color: '#B4600F' }}>
+                  <div className="pt-6 text-[11px] font-semibold uppercase tracking-[0.1em] sm:pb-6" style={{ color: BRAND_LABEL }}>
                     {label}
                   </div>
 
                   <div className="flex items-start gap-2.5 pb-3 sm:pt-6 sm:pb-6">
-                    <X size={14} strokeWidth={2.25} className="mt-[3px] shrink-0" style={{ color: '#C97A1F' }} />
+                    <X size={14} strokeWidth={2.25} className="mt-[3px] shrink-0" style={{ color: BRAND_DEEP }} />
                     <span className="text-[14.5px] leading-[1.7]" style={{ color: '#3A3530' }}>{oldWay}</span>
                   </div>
 
                   <div
                     className={`mb-3 flex items-start gap-3 rounded-xl px-4 py-3.5 sm:mb-0 sm:rounded-none sm:px-8 sm:py-6 ${isLast ? 'sm:rounded-b-2xl' : ''}`}
-                    style={{ background: 'rgba(255,153,51,0.08)' }}
+                    style={{ background: BRAND_TINT }}
                   >
-                    <Check size={15} strokeWidth={2.75} className="mt-[3px] shrink-0" style={{ color: '#FF9933' }} />
+                    <Check size={15} strokeWidth={2.75} className="mt-[3px] shrink-0" style={{ color: BRAND }} />
                     <span className="text-[15.5px] font-semibold leading-[1.7]" style={{ color: '#1C1814' }}>{ourWay}</span>
                   </div>
                 </div>
@@ -309,7 +318,7 @@ export default async function WhyUsPage() {
             <Link
               href="/signup"
               className="inline-flex items-center gap-2 text-[15px] font-semibold transition-opacity hover:opacity-60"
-              style={{ color: '#FF9933' }}
+              style={{ color: BRAND }}
             >
               List your practice
               <ArrowUpRight size={15} strokeWidth={2.2} />
@@ -319,6 +328,7 @@ export default async function WhyUsPage() {
       </section>
 
       <SiteFooter tenant={{ brandName: tenant.brandName, footerTagline: tenant.footerTagline, logoPath: tenant.logoPath }} />
+      <FooterReveal wordmark={tenant.brandName} />
     </div>
   )
 }

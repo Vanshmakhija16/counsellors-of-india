@@ -176,7 +176,7 @@ export default function SiteNavbar({ tenant = DEFAULT_TENANT }: { tenant?: SiteN
 
         <div className="sidebar-top">
           <div className="sidebar-brand">
-            <img src="/coi.png" alt={tenant.brandName} />
+            <img src={tenant.logoPath ?? '/coi.png'} alt={tenant.brandName} />
             <h3>{tenant.brandName}</h3>
           </div>
 

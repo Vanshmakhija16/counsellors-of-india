@@ -30,6 +30,7 @@ export default async function SignupPage() {
     <SignupPageClient
       defaultCountryIso={tenant.defaultCountryIso}
       domainDisplay={domainDisplay}
+      siteUrl={tenant.siteUrl}
       brandName={tenant.brandName}
       tagline={tenant.footerTagline}
       logoPath={tenant.logoPath}

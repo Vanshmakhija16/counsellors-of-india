@@ -4,6 +4,21 @@ import { useState, useRef, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { ArrowLeft, ArrowRight, Check, MapPin } from 'lucide-react'
 
+// Accent colors for the guide. Defaults are India's original saffron values,
+// so any call site that doesn't pass `colors` renders exactly what it did
+// before. Other tenants (e.g. America) pass their own brand colors.
+export interface OnboardingStepsColors {
+  brand: string   // dots, rail line, active step, buttons
+  hover: string   // button hover
+  label: string   // "Stop n of 7" label
+}
+
+const DEFAULT_COLORS: OnboardingStepsColors = {
+  brand: '#FF9933',
+  hover: '#E07A12',
+  label: '#B4600F',
+}
+
 const STEPS = [
   {
     n: 1,
@@ -80,7 +95,7 @@ const STEPS = [
 function StepBody({ s }: { s: (typeof STEPS)[number] }) {
   return (
     <>
-      <div className="mb-1 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[#B4600F]">
+      <div className="mb-1 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-wider text-[color:var(--ob-label)]">
         <MapPin size={13} /> Stop {s.n} of {STEPS.length}
       </div>
       <h3
@@ -96,7 +111,7 @@ function StepBody({ s }: { s: (typeof STEPS)[number] }) {
         <ul className="mb-4 grid grid-cols-1 gap-x-6 gap-y-2 sm:grid-cols-2">
           {s.list.map(item => (
             <li key={item} className="flex items-center gap-2 text-[14px] text-[#4A453D]">
-              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#FF9933]" />
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-[color:var(--ob-brand)]" />
               {item}
             </li>
           ))}
@@ -119,85 +134,79 @@ function StepBody({ s }: { s: (typeof STEPS)[number] }) {
   )
 }
 
-export default function OnboardingSteps() {
+export default function OnboardingSteps({ colors = DEFAULT_COLORS }: { colors?: OnboardingStepsColors } = {}) {
   const [current, setCurrent] = useState(1)
   const [reducedMotion, setReducedMotion] = useState(false)
   const isFirst = current === 1
   const isLast = current === STEPS.length
 
-  const wrapperRef = useRef<HTMLDivElement>(null)
+  const scrollerRef = useRef<HTMLDivElement>(null)
   const rafId = useRef<number | null>(null)
 
   useEffect(() => {
     setReducedMotion(window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   }, [])
 
-  // ── Pin-and-scrub: the wrapper below is tall (STEPS.length × 100vh). Its
-  // inner panel is `position: sticky; top: X`, so as long as you're scrolling
-  // through that tall region the panel stays visually locked on screen — the
-  // "main page" doesn't move — while we read how far into that region the
-  // window has scrolled and swap which step is shown. Once you scroll past
-  // the wrapper (or back above it), it's ordinary page scroll again. No
-  // preventDefault/wheel-hijacking needed — native scroll does the locking.
   useEffect(() => {
-    if (reducedMotion) return
-
-    function updateFromScroll() {
-      const wrapper = wrapperRef.current
-      if (!wrapper) return
-      const total = wrapper.offsetHeight - window.innerHeight
-      if (total <= 0) return
-      const rectTop = wrapper.getBoundingClientRect().top
-      const progress = Math.min(1, Math.max(0, -rectTop / total))
-      const idx = Math.min(STEPS.length - 1, Math.floor(progress * STEPS.length))
-      setCurrent(idx + 1)
-    }
-
-    function onScroll() {
-      if (rafId.current) cancelAnimationFrame(rafId.current)
-      rafId.current = requestAnimationFrame(updateFromScroll)
-    }
-
-    updateFromScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll)
     return () => {
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
       if (rafId.current) cancelAnimationFrame(rafId.current)
     }
-  }, [reducedMotion])
+  }, [])
 
-  // Rail clicks / Back-Next: scroll the window to the middle of that step's
-  // slice of the wrapper's scroll range, so the sticky panel lands on it.
+  // ── The white box is its own scroll container. Scrolling with the mouse
+  // wheel / trackpad / touch while the pointer is over it moves between
+  // steps INSIDE the box (each step snaps into place) — the page behind it
+  // does not move. Once you reach the first/last step, any further scroll
+  // naturally continues on the page (normal scroll chaining), so nothing is
+  // ever trapped. No wheel-hijacking or scroll-locking involved.
+  const onScroll = useCallback(() => {
+    if (rafId.current) cancelAnimationFrame(rafId.current)
+    rafId.current = requestAnimationFrame(() => {
+      const el = scrollerRef.current
+      if (!el) return
+      const kids = Array.from(el.children) as HTMLElement[]
+      let best = 0
+      let bestDist = Infinity
+      kids.forEach((kid, i) => {
+        const dist = Math.abs(kid.offsetTop - el.scrollTop)
+        if (dist < bestDist) {
+          bestDist = dist
+          best = i
+        }
+      })
+      setCurrent(best + 1)
+    })
+  }, [])
+
+  // Rail clicks / Previous-Next: scroll the box (not the page) to that step.
   const go = useCallback(
     (n: number) => {
+      const el = scrollerRef.current
+      if (!el) return
       const target = Math.min(STEPS.length, Math.max(1, n))
-
-      if (reducedMotion) {
-        setCurrent(target)
-        return
-      }
-
-      const wrapper = wrapperRef.current
-      if (!wrapper) return
-      const total = wrapper.offsetHeight - window.innerHeight
-      const wrapperTop = wrapper.getBoundingClientRect().top + window.scrollY
-      const sliceProgress = (target - 0.5) / STEPS.length
-      window.scrollTo({ top: wrapperTop + sliceProgress * total, behavior: 'smooth' })
+      const kid = el.children[target - 1] as HTMLElement | undefined
+      if (!kid) return
+      el.scrollTo({ top: kid.offsetTop, behavior: reducedMotion ? 'auto' : 'smooth' })
     },
     [reducedMotion]
   )
 
   return (
-    <div className="mx-auto max-w-5xl px-6 py-16">
+    <div
+      className="mx-auto max-w-5xl px-6 py-16"
+      style={{
+        ['--ob-brand' as string]: colors.brand,
+        ['--ob-hover' as string]: colors.hover,
+        ['--ob-label' as string]: colors.label,
+      } as React.CSSProperties}
+    >
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[260px_1fr] lg:items-start lg:gap-10">
         {/* ── VERTICAL RAIL ─────────────────────────────────────────── */}
-        <div className="relative lg:sticky lg:top-28">
+        <div className="relative">
           {/* connecting line */}
           <div className="absolute left-5 top-5 bottom-5 w-px bg-[#E3D9C8]" />
           <div
-            className="absolute left-5 top-5 w-px bg-[#FF9933] transition-all duration-500"
+            className="absolute left-5 top-5 w-px bg-[color:var(--ob-brand)] transition-all duration-500"
             style={{
               height:
                 STEPS.length > 1 ? `calc((100% - 2.5rem) * ${(current - 1) / (STEPS.length - 1)})` : '0px',
@@ -222,10 +231,10 @@ export default function OnboardingSteps() {
                     <span
                       className={`relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border-2 text-[13px] font-bold transition-all duration-300 ${
                         active
-                          ? 'border-[#FF9933] bg-[#FF9933] text-white shadow-[0_0_0_5px_rgba(255,153,51,0.16)]'
+                          ? 'border-[color:var(--ob-brand)] bg-[color:var(--ob-brand)] text-white shadow-[0_0_0_5px_color-mix(in_srgb,var(--ob-brand)_16%,transparent)]'
                           : done
-                          ? 'border-[#FF9933] bg-white text-[#FF9933]'
-                          : 'border-[#E3D9C8] bg-white text-[#B7AC98] group-hover:border-[#FF9933]/50'
+                          ? 'border-[color:var(--ob-brand)] bg-white text-[color:var(--ob-brand)]'
+                          : 'border-[#E3D9C8] bg-white text-[#B7AC98] group-hover:border-[color:color-mix(in_srgb,var(--ob-brand)_50%,transparent)]'
                       }`}
                     >
                       {done ? <Check size={16} /> : s.n}
@@ -249,74 +258,57 @@ export default function OnboardingSteps() {
           </ol>
         </div>
 
-        {/* ── RIGHT COLUMN ─────────────────────────────────────────── */}
-        {reducedMotion ? (
-          // Reduced-motion fallback: no scroll-jack, just a normal stacked list.
-          <div className="flex flex-col gap-6">
+        {/* ── RIGHT COLUMN: the scrollable box ───────────────────────── */}
+        <div className="flex h-[75vh] max-h-[640px] min-h-[420px] flex-col overflow-hidden rounded-3xl border border-[#ECE5D9] bg-white shadow-[0_1px_2px_rgba(31,28,24,0.04),0_20px_50px_-24px_rgba(31,28,24,0.14)]">
+          <div
+            ref={scrollerRef}
+            onScroll={onScroll}
+            tabIndex={0}
+            role="region"
+            aria-label="Onboarding steps. Scroll to move between steps."
+            className="relative min-h-0 flex-1 snap-y snap-mandatory overflow-y-auto outline-none [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          >
             {STEPS.map(s => (
-              <div
-                key={s.n}
-                className="rounded-3xl border border-[#ECE5D9] bg-white p-8 shadow-[0_1px_2px_rgba(31,28,24,0.04),0_20px_50px_-24px_rgba(31,28,24,0.14)] sm:p-10"
-              >
-                <StepBody s={s} />
+              <div key={s.n} className="flex min-h-full snap-start snap-always flex-col p-8 sm:p-10">
+                <div className="flex-1">
+                  <StepBody s={s} />
+                </div>
+                {s.n === STEPS.length && (
+                  <p className="mt-4 text-[11px] text-[#B7AC98]">Keep scrolling to return to the page.</p>
+                )}
               </div>
             ))}
           </div>
-        ) : (
-          <div ref={wrapperRef} className="relative" style={{ height: `${STEPS.length * 100}vh` }}>
-            <div className="sticky top-[12vh] h-[75vh] max-h-[640px] overflow-hidden rounded-3xl border border-[#ECE5D9] bg-white shadow-[0_1px_2px_rgba(31,28,24,0.04),0_20px_50px_-24px_rgba(31,28,24,0.14)]">
-              <div className="relative h-full">
-                {STEPS.map(s => (
-                  <div
-                    key={s.n}
-                    aria-hidden={s.n !== current}
-                    className="absolute inset-0 flex flex-col overflow-y-auto p-8 pb-24 transition-opacity duration-300 ease-out sm:p-10 sm:pb-28"
-                    style={{
-                      opacity: s.n === current ? 1 : 0,
-                      pointerEvents: s.n === current ? 'auto' : 'none',
-                    }}
-                  >
-                    <div className="flex-1">
-                      <StepBody s={s} />
-                    </div>
-                    {s.n === STEPS.length && (
-                      <p className="mt-4 text-[11px] text-[#B7AC98]">Keep scrolling to return to the page.</p>
-                    )}
-                  </div>
-                ))}
-              </div>
 
-              {/* pinned fallback controls — scroll is primary, these are secondary */}
-              <div className="absolute inset-x-0 bottom-0 z-10 flex items-center justify-between border-t border-[#ECE5D9] bg-white p-6 sm:px-10">
-                <button
-                  type="button"
-                  onClick={() => go(current - 1)}
-                  disabled={isFirst}
-                  className="flex items-center gap-1.5 rounded-full border border-[#ECE5D9] bg-white px-5 py-2.5 text-[13.5px] font-semibold text-[#1F1C18] transition hover:border-[#FF9933]/40 disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  <ArrowLeft size={14} /> Previous stop
-                </button>
+          {/* controls — scrolling inside the box is primary, these are secondary */}
+          <div className="z-10 flex shrink-0 items-center justify-between border-t border-[#ECE5D9] bg-white p-6 sm:px-10">
+            <button
+              type="button"
+              onClick={() => go(current - 1)}
+              disabled={isFirst}
+              className="flex items-center gap-1.5 rounded-full border border-[#ECE5D9] bg-white px-5 py-2.5 text-[13.5px] font-semibold text-[#1F1C18] transition hover:border-[color:color-mix(in_srgb,var(--ob-brand)_40%,transparent)] disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              <ArrowLeft size={14} /> Previous stop
+            </button>
 
-                {isLast ? (
-                  <Link
-                    href="/signup"
-                    className="flex items-center gap-1.5 rounded-full bg-[#FF9933] px-5 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-[#E07A12]"
-                  >
-                    Create your account <ArrowRight size={14} />
-                  </Link>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => go(current + 1)}
-                    className="flex items-center gap-1.5 rounded-full bg-[#FF9933] px-5 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-[#E07A12]"
-                  >
-                    Next stop <ArrowRight size={14} />
-                  </button>
-                )}
-              </div>
-            </div>
+            {isLast ? (
+              <Link
+                href="/signup"
+                className="flex items-center gap-1.5 rounded-full bg-[color:var(--ob-brand)] px-5 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-[color:var(--ob-hover)]"
+              >
+                Create your account <ArrowRight size={14} />
+              </Link>
+            ) : (
+              <button
+                type="button"
+                onClick={() => go(current + 1)}
+                className="flex items-center gap-1.5 rounded-full bg-[color:var(--ob-brand)] px-5 py-2.5 text-[13.5px] font-semibold text-white transition hover:bg-[color:var(--ob-hover)]"
+              >
+                Next stop <ArrowRight size={14} />
+              </button>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   )

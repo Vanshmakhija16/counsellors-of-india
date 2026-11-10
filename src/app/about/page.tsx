@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import SiteNav from '@/components/layout/SiteNav'
 import SiteFooter from '@/components/layout/SiteFooter'
+import FooterReveal from '@/components/landing/FooterReveal'
 import { ArrowUpRight } from 'lucide-react'
 import { getCurrentTenant } from '@/lib/tenants/server'
 
@@ -345,6 +346,7 @@ export default async function AboutPage() {
       </section>
 
       <SiteFooter tenant={{ brandName: tenant.brandName, footerTagline: tenant.footerTagline, logoPath: tenant.logoPath }} />
+      <FooterReveal wordmark={tenant.brandName} />
     </div>
   )
 }

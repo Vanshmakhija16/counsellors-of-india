@@ -500,6 +500,7 @@ export default function UnifiedContentEditor({
                 )}
               </div>
             </Accordion>
+            )}
 
             {/* Carousel slides */}
             <Accordion label="Carousel Slides — Quotes, Stats, Testimonials">

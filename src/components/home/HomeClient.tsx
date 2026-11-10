@@ -229,8 +229,11 @@ const TESTIS = [
 ]
 
 /* ─────────────────────────────────────────────────────────────────
-   THERAPIST CARD
+   THERAPIST CARD`
 ───────────────────────────────────────────────────────────────── */
+
+
+
 function TherapistCard({ t }: { t: any }) {
   const name   = t.full_name || t.name || 'Unnamed'
   const photo  = t.photo_url || ''
@@ -1567,6 +1570,8 @@ function FaqItem({ q, a, idx }: { q: string; a: string; idx: number }) {
 // original hardcoded copy, so the homepage renders byte-for-byte what it
 // did before for anyone whose request resolves to the 'in' tenant.
 export interface HomeTenant {
+  /** Country the portal serves, used in FAQ copy (e.g. 'India', 'America'). Defaults to India. */
+  countryName?: string
   brandName: string
   logoPath?: string
   currencySymbol: string
@@ -2198,7 +2203,7 @@ export default function HomeClient({ tenant = DEFAULT_HOME_TENANT }: { tenant?: 
             {[
               {
                 q: `Who can list a practice on ${tenant.brandName}?`,
-                a: 'Any dedicated counsellor, psychologist, or psychotherapist practising in India. We verify credentials before your profile goes live to keep the network trustworthy for clients.',
+                a: `Any dedicated counsellor, psychologist, or psychotherapist practising in ${tenant.countryName ?? 'India'}. We verify credentials before your profile goes live to keep the network trustworthy for clients.`,
               },
               {
                 q: 'How long does it take to set up my profile?',
