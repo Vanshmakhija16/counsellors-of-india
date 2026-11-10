@@ -43,7 +43,7 @@ export default async function ContactPage() {
       {/* Hero + form, single composed section for tighter visual rhythm */}
       <section className="relative overflow-hidden px-6 pt-28 pb-24">
         {/* Layered ambient glow — two soft blurs instead of one stray circle */}
-        <div className="pointer-events-none absolute -top-32 right-[-8%] h-[440px] w-[440px] rounded-full bg-[#FF9933] opacity-[0.08] blur-[110px]" />
+        <div className="pointer-events-none absolute -top-32 right-[-8%] h-[440px] w-[440px] rounded-full bg-[color:var(--wn-saffron)] opacity-[0.08] blur-[110px]" />
         <div className="pointer-events-none absolute -bottom-40 left-[-10%] h-[380px] w-[380px] rounded-full bg-[#456554] opacity-[0.06] blur-[100px]" />
 
         <div className="relative mx-auto grid max-w-5xl items-start gap-16 lg:grid-cols-[1.05fr_1fr] lg:gap-20">
@@ -63,11 +63,11 @@ export default async function ContactPage() {
             <div className="mt-10 relative flex flex-col gap-9">
               {/* Connecting vertical line running through the node centers —
                   turns this into a step-by-step journey instead of a flat list. */}
-              <div className="absolute left-5 top-5 bottom-5 w-px bg-gradient-to-b from-[#FF9933]/40 via-[#FF9933]/20 to-transparent" aria-hidden="true" />
+              <div className="absolute left-5 top-5 bottom-5 w-px bg-gradient-to-b from-[rgba(var(--wn-brand-rgb),0.4)] via-[rgba(var(--wn-brand-rgb),0.2)] to-transparent" aria-hidden="true" />
 
               {TRUST_POINTS(`hello@${tenant.siteUrl.replace(/^https?:\/\/(www\.)?/, '')}`).map(({ icon: Icon, title, body }, i) => (
                 <div key={title} className="relative flex items-start gap-4">
-                  <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#FF9933]/25 bg-white text-[#B4600F] shadow-[0_2px_8px_rgba(255,153,51,0.12)]">
+                  <div className="relative z-10 flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[rgba(var(--wn-brand-rgb),0.25)] bg-white text-[color:var(--wn-brand-ink)] shadow-[0_2px_8px_rgba(var(--wn-brand-rgb),0.12)]">
                     <Icon size={16} strokeWidth={1.8} />
 
                   </div>

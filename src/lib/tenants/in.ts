@@ -98,4 +98,6 @@ export const inTenant: TenantConfig = {
   primaryColor: '#FF9933',
   primaryColorDark: '#E07A12',
   primaryColorSoft: '#FFD9B0',
+  // Original contact-page icon colour (previously hardcoded as #B4600F).
+  primaryColorInk: '#B4600F',
 }

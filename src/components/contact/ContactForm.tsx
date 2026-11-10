@@ -37,7 +37,7 @@ export default function ContactForm() {
   if (status === 'sent') {
     return (
       <div className="rounded-3xl border border-[#ECE5D9] bg-white p-10 text-center shadow-[0_1px_2px_rgba(31,28,24,0.04),0_16px_40px_-20px_rgba(31,28,24,0.12)]">
-        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[#FF9933]/10 text-[#FF9933]">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-[rgba(var(--wn-brand-rgb),0.1)] text-[color:var(--wn-saffron)]">
           <CheckCircle2 size={24} />
         </div>
         <h3
@@ -54,7 +54,7 @@ export default function ContactForm() {
   }
 
   const inputClass =
-    'w-full rounded-xl border border-[#ECE5D9] bg-[#FFFCF8] px-4 py-3 text-[14px] text-[#1F1C18] outline-none transition-all duration-150 placeholder:text-[#A89F94] focus:border-[#FF9933] focus:bg-white focus:ring-4 focus:ring-[#FF9933]/12'
+    'w-full rounded-xl border border-[#ECE5D9] bg-[#FFFCF8] px-4 py-3 text-[14px] text-[#1F1C18] outline-none transition-all duration-150 placeholder:text-[#A89F94] focus:border-[color:var(--wn-saffron)] focus:bg-white focus:ring-4 focus:ring-[rgba(var(--wn-brand-rgb),0.12)]'
 
   return (
     <form
@@ -63,7 +63,7 @@ export default function ContactForm() {
     >
       <div className="mb-5">
         <label className="mb-1.5 block text-[12.5px] font-medium text-[#4A453D]">
-          Full name <span className="text-[#FF9933]">*</span>
+          Full name <span className="text-[color:var(--wn-saffron)]">*</span>
         </label>
         <input
           required
@@ -76,7 +76,7 @@ export default function ContactForm() {
 
       <div className="mb-5">
         <label className="mb-1.5 block text-[12.5px] font-medium text-[#4A453D]">
-          Email address <span className="text-[#FF9933]">*</span>
+          Email address <span className="text-[color:var(--wn-saffron)]">*</span>
         </label>
         <input
           required
@@ -90,7 +90,7 @@ export default function ContactForm() {
 
       <div className="mb-5">
         <label className="mb-1.5 block text-[12.5px] font-medium text-[#4A453D]">
-          Mobile number <span className="text-[#FF9933]">*</span>
+          Mobile number <span className="text-[color:var(--wn-saffron)]">*</span>
         </label>
         <input
           required
@@ -124,7 +124,7 @@ export default function ContactForm() {
       <button
         type="submit"
         disabled={status === 'sending'}
-        className="flex w-full items-center justify-center gap-2 rounded-full bg-[#FF9933] px-6 py-3.5 text-[14px] font-semibold text-white transition-all duration-150 hover:bg-[#E07A12] hover:shadow-[0_8px_20px_-8px_rgba(255,153,51,0.55)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:shadow-none"
+        className="flex w-full items-center justify-center gap-2 rounded-full bg-[color:var(--wn-saffron)] px-6 py-3.5 text-[14px] font-semibold text-white transition-all duration-150 hover:bg-[color:var(--wn-saffron-deep)] hover:shadow-[0_8px_20px_-8px_rgba(var(--wn-brand-rgb),0.55)] active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:shadow-none"
       >
         {status === 'sending' ? (
           <>

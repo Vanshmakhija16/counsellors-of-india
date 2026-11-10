@@ -156,4 +156,10 @@ export interface TenantConfig {
    *  everywhere else). Falls back to primaryColorDark when unset — see
    *  layout.tsx's --wn-accent wiring. */
   accentColor?: string
+
+  /** Readable "ink" shade of the brand color for small icons/text on a
+   *  white background (e.g. the contact page's icon glyphs). Falls back to
+   *  primaryColorDark when unset — see layout.tsx's --wn-brand-ink wiring.
+   *  India sets this to its original #B4600F so its rendering is unchanged. */
+  primaryColorInk?: string
 }

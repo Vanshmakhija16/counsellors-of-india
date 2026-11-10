@@ -27,8 +27,8 @@
 .pfoot-glow{
   position: absolute; inset: 0; pointer-events: none; z-index: 0;
   background:
-    radial-gradient(ellipse 55% 45% at 12% 0%, rgba(255,153,51,.10) 0%, transparent 60%),
-    radial-gradient(ellipse 45% 40% at 92% 100%, rgba(255,153,51,.06) 0%, transparent 65%);
+    radial-gradient(ellipse 55% 45% at 12% 0%, rgba(var(--wn-brand-rgb, 255,153,51),.10) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 40% at 92% 100%, rgba(var(--wn-brand-rgb, 255,153,51),.06) 0%, transparent 65%);
 }
 .pfoot-inner{
   position: relative; z-index: 2;

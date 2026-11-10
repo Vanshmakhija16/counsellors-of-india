@@ -152,6 +152,12 @@ export default async function RootLayout({
     // dark brand shade for tenants (like India) that don't set a distinct
     // accentColor, so this is a no-op unless a tenant opts in.
     '--wn-accent': tenant.accentColor ?? tenant.primaryColorDark,
+    // Raw "R, G, B" of the primary brand color, for rgba(var(--wn-brand-rgb), a)
+    // in places Tailwind/CSS can't derive an alpha variant from a hex var.
+    // India resolves to '255, 153, 51' — identical to the old hardcoded values.
+    '--wn-brand-rgb': rgb,
+    // Readable shade for small icons/text on white (falls back to the dark shade).
+    '--wn-brand-ink': tenant.primaryColorInk ?? tenant.primaryColorDark,
   } as React.CSSProperties
 
   return (
