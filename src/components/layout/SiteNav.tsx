@@ -252,19 +252,27 @@ export default function SiteNav({ tenant = DEFAULT_TENANT }: { tenant?: SiteNavT
         .sitenav-cta{
           display: inline-flex;
           align-items: center;
+          justify-content: center;
           height: 42px;
-          padding: 0 20px;
+          padding: 0 22px;
           border-radius: 999px;
-          background: ${INK};
-          color: #fff;
-          font-size: 13px;
-          font-weight: 600;
+          background-color: rgba(255, 255, 255, 0.85);
+          background-image: linear-gradient(${SAFFRON}, ${SAFFRON});
+          background-repeat: no-repeat;
+          background-position: bottom;
+          background-size: 100% 0%;
+          border: 1.5px solid ${SAFFRON};
+          color: ${SAFFRON};
+          font-size: 13.5px;
+          font-weight: 500;
           text-decoration: none;
           white-space: nowrap;
-          transition: background .2s ease, transform .2s ease, box-shadow .2s ease;
+          box-shadow: 0 6px 16px -10px color-mix(in srgb, ${SAFFRON} 55%, transparent);
+          transition: background-size .4s cubic-bezier(.22,.87,.36,1), color .3s ease, transform .2s ease, box-shadow .2s ease;
         }
         .sitenav-cta:hover{
-          background: ${SAFFRON};
+          background-size: 100% 100%;
+          color: #fff;
           transform: translateY(-1px);
           box-shadow: 0 12px 18px -12px color-mix(in srgb, ${SAFFRON} 70%, transparent);
         }

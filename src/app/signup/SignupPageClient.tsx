@@ -25,6 +25,12 @@ export interface SignupPageClientProps {
   /** Domain shown in the "your public web address will be ___/username"
    *  preview, e.g. 'counsellorsofindia.com/', tenant-specific. */
   domainDisplay: string
+  /** Canonical production URL for this tenant, e.g.
+   *  'https://www.counselorsofamerica.com' (no trailing slash). Used to
+   *  build the OTP email's emailRedirectTo link so it always points at the
+   *  real production domain, regardless of what host the signup page
+   *  itself happened to be loaded from (e.g. a local/staging hostname). */
+  siteUrl: string
   /** Tenant brand name/tagline for the AuthLayout branding panel, e.g.
    *  'Counsellors of India' vs 'Counsellors of America'. */
   brandName: string
@@ -70,7 +76,7 @@ export default function SignupPageClient(props: SignupPageClientProps) {
   )
 }
 
-function SignupForm({ defaultCountryIso, domainDisplay, brandName, tagline, logoPath, accentColor, accentColorDark, journeyAccentColor, contentClassName, headerClassName, panelBackground, panelAccent }: SignupPageClientProps) {
+function SignupForm({ defaultCountryIso, domainDisplay, siteUrl, brandName, tagline, logoPath, accentColor, accentColorDark, journeyAccentColor, contentClassName, headerClassName, panelBackground, panelAccent }: SignupPageClientProps) {
   const router       = useRouter()
   const searchParams = useSearchParams()
   const supabase     = useSupabaseClient()
@@ -337,7 +343,11 @@ function SignupForm({ defaultCountryIso, domainDisplay, brandName, tagline, logo
         // 6-digit code, send them to our callback route (not the site
         // root) with a flag telling it this is a signup, not a
         // password-reset — see src/app/auth/callback/route.ts.
-        emailRedirectTo: `${window.location.origin}/auth/callback?next=signup`,
+        // Built from the tenant's real production siteUrl (NOT
+        // window.location.origin) so the emailed link always points at
+        // the live domain even when signup was loaded from a local/staging
+        // hostname (e.g. counsellorsofamerica.local:3000).
+        emailRedirectTo: `${siteUrl}/auth/callback?next=signup`,
       },
     })
 
@@ -570,7 +580,7 @@ with the design and details you chose. </p> </div>
         disabled={resendIn > 0 || otpSending}
         onClick={async () => {
           setOtpSending(true); setOtpError('')
-          const { error: rErr } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo: `${window.location.origin}/auth/callback?next=signup` } })
+          const { error: rErr } = await supabase.auth.signInWithOtp({ email, options: { shouldCreateUser: true, emailRedirectTo: `${siteUrl}/auth/callback?next=signup` } })
           if (rErr) setOtpError(rErr.message); else setResendIn(45)
           setOtpSending(false)
         }}

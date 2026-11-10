@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import Link from 'next/link'
+import './SiteFooter.css'
 
 // Minimal branding shape the footer actually renders — kept separate from
 // the full TenantConfig so this client component doesn't need to import

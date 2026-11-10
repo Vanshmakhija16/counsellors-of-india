@@ -1,0 +1,113 @@
+/* ═══════════════════════════════════════════════════════════════
+   SITE FOOTER (.pfoot) — shared styles for <SiteFooter />
+
+   These rules used to live only in src/app/page.css, which is imported
+   by the homepage (and blog). Every other marketing page (About, Why Us,
+   Onboarding Guide, Contact) rendered <SiteFooter /> without them, so the
+   footer showed up unstyled (giant logo, bare links). The component now
+   imports this file itself, so it looks the same on every page.
+
+   The CSS variables it needs are declared on .pfoot below (same values as
+   the :root ones in page.css) so it never depends on page.css being loaded.
+═══════════════════════════════════════════════════════════════ */
+.pfoot{
+  --surf-dark: #14110C;
+  --surf-1: #FFFCF8;
+  --display: 'Plus Jakarta Sans','Inter',system-ui,sans-serif;
+  --sans: 'Inter',system-ui,-apple-system,sans-serif;
+  --section-x: clamp(24px, 6vw, 96px);
+
+  position: relative;
+  z-index: 5;
+  background: var(--surf-dark, #14110C);
+  color: rgba(255,255,255,.72);
+  overflow: hidden;
+  padding: clamp(4.5rem, 9vw, 7rem) calc(var(--section-x, clamp(1.5rem, 6vw, 6rem)) + 2.75rem) clamp(2.6rem, 5vw, 3.4rem);
+}
+.pfoot-glow{
+  position: absolute; inset: 0; pointer-events: none; z-index: 0;
+  background:
+    radial-gradient(ellipse 55% 45% at 12% 0%, rgba(255,153,51,.10) 0%, transparent 60%),
+    radial-gradient(ellipse 45% 40% at 92% 100%, rgba(255,153,51,.06) 0%, transparent 65%);
+}
+.pfoot-inner{
+  position: relative; z-index: 2;
+  max-width: 1360px;
+  margin: 0 auto;
+}
+
+/* ── top: brand + link columns ── */
+.pfoot-top{
+  display: flex;
+  flex-wrap: wrap;
+  gap: clamp(3rem, 6vw, 5rem);
+  align-items: start;
+}
+.pfoot-brand{ flex: 0 1 440px; max-width: 440px; }
+.pfoot-col{ flex: 0 0 auto; min-width: 130px; }
+.pfoot-col:nth-of-type(2){ margin-left: clamp(1rem, 3vw, 2.5rem); }
+@media(max-width: 900px){
+  .pfoot-top{ gap: 2.4rem 3rem; }
+  .pfoot-brand{ max-width: none; }
+}
+@media(max-width: 760px){
+  .pfoot-top{ flex-direction: column; gap: 1.4rem; }
+  .pfoot-col:nth-of-type(2){
+    margin-left: 0;
+    margin-top: 3.6rem;
+  }
+  /* .pfoot-brand's 440px flex-basis is meant for desktop row width; in
+     column direction it would apply to height and leave a huge gap. */
+  .pfoot-brand{ flex: 0 0 auto; }
+}
+
+.pfoot-logo{
+  display: inline-flex; align-items: center; gap: 14px;
+  text-decoration: none; color: #fff;
+  font-family: var(--display); font-size: 17px; font-weight: 500;
+  letter-spacing: -.01em; line-height: 1.15;
+}
+.pfoot-logo-img{
+  height: 58px;
+  width: auto;
+  object-fit: contain;
+  flex-shrink: 0;
+  background: var(--surf-1, #FFFCF8);
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(0,0,0,.28);
+}
+.pfoot-tag{
+  margin: 1.3rem 0 0;
+  font-family: var(--sans); font-size: 14.5px; font-weight: 300; line-height: 1.75;
+  color: rgba(255,255,255,.5);
+  max-width: 38ch;
+}
+
+/* ── link columns ── */
+.pfoot-col-h{
+  font-family: var(--sans); font-size: 12.5px; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
+  color: rgba(255,255,255,.4); margin-bottom: 1.2rem;
+}
+.pfoot-col-list{ list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: .85rem; }
+.pfoot-col-list a{
+  font-family: var(--sans); font-size: 14.5px; font-weight: 400;
+  color: rgba(255,255,255,.65); text-decoration: none;
+  transition: color .2s ease;
+}
+.pfoot-col-list a:hover{ color: var(--wn-saffron, #FF9933); }
+
+/* ── bottom bar ── */
+.pfoot-bottom{
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 1.2rem;
+  margin-top: 1rem;
+}
+.pfoot-bottom-l{
+  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  font-family: var(--sans); font-size: 13.5px; font-weight: 400;
+  color: rgba(255,255,255,.4);
+}
+@media(max-width: 480px){
+  .pfoot-bottom{ flex-direction: column; align-items: flex-start; }
+}

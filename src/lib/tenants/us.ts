@@ -107,6 +107,7 @@ export const usTenant: TenantConfig = {
 
   
   defaultCountryIso: 'US',
+  countryName: 'America',
 
   // TEMP: no dedicated America logo asset exists yet, so reuse the India
   // mark for now rather than showing a text/monogram fallback. Swap this

@@ -113,6 +113,11 @@ export interface TenantConfig {
    *  still change it — this is just a sensible default. */
   defaultCountryIso: string
 
+  /** Human-facing country name used in marketing copy, e.g. the homepage
+   *  FAQ ("...practising in America"). Optional — India's copy falls back
+   *  to 'India' when unset, so the live India site is unchanged. */
+  countryName?: string
+
   /** Path (under /public) to this tenant's real logo mark, e.g. '/coi.png'.
    *  Only set this once a real logo asset exists for the tenant — leave it
    *  undefined otherwise. Auth screens (and anywhere else that shows a

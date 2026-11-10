@@ -6866,7 +6866,7 @@ padding:
   background:
     radial-gradient(
       circle,
-      rgba(255,153,51,0.35),
+      color-mix(in srgb, var(--wn-saffron, #ff9933) 35%, transparent),
       transparent 70%
     );
 
@@ -6887,7 +6887,7 @@ padding:
   background:
     radial-gradient(
       circle,
-      rgba(255,190,92,0.28),
+      color-mix(in srgb, var(--wn-saffron-soft, #ffbe5c) 60%, transparent),
       transparent 70%
     );
 
@@ -6946,7 +6946,7 @@ padding:
   background: rgba(255,255,255,0.18);
 
   box-shadow:
-    0 10px 30px rgba(255,153,51,0.25);
+    0 10px 30px color-mix(in srgb, var(--wn-saffron, #ff9933) 25%, transparent);
 }
 
 .mobile-sidebar.show{
@@ -7063,8 +7063,8 @@ padding:
   background:
     linear-gradient(
       135deg,
-      rgba(99,102,241,0.14),
-      rgba(168,85,247,0.10)
+      color-mix(in srgb, var(--wn-saffron, #ff9933) 14%, transparent),
+      color-mix(in srgb, var(--wn-saffron-deep, #e07a12) 10%, transparent)
     );
 
   opacity: 0;
@@ -7080,7 +7080,7 @@ padding:
   transform: translateX(8px) scale(1.02);
 
   box-shadow:
-    0 12px 28px rgba(99,102,241,0.12);
+    0 12px 28px color-mix(in srgb, var(--wn-saffron, #ff9933) 12%, transparent);
 }
 
 /* CARD */
@@ -7493,7 +7493,7 @@ padding:
 .mobile-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(255, 153, 51, 0.08);
+  background: color-mix(in srgb, var(--wn-saffron, #ff9933) 8%, transparent);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   opacity: 0;
@@ -7533,10 +7533,10 @@ padding:
 
   overflow-y: auto;
 
-  border-left: 1px solid rgba(255, 153, 51, 0.15);
+  border-left: 1px solid color-mix(in srgb, var(--wn-saffron, #ff9933) 15%, transparent);
 
   box-shadow:
-    -20px 0 60px rgba(255, 153, 51, 0.12);
+    -20px 0 60px color-mix(in srgb, var(--wn-saffron, #ff9933) 12%, transparent);
 }
 
 .mobile-sidebar.show {
@@ -7544,7 +7544,7 @@ padding:
 }
 
 /* ========================================
-   ORANGE GLOW
+   BRAND GLOW (tenant colour)
 ======================================== */
 
 .sidebar-glow {
@@ -7557,7 +7557,7 @@ padding:
 
   border-radius: 50%;
 
-  background: rgba(255, 153, 51, 0.15);
+  background: color-mix(in srgb, var(--wn-saffron, #ff9933) 15%, transparent);
 
   filter: blur(80px);
 
@@ -7637,14 +7637,14 @@ padding:
 }
 
 .sidebar-links a span {
-  color: #ff9933;
+  color: var(--wn-saffron, #ff9933);
   font-size: 0.8rem;
   font-weight: 700;
   min-width: 24px;
 }
 
 .sidebar-links a:hover {
-  background: rgba(255, 153, 51, 0.08);
+  background: color-mix(in srgb, var(--wn-saffron, #ff9933) 8%, transparent);
   transform: translateX(6px);
 }
 
@@ -7658,7 +7658,7 @@ padding:
 
   border-radius: 50%;
 
-  background: #ff9933;
+  background: var(--wn-saffron, #ff9933);
 
   opacity: 0;
 
@@ -7683,11 +7683,11 @@ padding:
   background:
     linear-gradient(
       135deg,
-      rgba(255,153,51,0.08),
-      rgba(255,153,51,0.02)
+      color-mix(in srgb, var(--wn-saffron, #ff9933) 8%, transparent),
+      color-mix(in srgb, var(--wn-saffron, #ff9933) 2%, transparent)
     );
 
-  border: 1px solid rgba(255,153,51,0.18);
+  border: 1px solid color-mix(in srgb, var(--wn-saffron, #ff9933) 18%, transparent);
 }
 
 .sidebar-card p {
@@ -7712,7 +7712,7 @@ padding:
 
   border-radius: 16px;
 
-  background: #ff9933;
+  background: var(--wn-saffron, #ff9933);
   color: white;
 
   font-weight: 700;
@@ -7727,14 +7727,14 @@ padding:
   transition: all 0.3s ease;
 
   box-shadow:
-    0 10px 30px rgba(255,153,51,0.3);
+    0 10px 30px color-mix(in srgb, var(--wn-saffron, #ff9933) 30%, transparent);
 }
 
 .sidebar-card .btn:hover {
   transform: translateY(-2px);
 
   box-shadow:
-    0 16px 35px rgba(255,153,51,0.35);
+    0 16px 35px color-mix(in srgb, var(--wn-saffron, #ff9933) 35%, transparent);
 }
 
 /* ========================================
@@ -7754,7 +7754,7 @@ padding:
 
 .footer-link {
   color: white;
-  background-color:#ff9933;
+  background-color: var(--wn-saffron, #ff9933);
   padding: 16px;
   border-radius:10px;
   text-decoration: none;
@@ -7766,7 +7766,7 @@ padding:
 }
 
 .footer-link:hover {
-  color: #ff9933;
+  color: var(--wn-saffron, #ff9933);
   background-color : white;
 }
 
@@ -7776,7 +7776,7 @@ padding:
 
   border-radius: 50%;
 
-  background: #ff9933;
+  background: var(--wn-saffron, #ff9933);
 }
 
 /* ========================================
@@ -7788,7 +7788,7 @@ padding:
 }
 
 .mobile-sidebar::-webkit-scrollbar-thumb {
-  background: rgba(255,153,51,0.35);
+  background: color-mix(in srgb, var(--wn-saffron, #ff9933) 35%, transparent);
   border-radius: 999px;
 }
 
@@ -7821,7 +7821,7 @@ padding:
 
   border-radius: 14px;
 
-  background: rgba(255, 153, 51, 0.08);
+  background: color-mix(in srgb, var(--wn-saffron, #ff9933) 8%, transparent);
 
   color: #0f172a;
 
@@ -7832,7 +7832,7 @@ padding:
 }
 
 .sidebar-close:hover {
-  background: #ff9933;
+  background: var(--wn-saffron, #ff9933);
   color: #fff;
 
   transform: rotate(90deg);
@@ -8696,6 +8696,33 @@ section#experience.texp {
     width: 100%;
     border-radius: 0 0 22px 22px;
   }
+}
+
+/* ── Fix: header (logo / title / close) scrolling out of view ──────────
+   The decorative glows used to be ::before / ::after blobs positioned
+   past the sheet's edges (e.g. bottom:-100px). Inside this overflow-y:auto
+   sheet, that added ~100px of invisible scroll area, so any scroll/tap
+   shifted the content up and hid the .sidebar-top header row. The glows
+   are now plain background gradients (which cannot create scroll
+   overflow), tinted with the tenant brand colour: Old Glory Blue on COA,
+   saffron on India. background-size/animation are reset because an
+   earlier block animates a 300% gradient on this element. */
+.mobile-sidebar{
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  background:
+    radial-gradient(circle 170px at 100% 0%,
+      color-mix(in srgb, var(--wn-saffron, #ff9933) 22%, transparent), transparent 70%),
+    radial-gradient(circle 190px at 0% 100%,
+      color-mix(in srgb, var(--wn-saffron, #ff9933) 14%, transparent), transparent 70%),
+    #ffffff;
+  background-size: auto;
+  background-position: 0 0;
+  animation: none;
+}
+.mobile-sidebar::before,
+.mobile-sidebar::after{
+  display: none;
 }
 
 /* ── Pricing CTA buttons — tenant-aware brand color instead of hardcoded

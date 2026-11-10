@@ -13,6 +13,7 @@ export default async function Home() {
   const config   = getTenantConfig(tenantId as any)
 
   const tenant: HomeTenant = {
+    countryName:    config.countryName,
     brandName:      config.brandName,
     logoPath:       config.logoPath,
     currencySymbol: config.currencySymbol,
