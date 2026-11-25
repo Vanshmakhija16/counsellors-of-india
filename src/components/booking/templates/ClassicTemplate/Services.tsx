@@ -3,7 +3,7 @@
 import type { RefObject } from 'react'
 import { ChevronLeft, ChevronRight, Plus, Trash2 } from 'lucide-react'
 import { useEditableTemplate } from '../edit/EditContext'
-import type { EditableService } from '../templateUtils'
+import { formatTherapistPrice, type EditableService } from '../templateUtils'
 
 export interface ServiceItem {
   code: string
@@ -23,6 +23,8 @@ interface ServicesProps {
   scrollSvc: (dir: 1 | -1) => void
   defaultFee?: number
   defaultDurationMins?: number
+  currencySymbol?: string
+  isDemo?: boolean
   onBookService?: (service: ServiceItem) => void
 }
 
@@ -32,7 +34,7 @@ const editInp = `w-full rounded border border-dashed border-[#ff9933] bg-[#fffbf
   focus:ring-[#ff9933]/30 resize-none placeholder:text-[#9a8f80]`
 
 export default function Services({
-  services, svcTrackRef, svcCanPrev, svcCanNext, scrollSvc, defaultFee, defaultDurationMins, onBookService,
+  services, svcTrackRef, svcCanPrev, svcCanNext, scrollSvc, defaultFee, defaultDurationMins, currencySymbol = '₹', isDemo = false, onBookService,
 }: ServicesProps) {
   const { editMode, updateProfileContent } = useEditableTemplate()
 
@@ -99,7 +101,7 @@ export default function Services({
           </div>
           <div className="flex flex-col justify-end">
             <p className="max-w-[480px] text-[15px] leading-[1.85] text-[#6b6056]">
-              Every engagement begins with a thoughtful conversation — creating space to understand
+              Every engagement begins with a thoughtful conversation, creating space to understand
               what you're carrying and whether this practice feels aligned for your journey ahead.
             </p>
           </div>
@@ -235,9 +237,9 @@ export default function Services({
                     {editMode ? (
                       <div className="mb-4 grid grid-cols-2 gap-3">
                         <div>
-                          <label className="block text-[10px] uppercase tracking-widest text-[#9ca3af] font-semibold mb-1">Price (₹) — blank for default</label>
+                          <label className="block text-[10px] uppercase tracking-widest text-[#9ca3af] font-semibold mb-1">Price ({currencySymbol}) — blank for default</label>
                           <div className="relative">
-                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm text-[#9ca3af]">₹</span>
+                            <span className="absolute left-2 top-1/2 -translate-y-1/2 text-sm text-[#9ca3af]">{currencySymbol}</span>
                             <input
                               type="number"
                               min={0}
@@ -269,7 +271,7 @@ export default function Services({
                               className="text-[22px] font-semibold leading-none tracking-tight text-[#1a1a18]"
                               style={{ fontFamily: 'var(--font-fraunces), serif' }}
                             >
-                              {/^\d+$/.test(price) ? `₹${Number(price).toLocaleString('en-IN')}` : price}
+                              {/^\d+$/.test(price) ? formatTherapistPrice(price, { currencySymbol, isDemo }) : price}
                             </span>
                             {/^\d+$/.test(price) && (
                               <span className="text-[11px] uppercase tracking-[0.2em] text-[#6b6056]">/ session</span>

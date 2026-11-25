@@ -77,7 +77,7 @@ export default function Footer({ therapist }: FooterProps) {
         {/* Bottom bar */}
         <div className="ct5-footer-bottom">
           <span className="ct5-footer-copy">
-            © {year} {name} · Counsellors of India. All rights reserved.
+            © {year} {name} · {therapist.brandName || 'Counsellors of India'}. All rights reserved.
           </span>
           {/* <span className="ct5-footer-copy" style={{ opacity: 0.4 }}>
             Confidential · Evidence-Based · RCI Licensed

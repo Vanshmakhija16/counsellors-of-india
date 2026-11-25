@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import type { TherapistProfile, EditableService } from '../templateUtils'
-import { resolveCT4Content } from '../templateUtils'
+import { formatTherapistPrice, resolveCT4Content } from '../templateUtils'
 
 interface ServicesProps {
   therapist: TherapistProfile
@@ -106,7 +106,7 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
                     <div className="ct4-svc-price-row">
                       <div className="ct4-svc-price-badge">
                         <span className="ct4-svc-price-amount">
-                          ₹{price != null ? price.toLocaleString('en-IN') : '—'}
+                          {formatTherapistPrice(price, therapist)}
                         </span>
                         <span className="ct4-svc-price-label">per session</span>
                       </div>

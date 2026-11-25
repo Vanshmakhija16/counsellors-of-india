@@ -26,6 +26,7 @@ import {
   type OccupationType,
   type SubstanceFrequency,
 } from '@/lib/clinical/intake'
+import { useTenantAccent } from '@/lib/useTenantAccent'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -251,6 +252,7 @@ function HistoryPane({
   onChange: (v: IntakeHistory) => void
   onBlur: () => void
 }) {
+  const { tenantId } = useTenantAccent()
   function upd<K extends keyof IntakeHistory>(key: K, val: IntakeHistory[K]) {
     onChange({ ...value, [key]: val })
   }
@@ -309,7 +311,7 @@ function HistoryPane({
             key: 'previous_therapy' as const,
             label: 'Previous therapy / counselling',
             placeholder:
-              'Yes / No. If yes: who they saw (psychiatrist, psychologist, counsellor), when, how long, what helped or did not help.',
+              `Yes / No. If yes: who they saw (psychiatrist, psychologist, ${tenantId === 'us' ? 'counselor' : 'counsellor'}), when, how long, what helped or did not help.`,
           },
           {
             key: 'psychiatric_history' as const,

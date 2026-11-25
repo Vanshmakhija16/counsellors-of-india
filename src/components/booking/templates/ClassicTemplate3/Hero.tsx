@@ -204,7 +204,7 @@
 
 import { useEffect, useRef, useState, type RefObject } from 'react'
 import type { TherapistProfile } from '../templateUtils'
-import { resolveImage, getInitials, resolveCT3Content } from '../templateUtils'
+import { formatTherapistPrice, resolveImage, getInitials, resolveCT3Content } from '../templateUtils'
 
 interface HeroProps {
   therapist: TherapistProfile
@@ -435,8 +435,8 @@ export default function Hero({
 
           <div className="ct3-meta-card">
             <span className="ct3-meta-number">
-              ₹
-              {therapist.fee?.toLocaleString() ||
+              {formatTherapistPrice(therapist.fee,
+                therapist) ||
                 '2,000'}
             </span>
 

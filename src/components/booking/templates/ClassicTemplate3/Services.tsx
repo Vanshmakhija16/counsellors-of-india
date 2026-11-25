@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { TherapistProfile, EditableService } from '../templateUtils'
-import { resolveCT3Content } from '../templateUtils'
+import { formatTherapistPrice, resolveCT3Content } from '../templateUtils'
 
 interface ServicesProps {
   therapist: TherapistProfile
@@ -391,7 +391,7 @@ export default function Services({ therapist, onBookService }: ServicesProps) {
                               color:      isActive ? 'var(--sage)' : 'var(--ink-3)',
                               transition: 'all 0.42s ease',
                             }}>
-                              ₹{svc.price.toLocaleString()}
+                              {formatTherapistPrice(svc.price, therapist)}
                             </span>
                           </div>
                         ) : (

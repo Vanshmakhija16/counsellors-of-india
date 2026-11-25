@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { createServerSupabaseClient, createServiceSupabaseClientForTenant } from '@/lib/supabase-server'
+import { getCurrentTenant } from '@/lib/tenants/server'
+import { localizeCounselorSpelling } from '@/lib/counselorSpelling'
 import { notFound } from 'next/navigation'
 import { getColor } from '@/lib/template'
 import StaticProfile from '@/components/booking/templates/StaticProfile'
@@ -12,7 +14,14 @@ import ClassicTemplate6 from '@/components/booking/templates/ClassicTemplate6'
 import ClassicTemplate7 from '@/components/booking/templates/ClassicTemplate7'
 import ClassicTemplate8 from '@/components/booking/templates/ClassicTemplate8'
 
-const BASE_URL = 'https://www.counsellorsofindia.com'
+// Columns the public profile page reads from `therapists`. The US project does
+// not have tagline / approach_text / education / certifications, and selecting
+// a missing column makes the whole query fail (which used to surface as a 404),
+// so the US lookup leaves them out. India's select is unchanged.
+const THERAPIST_PAGE_COLUMNS_US =
+  'id, full_name, title, bio, photo_url, city, years_experience, fee_per_session, total_sessions, specialties, languages, session_duration_mins, session_mode, phone, email, plan, hidden_sections, color_id, template_id, username, availability, profile_content, whatsapp, website, instagram, linkedin'
+const THERAPIST_PAGE_COLUMNS =
+  THERAPIST_PAGE_COLUMNS_US + ', tagline, approach_text, education, certifications'
 
 /* ── Dynamic OG metadata per therapist profile ── */
 export async function generateMetadata({
@@ -21,40 +30,46 @@ export async function generateMetadata({
   params: Promise<{ username: string }>
 }): Promise<Metadata> {
   const { username } = await params
-  const supabase = await createServerSupabaseClient()
+  const tenant = await getCurrentTenant()
+  // COA revokes anonymous reads from `therapists`; use its tenant-scoped
+  // service client for this server-side, explicitly selected public metadata.
+  const supabase = tenant.id === 'us'
+    ? await createServiceSupabaseClientForTenant()
+    : await createServerSupabaseClient()
 
   const raw = decodeURIComponent(username).trim()
   const candidates = [...new Set([raw, raw.replace(/^@+/, ''), `@${raw.replace(/^@+/, '')}`])]
 
   let therapist = null
   for (const candidate of candidates) {
-    const { data } = await supabase
+    let query = supabase
       .from('therapists')
       .select('full_name, title, city, specialties, photo_url, bio, username')
       .eq('username', candidate)
-      .maybeSingle()
+    if (tenant.id === 'us') query = query.eq('is_active', true).eq('is_profile_complete', true)
+    const { data } = await query.maybeSingle()
     if (data) { therapist = data; break }
   }
 
   if (!therapist) {
-    return { title: 'Therapist Not Found | Counsellors of India' }
+    return { title: `Therapist Not Found | ${tenant.brandName}` }
   }
 
   const name       = therapist.full_name ?? 'Therapist'
   const specialty  = Array.isArray(therapist.specialties) && therapist.specialties.length > 0
     ? therapist.specialties[0]
     : 'Counselling'
-  const city       = therapist.city ?? 'India'
-  const title      = therapist.title ?? 'Therapist'
-  const photo      = therapist.photo_url ?? `${BASE_URL}/og-image.png`
-  const profileUrl = `${BASE_URL}/${therapist.username}`
+  const city       = therapist.city ?? tenant.countryName
+  const title      = localizeCounselorSpelling(therapist.title ?? 'Therapist', tenant.id === 'us')
+  const photo      = therapist.photo_url ?? `${tenant.siteUrl}/og-image.png`
+  const profileUrl = `${tenant.siteUrl}/${therapist.username}`
 
-  // CSV row 10: dynamic alt → "{Full Name} – {Specialty} therapist in {City}, India | Counsellors of India"
-  const imageAlt   = `${name} – ${specialty} therapist in ${city}, India | Counsellors of India`
-  const pageTitle  = `${name} | ${title} in ${city} | Counsellors of India`
+  const imageAlt   = `${name} – ${specialty} therapist in ${city} | ${tenant.brandName}`
+  // The root metadata template appends the current tenant brand to this title.
+  const pageTitle  = `${name} | ${title} in ${city}`
   const description = therapist.bio
     ? therapist.bio.slice(0, 155)
-    : `Book a session with ${name}, ${title} in ${city}. Online therapy & counselling on Counsellors of India.`
+    : `Book a session with ${name}, ${title} in ${city}. Online therapy & counselling on ${tenant.brandName}.`
 
   return {
     title: pageTitle,
@@ -63,7 +78,7 @@ export async function generateMetadata({
     openGraph: {
       type: 'profile',
       url: profileUrl,
-      siteName: 'Counsellors of India',
+      siteName: tenant.brandName,
       title: pageTitle,
       description,
       images: [
@@ -74,7 +89,7 @@ export async function generateMetadata({
           alt: imageAlt,
         },
       ],
-      locale: 'en_IN',
+      locale: tenant.ogLocale,
     },
     twitter: {
       card: 'summary_large_image',
@@ -92,29 +107,32 @@ export default async function TherapistPublicPage({
   params: Promise<{ username: string }>
 }) {
   const { username } = await params
-  const supabase = await createServerSupabaseClient()
+  const tenant = await getCurrentTenant()
+  // COA revokes anonymous reads from `therapists`; keep India on its existing
+  // cookie-authenticated read path.
+  const supabase = tenant.id === 'us'
+    ? await createServiceSupabaseClientForTenant()
+    : await createServerSupabaseClient()
 
   const raw = decodeURIComponent(username).trim()
   const candidates = [...new Set([raw, raw.replace(/^@+/, ''), `@${raw.replace(/^@+/, '')}`])]
 
   let therapist = null
-  let lastError: any = null
   for (const candidate of candidates) {
-    const { data, error } = await supabase
+    let query = supabase
       .from('therapists')
-      .select('*')
+      .select(tenant.id === 'us' ? THERAPIST_PAGE_COLUMNS_US : THERAPIST_PAGE_COLUMNS)
       .eq('username', candidate)
-      .maybeSingle()
-    if (error) lastError = error
+    if (tenant.id === 'us') query = query.eq('is_active', true).eq('is_profile_complete', true)
+    const { data } = await query.maybeSingle()
     if (data) { therapist = data; break }
   }
-
-  console.log('[DEBUG /[username]]', { raw, candidates, found: !!therapist, error: lastError })
 
   if (!therapist) notFound()
 
   // ── Determine if the logged-in visitor is this profile's owner ──────────
-  const { data: { user } } = await supabase.auth.getUser()
+  const authClient = await createServerSupabaseClient()
+  const { data: { user } } = await authClient.auth.getUser()
   const isOwner = !!user && user.id === therapist.id
 
   const hiddenSections: string[] = therapist.hidden_sections ?? []
@@ -133,11 +151,12 @@ export default async function TherapistPublicPage({
 
   const profile = {
     id:               therapist.id,
+    brandName:        tenant.brandName,
     name:             therapist.full_name ?? '',
-    credentials:      therapist.title ?? '',
+    credentials:      localizeCounselorSpelling(therapist.title ?? '', tenant.id === 'us'),
     bio:              therapist.bio ?? '',
     image:            therapist.photo_url ?? '',
-    location:         therapist.city ?? '',
+    location:         therapist.city ?? tenant.countryName,
     experience:       therapist.years_experience ?? 0,
     fee:              therapist.fee_per_session ?? 0,
     totalReviews:     therapist.total_sessions ?? undefined,
@@ -175,7 +194,7 @@ export default async function TherapistPublicPage({
   // - cancelled / payment_failed / expired statuses
   // - pending_payment holds whose hold_until has already passed (stale holds)
   //   These slots are effectively free again and should show as available.
-  const { data: booked } = await supabase
+  const { data: booked } = await authClient
     .from('appointments')
     .select('scheduled_at, status, hold_until')
     .eq('therapist_id', therapist.id)
@@ -192,7 +211,7 @@ export default async function TherapistPublicPage({
     })
     .map(b => b.scheduled_at)
 
-  const { data: feedbacks } = await supabase
+  const { data: feedbacks } = await authClient
     .from('feedbacks')
     .select('id, client_name, client_role, rating, text, created_at')
     .eq('therapist_id', therapist.id)
@@ -208,7 +227,7 @@ export default async function TherapistPublicPage({
       case 'classic6': return <ClassicTemplate6 therapist={profile} bookedTimes={bookedTimes} hiddenSections={hiddenSections} feedbacks={feedbacks ?? []} />
       case 'classic7': return <ClassicTemplate7 therapist={profile} bookedTimes={bookedTimes} hiddenSections={hiddenSections} feedbacks={feedbacks ?? []} />
       case 'classic8': return <ClassicTemplate8 therapist={profile} bookedTimes={bookedTimes} hiddenSections={hiddenSections} />
-      default:         return <ClassicTemplate  therapist={profile} bookedTimes={bookedTimes} feedbacks={feedbacks ?? []} hiddenSections={hiddenSections} isOwner={isOwner} />
+      default:         return <ClassicTemplate  therapist={profile} bookedTimes={bookedTimes} feedbacks={feedbacks ?? []} hiddenSections={hiddenSections} isOwner={isOwner} brandName={tenant.brandName} />
     }
   })()
 

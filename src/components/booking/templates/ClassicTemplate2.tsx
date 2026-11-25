@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 import type { TherapistProfile } from './templateUtils'
-import { resolveCT2Content } from './templateUtils'
+import { formatTherapistPrice, resolveCT2Content } from './templateUtils'
 import { getOrderedSections } from '@/lib/template'
 import { ct2Styles } from './ClassicTemplate2/styles'
 import Navbar from './ClassicTemplate2/Navbar'
@@ -36,7 +36,7 @@ export default function ClassicTemplate2({ therapist, bookedTimes = [], hiddenSe
     kind:    s.kind ?? '',
     desc:    s.desc,
     forWhom: s.forWhom ?? [],
-    price:   s.price,
+    price:   s.price != null ? formatTherapistPrice(s.price, therapist) : undefined,
     duration_mins: s.duration_mins,
   }))
 

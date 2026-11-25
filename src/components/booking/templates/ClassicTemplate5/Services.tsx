@@ -2,7 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import type { TherapistProfile } from '../templateUtils'
-import { resolveCT5Content } from '../templateUtils'
+import { formatTherapistPrice, resolveCT5Content } from '../templateUtils'
 
 interface ServicesProps { therapist: TherapistProfile }
 
@@ -71,7 +71,7 @@ export default function Services({ therapist }: ServicesProps) {
                       color: 'var(--warm-gray)',
                     }}
                   >
-                    {duration} min{price != null ? ` · ₹${price.toLocaleString('en-IN')}` : ''}
+                    {duration} min{price != null ? ` · ${formatTherapistPrice(price, therapist)}` : ''}
                   </span>
                 </div>
               </div>

@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { getCurrentTenant } from '@/lib/tenants/server'
 import { cookies } from 'next/headers'
 import { createServiceSupabaseClient } from '@/lib/supabase-server'
 import { encrypt } from '@/lib/encryption'
@@ -31,6 +32,10 @@ async function getUser() {
 // ── POST — save credentials ────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
+    const tenant = await getCurrentTenant()
+    if (tenant.id !== 'in') {
+      return NextResponse.json({ error: 'Razorpay is unavailable for this tenant' }, { status: 410 })
+    }
     const user = await getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 

@@ -6,7 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceSupabaseClient } from '@/lib/supabase-server'
+import { createServiceSupabaseClientForTenantOrLegacyIndia } from '@/lib/supabase-server'
 
 const PLAN_LIMITS: Record<string, number> = { starter: 10, pro: Infinity }
 
@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Missing therapist_id' }, { status: 400 })
   }
 
-  const supabase = createServiceSupabaseClient()
+  const supabase = await createServiceSupabaseClientForTenantOrLegacyIndia()
 
   const { data: therapist } = await supabase
     .from('therapists')

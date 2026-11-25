@@ -22,6 +22,7 @@ import 'server-only'
  */
 
 import { sendBookingConfirmation, sendTherapistBookingAlert } from '@/lib/whatsapp'
+import { getCurrentTenant } from '@/lib/tenants/server'
 import { schedulePrefetchTask } from 'next/dist/client/components/segment-cache/scheduler';
 
 function escapeHtml(s: string): string {
@@ -71,6 +72,7 @@ interface EmailParams {
  * therapist too. Uses the same SMTP/nodemailer setup as /api/contact.
  */
 export async function sendBookingConfirmationEmails(params: EmailParams): Promise<void> {
+  const brandName = (await getCurrentTenant()).brandName
   const startedAt = Date.now()
   console.log('[booking-notifications] sendBookingConfirmationEmails() called with:', {
     clientEmail:    params.clientEmail,
@@ -119,7 +121,7 @@ export async function sendBookingConfirmationEmails(params: EmailParams): Promis
     greetingTimeout:   10_000,
     socketTimeout:     15_000,
   })
-  const FROM = process.env.SMTP_FROM || 'Counsellors of India <support@counsellorsofindia.com>'
+  const FROM = process.env.SMTP_FROM || `${brandName} <support@counsellorsofindia.com>`
 
   // Explicit connectivity check BEFORE attempting to send -- this is the
   // single most useful line in these logs for diagnosing "WhatsApp sent,
@@ -166,7 +168,7 @@ export async function sendBookingConfirmationEmails(params: EmailParams): Promis
       ${includePrice && params.amountPaid ? `<p><strong>Amount Paid:</strong> ₹${params.amountPaid.toLocaleString('en-IN')}</p>` : ''}`
   }
 
-  const signOff = '<p style="margin-top:24px">With regards,<br/>Team Counsellors of India</p>'
+  const signOff = `<p style="margin-top:24px">With regards,<br/>Team ${brandName}</p>`
 
   const sends: Promise<unknown>[] = []
 
@@ -349,6 +351,7 @@ interface NotifyBookingRescheduledParams {
  * until a dedicated template is submitted and approved.
  */
 export async function notifyBookingRescheduled(params: NotifyBookingRescheduledParams): Promise<void> {
+  const brandName = (await getCurrentTenant()).brandName
   const isPro = (params.plan ?? 'starter').toLowerCase() === 'pro'
   console.log('[booking-notifications] notifyBookingRescheduled() called:', {
     plan: params.plan,
@@ -403,8 +406,8 @@ export async function notifyBookingRescheduled(params: NotifyBookingRescheduledP
       secure: process.env.SMTP_SECURE === 'true',
       auth:   { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
     })
-    const FROM = process.env.SMTP_FROM || 'Counsellors of India <support@counsellorsofindia.com>'
-    const signOff = '<p style="margin-top:24px">With regards,<br/>Team Counsellors of India</p>'
+    const FROM = process.env.SMTP_FROM || `${brandName} <support@counsellorsofindia.com>`
+    const signOff = `<p style="margin-top:24px">With regards,<br/>Team ${brandName}</p>`
 
     function meetLinkBlock(): string {
       if (!params.meetLink) {

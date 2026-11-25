@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { ArrowLeft, Mail, Phone, MapPin, IndianRupee, Clock, User, Crown, Rocket, TriangleAlert } from 'lucide-react'
 import { requireAdmin } from '@/lib/admin'
-import { createServiceSupabaseClient } from '@/lib/supabase-server'
+import { createServiceSupabaseClientForTenantOrLegacyIndia } from '@/lib/supabase-server'
 import BookingsTable, { type BookingRow } from '@/components/admin/BookingsTable'
 
 interface Props {
@@ -52,7 +52,7 @@ function formatDate(iso: string | null) {
 export default async function AdminTherapistDetailPage({ params }: Props) {
   await requireAdmin()
   const { id } = await params
-  const db = createServiceSupabaseClient()
+  const db = await createServiceSupabaseClientForTenantOrLegacyIndia()
 
   const [{ data: t }, { data: appointments }] = await Promise.all([
     db.from('therapists').select('*').eq('id', id).maybeSingle(),

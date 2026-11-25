@@ -191,11 +191,14 @@ export interface ProfileContent {
 export interface TherapistProfile {
   id?: string
   name: string
+  brandName?: string
   initials?: string
   credentials: string
   city?: string
   bio: string
   fee: number
+  currencySymbol?: string
+  isDemo?: boolean
   sessionDuration: number
   rating?: number
   totalReviews?: number
@@ -220,6 +223,20 @@ export interface TherapistProfile {
   availability?: AvailabilityData | null
   profile_content?: ProfileContent
   section_order?: string[]
+}
+
+export function formatTherapistPrice(
+  amount: number | string | null | undefined,
+  therapist: Pick<TherapistProfile, 'currencySymbol' | 'isDemo'>,
+): string {
+  const numericAmount = typeof amount === 'string'
+    ? Number(amount.replace(/[^\d.-]/g, ''))
+    : Number(amount)
+  if (!Number.isFinite(numericAmount)) return '—'
+  const symbol = therapist.currencySymbol ?? '₹'
+  const displayAmount = symbol === '$' && therapist.isDemo ? numericAmount / 10 : numericAmount
+  const locale = symbol === '$' ? 'en-US' : 'en-IN'
+  return `${symbol}${Math.round(displayAmount).toLocaleString(locale)}`
 }
 
 // ── Availability types ────────────────────────────────────────────────────

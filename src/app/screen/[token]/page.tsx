@@ -3,6 +3,7 @@ import { getInviteByToken } from '@/lib/clinical/invites.server'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
 import type { InstrumentWithItems, InstrumentItem, InstrumentOption, SeverityBand } from '@/lib/clinical/screening'
 import PublicScreeningForm from './PublicScreeningForm'
+import { getCurrentTenant } from '@/lib/tenants/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,6 +13,7 @@ export default async function PublicScreenPage({
   params: Promise<{ token: string }>
 }) {
   const { token } = await params
+  const tenant = await getCurrentTenant()
   const invite = await getInviteByToken(token).catch(() => null)
 
   if (!invite) notFound()
@@ -99,7 +101,7 @@ export default async function PublicScreenPage({
       <div className="max-w-xl mx-auto">
         <div className="mb-8 text-center">
           <p className="text-[10px] font-semibold uppercase tracking-widest text-[#6b7280] mb-1">
-            Counsellors of India
+            {tenant.brandName}
           </p>
           <h1
             className="text-2xl font-semibold text-[#1c1c1e]"

@@ -83,7 +83,7 @@ export default function Footer({ therapist }: FooterProps) {
         )}
 
         <div className="ct8-footer-bottom">
-          <span className="ct8-footer-copy">© {year} {name} · Counsellors of India. All rights reserved.</span>
+          <span className="ct8-footer-copy">© {year} {name} · {therapist.brandName || 'Counsellors of India'}. All rights reserved.</span>
         </div>
       </div>
     </footer>

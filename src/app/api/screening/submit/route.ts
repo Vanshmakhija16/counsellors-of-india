@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
+import { createServiceSupabaseClientForTenantOrLegacyIndia } from '@/lib/supabase-server'
 import { rateLimit } from '@/lib/rate-limit'
 
 /**
@@ -21,11 +21,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'token and responses required' }, { status: 400 })
     }
 
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      { cookies: { getAll: () => [], setAll: () => {} } }
-    )
+    const supabase = await createServiceSupabaseClientForTenantOrLegacyIndia()
 
     // ── 1. Validate invite ────────────────────────────────────────────────────
     const { data: inviteRow, error: invErr } = await supabase

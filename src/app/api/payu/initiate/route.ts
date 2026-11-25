@@ -21,11 +21,16 @@ import {
   generateTxnId,
   formatAmount,
 } from '@/lib/payu'
+import { getCurrentTenant } from '@/lib/tenants/server'
 
 // Server-authoritative pricing — never trust an amount sent from the client.
 
 export async function POST(req: NextRequest) {
   try {
+    const tenant = await getCurrentTenant()
+    if (tenant.id !== 'in') {
+      return NextResponse.json({ error: 'PayU is unavailable for this tenant' }, { status: 410 })
+    }
     assertPayuConfigured()
 
     const { plan: rawPlan } = (await req.json()) as { plan?: string }

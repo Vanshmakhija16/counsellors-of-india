@@ -13,12 +13,14 @@ import AuthLayout from '@/components/layout/AuthLayout'
 import Input from '@/components/ui/Input'
 import Button from '@/components/ui/Button'
 import { User, CheckCircle } from 'lucide-react'
+import { getCurrentTenant } from '@/lib/tenants/server'
 
 export const metadata = { robots: { index: false, follow: false } }
 
-export default function SignupPreviewPage() {
+export default async function SignupPreviewPage() {
+  const tenant = await getCurrentTenant()
   return (
-    <AuthLayout title="Create your free account">
+    <AuthLayout title="Create your free account" brandName={tenant.brandName} tagline={tenant.footerTagline} logoPath={tenant.logoPath}>
       <div className="bg-white rounded-2xl border border-[#ece5d9] shadow-[0_20px_60px_-30px_rgba(31,28,24,0.25)] p-7 sm:p-8">
         <form className="space-y-5">
 

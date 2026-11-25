@@ -5,7 +5,7 @@ import {
   Brain, Users, CloudDrizzle, Heart, Compass, Sparkles,
   Clock, ArrowUpRight, ArrowLeft, ArrowRight,
 } from 'lucide-react'
-import type { TherapistProfile } from '../templateUtils'
+import { formatTherapistPrice, type TherapistProfile } from '../templateUtils'
 import { useCt7Reveal } from './_reveal'
 
 interface ExpertiseProps {
@@ -49,7 +49,7 @@ export default function Expertise({ therapist, scrollTo }: ExpertiseProps) {
     : DEFAULT_FOCUS
 
   const priceLabel = therapist.fee
-    ? `₹${new Intl.NumberFormat('en-IN').format(therapist.fee)}`
+    ? formatTherapistPrice(therapist.fee, therapist)
     : null
   const durationLabel = therapist.sessionDuration ? `${therapist.sessionDuration} min` : null
 

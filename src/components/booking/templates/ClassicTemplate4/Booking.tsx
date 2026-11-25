@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Loader2, X } from 'lucide-react'
 import type { TherapistProfile, EditableService } from '../templateUtils'
-import { getAvailableDays, slotToISO } from '../templateUtils'
+import { formatTherapistPrice, getAvailableDays, slotToISO } from '../templateUtils'
 import { useBooking } from '@/lib/useBooking'
 
 // ── Temporary: send to WhatsApp instead of API/payment ──────────────────
@@ -164,10 +164,10 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
 
               <dl>
                 <SpecRow k="Duration"     v={`${effectiveDuration} Minutes`} />
-                <SpecRow k="Investment"   v={effectivePrice ? `₹ ${effectivePrice.toLocaleString()}` : '—'} highlight={selectedService?.price != null} />
+                <SpecRow k="Investment"   v={effectivePrice ? formatTherapistPrice(effectivePrice, therapist) : '—'} highlight={selectedService?.price != null} />
                 <SpecRow k="Format"       v="Online · In-Person" />
                 <SpecRow k="Confirmation" v="Immediate via WhatsApp" />
-                <SpecRow k="Payment"      v="🔒 Secure via PayU" />
+                <SpecRow k="Payment"      v="🔒 Secure via Paypal" />
               </dl>
               {slotsBlocked > 1 && (
                 <p style={{ marginTop: 14, fontSize: 11.5, color: 'var(--silver)', lineHeight: 1.6, letterSpacing: '0.02em' }}>
@@ -274,8 +274,8 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                     {effectivePrice != null && effectivePrice > 0 && (
                       <p style={{ fontSize: 12, color: 'var(--silver)', marginTop: '1.2rem', letterSpacing: '0.04em' }}>
                         You will be charged{' '}
-                        <span style={{ color: 'var(--gold)', fontWeight: 500 }}>₹ {effectivePrice.toLocaleString()}</span>
-                        {selectedService ? ` for ${selectedService.name}` : ''} via PayU before your booking is confirmed.
+                        <span style={{ color: 'var(--gold)', fontWeight: 500 }}>{formatTherapistPrice(effectivePrice, therapist)}</span>
+                        {selectedService ? ` for ${selectedService.name}` : ''} via Paypal before your booking is confirmed.
                       </p>
                     )}
 
@@ -288,7 +288,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                       {bookingLoading ? (
                         <><Loader2 size={13} className="animate-spin" /> Processing…</>
                       ) : effectivePrice != null && effectivePrice > 0 ? (
-                        <>Pay ₹{effectivePrice.toLocaleString()} & Confirm →</>
+                        <>Pay {formatTherapistPrice(effectivePrice, therapist)} & Confirm →</>
                       ) : (
                         <>Confirm Reservation →</>
                       )}

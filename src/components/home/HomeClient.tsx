@@ -10,6 +10,7 @@ import SiteNavbar from '@/components/layout/SiteNavbar'
 import { useTherapist } from '@/lib/useTherapist'
 import { loadDemo, saveDemo, emptyDemo, type DemoProfile } from '@/lib/demoSession'
 import { normalizeSpecialtyKey, titleCaseLabel } from '@/lib/specialties'
+import { localizeCounselorSpelling } from '@/lib/counselorSpelling'
 import { Check, Crown, Rocket, ArrowRight } from 'lucide-react'
 import '@/app/page.css'
 
@@ -1038,10 +1039,11 @@ function LiveTemplateExperience({ domainDisplay }: { domainDisplay: string }) {
 const TPARAM_TO_TEMPLATE_ID: Record<string, DemoProfile['template_id']> = {
   t1: 'classic', t2: 'classic2', t3: 'classic3', t4: 'classic4', t5: 'classic5',
 }
+const AMERICA_TEMPLATE1_PHOTO = '/images/demo/america/template1.png'
 
 
 
-function TemplateShowcase({ onPreview, domainDisplay }: { onPreview: (t: typeof TMPLS[0]) => void; domainDisplay: string }) {
+function TemplateShowcase({ onPreview, domainDisplay, namePlaceholder, isAmerica }: { onPreview: (t: typeof TMPLS[0]) => void; domainDisplay: string; namePlaceholder: string; isAmerica: boolean }) {
 
   const [active, setActive] = useState(0)
 const [loading, setLoading] = useState(true)
@@ -1175,6 +1177,8 @@ return (
         templateId={TPARAM_TO_TEMPLATE_ID[cur.id]}
         previewHref={`/try?t=${cur.id}`}
         activeName={cur.name}
+        namePlaceholder={namePlaceholder}
+        isAmerica={isAmerica}
       />
 
     </div>
@@ -1187,12 +1191,13 @@ return (
 
 /* ── Minimal "Try with my details" form. Persists to the shared demoSession
    so the data follows the user across every template and into /try. ── */
-function DemoForm({ templateId, previewHref, activeName }:
-  { templateId: DemoProfile['template_id']; previewHref: string; activeName: string }) {
+function DemoForm({ templateId, previewHref, activeName, namePlaceholder, isAmerica }:
+  { templateId: DemoProfile['template_id']; previewHref: string; activeName: string; namePlaceholder: string; isAmerica: boolean }) {
   const router = useRouter()
   const [form, setForm] = useState<DemoProfile>(() => emptyDemo())
   const [mounted, setMounted] = useState(false)
   const [preparing, setPreparing] = useState(false)
+  const [hideTemplatePhoto, setHideTemplatePhoto] = useState(false)
   const fileRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => { setForm(loadDemo()); setMounted(true) }, [])
@@ -1206,14 +1211,23 @@ function DemoForm({ templateId, previewHref, activeName }:
     const file = e.target.files?.[0]
     if (!file) return
     const url = URL.createObjectURL(file)
+    setHideTemplatePhoto(false)
     update({ photo_url: url })
   }
 
   const ready = mounted && !!(form.full_name && form.full_name.trim() && form.bio && form.bio.trim())
+  const photoUrl = form.photo_url === AMERICA_TEMPLATE1_PHOTO && templateId !== 'classic'
+    ? undefined
+    : form.photo_url ?? (isAmerica && templateId === 'classic' && !hideTemplatePhoto ? AMERICA_TEMPLATE1_PHOTO : undefined)
 
   function seePreview() {
     if (!ready) return
-    saveDemo({ template_id: templateId })
+    saveDemo({
+      template_id: templateId,
+      photo_url: form.photo_url === AMERICA_TEMPLATE1_PHOTO && templateId !== 'classic'
+        ? undefined
+        : form.photo_url ?? (isAmerica && templateId === 'classic' && !hideTemplatePhoto ? AMERICA_TEMPLATE1_PHOTO : undefined),
+    })
 
     let seen = false
     try { seen = localStorage.getItem('coi_prepared_v1') === '1' } catch {}
@@ -1235,12 +1249,12 @@ function DemoForm({ templateId, previewHref, activeName }:
       <div className="tshow-photo-row">
         <button
           type="button"
-          className={`tshow-form-photo ${form.photo_url ? 'has-img' : ''}`}
+          className={`tshow-form-photo ${photoUrl ? 'has-img' : ''}`}
           onClick={() => fileRef.current?.click()}
-          aria-label={form.photo_url ? 'Change profile image' : 'Add profile image'}
+          aria-label={photoUrl ? 'Change profile image' : 'Add profile image'}
         >
-          {form.photo_url
-            ? <img src={form.photo_url} alt="" className="tshow-form-photo-img" />
+          {photoUrl
+            ? <img src={photoUrl} alt="" className="tshow-form-photo-img" />
             : (
               <span className="tshow-form-photo-ph">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -1255,8 +1269,8 @@ function DemoForm({ templateId, previewHref, activeName }:
             <button type="button" className="tshow-photo-btn" onClick={() => fileRef.current?.click()}>
               {form.photo_url ? 'Change' : 'Upload'}
             </button>
-            {form.photo_url && (
-              <button type="button" className="tshow-photo-btn ghost" onClick={() => update({ photo_url: undefined })}>
+            {photoUrl && (
+              <button type="button" className="tshow-photo-btn ghost" onClick={() => { setHideTemplatePhoto(true); update({ photo_url: undefined }) }}>
                 Remove
               </button>
             )}
@@ -1271,7 +1285,7 @@ function DemoForm({ templateId, previewHref, activeName }:
           className="tshow-input"
           value={form.full_name ?? ''}
           onChange={e => update({ full_name: e.target.value })}
-          placeholder="Dr. Karan"
+          placeholder={namePlaceholder}
         />
       </label>
 
@@ -1296,7 +1310,7 @@ function DemoForm({ templateId, previewHref, activeName }:
         />
       </label>
 
-      <button type="submit" className="tshow-form-cta" disabled={!ready}>
+      <button type="submit" className={`tshow-form-cta${isAmerica ? ' is-america' : ''}`} disabled={!ready}>
         See preview in {activeName}
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/>
@@ -1597,6 +1611,7 @@ const DEFAULT_HOME_TENANT: HomeTenant = {
 
 export default function HomeClient({ tenant = DEFAULT_HOME_TENANT }: { tenant?: HomeTenant } = {}) {
   const domainDisplay = tenant.siteUrl.replace(/^https?:\/\/(www\.)?/, '')
+  const isAmerica = tenant.countryName === 'America'
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
@@ -1783,12 +1798,12 @@ export default function HomeClient({ tenant = DEFAULT_HOME_TENANT }: { tenant?: 
     const placeholders = [
       {full_name:'Dr. Karan ', title:'Clinical Psychologist · Mumbai', username:'#'},
       {full_name:'Rajan Kumar',       title:'Psychotherapist · Bangalore',   username:'#'},
-      {full_name:'Karan Singh',      title:'Counsellor · Delhi',            username:'#'},
+    {full_name:'Karan Singh',      title:tenant.countryName === 'America' ? 'Counselor · New York' : 'Counsellor · Delhi', username:'#'},
       {full_name:'Dr. Rahul Verma',   title:'Trauma · EMDR · Mumbai',         username:'#'},
       {full_name:'Vikram Nair',       title:'Psychotherapist · Chennai',      username:'#'},
       {full_name:'Meera Joshi',       title:'CBT Therapist · Pune',           username:'#'},
-      {full_name:'Dr. Kavya Iyer',    title:'Family Counsellor · Hyderabad',  username:'#'},
-      {full_name:'Arjun Mehta',       title:'Career Counsellor · Gurgaon',    username:'#'},
+    {full_name:'Dr. Kavya Iyer',    title:tenant.countryName === 'America' ? 'Family Counselor · Houston' : 'Family Counsellor · Hyderabad', username:'#'},
+    {full_name:'Arjun Mehta',       title:tenant.countryName === 'America' ? 'Career Counselor · Chicago' : 'Career Counsellor · Gurgaon', username:'#'},
     ]
     return [...therapists, ...placeholders].slice(0,12)
   },[therapists])
@@ -1870,7 +1885,12 @@ export default function HomeClient({ tenant = DEFAULT_HOME_TENANT }: { tenant?: 
             <LiveTemplateExperience domainDisplay={domainDisplay}/>
 
 
-      <TemplateShowcase onPreview={setPreviewT} domainDisplay={domainDisplay}/>
+      <TemplateShowcase
+        onPreview={setPreviewT}
+        domainDisplay={domainDisplay}
+        namePlaceholder={tenant.countryName === 'America' ? 'Dr. Emiley Carl' : 'Dr. Karan'}
+        isAmerica={tenant.countryName === 'America'}
+      />
 
 
       {/* ══════════════════════════════════════════════════════════════
@@ -2003,7 +2023,7 @@ export default function HomeClient({ tenant = DEFAULT_HOME_TENANT }: { tenant?: 
                     const isLast = idx === gridTherapists.length - 1 && remainingCount > 0
                     const name = t.full_name || t.name || 'Therapist'
                     const photo = t.photo_url || ''
-                    const role = t.title || t.qualification || ''
+                    const role = localizeCounselorSpelling(t.title || t.qualification || '', isAmerica)
                     const city = t.city || t.location || ''
                     const specs: string[] = t.specialties || t.specializations || []
                     const fee = t.fee_per_session ?? null
@@ -2022,7 +2042,7 @@ export default function HomeClient({ tenant = DEFAULT_HOME_TENANT }: { tenant?: 
                               : <span>{init}</span>
                             }
                             <span className="td-card-verified" title="Verified therapist">
-                              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="20 6 9 17 4 12"/>
                               </svg>
                             </span>
@@ -2203,7 +2223,7 @@ export default function HomeClient({ tenant = DEFAULT_HOME_TENANT }: { tenant?: 
             {[
               {
                 q: `Who can list a practice on ${tenant.brandName}?`,
-                a: `Any dedicated counsellor, psychologist, or psychotherapist practising in ${tenant.countryName ?? 'India'}. We verify credentials before your profile goes live to keep the network trustworthy for clients.`,
+                a: `Any dedicated ${tenant.countryName === 'America' ? 'counselor' : 'counsellor'}, psychologist, or psychotherapist practising in ${tenant.countryName ?? 'India'}. We verify credentials before your profile goes live to keep the network trustworthy for clients.`,
               },
               {
                 q: 'How long does it take to set up my profile?',
@@ -2211,7 +2231,7 @@ export default function HomeClient({ tenant = DEFAULT_HOME_TENANT }: { tenant?: 
               },
               {
                 q: 'How do clients book sessions with me?',
-                a: 'Clients book directly from your profile page. You receive an instant notification, and the appointment lands in your dashboard. Online payments via Razorpay are built in.',
+                a: `Clients book directly from your profile page. You receive an instant notification, and the appointment lands in your dashboard. Online payments via ${tenant.countryName === 'America' ? 'PayPal' : 'Razorpay'} are built in.`,
               },
               {
                 q: 'Is there a free plan?',
@@ -2219,7 +2239,7 @@ export default function HomeClient({ tenant = DEFAULT_HOME_TENANT }: { tenant?: 
               },
               {
                 q: 'How is client data protected?',
-                a: 'All client information, notes, and bookings are encrypted. We follow Indian data protection guidelines and never share your client data with third parties.',
+                a: 'All client information, notes, and bookings are encrypted. We follow Government data protection guidelines and never share your client data with third parties.',
               },
               {
                 q: 'Can I cancel or downgrade later?',

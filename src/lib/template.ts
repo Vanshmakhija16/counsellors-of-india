@@ -29,7 +29,7 @@ export interface Template {
 
 export interface TherapistProfile {
   id?: string; name?: string; credentials?: string; bio?: string
-  image?: string; location?: string; experience?: number; fee?: number
+  image?: string; location?: string; experience?: number; fee?: number; currencySymbol?: string; isDemo?: boolean
   specialties?: string[]; sessionDuration?: number; full_name?: string
   title?: string; photo_url?: string; city?: string; languages?: string[]
   fee_per_session?: number; session_duration_mins?: number

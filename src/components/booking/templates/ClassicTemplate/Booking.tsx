@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Clock, Video, Shield, ArrowLeft, Calendar, X } from 'lucide-react'
 import type { TherapistProfile } from '../templateUtils'
-import { getAvailableDays, slotToISO } from '../templateUtils'
+import { formatTherapistPrice, getAvailableDays, slotToISO } from '../templateUtils'
 import type { ServiceItem } from './Services'
 import { useBooking } from '@/lib/useBooking'
 
@@ -167,7 +167,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                     </p>
                     {effectivePrice != null && effectivePrice > 0 && (
                       <p className="mt-0.5 text-[13px] text-[#6b6056]">
-                        ₹{effectivePrice.toLocaleString('en-IN')} / session
+                        {formatTherapistPrice(effectivePrice, therapist)} / session
                       </p>
                     )}
                   </div>
@@ -197,7 +197,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
               {effectivePrice != null && effectivePrice > 0 && (
                 <div className="mt-2 flex items-center gap-2 rounded-xl border border-[#b46b50]/30 bg-[#efe7d6] px-4 py-2.5">
                   <span className="text-[18px]">🔒</span>
-                  <p className="text-[12px] text-[#6b6056]">Secure payment via PayU before booking is confirmed</p>
+                  <p className="text-[12px] text-[#6b6056]">Secure payment via Paypal before booking is confirmed</p>
                 </div>
               )}
             </div>
@@ -297,7 +297,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                         {selectedService ? selectedService.title : 'Session fee'}
                       </span>
                       <span className="text-[15px] font-semibold text-[#1a1a18]" style={{ fontFamily: 'var(--font-fraunces), serif' }}>
-                        ₹{effectivePrice.toLocaleString('en-IN')}
+                        {formatTherapistPrice(effectivePrice, therapist)}
                       </span>
                     </div>
                   )}
@@ -334,7 +334,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                   {bookingLoading
                     ? 'Processing…'
                     : effectivePrice != null && effectivePrice > 0
-                      ? `Pay ₹${effectivePrice.toLocaleString('en-IN')} & Book`
+                      ? `Pay ${formatTherapistPrice(effectivePrice, therapist)} & Book`
                       : 'Confirm Booking'}
                 </button>
               </>

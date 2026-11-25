@@ -29,6 +29,9 @@ export async function POST(req: NextRequest) {
     }
 
     const tenant = await getCurrentTenant()
+    if (tenant.id !== 'us') {
+      return NextResponse.json({ error: 'PayPal plan payments are unavailable for this tenant' }, { status: 410 })
+    }
     const tenantPrefix = tenant.supabaseEnvPrefix // e.g. 'US' — reused as the PayPal env-var prefix too
 
     const amountUsd = getPlanPriceUsd(plan, user.email)

@@ -2,6 +2,7 @@ import Link from 'next/link'
 import SiteNavbar from '@/components/layout/SiteNavbar'
 import SiteFooter from '@/components/layout/SiteFooter'
 import FooterReveal from '@/components/landing/FooterReveal'
+import { getCurrentTenant } from '@/lib/tenants/server'
 
 import '../app/page.css'
 
@@ -10,15 +11,29 @@ import '../app/page.css'
 // here: get back to something real. No navbar, no extra links, just the
 // error, one line of context, and exactly two ways forward, then the
 // real site footer underneath.
-export default function NotFound() {
+export default async function NotFound() {
+  const tenant = await getCurrentTenant()
+  const isAmerica = tenant.id === 'us'
+
   return (
-    <div className="nf-page">
+    <div
+      className="nf-page"
+      style={{
+        ['--nf-primary' as string]: tenant.primaryColor,
+        ['--nf-primary-dark' as string]: tenant.primaryColorDark,
+        ['--nf-accent' as string]: tenant.accentColor ?? tenant.primaryColor,
+        ['--nf-background' as string]: isAmerica ? '#F5F6FA' : '#FDF5EC',
+        ['--nf-chair' as string]: isAmerica ? '#A8A7CB' : '#F6A75C',
+        ['--nf-chair-side' as string]: isAmerica ? '#7776A5' : '#EE9750',
+        ['--nf-chair-base' as string]: isAmerica ? '#3C3B6E' : '#B4693B',
+      }}
+    >
       <style>{`
         .nf-page {
           min-height: 100vh;
           display: flex;
           flex-direction: column;
-          background: #FDF5EC;
+          background: var(--nf-background);
         }
         .nf-main {
           flex: 1;
@@ -35,7 +50,7 @@ export default function NotFound() {
           font-weight: 800;
           font-size: clamp(56px, 10vw, 84px);
           line-height: 1;
-          color: #FF9933;
+          color: var(--nf-primary);
           margin: 0;
           letter-spacing: -0.02em;
         }
@@ -74,7 +89,7 @@ export default function NotFound() {
         }
         .nf-json .nf-json-key { color: #B4693B; }
         .nf-json .nf-json-str { color: #2D6A4F; }
-        .nf-json .nf-json-num { color: #FF9933; font-weight: 700; }
+        .nf-json .nf-json-num { color: var(--nf-primary); font-weight: 700; }
 
         .nf-oops {
           font-family: 'Inter', system-ui, sans-serif;
@@ -93,13 +108,13 @@ export default function NotFound() {
           font-weight: 600;
           font-size: 16px;
           color: #fff;
-          background: #FF9933;
+          background: var(--nf-primary);
           padding: 14px 28px;
           border-radius: 12px;
           text-decoration: none;
           transition: background 160ms ease;
         }
-        .nf-link-primary:hover { background: #E07A12; }
+        .nf-link-primary:hover { background: var(--nf-primary-dark); }
         .nf-link-secondary {
           font-family: 'Inter', system-ui, sans-serif;
           font-weight: 600;
@@ -111,12 +126,12 @@ export default function NotFound() {
           text-decoration: none;
           transition: border-color 160ms ease, color 160ms ease;
         }
-        .nf-link-secondary:hover { border-color: #FF9933; color: #FF9933; }
+        .nf-link-secondary:hover { border-color: var(--nf-accent); color: var(--nf-accent); }
       `}</style>
 
 
       <div className="nf-main">
-              <SiteNavbar />
+              <SiteNavbar tenant={{ brandName: tenant.brandName, logoPath: tenant.logoPath, ctaColor: tenant.primaryColor }} />
 
         
         <div className="nf-illustration-row">
@@ -131,11 +146,11 @@ export default function NotFound() {
               <path d="M164 122 C164 112 176 112 176 122 C176 128 170 132 170 132 C170 132 164 128 164 122 Z" fill="#7FA36C" />
 
               {/* ── LEFT chair: the client, mid-conversation (open hand) ── */}
-              <path d="M18 168 L118 168 L118 104 C118 95 111 90 102 90 L34 90 C25 90 18 95 18 104 Z" fill="#F6A75C" />
-              <rect x="18" y="106" width="16" height="52" rx="8" fill="#EE9750" />
-              <rect x="102" y="106" width="16" height="52" rx="8" fill="#EE9750" />
-              <path d="M18 168 L11 181 L26 181 L30 168 Z" fill="#B4693B" />
-              <path d="M118 168 L125 181 L110 181 L106 168 Z" fill="#B4693B" />
+              <path d="M18 168 L118 168 L118 104 C118 95 111 90 102 90 L34 90 C25 90 18 95 18 104 Z" fill="var(--nf-chair)" />
+              <rect x="18" y="106" width="16" height="52" rx="8" fill="var(--nf-chair-side)" />
+              <rect x="102" y="106" width="16" height="52" rx="8" fill="var(--nf-chair-side)" />
+              <path d="M18 168 L11 181 L26 181 L30 168 Z" fill="var(--nf-chair-base)" />
+              <path d="M118 168 L125 181 L110 181 L106 168 Z" fill="var(--nf-chair-base)" />
               {/* client body, turned slightly toward the therapist (right) */}
               <path d="M46 160 C46 132 54 118 70 118 C86 118 94 132 94 160 Z" fill="#5C8B7A" />
               {/* client's legs — seated, feet resting near the floor */}
@@ -149,11 +164,11 @@ export default function NotFound() {
               <path d="M52 96 C52 82 60 74 70 74 C80 74 88 82 88 96 C82 89 76 87 70 87 C64 87 58 89 52 96 Z" fill="#3A2A1D" />
 
               {/* ── RIGHT chair: the therapist, notepad in lap, listening ── */}
-              <path d="M222 168 L322 168 L322 104 C322 95 315 90 306 90 L238 90 C229 90 222 95 222 104 Z" fill="#F6A75C" />
-              <rect x="222" y="106" width="16" height="52" rx="8" fill="#EE9750" />
-              <rect x="306" y="106" width="16" height="52" rx="8" fill="#EE9750" />
-              <path d="M222 168 L215 181 L230 181 L234 168 Z" fill="#B4693B" />
-              <path d="M322 168 L329 181 L314 181 L310 168 Z" fill="#B4693B" />
+              <path d="M222 168 L322 168 L322 104 C322 95 315 90 306 90 L238 90 C229 90 222 95 222 104 Z" fill="var(--nf-chair)" />
+              <rect x="222" y="106" width="16" height="52" rx="8" fill="var(--nf-chair-side)" />
+              <rect x="306" y="106" width="16" height="52" rx="8" fill="var(--nf-chair-side)" />
+              <path d="M222 168 L215 181 L230 181 L234 168 Z" fill="var(--nf-chair-base)" />
+              <path d="M322 168 L329 181 L314 181 L310 168 Z" fill="var(--nf-chair-base)" />
               {/* therapist body, facing the client (left) */}
               <path d="M246 160 C246 132 254 118 270 118 C286 118 294 132 294 160 Z" fill="#B4693B" />
               {/* therapist's legs — seated, feet resting near the floor */}
@@ -187,8 +202,8 @@ export default function NotFound() {
         </div>
       </div>
 
-      <SiteFooter />
-      <FooterReveal />
+      <SiteFooter tenant={{ brandName: tenant.brandName, footerTagline: tenant.footerTagline, logoPath: tenant.logoPath }} />
+      <FooterReveal wordmark={tenant.brandName} />
     </div>
   )
 }

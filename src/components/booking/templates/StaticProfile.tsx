@@ -21,6 +21,7 @@ interface Props {
     sessionMode: string
     phone: string
     plan: string
+    brandName?: string
     whatsapp?: string
     instagram?: string
     linkedin?: string
@@ -1726,7 +1727,7 @@ export default function StaticProfile({ therapist }: Props) {
 
           <div className="ed-footer-bottom">
             <div>&copy; {year} {therapist.name}</div>
-            <div>Counsellors of India <em>— Verified practitioner</em></div>
+            <div>{therapist.brandName || 'Counsellors of India'} <em>— Verified practitioner</em></div>
           </div>
         </footer>
 

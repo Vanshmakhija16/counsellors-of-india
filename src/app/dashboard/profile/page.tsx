@@ -18,7 +18,7 @@ import { addNormalizedUnique } from '@/lib/specialties'
 import type { ProfileContent, CT1Content, CT2Content, CT3Content, CT4Content, CT5Content, CT6Content } from '@/components/booking/templates/templateUtils'
 import {
   User, Briefcase, Camera, CheckCircle, Clock, ExternalLink, Globe2,
-  IndianRupee, Languages, Link as LinkIcon, MapPin, Phone, Save, ShieldCheck,
+  DollarSign, IndianRupee, Languages, Link as LinkIcon, MapPin, Phone, Save, ShieldCheck,
   Sparkles, Lock, Check, AlertCircle, GripVertical, ChevronUp, ChevronDown,
   CalendarClock, Palette, ListChecks, Video,
 } from 'lucide-react'
@@ -68,13 +68,14 @@ const SPECIALTIES_LIST = [
   'Anger Management', 'Sleep Issues', 'ADHD', 'Eating Disorders',
 ]
 
-const IN_STATES = State.getStatesOfCountry('IN')
-const STATES_LIST = IN_STATES.map(s => s.name).sort()
+function statesOfCountry(countryCode: string): string[] {
+  return State.getStatesOfCountry(countryCode).map(s => s.name).sort()
+}
 
-function citiesOfState(stateName: string): string[] {
-  const st = IN_STATES.find(s => s.name === stateName)
+function citiesOfState(countryCode: string, stateName: string): string[] {
+  const st = State.getStatesOfCountry(countryCode).find(s => s.name === stateName)
   if (!st) return []
-  const names = City.getCitiesOfState('IN', st.isoCode).map(c => c.name)
+  const names = City.getCitiesOfState(countryCode, st.isoCode).map(c => c.name)
   return Array.from(new Set(names)).sort()
 }
 
@@ -96,12 +97,12 @@ const COUNTRY_CODES: { code: string; dial: string; flag: string; len: number }[]
   { code: 'DE', dial: '+49',  flag: '🇩🇪', len: 11 },
 ]
 
-function splitPhone(stored: string): { dial: string; number: string } {
+function splitPhone(stored: string, defaultDial = '+91'): { dial: string; number: string } {
   const s = (stored ?? '').trim()
   const match = [...COUNTRY_CODES].sort((a, b) => b.dial.length - a.dial.length)
     .find(c => s.startsWith(c.dial))
   if (match) return { dial: match.dial, number: s.slice(match.dial.length).replace(/\D/g, '') }
-  return { dial: '+91', number: s.replace(/\D/g, '') }
+  return { dial: defaultDial, number: s.replace(/\D/g, '') }
 }
 
 function formatLockDate(iso: string | null) {
@@ -128,7 +129,14 @@ export default function ProfilePage() {
   const supabase = createClient()
   const router = useRouter()
   const fileRef = useRef<HTMLInputElement>(null)
-  const { accent: BRAND, accentDark: BRAND_DARK } = useTenantAccent()
+  const { accent: BRAND, accentDark: BRAND_DARK, tenantId } = useTenantAccent()
+  const countryCode = tenantId === 'us' ? 'US' : 'IN'
+  const defaultDialCode = tenantId === 'us' ? '+1' : '+91'
+  const statesList = useMemo(() => statesOfCountry(countryCode), [countryCode])
+  const availableTemplates = useMemo(
+    () => tenantId === 'us' ? TEMPLATES.slice(0, 5) : TEMPLATES,
+    [tenantId],
+  )
 
   const [tab, setTab] = useState<TabId>('basic')
   const [userId, setUserId] = useState<string | null>(null)
@@ -146,7 +154,7 @@ export default function ProfilePage() {
   const [cityName, setCityName] = useState('')
   const [customSpecialty, setCustomSpecialty] = useState('')
   const [customLanguage, setCustomLanguage] = useState('')
-  const [dialCode, setDialCode] = useState('+91')
+  const [dialCode, setDialCode] = useState(defaultDialCode)
   const [phoneNumber, setPhoneNumber] = useState('')
   const [photoPreview, setPhotoPreview] = useState<string | null>(null)
   const [photoFile, setPhotoFile] = useState<File | null>(null)
@@ -204,12 +212,12 @@ export default function ProfilePage() {
           whatsapp: data.whatsapp ?? '', website: data.website ?? '', meet_link: data.meet_link ?? '',
         })
         setPhotoPreview(data.photo_url ?? null)
-        const { dial, number } = splitPhone(data.phone ?? '')
+        const { dial, number } = splitPhone(data.phone ?? '', defaultDialCode)
         setDialCode(dial); setPhoneNumber(number)
         const stored = (data.city ?? '').trim()
         if (stored) {
           const [c, s] = stored.split(',').map((p: string) => p.trim())
-          setStateName(s && STATES_LIST.includes(s) ? s : '')
+          setStateName(s && statesList.includes(s) ? s : '')
           setCityName(c ?? '')
         }
         setSelectedTemplate(data.template_id ?? 'classic')
@@ -231,9 +239,9 @@ export default function ProfilePage() {
 
   function handleStateChange(s: string) {
     setStateName(s)
-    if (!citiesOfState(s).includes(cityName)) setCityName('')
+    if (!citiesOfState(countryCode, s).includes(cityName)) setCityName('')
   }
-  const cityOptions = useMemo(() => citiesOfState(stateName), [stateName])
+  const cityOptions = useMemo(() => citiesOfState(countryCode, stateName), [countryCode, stateName])
 
   function addCustomSpecialty() {
     const v = customSpecialty.trim(); if (!v) return
@@ -503,7 +511,7 @@ export default function ProfilePage() {
                   <select value={stateName} onChange={e => handleStateChange(e.target.value)}
                     className="h-11 w-full rounded-lg border border-[#ded8ce] bg-[#fffdfb] px-4 text-sm text-[#171412] outline-none transition focus:border-[#171412]">
                     <option value="">Select state</option>
-                    {STATES_LIST.map(s => <option key={s} value={s}>{s}</option>)}
+                    {statesList.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
                 </label>
                 <label className="space-y-1.5">
@@ -543,7 +551,7 @@ export default function ProfilePage() {
             </div>
             <div className="grid gap-5 p-5 md:grid-cols-2">
               <label className="space-y-1.5">
-                <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[#8b8278]"><IndianRupee size={12} /> Session fee</span>
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.12em] text-[#8b8278]">{tenantId === 'us' ? <DollarSign size={12} /> : <IndianRupee size={12} />} Session fee</span>
                 <input type="text" inputMode="numeric" pattern="[0-9]*" value={form.fee_per_session}
                   onChange={e => setForm({ ...form, fee_per_session: e.target.value.replace(/\D/g, '') })}
                   onWheel={e => e.currentTarget.blur()} placeholder="1500"
@@ -558,11 +566,10 @@ export default function ProfilePage() {
               </label>
               <label className="space-y-1.5">
                 <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8b8278]">Years of experience</span>
-                <select value={form.years_experience} onChange={e => setForm({ ...form, years_experience: e.target.value })}
-                  className="h-11 w-full rounded-lg border border-[#ded8ce] bg-[#fffdfb] px-4 text-sm text-[#171412] outline-none transition focus:border-[#171412]">
-                  <option value="0">Fresher</option>
-                  {Array.from({ length: 40 }, (_, i) => i + 1).map(y => <option key={y} value={y}>{y} {y === 1 ? 'year' : 'years'}</option>)}
-                </select>
+                <input type="number" min={0} value={form.years_experience}
+                  onChange={e => setForm({ ...form, years_experience: e.target.value })}
+                  onWheel={e => e.currentTarget.blur()} placeholder="e.g. 5"
+                  className="h-11 w-full rounded-lg border border-[#ded8ce] bg-[#fffdfb] px-4 text-sm text-[#171412] outline-none transition placeholder:text-[#aaa197] focus:border-[#171412]" />
               </label>
               <label className="space-y-1.5">
                 <span className="text-xs font-semibold uppercase tracking-[0.12em] text-[#8b8278]">Total sessions completed</span>
@@ -787,6 +794,7 @@ export default function ProfilePage() {
             hideTabs={false}
             hideActionBar={false}
             frameHeight={520}
+            templates={availableTemplates}
           />
         </div>
       )}

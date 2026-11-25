@@ -1,4 +1,4 @@
-import { createServiceSupabaseClient } from '@/lib/supabase-server'
+import { createServiceSupabaseClientForTenantOrLegacyIndia } from '@/lib/supabase-server'
 import { NextRequest, NextResponse } from 'next/server'
 
 /**
@@ -23,7 +23,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ bookedTimes: [] })
   }
 
-  const supabase = createServiceSupabaseClient()
+  const supabase = await createServiceSupabaseClientForTenantOrLegacyIndia()
   const now = new Date().toISOString()
 
   const { data, error } = await supabase

@@ -141,7 +141,7 @@ export default function PayPalConnect() {
           <p className="font-semibold mb-1">Direct Settlement Architecture</p>
           <p>
             Each booking payment goes <strong>directly</strong> from the client
-            into your PayPal account. Counsellors of America takes no
+            into your PayPal account. Counselors of America takes no
             platform fee on transactions.
           </p>
         </div>

@@ -27,9 +27,12 @@ export interface DemoProfile {
   full_name?: string
   title?: string          // credentials line
   city?: string
+  location?: string
+  languages?: string[]
   bio?: string
   tagline?: string
   fee?: number
+  currencySymbol?: string
   specialties?: string[]
   photo_url?: string      // data URL (object URL) for the optional photo
   template_id: TemplateId
@@ -92,9 +95,13 @@ export function demoToProfile(demo: DemoProfile): TherapistProfile {
     full_name:        demo.full_name || undefined,
     title:            demo.title || undefined,
     city:             demo.city || undefined,
+    location:         demo.location || undefined,
+    languages:        demo.languages?.length ? demo.languages : undefined,
     bio:              demo.bio || undefined,
     photo_url:        demo.photo_url || undefined,
     fee_per_session:  typeof demo.fee === 'number' ? demo.fee : undefined,
+    currencySymbol:   demo.currencySymbol || undefined,
+    isDemo:           true,
     specialties:      demo.specialties?.length ? demo.specialties : undefined,
     template_id:      demo.template_id,
     color_id:         demo.color_id,

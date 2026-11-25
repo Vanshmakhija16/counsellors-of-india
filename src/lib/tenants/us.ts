@@ -29,8 +29,8 @@ export const usTenant: TenantConfig = {
     // 127.0.0.1  counselorsofamerica.local
     'counsellorsofamerica.local',
   ],
-  brandName: 'Counsellors of America',
-  brandShort: 'Counsellors',
+  brandName: 'Counselors of America',
+  brandShort: 'Counselors',
   currency: 'USD',
   currencySymbol: '$',
   paymentGateway: 'paypal',
@@ -39,12 +39,12 @@ export const usTenant: TenantConfig = {
   isLive: true,
 
   siteUrl: 'https://www.counselorsofamerica.com',
-  metaTitle: 'Counsellors of America | Website Builder for Therapists',
-  metaTitleTemplate: '%s | Counsellors of America',
+  metaTitle: 'Counselors of America | Website Builder for Therapists',
+  metaTitleTemplate: '%s | Counselors of America',
   metaDescription:
     'Start getting therapy clients online. Build your website, take bookings & collect payments in under 10 minutes.',
   ogDescription:
-    'Counsellors of America – therapist website builder showing profile, booking and secure PayPal payments.',
+    'Counselors of America – therapist website builder showing profile, booking and secure PayPal payments.',
   keywords: [
     'therapist website builder',
     'counselor profile website',
@@ -52,7 +52,7 @@ export const usTenant: TenantConfig = {
     'private practice management software',
     'psychologist website builder',
     'PayPal therapy payments',
-    'counsellors of America',
+    'counselors of America',
   ],
   ogLocale: 'en_US',
   twitterHandle: '@counsellorsus',
@@ -95,7 +95,6 @@ export const usTenant: TenantConfig = {
       feats: [
         'Everything in Starter, plus:',
         'Unlimited bookings',
-        'SMS booking confirmations',
         'Featured Therapist badge',
         'Higher visibility in directory',
         'Priority support',
@@ -109,11 +108,9 @@ export const usTenant: TenantConfig = {
   defaultCountryIso: 'US',
   countryName: 'America',
 
-  // TEMP: no dedicated America logo asset exists yet, so reuse the India
-  // mark for now rather than showing a text/monogram fallback. Swap this
-  // to a real America-specific logo path once one exists.
-  logoPath: '/COA2.png',
-  faviconPath: '/COA.png',
+  // America brand assets use US spelling in the wordmark.
+  logoPath: '/COA2-counselors.png',
+  faviconPath: '/COA-counselors.png',
 
   // Old Glory Blue -- see the isUs branch in src/app/signup/page.tsx for
   // the earlier, narrower signup-page-only version of this; this makes it

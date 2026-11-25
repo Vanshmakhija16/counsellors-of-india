@@ -218,7 +218,7 @@ export async function POST(req: NextRequest) {
   <p><strong>Date:</strong> ${escapeHtml(formattedDate)}</p>
   <p><strong>Time:</strong> ${escapeHtml(formattedTime)}</p>
   <p><strong>Duration:</strong> ${durationMins} minutes</p>
-  ${servicePrice != null ? `<p><strong>Amount:</strong> ₹${Number(servicePrice).toLocaleString('en-IN')} (via PayU · ${escapeHtml(mihpayid)})</p>` : ''}
+  ${servicePrice != null ? `<p><strong>Amount:</strong> ₹${Number(servicePrice).toLocaleString('en-IN')} (via Paypal · ${escapeHtml(mihpayid)})</p>` : ''}
   ${therapist.meet_link
     ? `<p style="margin-top:16px"><strong>Your meeting link:</strong> <a href="${escapeHtml(therapist.meet_link)}">${escapeHtml(therapist.meet_link)}</a></p>`
     : `<p style="margin-top:16px;color:#666">You haven't set a meeting link yet — add one in your dashboard under Practice details so it's included automatically next time.</p>`}

@@ -1,11 +1,11 @@
 import 'server-only'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { createServiceSupabaseClientForTenantOrLegacyIndia } from '@/lib/supabase-server'
 import type { PublicInvitePayload } from './invites'
 
 export type { PublicInvitePayload } from './invites'
 
 export async function getInviteByToken(token: string): Promise<PublicInvitePayload | null> {
-  const supabase = await createServerSupabaseClient()
+  const supabase = await createServiceSupabaseClientForTenantOrLegacyIndia()
 
   const { data, error } = await supabase
     .from('screening_invites')

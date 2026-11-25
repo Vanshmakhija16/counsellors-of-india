@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getPlanPriceInr, normalizePlan } from '@/lib/pricing'
 import { createServerSupabaseClient } from '@/lib/supabase-server'
+import { getCurrentTenant } from '@/lib/tenants/server'
 
 const RAZORPAY_KEY_ID = process.env.RAZORPAY_KEY_ID ?? process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? ''
 const RAZORPAY_KEY_SECRET = process.env.RAZORPAY_KEY_SECRET ?? ''
 
 export async function POST(req: NextRequest) {
   try {
+    const tenant = await getCurrentTenant()
+    if (tenant.id !== 'in') {
+      return NextResponse.json({ error: 'Razorpay is unavailable for this tenant' }, { status: 410 })
+    }
     const { plan: rawPlan, currency = 'INR', receipt } = await req.json()
     const plan = normalizePlan(rawPlan)
 

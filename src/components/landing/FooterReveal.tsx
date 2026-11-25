@@ -165,7 +165,7 @@ export default function FooterReveal({ wordmark = 'Counsellors of India' }: { wo
         className="absolute bottom-8 left-0 right-0 flex items-center justify-center gap-8"
         style={{ color: 'rgba(255,255,255,0.15)', fontSize: 11 }}
       >
-        <span>© 2025 Counsellors of India</span>
+        <span>© {new Date().getFullYear()} {wordmark}</span>
         <span>·</span>
         <a href="/privacy" className="hover:text-white/40 transition">Privacy</a>
         <span>·</span>

@@ -3,9 +3,9 @@
 import type { ReactNode } from 'react'
 import type { TherapistProfile } from '../templateUtils'
 
-interface FooterProps { therapist: TherapistProfile }
+interface FooterProps { therapist: TherapistProfile; brandName?: string }
 
-export default function Footer({ therapist }: FooterProps) {
+export default function Footer({ therapist, brandName = 'Counsellors of India' }: FooterProps) {
   // Peel off a leading honorific ("Dr.") so it can carry the accent colour,
   // matching the hero headline. The rest of the name keeps the footer's cream.
   const footerNameParts = (therapist.name ?? '').trim().split(/\s+/).filter(Boolean)
@@ -165,7 +165,7 @@ export default function Footer({ therapist }: FooterProps) {
   <div className="flex flex-col gap-4 pt-8 lg:flex-row lg:items-center lg:justify-between">
 
     <p className="text-[11px] text-[#6b6056]">
-      © {new Date().getFullYear()} {footerRest || therapist.name} · Counsellors of India · All rights reserved.
+      © {new Date().getFullYear()} {footerRest || therapist.name} · {brandName} · All rights reserved.
     </p>
 
     <button

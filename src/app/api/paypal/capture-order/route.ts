@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerSupabaseClient } from '@/lib/supabase-server'
+import {
+  createServerSupabaseClient,
+  createServiceSupabaseClientForTenant,
+} from '@/lib/supabase-server'
 import { capturePayPalOrder } from '@/lib/paypal'
 import { getPlanPriceUsd, highestPlan, normalizePlan } from '@/lib/pricing'
 import { getCurrentTenant } from '@/lib/tenants/server'
@@ -32,6 +35,9 @@ export async function POST(req: NextRequest) {
     }
 
     const tenant = await getCurrentTenant()
+    if (tenant.id !== 'us') {
+      return NextResponse.json({ error: 'PayPal payments are unavailable for this tenant' }, { status: 410 })
+    }
     const captured = await capturePayPalOrder({
       tenantPrefix: tenant.supabaseEnvPrefix,
       orderId: paypal_order_id,
@@ -66,7 +72,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Payment order does not match this plan.' }, { status: 400 })
     }
 
-    const { data: existing } = await supabase
+    const tenantDb = await createServiceSupabaseClientForTenant()
+
+    const { data: existing } = await tenantDb
       .from('therapists')
       .select('highest_plan')
       .eq('id', user.id)
@@ -74,7 +82,7 @@ export async function POST(req: NextRequest) {
 
     const newHighest = highestPlan((existing as { highest_plan?: string } | null)?.highest_plan, targetPlan)
 
-    const { error } = await supabase
+    const { error } = await tenantDb
       .from('therapists')
       .update({
         plan: targetPlan,

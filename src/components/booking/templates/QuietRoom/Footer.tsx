@@ -57,7 +57,7 @@ export default function Footer({ therapist, scrollTo }: FooterProps) {
 
       <div className="qr-ft-base qr-mono">
         <span>&copy; {year} {therapist.name}</span>
-        <span className="qr-ft-brandname">Counsellors of India</span>
+        <span className="qr-ft-brandname">{therapist.brandName || 'Counsellors of India'}</span>
       </div>
     </footer>
   )

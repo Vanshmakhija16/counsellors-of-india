@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 export const metadata: Metadata = {
-  title: 'Create Your Therapist Profile – Sign Up | Counsellors of India',
+  title: 'Create Your Therapist Profile – Sign Up',
   description:
     'Create your free therapist profile in under 10 minutes. Add credentials, pick a template & start accepting bookings from clients across India.',
   robots: {

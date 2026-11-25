@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { TherapistProfile, getNext7Days, resolveCT1Content, resolveImage } from './templateUtils'
+import { formatTherapistPrice, TherapistProfile, getNext7Days, resolveCT1Content, resolveImage } from './templateUtils'
 import { getOrderedSections } from '@/lib/template'
 import { globalStyles } from './ClassicTemplate/styles'
 import Loader from './ClassicTemplate/Loader'
@@ -26,6 +26,7 @@ interface ClassicTemplateProps {
   hiddenSections?: string[]
   /** True when the logged-in user viewing this page owns this profile. */
   isOwner?: boolean
+  brandName?: string
 }
 
 // Hardcoded carousel slide backgrounds/accents (visual only, not editable)
@@ -37,15 +38,15 @@ const SLIDE_STYLES = [
   { bg: 'linear-gradient(135deg, #1f2430 0%, #29303f 60%, #1a1f2a 100%)', accent: '#7a9fc4' },
 ]
 
-export default function ClassicTemplate({ therapist, bookedTimes = [], feedbacks = [], hiddenSections = [], isOwner = false }: ClassicTemplateProps) {
+export default function ClassicTemplate({ therapist, bookedTimes = [], feedbacks = [], hiddenSections = [], isOwner = false, brandName = 'Counsellors of India' }: ClassicTemplateProps) {
   return (
     <EditProvider isOwner={isOwner} therapist={therapist}>
-      <ClassicTemplateInner bookedTimes={bookedTimes} feedbacks={feedbacks} hiddenSections={hiddenSections} />
+      <ClassicTemplateInner bookedTimes={bookedTimes} feedbacks={feedbacks} hiddenSections={hiddenSections} brandName={brandName} />
     </EditProvider>
   )
 }
 
-function ClassicTemplateInner({ bookedTimes = [], feedbacks = [], hiddenSections = [] }: Omit<ClassicTemplateProps, 'therapist' | 'isOwner'>) {
+function ClassicTemplateInner({ bookedTimes = [], feedbacks = [], hiddenSections = [], brandName = 'Counsellors of India' }: Omit<ClassicTemplateProps, 'therapist' | 'isOwner'>) {
   const { draft: therapist } = useEditableTemplate()
   const show = (id: string) => !hiddenSections.includes(id)
   const orderedIds = getOrderedSections('classic', therapist.section_order, hiddenSections).map(s => s.id)
@@ -64,7 +65,7 @@ function ClassicTemplateInner({ bookedTimes = [], feedbacks = [], hiddenSections
     kind:    s.kind ?? '',
     desc:    s.desc,
     forWhom: s.forWhom ?? [],
-    price:   s.price,
+    price:   therapist.isDemo && therapist.currencySymbol === '$' ? '$150 / session' : s.price,
     duration_mins: s.duration_mins,
   }))
 
@@ -228,6 +229,8 @@ function ClassicTemplateInner({ bookedTimes = [], feedbacks = [], hiddenSections
         scrollSvc={scrollSvc}
         defaultFee={therapist.fee}
         defaultDurationMins={therapist.sessionDuration}
+        currencySymbol={therapist.currencySymbol}
+        isDemo={therapist.isDemo}
         onBookService={handleBookService}
       />
     ),
@@ -251,7 +254,7 @@ function ClassicTemplateInner({ bookedTimes = [], feedbacks = [], hiddenSections
         onClearService={() => setSelectedService(null)}
       />
     ),
-    footer: <Footer key="footer" therapist={therapist} />,
+    footer: <Footer key="footer" therapist={therapist} brandName={brandName} />,
   }
 
   return (

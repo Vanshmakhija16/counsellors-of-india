@@ -15,22 +15,13 @@
  */
 
 import { NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { createServiceSupabaseClient } from '@/lib/supabase-server'
+import {
+  createServerSupabaseClient,
+  createServiceSupabaseClientForTenantOrLegacyIndia,
+} from '@/lib/supabase-server'
 
 async function getUser() {
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll: () => cookieStore.getAll(),
-        setAll: (cs) => cs.forEach(({ name, value, options }) => cookieStore.set(name, value, options)),
-      },
-    }
-  )
+  const supabase = await createServerSupabaseClient()
   const { data: { user }, error } = await supabase.auth.getUser()
   return error ? null : user
 }
@@ -40,7 +31,7 @@ export async function POST() {
     const user = await getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    const db = createServiceSupabaseClient()
+    const db = await createServiceSupabaseClientForTenantOrLegacyIndia()
     const { data: therapist, error: fetchErr } = await db
       .from('therapists')
       .select('plan, subscription_expires_at, subscription_status')

@@ -1,11 +1,11 @@
 import Link from 'next/link'
 import { Users, IndianRupee, CalendarCheck, ShieldAlert, ArrowUpRight } from 'lucide-react'
 import { requireAdmin } from '@/lib/admin'
-import { createServiceSupabaseClient } from '@/lib/supabase-server'
+import { createServiceSupabaseClientForTenantOrLegacyIndia } from '@/lib/supabase-server'
 
 export default async function AdminOverviewPage() {
   await requireAdmin()
-  const db = createServiceSupabaseClient()
+  const db = await createServiceSupabaseClientForTenantOrLegacyIndia()
 
   const [{ data: therapists }, { count: totalBookings }, { count: bookingsThisMonth }] = await Promise.all([
     db.from('therapists').select('id, plan, is_active, razorpay_oauth_health, payments_enabled, created_at'),

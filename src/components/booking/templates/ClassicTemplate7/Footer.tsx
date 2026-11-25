@@ -59,7 +59,7 @@ export default function Footer({ therapist, scrollTo }: FooterProps) {
 
       <div className="ct7-ft-base">
         <span>&copy; {year} {therapist.name}</span>
-        <span>Counsellors of India</span>
+        <span>{therapist.brandName || 'Counsellors of India'}</span>
       </div>
     </footer>
   )

@@ -1,10 +1,10 @@
 import { requireAdmin } from '@/lib/admin'
-import { createServiceSupabaseClient } from '@/lib/supabase-server'
+import { createServiceSupabaseClientForTenantOrLegacyIndia } from '@/lib/supabase-server'
 import TherapistsTable, { type TherapistRow } from '@/components/admin/TherapistsTable'
 
 export default async function AdminTherapistsPage() {
   await requireAdmin()
-  const db = createServiceSupabaseClient()
+  const db = await createServiceSupabaseClientForTenantOrLegacyIndia()
 
   const [{ data: therapists }, { data: appointments }] = await Promise.all([
     db.from('therapists')

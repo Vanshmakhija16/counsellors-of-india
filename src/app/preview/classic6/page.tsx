@@ -1,17 +1,23 @@
 import ClassicTemplate6 from '@/components/booking/templates/ClassicTemplate6'
+import { getCurrentTenant } from '@/lib/tenants/server'
 import { demoProfiles, demoBookedTimes } from '../demoData'
 
-export const metadata = { title: 'The Quiet Room — Template Preview | Counsellors of India' }
+export const metadata = { title: 'The Quiet Room — Template Preview' }
 
 type SearchParams = Promise<{ embed?: string; pc?: string }>
 
 export default async function PreviewClassic6({ searchParams }: { searchParams: SearchParams }) {
   const { embed, pc } = await searchParams
+  const tenant = await getCurrentTenant()
   const isEmbed = embed === '1'
 
   let profileContent = {}
   if (pc) { try { profileContent = JSON.parse(decodeURIComponent(pc)) } catch { /* ignore */ } }
-  const profile = { ...demoProfiles.classic6, profile_content: profileContent }
+  const profile = {
+    ...demoProfiles.classic6,
+    ...(tenant.id === 'us' ? { currencySymbol: '$', isDemo: true } : {}),
+    profile_content: profileContent,
+  }
 
   return (
     <>

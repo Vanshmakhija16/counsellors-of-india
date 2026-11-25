@@ -83,7 +83,7 @@ export default function Footer({ therapist }: FooterProps) {
             className="ct2-mono"
             style={{ fontSize: 11, color: 'var(--mute)', letterSpacing: '0.14em' }}
           >
-            © {year} {fullName.toUpperCase()} · COUNSELLORS OF INDIA
+            © {year} {fullName.toUpperCase()} · {(therapist.brandName || 'Counsellors of India').toUpperCase()}
           </p>
           {/* <p
             className="ct2-mono"

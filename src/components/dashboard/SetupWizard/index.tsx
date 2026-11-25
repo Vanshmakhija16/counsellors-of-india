@@ -55,7 +55,7 @@ function VerticalStepper({ current, brand }: { current: number; brand: string })
     >
       {/* Brand */}
       <div className="mb-1">
-        <Logo size="sm" />
+        <Logo size="sm" brandName={tenantId === 'us' ? 'Counselors of America' : undefined} tagline={tenantId === 'us' ? 'practice management for American therapists' : undefined} />
       </div>
       {/* Continuity marker — this is step 4 of the account→plan→payment→build journey */}
       <p className="text-[10px] font-semibold uppercase tracking-wide mb-9" style={{ color: '#22c55e' }}>
@@ -195,7 +195,7 @@ export default function SetupWizard({
 }: Props) {
   const supabase = createClient()
   const fileRef  = useRef<HTMLInputElement>(null)
-  const { accent: BRAND } = useTenantAccent()
+  const { accent: BRAND, tenantId } = useTenantAccent()
 
   const [step, setStep] = useState(0)
 
@@ -295,7 +295,7 @@ export default function SetupWizard({
       <div className="lg:hidden shrink-0 flex items-center justify-between px-5 py-3 border-b"
         style={{ borderColor: '#EDE9E4' }}>
         <div className="flex items-center gap-2">
-          <Logo size="sm" />
+          <Logo size="sm" brandName={tenantId === 'us' ? 'Counselors of America' : undefined} tagline={tenantId === 'us' ? 'practice management for American therapists' : undefined} />
         </div>
         {/* Mobile step pills */}
         <div className="flex items-center gap-1.5">
@@ -430,7 +430,7 @@ export default function SetupWizard({
                   <label className="block text-sm font-semibold text-[#1c1c1e] mb-1.5">Full name <span style={{ color: BRAND }}>*</span></label>
                   <input className="w-full h-11 px-4 rounded-xl border border-[#e8e4df] text-sm text-[#1c1c1e] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent bg-white transition"
                     placeholder="e.g. Dr. Priya Sharma" value={name} onChange={e => setName(e.target.value)} />
-                  <p className="text-xs text-[#9ca3af] mt-1">Include your title — clients trust "Dr." or "Counsellor" prefixes</p>
+                  <p className="text-xs text-[#9ca3af] mt-1">Include your title — clients trust "Dr." or "{tenantId === 'us' ? 'Counselor' : 'Counsellor'}" prefixes</p>
                 </div>
 
                 {/* Bio */}

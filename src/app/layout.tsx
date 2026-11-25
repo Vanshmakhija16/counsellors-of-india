@@ -100,7 +100,7 @@ export async function generateMetadata(): Promise<Metadata> {
     },
 
     // Site favicon / browser-tab icon — uses this tenant's own logo mark
-    // when one exists (e.g. America's /COA2.png), falling back to the COI
+    // when one exists (e.g. America's dedicated logo), falling back to the COI
     // brand mark for tenants without a dedicated logo asset yet. Same file
     // already used for the navbar logo, so the tab icon always matches.
     icons: {

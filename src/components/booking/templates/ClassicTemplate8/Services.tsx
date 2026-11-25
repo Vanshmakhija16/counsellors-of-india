@@ -2,7 +2,7 @@
 
 import { ArrowUpRight } from 'lucide-react'
 import type { TherapistProfile } from '../templateUtils'
-import { resolveCT8Content } from '../templateUtils'
+import { formatTherapistPrice, resolveCT8Content } from '../templateUtils'
 import type { Persona } from './Hero'
 
 interface ServicesProps {
@@ -70,7 +70,7 @@ export default function Services({ therapist, persona }: ServicesProps) {
 
                 {price != null ? (
                   <div className="ct8-service-price-row">
-                    <span className="ct8-service-price">₹{Number(price).toLocaleString('en-IN')}</span>
+                    <span className="ct8-service-price">{formatTherapistPrice(price, therapist)}</span>
                     <span className="ct8-service-price-unit">/ {duration} min session</span>
                   </div>
                 ) : (

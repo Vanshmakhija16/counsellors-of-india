@@ -23,7 +23,7 @@ const LOADER_BY_TENANT: Record<TenantId, {
   secondary: string
 }> = {
   in: { letters: ['C', 'O', 'I'], tagline: 'COUNSELLORS OF INDIA',   words: ['INDIAN',   'COUNSEL', 'NETWORK'], primary: '#F5941F', secondary: '#1E7A44' },
-  us: { letters: ['C', 'O', 'A'], tagline: 'COUNSELLORS OF AMERICA', words: ['AMERICAN', 'COUNSEL', 'NETWORK'], primary: '#3C3B6E', secondary: '#B22234' },
+  us: { letters: ['C', 'O', 'A'], tagline: 'COUNSELORS OF AMERICA', words: ['AMERICAN', 'COUNSEL', 'NETWORK'], primary: '#3C3B6E', secondary: '#B22234' },
   ca: { letters: ['C', 'O', 'I'], tagline: 'COUNSELLORS OF INDIA',   words: ['INDIAN',   'COUNSEL', 'NETWORK'], primary: '#F5941F', secondary: '#1E7A44' },
   uk: { letters: ['C', 'O', 'I'], tagline: 'COUNSELLORS OF INDIA',   words: ['INDIAN',   'COUNSEL', 'NETWORK'], primary: '#F5941F', secondary: '#1E7A44' },
   au: { letters: ['C', 'O', 'I'], tagline: 'COUNSELLORS OF INDIA',   words: ['INDIAN',   'COUNSEL', 'NETWORK'], primary: '#F5941F', secondary: '#1E7A44' },

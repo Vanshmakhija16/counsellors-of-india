@@ -17,7 +17,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceSupabaseClient } from '@/lib/supabase-server'
+import { createServiceSupabaseClientForTenantOrLegacyIndia } from '@/lib/supabase-server'
 import {
   PAYU_KEY,
   PAYU_BASE_URL,
@@ -70,7 +70,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Slot must be at least 4 hours from now.' }, { status: 400 })
     }
 
-    const supabase = createServiceSupabaseClient()
+    const supabase = await createServiceSupabaseClientForTenantOrLegacyIndia()
 
     const { data: therapist, error: therapistErr } = await supabase
       .from('therapists')

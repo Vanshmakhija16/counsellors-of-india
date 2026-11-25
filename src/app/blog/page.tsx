@@ -6,14 +6,18 @@ import '@/app/page.css'
 import SiteFooter from '@/components/layout/SiteFooter'
 import { ArrowRight, ArrowUpRight, PenLine } from 'lucide-react'
 import { getCurrentTenant } from '@/lib/tenants/server'
-import { listPublishedBlogPostsServer } from '@/lib/blog.server'
+import { NOTEBOOK_POSTS } from '@/lib/blog.static'
 import type { BlogPost } from '@/lib/blog'
 import { estimateReadingMinutes } from '@/lib/markdown'
 import FooterReveal from '@/components/landing/FooterReveal'
 
-export const metadata: Metadata = {
-  title: 'Blog',
-  description: 'Practice-growth tips, guides, and stories for therapists and counsellors.',
+export async function generateMetadata(): Promise<Metadata> {
+  const tenant = await getCurrentTenant()
+  const profession = tenant.id === 'us' ? 'counselors' : 'counsellors'
+  return {
+    title: 'Blog',
+    description: `Practice-growth tips, guides, and stories for therapists and ${profession}.`,
+  }
 }
 
 // ── "The Practice Notebook" design tokens ──────────────────────────────
@@ -211,7 +215,7 @@ function OpenBook({ post, coverStart, coverEnd }: { post: BlogPost; coverStart: 
 
 export default async function BlogPage() {
   const tenant = await getCurrentTenant()
-  const posts = await listPublishedBlogPostsServer()
+  const posts = NOTEBOOK_POSTS
 
   const [activePost, ...spinePosts] = posts
   const half = Math.ceil(spinePosts.length / 2)

@@ -2,7 +2,7 @@
 
 import type { RefObject } from 'react'
 import type { TherapistProfile } from '../templateUtils'
-import { getAvailableDays, resolveImage } from '../templateUtils'
+import { formatTherapistPrice, getAvailableDays, resolveImage } from '../templateUtils'
 import EditableText from '../edit/EditableText'
 import { useEditableTemplate } from '../edit/EditContext'
 
@@ -164,7 +164,7 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
 
                 {therapist.fee && (
                   <p className="text-[15px] font-semibold text-[#b46b50]">
-                    ₹{therapist.fee.toLocaleString('en-IN')}
+                    {formatTherapistPrice(therapist.fee, therapist)}
                     <span className="font-normal"> / {therapist.sessionDuration} min</span>
                   </p>
                 )}

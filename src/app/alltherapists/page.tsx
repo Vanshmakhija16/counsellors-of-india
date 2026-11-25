@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { normalizeSpecialtyKey, titleCaseLabel } from '@/lib/specialties'
 import SiteNavbar from '@/components/layout/SiteNavbar'
+import { useTenantAccent } from '@/lib/useTenantAccent'
+import { localizeCounselorSpelling } from '@/lib/counselorSpelling'
 import '../page.css'
 
 const AVP = [
@@ -31,6 +33,8 @@ function handleCardTiltLeave(e: React.MouseEvent<HTMLAnchorElement>) {
 }
 
 export default function TherapistsDirectoryPage() {
+  const { tenantId } = useTenantAccent()
+  const isAmerica = tenantId === 'us'
   const [therapists, setTherapists] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
@@ -106,7 +110,7 @@ export default function TherapistsDirectoryPage() {
 
       <div className="tdp-hero" style={{ marginTop: 'clamp(90px, 12vw, 120px)' }}>
         <h1>All Practitioners</h1>
-        <p>{loading ? 'Loading practitioners…' : ` Therapists and counsellors across India.`}</p>
+        <p>{loading ? 'Loading practitioners…' : ` Therapists and ${isAmerica ? 'counselors' : 'counsellors'} across ${isAmerica ? 'America' : 'India'}.`}</p>
       </div>
 
       <section className="td-section sec-rise" style={{ paddingTop: 'clamp(1.5rem,3vw,2.5rem)' }}>
@@ -167,7 +171,7 @@ export default function TherapistsDirectoryPage() {
                 : filtered.map((t: any, idx: number) => {
                     const name = t.full_name || t.name || 'Therapist'
                     const photo = t.photo_url || ''
-                    const role = t.title || t.qualification || ''
+                    const role = localizeCounselorSpelling(t.title || t.qualification || '', isAmerica)
                     const city = t.city || t.location || ''
                     const specs: string[] = t.specialties || t.specializations || []
                     const fee = t.fee_per_session ?? null
@@ -182,7 +186,7 @@ export default function TherapistsDirectoryPage() {
                           <div className="td-card-av">
                             {photo ? <img src={photo} alt={name} loading="lazy" /> : <span>{init}</span>}
                             <span className="td-card-verified" title="Verified therapist">
-                              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
                                 <polyline points="20 6 9 17 4 12"/>
                               </svg>
                             </span>

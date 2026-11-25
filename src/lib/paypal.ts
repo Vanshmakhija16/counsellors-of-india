@@ -99,7 +99,7 @@ export async function createPayPalOrder(params: {
         },
       ],
       application_context: {
-        brand_name: 'Counsellors of America',
+        brand_name: 'Counselors of America',
         user_action: 'PAY_NOW',
         return_url: params.returnUrl,
         cancel_url: params.cancelUrl,
@@ -318,7 +318,7 @@ export async function createMultipartyOrder(params: {
       intent: 'CAPTURE',
       purchase_units: [purchaseUnit],
       application_context: {
-        brand_name: 'Counsellors of America',
+        brand_name: 'Counselors of America',
         user_action: 'PAY_NOW',
         return_url: params.returnUrl,
         cancel_url: params.cancelUrl,

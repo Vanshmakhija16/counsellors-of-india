@@ -72,8 +72,7 @@ const FOOTER_COLS = [
  */
 export default function SiteFooter({ tenant = DEFAULT_TENANT }: { tenant?: SiteFooterTenant } = {}) {
   const footerRef = useRef<HTMLElement>(null)
-  // "Counsellors of America" -> ["Counsellors", "America"], so the logo
-  // keeps its two-line "Counsellors<br/>of X" look for any brand name.
+  // Split the tenant's brand name so the logo keeps its two-line "of X" look.
   const [brandFirst, brandRest] = tenant.brandName.split(' of ')
 
   // While this footer is in view, hide any top nav tagged .site-topnav (see

@@ -38,6 +38,9 @@ export async function POST(req: NextRequest) {
     }
 
     const tenant = await getCurrentTenant()
+    if (tenant.id !== 'us') {
+      return NextResponse.json({ error: 'PayPal payments are unavailable for this tenant' }, { status: 410 })
+    }
     const db = await createServiceSupabaseClientForTenant()
 
     const { data: appt, error: apptErr } = await db

@@ -9,6 +9,7 @@ import ClassicTemplate5 from '@/components/booking/templates/ClassicTemplate5'
 import ClassicTemplate6 from '@/components/booking/templates/ClassicTemplate6'
 import ClassicTemplate7 from '@/components/booking/templates/ClassicTemplate7'
 import PreviewMessageListener from './PreviewMessageListener'
+import { getCurrentTenant } from '@/lib/tenants/server'
 
 type SearchParams = Promise<{ embed?: string; pc?: string }>
 
@@ -20,6 +21,7 @@ export default async function LivePreviewPage({
   searchParams: SearchParams
 }) {
   const supabase = await createServerSupabaseClient()
+  const tenant = await getCurrentTenant()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
@@ -69,6 +71,7 @@ export default async function LivePreviewPage({
     experience:      therapist.years_experience ?? 0,
     fee:             therapist.fee_per_session ?? 0,     // templates use .fee
     fee_per_session: therapist.fee_per_session ?? 0,
+    currencySymbol:  tenant.currencySymbol,
     specialties:     therapist.specialties ?? [],
     languages:       therapist.languages ?? ['English'],
     sessionDuration: therapist.session_duration_mins ?? 50, // templates use .sessionDuration

@@ -19,10 +19,15 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceSupabaseClient } from '@/lib/supabase-server'
 import { fetchPlatformRazorpayOrder, toPaise, verifyRazorpaySignature } from '@/lib/razorpay'
 import { getPlanPriceInr, highestPlan, normalizePlan } from '@/lib/pricing'
+import { getCurrentTenant } from '@/lib/tenants/server'
 
 const WEBHOOK_SECRET = process.env.RAZORPAY_WEBHOOK_SECRET ?? ''
 
 export async function POST(req: NextRequest) {
+  const tenant = await getCurrentTenant()
+  if (tenant.id !== 'in') {
+    return NextResponse.json({ error: 'Razorpay webhook is unavailable for this tenant' }, { status: 410 })
+  }
   // Signature must be verified against the RAW body text -- parsing to
   // JSON first and re-stringifying would produce a different byte
   // sequence than what Razorpay actually signed, breaking verification.

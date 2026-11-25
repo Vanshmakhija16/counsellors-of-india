@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from 'react'
 interface LoaderProps {
   onDone: () => void
   therapistName?: string
+  brandName?: string
 }
 
 // Label shifts as the count climbs — a small narrative arc rather than a
@@ -32,7 +33,7 @@ function easeInOutCubic(t: number): number {
 
 const SESSION_KEY = 'ct7-loader-seen'
 
-export default function Loader({ onDone, therapistName }: LoaderProps) {
+export default function Loader({ onDone, therapistName, brandName = 'Counsellors of India' }: LoaderProps) {
   const [count, setCount] = useState(0)
   const [opening, setOpening] = useState(false)
   const [mounted, setMounted] = useState(true)
@@ -93,7 +94,7 @@ export default function Loader({ onDone, therapistName }: LoaderProps) {
       <div className="ct7-loader-panel ct7-loader-panel--top" />
       <div className="ct7-loader-panel ct7-loader-panel--bottom" />
 
-      <span className="ct7-loader-brand">Counsellors of India</span>
+      <span className="ct7-loader-brand">{brandName}</span>
 
       <span className="ct7-loader-corner ct7-loader-corner--tl">+</span>
       <span className="ct7-loader-corner ct7-loader-corner--tr">+</span>

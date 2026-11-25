@@ -1,5 +1,6 @@
 
 import ClassicTemplate from '@/components/booking/templates/ClassicTemplate'
+import { getCurrentTenant } from '@/lib/tenants/server'
 import {
   demoProfiles,
   demoBookedTimes,
@@ -7,7 +8,7 @@ import {
 } from '../demoData'
 
 export const metadata = {
-  title: 'Classic I — Template Preview | Counsellors of India',
+  title: 'Classic I — Template Preview',
 }
 
 type SearchParams = Promise<{
@@ -22,6 +23,7 @@ export default async function PreviewClassic1({
   searchParams: SearchParams
 }) {
   const { embed, view, pc } = await searchParams
+  const tenant = await getCurrentTenant()
 
   const isEmbed = embed === '1'
 
@@ -30,7 +32,26 @@ export default async function PreviewClassic1({
   if (pc) {
     try { profileContent = JSON.parse(decodeURIComponent(pc)) } catch { /* ignore */ }
   }
-  const profile = { ...demoProfiles.classic1, profile_content: profileContent }
+  const profile = {
+    ...demoProfiles.classic1,
+    ...(tenant.id === 'us' ? {
+      name: 'Emily Carter',
+      credentials: 'Clinical Psychologist',
+      certifications: (demoProfiles.classic1.certifications ?? []).filter(
+        (certification: string) => !/\bRCI\b/i.test(certification),
+      ),
+    } : {}),
+    image: tenant.id === 'us'
+      ? '/images/demo/america/template1.png'
+      : demoProfiles.classic1.image,
+    ...(tenant.id === 'us' ? { fee: 150, currencySymbol: '$', isDemo: true } : {}),
+    ...(tenant.id === 'us' ? {
+      location: 'Washington, USA',
+      city: 'Washington, USA',
+      languages: ['English', 'French', 'Spanish'],
+    } : {}),
+    profile_content: profileContent,
+  }
 
   const previewWidth =
     view === 'mobile'
@@ -79,6 +100,7 @@ export default async function PreviewClassic1({
           >
             <ClassicTemplate
               therapist={profile}
+              brandName={tenant.brandName}
               bookedTimes={demoBookedTimes}
               feedbacks={demoFeedbacks}
               hiddenSections={[]}

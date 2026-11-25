@@ -18,7 +18,7 @@
 
 import { NextRequest, NextResponse } from 'next/server'
 import { getAdminUser } from '@/lib/admin'
-import { createServiceSupabaseClient } from '@/lib/supabase-server'
+import { createServiceSupabaseClientForTenantOrLegacyIndia } from '@/lib/supabase-server'
 
 interface Params {
   params: Promise<{ id: string }>
@@ -31,7 +31,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
   const { id } = await params
   if (!id) return NextResponse.json({ error: 'Missing therapist id.' }, { status: 400 })
 
-  const db = createServiceSupabaseClient()
+  const db = await createServiceSupabaseClientForTenantOrLegacyIndia()
 
   const { data: therapist, error: findErr } = await db
     .from('therapists')

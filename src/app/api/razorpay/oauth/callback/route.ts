@@ -75,16 +75,6 @@ export async function GET(req: NextRequest) {
   const cookieStore = await cookies()
   const expectedState = cookieStore.get(STATE_COOKIE)?.value
 
-  // -- TEMPORARY DEBUG LOGGING: remove once the flow is confirmed fixed --
-  console.log('[razorpay/oauth/callback] debug', {
-    callbackState: state,
-    cookieState: expectedState,
-    host: req.headers.get('host'),
-    xForwardedHost: req.headers.get('x-forwarded-host'),
-    xForwardedProto: req.headers.get('x-forwarded-proto'),
-    safeOrigin: getSafeOrigin(),
-  })
-
   // Therapist denied consent, or Razorpay reported some other error.
   if (oauthError) {
     console.warn('[razorpay/oauth/callback] Razorpay returned error:', oauthError)

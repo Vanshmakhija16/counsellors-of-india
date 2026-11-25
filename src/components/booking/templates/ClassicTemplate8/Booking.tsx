@@ -155,7 +155,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
           <div className={`ct8-book-card${showDetails ? ' ct8-book-card--details' : selectedDay ? ' ct8-book-card--with-times' : ''}`}>
             {/* ── Left: static event info ── */}
             <div className="ct8-book-info">
-              <div className="ct8-book-brand">{therapist.name || 'Counsellors of India'}</div>
+              <div className="ct8-book-brand">{therapist.name || therapist.brandName || 'Counsellors of India'}</div>
               <h3 className="ct8-book-title">{duration} Minute Session</h3>
               <div className="ct8-book-meta-row"><Clock size={15} /> {duration} min</div>
               <div className="ct8-book-meta-row"><Video size={15} /> Online · In-Person</div>

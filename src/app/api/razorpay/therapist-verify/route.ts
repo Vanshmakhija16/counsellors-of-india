@@ -1,11 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createServiceSupabaseClient } from '@/lib/supabase-server'
+import { getCurrentTenant } from '@/lib/tenants/server'
 import { decrypt } from '@/lib/encryption'
 import { verifyRazorpaySignature } from '@/lib/razorpay'
 import { notifyBookingConfirmed } from '@/lib/booking-notifications'
 
 export async function POST(req: NextRequest) {
   try {
+    const tenant = await getCurrentTenant()
+    if (tenant.id !== 'in') {
+      return NextResponse.json({ error: 'Razorpay is unavailable for this tenant' }, { status: 410 })
+    }
     const {
       therapist_id,
       razorpay_order_id,

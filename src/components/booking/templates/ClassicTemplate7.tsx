@@ -54,7 +54,7 @@ export default function ClassicTemplate7({ therapist, bookedTimes = [], hiddenSe
         rel="stylesheet"
       />
 
-      <Loader onDone={() => setLoaded(true)} therapistName={therapist.name} />
+      <Loader onDone={() => setLoaded(true)} therapistName={therapist.name} brandName={therapist.brandName} />
 
       <Navbar therapist={therapist} scrollTo={scrollTo} />
 

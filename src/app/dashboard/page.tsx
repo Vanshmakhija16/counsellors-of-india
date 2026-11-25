@@ -54,7 +54,10 @@ function inferState(therapist: any): 'no-template' | 'no-content' | 'unpublished
 export default function DashboardPage() {
   const { therapist, loading } = useTherapist()
   const supabase = useSupabaseClient()
-  const { accent: SAFFRON, accentDark: SAFFRON_DEEP } = useTenantAccent()
+  const { accent: SAFFRON, accentDark: SAFFRON_DEEP, tenantId } = useTenantAccent()
+  const bookingDomain = tenantId === 'us'
+    ? 'counselorsofamerica.com'
+    : 'counsellorsofindia.com'
 
   const [appointments, setAppointments] = useState<any[]>([])
   const [stats, setStats]   = useState({ total: 0, today: 0, pending: 0 })
@@ -132,14 +135,14 @@ export default function DashboardPage() {
 
   function copyLink() {
     if (!therapist) return
-    navigator.clipboard.writeText(`${window.location.origin}/${therapist.username}`)
+    navigator.clipboard.writeText(`https://${bookingDomain}/${therapist.username}`)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
   }
 
   async function shareLink() {
     if (!therapist) return
-    const url = `${window.location.origin}/${therapist.username}`
+    const url = `https://${bookingDomain}/${therapist.username}`
     if (navigator.share) {
       try { await navigator.share({ title: 'My booking page', url }) } catch { /* cancelled */ }
     } else { copyLink() }
@@ -179,7 +182,7 @@ export default function DashboardPage() {
     /^(dr|mr|mrs|ms|miss|mx|prof)\.?$/i.test(nameParts[0])
     ? nameParts[1] : (nameParts[0] ?? '')
   const publicUrl = therapist?.username
-    ? `counsellorsofindia.com/${therapist.username}`
+    ? `${bookingDomain}/${therapist.username}`
     : null
   const hasBookings = stats.total > 0
 

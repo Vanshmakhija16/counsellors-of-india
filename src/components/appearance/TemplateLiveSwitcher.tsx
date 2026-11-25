@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Sparkles, Check, Lock, ChevronLeft, ChevronRight } from 'lucide-react'
 import { TEMPLATES, type TemplateId, type Template } from '@/lib/template'
+import { useTenantAccent } from '@/lib/useTenantAccent'
 
 const META: Record<TemplateId, { slug: string; t: string }> = {
   classic:  { slug: 'classic',  t: 't1' },
@@ -44,6 +45,10 @@ export default function TemplateLiveSwitcher({
   hideActionBar = false, hideArrows = false, frameHeight = 680,
   profileContent, templates = TEMPLATES,
 }: Props) {
+  const { tenantId } = useTenantAccent()
+  const sampleBookingDomain = tenantId === 'us'
+    ? 'counselorsofamerica.com'
+    : 'counsellorsofindia.com'
   const [internalActive, setInternalActive] = useState<TemplateId>(selectedTemplate)
   const active = controlledActive ?? internalActive
   const setActive = (id: TemplateId) => {
@@ -202,7 +207,7 @@ export default function TemplateLiveSwitcher({
           <div className="w-2.5 h-2.5 rounded-full bg-green-400" />
         </div>
         <div className="flex-1 mx-2 h-6 rounded-md bg-white border border-[#e8e4df] flex items-center justify-center">
-          <span className="text-[11px] text-[#9ca3af]">counsellorsofindia.com/your-name</span>
+          <span className="text-[11px] text-[#9ca3af]">{sampleBookingDomain}/your-name</span>
         </div>
         <span className="text-[10px] font-semibold text-emerald-600 flex items-center gap-1">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> LIVE

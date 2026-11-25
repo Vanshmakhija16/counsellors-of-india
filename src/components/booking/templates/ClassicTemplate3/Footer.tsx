@@ -80,7 +80,7 @@ export default function Footer({ therapist }: FooterProps) {
 
         <div className="ct3-footer-bottom">
           <p className="ct3-footer-copy">
-            © {year} · {fullName.toUpperCase()} · COUNSELLORS OF INDIA
+            © {year} · {fullName.toUpperCase()} · {(therapist.brandName || 'Counsellors of India').toUpperCase()}
           </p>
           {/* <p className="ct3-footer-tag">ATELIER BLANC · CT3</p> */}
         </div>

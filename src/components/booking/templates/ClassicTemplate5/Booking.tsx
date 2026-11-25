@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Check, Loader2 } from 'lucide-react'
 import type { TherapistProfile } from '../templateUtils'
-import { getAvailableDays, slotToISO } from '../templateUtils'
+import { formatTherapistPrice, getAvailableDays, slotToISO } from '../templateUtils'
 import { useBooking } from '@/lib/useBooking'
 
 // ── Temporary: send to WhatsApp instead of API/payment ──────────────────
@@ -125,7 +125,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
               </div>
               <div className="ct5-session-row">
                 <span className="ct5-session-key">Investment</span>
-                <span className="ct5-session-val">{therapist.fee ? `₹ ${therapist.fee.toLocaleString()}` : '—'}</span>
+                <span className="ct5-session-val">{therapist.fee ? formatTherapistPrice(therapist.fee, therapist) : '—'}</span>
               </div>
               <div className="ct5-session-row">
                 <span className="ct5-session-key">Format</span>
@@ -133,7 +133,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
               </div>
               <div className="ct5-session-row">
                 <span className="ct5-session-key">Payment</span>
-                <span className="ct5-session-val">🔒 Secure via PayU</span>
+                <span className="ct5-session-val">🔒 Secure via Paypal</span>
               </div>
             </div>
           </div>
@@ -241,8 +241,8 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                 {therapist.fee != null && therapist.fee > 0 && (
                   <p style={{ fontSize: 12, color: 'var(--warm-gray)', marginTop: '1rem', lineHeight: 1.5 }}>
                     You will be charged{' '}
-                    <strong style={{ color: 'var(--forest)' }}>₹{therapist.fee.toLocaleString()}</strong>
-                    {' '}via PayU before your booking is confirmed.
+                    <strong style={{ color: 'var(--forest)' }}>{formatTherapistPrice(therapist.fee, therapist)}</strong>
+                    {' '}via Paypal before your booking is confirmed.
                   </p>
                 )}
 
@@ -255,7 +255,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                   {bookingLoading ? (
                     <><Loader2 size={13} className="animate-spin" /> Processing…</>
                   ) : therapist.fee != null && therapist.fee > 0 ? (
-                    <>Pay ₹{therapist.fee.toLocaleString()} & Confirm &nbsp;→</>
+                    <>Pay {formatTherapistPrice(therapist.fee, therapist)} & Confirm &nbsp;→</>
                   ) : (
                     <>Confirm Session &nbsp;→</>
                   )}

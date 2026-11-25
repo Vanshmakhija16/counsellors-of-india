@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-export const metadata = { title: 'Payment Failed | Counsellors of India' }
+export const metadata = { title: 'Payment Failed' }
 
 const REASONS: Record<string, string> = {
   invalid_signature: 'We could not verify the payment response. No charge was applied.',

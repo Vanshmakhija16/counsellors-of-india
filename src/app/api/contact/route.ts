@@ -11,7 +11,8 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceSupabaseClient } from '@/lib/supabase-server'
+import { createServiceSupabaseClientForTenantOrLegacyIndia } from '@/lib/supabase-server'
+import { getCurrentTenant } from '@/lib/tenants/server'
 
 function escapeHtml(s: string) {
   return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -20,6 +21,7 @@ function escapeHtml(s: string) {
 
 export async function POST(req: NextRequest) {
   try {
+    const tenant = await getCurrentTenant()
     const body = await req.json()
     const name    = typeof body.name === 'string' ? body.name.trim() : ''
     const email   = typeof body.email === 'string' ? body.email.trim() : ''
@@ -42,7 +44,7 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Store in Supabase ──────────────────────────────────────────────────
-    const supabase = createServiceSupabaseClient()
+    const supabase = await createServiceSupabaseClientForTenantOrLegacyIndia()
     const { data: saved, error: insertErr } = await supabase
       .from('contact_submissions')
       .insert({ name, email, phone, concern: concern || null })
@@ -64,7 +66,7 @@ export async function POST(req: NextRequest) {
           secure: process.env.SMTP_SECURE === 'true',
           auth:   { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
         })
-        const FROM = process.env.SMTP_FROM || 'Counsellors of India <support@counsellorsofindia.com>'
+        const FROM = process.env.SMTP_FROM || `${tenant.brandName} <support@counsellorsofindia.com>`
         const TO   = process.env.CONTACT_TO_EMAIL || process.env.SMTP_USER
 
         await transporter.sendMail({

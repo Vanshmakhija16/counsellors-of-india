@@ -7,7 +7,7 @@ import '@/app/page.css'
 import SiteFooter from '@/components/layout/SiteFooter'
 import FooterReveal from '@/components/landing/FooterReveal'
 import { getCurrentTenant } from '@/lib/tenants/server'
-import { getPublishedBlogPostBySlugServer, listPublishedBlogPostsServer } from '@/lib/blog.server'
+import { NOTEBOOK_POSTS } from '@/lib/blog.static'
 import { renderMarkdown, estimateReadingMinutes } from '@/lib/markdown'
 import BookReader from './BookReader'
 
@@ -18,7 +18,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const post = await getPublishedBlogPostBySlugServer(slug)
+  const post = NOTEBOOK_POSTS.find((entry) => entry.slug === slug) ?? null
   if (!post) return { title: 'Post not found' }
   return {
     title: post.title,
@@ -44,7 +44,7 @@ const RULE = '#E4DCC9'
 export default async function BlogPostPage({ params }: Props) {
   const { slug } = await params
   const tenant = await getCurrentTenant()
-  const post = await getPublishedBlogPostBySlugServer(slug)
+  const post = NOTEBOOK_POSTS.find((entry) => entry.slug === slug) ?? null
 
   if (!post) notFound()
 

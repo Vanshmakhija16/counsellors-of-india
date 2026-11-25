@@ -2,9 +2,9 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { usePathname } from 'next/navigation'
+import { useTenantAccent } from '@/lib/useTenantAccent'
 
 const WHATSAPP_NUMBER = '918854030924'
-const WHATSAPP_MESSAGE = 'Hii, I want to know more about Counsellors of India'
 const CALENDLY_URL = 'https://calendly.com/counsellorsofindia-coi/30min'
 
 declare global {
@@ -42,7 +42,9 @@ function loadCalendlyAssets(onReady: () => void) {
 
 export default function WhatsAppFab() {
   const pathname = usePathname()
-  const waHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_MESSAGE)}`
+  const { tenantId } = useTenantAccent()
+  const brandName = tenantId === 'us' ? 'Counselors of America' : 'Counsellors of India'
+  const waHref = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(`Hii, I want to know more about ${brandName}`)}`
   const [waHovered, setWaHovered] = useState(false)
   const [demoHovered, setDemoHovered] = useState(false)
   const [calendlyLoading, setCalendlyLoading] = useState(false)
@@ -68,7 +70,7 @@ export default function WhatsAppFab() {
   // Hide on auth/onboarding flows -- a marketing chat/demo widget doesn't
   // belong floating over an account-creation or password-reset form. Also
   // hidden on therapist public profile pages ([username]) -- this WhatsApp
-  // button is for "ask about Counsellors of India" (the platform), and it
+  // button is for "ask about the platform", and it
   // sits fixed bottom-right at a very high z-index (2000), which was
   // overlapping the booking card's own "Pay & Confirm" button there,
   // causing accidental clicks into WhatsApp instead of completing payment.

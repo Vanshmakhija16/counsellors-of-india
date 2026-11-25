@@ -6316,6 +6316,14 @@ padding:
     0 1px 0 rgba(255,255,255,.3) inset,
     0 16px 34px -8px rgba(255,153,51,.68);
 }
+.tshow-form-cta.is-america {
+  background: linear-gradient(175deg, #55548B 0%, #3C3B6E 55%, #2A2952 100%);
+  box-shadow: 0 1px 0 rgba(255,255,255,.3) inset, 0 10px 26px -8px rgba(60,59,110,.3);
+}
+.tshow-form-cta.is-america:hover:not(:disabled) {
+  background: linear-gradient(175deg, #626198 0%, #3C3B6E 60%, #2A2952 100%);
+  box-shadow: 0 1px 0 rgba(255,255,255,.3) inset, 0 16px 34px -8px rgba(60,59,110,.38);
+}
 .tshow-form-cta:hover:not(:disabled) svg { transform: translateX(3px); }
 .tshow-form-cta:active:not(:disabled) { transform: translateY(0); }
 .tshow-form-cta:disabled {
@@ -7853,7 +7861,6 @@ padding:
    right iframe align with the “Explore templates” heading above them.       */
 section#experience.texp {
   padding: var(--section-y) clamp(1.5rem, 5vw, 3rem);
-  margin-bottom: 100px;
 }
 .texp-layout {
   max-width: 1180px;

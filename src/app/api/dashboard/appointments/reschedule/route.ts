@@ -27,23 +27,14 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
-import { createServiceSupabaseClient } from '@/lib/supabase-server'
+import {
+  createServerSupabaseClient,
+  createServiceSupabaseClientForTenantOrLegacyIndia,
+} from '@/lib/supabase-server'
 import { notifyBookingRescheduled } from '@/lib/booking-notifications'
 
 async function getUser() {
-  const cookieStore = await cookies()
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll:  () => cookieStore.getAll(),
-        setAll: (cs) => cs.forEach(({ name, value, options }) => cookieStore.set(name, value, options)),
-      },
-    }
-  )
+  const supabase = await createServerSupabaseClient()
   const { data: { user }, error } = await supabase.auth.getUser()
   return error ? null : user
 }
@@ -59,7 +50,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Missing appointment_id' }, { status: 400 })
     }
 
-    const db = createServiceSupabaseClient()
+    const db = await createServiceSupabaseClientForTenantOrLegacyIndia()
 
     // Confirm this appointment actually belongs to the logged-in therapist
     // before revealing anything -- never trust the id alone.
@@ -149,7 +140,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'New time must be in the future.' }, { status: 400 })
     }
 
-    const db = createServiceSupabaseClient()
+    const db = await createServiceSupabaseClientForTenantOrLegacyIndia()
 
     // Ownership check -- can only reschedule your own appointment.
     const { data: appointment, error: apptErr } = await db

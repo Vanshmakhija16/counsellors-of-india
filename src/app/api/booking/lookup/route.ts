@@ -4,13 +4,13 @@
  * can redirect the user back to the correct booking page (#book section).
  */
 import { NextRequest, NextResponse } from 'next/server'
-import { createServiceSupabaseClient } from '@/lib/supabase-server'
+import { createServiceSupabaseClientForTenantOrLegacyIndia } from '@/lib/supabase-server'
 
 export async function GET(req: NextRequest) {
   const txnid = req.nextUrl.searchParams.get('txnid')
   if (!txnid) return NextResponse.json({ error: 'Missing txnid' }, { status: 400 })
 
-  const db = createServiceSupabaseClient()
+  const db = await createServiceSupabaseClientForTenantOrLegacyIndia()
 
   // Find appointment by txnid (set during hold, cleared on success)
   const { data: appt } = await db

@@ -11,6 +11,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createServiceSupabaseClient } from '@/lib/supabase-server'
 import { decrypt } from '@/lib/encryption'
 import { verifyRazorpaySignature } from '@/lib/razorpay'
+import { getCurrentTenant } from '@/lib/tenants/server'
 
 // ── Types ─────────────────────────────────────────────────────────────
 interface RazorpayWebhookEvent {
@@ -34,6 +35,10 @@ interface PaymentRow {
 // ── Main handler ──────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
   try {
+    const tenant = await getCurrentTenant()
+    if (tenant.id !== 'in') {
+      return NextResponse.json({ error: 'Legacy Razorpay webhook is unavailable for this tenant' }, { status: 410 })
+    }
     // 1. Read raw body for HMAC verification
     const rawBody           = await req.text()
     const razorpaySignature = req.headers.get('x-razorpay-signature') ?? ''

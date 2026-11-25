@@ -8,6 +8,7 @@ import {
   type TemplateId,
 } from '@/lib/template'
 import { createClient } from '@/lib/supabase'
+import { resolveTenantId } from '@/lib/tenants'
 import TemplateCanvas from '@/components/booking/templates/TemplateCanvas'
 import TemplateThumbnail from '@/components/appearance/TemplateThumbnail'
 import QuickFillForm from '@/components/demo/QuickFillForm'
@@ -24,6 +25,20 @@ const TPARAM_TO_TEMPLATE: Record<string, TemplateId> = {
   t1: 'classic', t2: 'classic2', t3: 'classic3', t4: 'classic4', t5: 'classic5', t6: 'classic6', t7: 'classic7', t8: 'classic8',
   classic: 'classic', classic2: 'classic2', classic3: 'classic3', classic4: 'classic4', classic5: 'classic5', classic6: 'classic6', classic7: 'classic7', classic8: 'classic8',
 }
+
+const AMERICA_DEMO_NAMES: Partial<Record<TemplateId, string>> = {
+  classic: 'Emily Carter',
+  classic2: 'Lauren Mitchell',
+  classic3: 'Daniel Brooks',
+  classic4: 'Margaret Hayes',
+  classic5: 'Robert Bennett',
+}
+const PRESET_DEMO_NAMES = new Set([
+  'Dr. Nisha', 'Nisha', 'Emiley Carl', 'Vikram Gupta', 'Kiran Singh',
+  'Dr. Millie Joseph', 'Karan Singh', 'Dr. Aanya Mehta', 'Dr. Rohan Malhotra',
+  'Dr. Vansh Makhija',
+  'Emily Carter', 'Lauren Mitchell', 'Daniel Brooks', 'Margaret Hayes', 'Robert Bennett',
+])
 
 export default function TryDemoPage() {
   return (
@@ -60,6 +75,48 @@ function TryDemo() {
     let d = loadDemo()
     const requested = TPARAM_TO_TEMPLATE[searchParams.get('t') ?? '']
     if (requested && requested !== d.template_id) d = saveDemo({ template_id: requested })
+    const activeTemplate = requested ?? d.template_id
+    if (resolveTenantId(window.location.hostname) === 'us') {
+      const patch: Partial<DemoProfile> = { currencySymbol: '$' }
+      const demoName = AMERICA_DEMO_NAMES[activeTemplate]
+      if (demoName && (!d.full_name || PRESET_DEMO_NAMES.has(d.full_name))) patch.full_name = demoName
+      if (!d.title || /\bRCI\b/i.test(d.title)) patch.title = 'Licensed Therapist'
+      if (!d.location || /india|mumbai|maharashtra|kochi|kerala|delhi|bengaluru/i.test(d.location)) {
+        patch.location = 'Washington, USA'
+      }
+      if (!d.city || /india|mumbai|maharashtra|kochi|kerala|delhi|bengaluru/i.test(d.city)) {
+        patch.city = 'Washington, USA'
+      }
+      if (!d.languages?.length || d.languages.some(language => /^(hindi|marathi)$/i.test(language))) {
+        patch.languages = ['English', 'French', 'Spanish']
+      }
+      if (activeTemplate === 'classic3' && (!d.languages?.length || d.languages.some(language => /^(hindi|marathi|spanish)$/i.test(language)))) {
+        patch.languages = ['English', 'French']
+      }
+      if (activeTemplate === 'classic5' && (!d.languages?.length || d.languages.some(language => /^(hindi|marathi|french)$/i.test(language)))) {
+        patch.languages = ['English', 'Spanish']
+      }
+
+      if (activeTemplate === 'classic') {
+        patch.template_id = 'classic'
+        patch.fee = 150
+        patch.currencySymbol = '$'
+      }
+
+      const templateImage: Partial<Record<TemplateId, string>> = {
+        classic: '/images/demo/america/template1.png',
+        classic2: '/images/demo/america/template2.png',
+        classic3: '/images/demo/america/template3.png',
+        classic4: '/images/demo/america/template4.png',
+        classic5: '/images/demo/america/template5.png',
+      }
+      const selectedImage = templateImage[activeTemplate]
+      const isDemoTemplateImage = d.photo_url?.startsWith('/images/demo/america/template') || d.photo_url === '/images/demo/america/template2.png'
+      if (selectedImage && (!d.photo_url || isDemoTemplateImage)) {
+        patch.photo_url = selectedImage
+      }
+      if (Object.keys(patch).length) d = saveDemo(patch)
+    }
     setDemo(d)
   }, [])
 
@@ -133,6 +190,9 @@ function TryDemo() {
   }
 
   const profile = useMemo(() => (demo ? demoToProfile(demo) : null), [demo])
+  const brandName = typeof window !== 'undefined' && resolveTenantId(window.location.hostname) === 'us'
+    ? 'Counselors of America'
+    : 'Counsellors of India'
 
   if (!demo || !profile) {
     return (
@@ -272,7 +332,7 @@ function TryDemo() {
                   Live Preview
                 </p>
                 <p className="text-white/28 text-[10px] mt-[3px] leading-none font-medium tracking-wide">
-                  Counsellors of India
+                  {brandName}
                 </p>
               </div>
 
@@ -612,7 +672,7 @@ function TryDemo() {
           className="demo-canvas bg-white transition-opacity duration-200"
           style={{ opacity: morphing ? 0 : 1 }}
         >
-          <TemplateCanvas profile={profile} />
+          <TemplateCanvas profile={profile} brandName={brandName} />
         </div>
       </main>
 

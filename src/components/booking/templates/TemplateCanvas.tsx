@@ -35,8 +35,11 @@ export function toTemplateTherapist(p: TherapistProfile): TemplateTherapist {
     initials: initials || SAMPLE_THERAPIST.initials,
     credentials: p.title ?? SAMPLE_THERAPIST.credentials,
     city: p.city ?? SAMPLE_THERAPIST.city,
+    location: p.location ?? SAMPLE_THERAPIST.location,
     bio: p.bio ?? SAMPLE_THERAPIST.bio,
     fee: p.fee_per_session ?? SAMPLE_THERAPIST.fee,
+    currencySymbol: p.currencySymbol ?? SAMPLE_THERAPIST.currencySymbol ?? '₹',
+    isDemo: p.isDemo ?? false,
     sessionDuration: p.session_duration_mins ?? SAMPLE_THERAPIST.sessionDuration,
     specialties: p.specialties ?? SAMPLE_THERAPIST.specialties,
     languages: p.languages ?? SAMPLE_THERAPIST.languages,
@@ -45,9 +48,24 @@ export function toTemplateTherapist(p: TherapistProfile): TemplateTherapist {
   }
 }
 
-function renderTemplate(profile: TherapistProfile) {
+function renderTemplate(profile: TherapistProfile, brandName: string) {
   const hidden = profile.hidden_sections ?? []
-  const t = toTemplateTherapist(profile)
+  const t = {
+    ...toTemplateTherapist(profile),
+    brandName,
+    ...(brandName === 'Counselors of America' && profile.isDemo
+      ? { currencySymbol: '$', isDemo: true }
+      : {}),
+  }
+  if (
+    profile.template_id === 'classic4' &&
+    brandName === 'Counselors of America' &&
+    (profile as { isDemo?: boolean }).isDemo
+  ) {
+    t.reviews = t.reviews?.map((review, index) => index === 0
+      ? { ...review, text: 'The support I received helped me through one of the most difficult seasons of my life.' }
+      : review)
+  }
   switch (profile.template_id ?? 'classic') {
     case 'classic2': return <ClassicTemplate2 therapist={t} hiddenSections={hidden} />
     case 'classic3': return <ClassicTemplate3 therapist={t} hiddenSections={hidden} />
@@ -56,19 +74,20 @@ function renderTemplate(profile: TherapistProfile) {
     case 'classic6': return <ClassicTemplate6 therapist={t} hiddenSections={hidden} />
     case 'classic7': return <ClassicTemplate7 therapist={t} hiddenSections={hidden} />
     case 'classic8': return <ClassicTemplate8 therapist={t} hiddenSections={hidden} />
-    default:         return <ClassicTemplate therapist={t} feedbacks={[]} hiddenSections={hidden} />
+    default:         return <ClassicTemplate therapist={t} feedbacks={[]} hiddenSections={hidden} brandName={brandName} />
   }
 }
 
 interface Props {
   profile: TherapistProfile
+  brandName?: string
   className?: string
   style?: React.CSSProperties
 }
 
 /** Renders the full template for `profile`, injecting the brand color as the
  *  CSS variables the templates read. */
-export default function TemplateCanvas({ profile, className, style }: Props) {
+export default function TemplateCanvas({ profile, brandName = 'Counsellors of India', className, style }: Props) {
   const color = getColor(profile.color_id ?? 'teal')
 
   const brandVars = `
@@ -91,7 +110,7 @@ export default function TemplateCanvas({ profile, className, style }: Props) {
       }}
     >
       <style>{`:root { ${brandVars} }`}</style>
-      {renderTemplate(profile)}
+      {renderTemplate(profile, brandName)}
     </div>
   )
 }

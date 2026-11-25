@@ -141,3 +141,19 @@ export async function createServiceSupabaseClientForTenant() {
   const creds = getCredsForPrefix(tenant.supabaseEnvPrefix)
   return createClient(creds.url, creds.serviceRoleKey)
 }
+
+/**
+ * Backward-compatible tenant service helper.
+ *
+ * India keeps using the established India fallback credentials. Other tenants,
+ * including US, use their own prefixed Supabase project and service role key.
+ * Use this in shared routes when changing India behaviour would be unsafe.
+ */
+export async function createServiceSupabaseClientForTenantOrLegacyIndia() {
+  const tenant = await getCurrentTenant()
+  if (tenant.id === 'in') {
+    return createServiceSupabaseClient()
+  }
+  const creds = getCredsForPrefix(tenant.supabaseEnvPrefix)
+  return createClient(creds.url, creds.serviceRoleKey)
+}
