@@ -45,7 +45,13 @@ export default function Hero({ therapist, heroLoaded, heroRef }: HeroProps) {
       <style>{`
         .ct2-hero { min-height: 680px; height: clamp(620px, 80vh, 860px); }
         @media (max-width: 1023px) {
-          .ct2-hero { height: 100dvh; min-height: 100dvh; }
+          /* Keep mobile hero compact while allowing longer copy to expand it. */
+          .ct2-hero {
+            height: auto;
+            min-height: clamp(620px, 76svh, 740px);
+            padding-top: 80px !important;
+            padding-bottom: 48px;
+          }
         }
         .ct2-hero-photo-mobile { width: 100%; max-width: 320px; }
         @media (max-width: 380px) {
