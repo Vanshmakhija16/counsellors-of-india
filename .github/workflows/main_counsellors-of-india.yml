@@ -1,9 +1,6 @@
 name: Build and deploy Node.js app to Azure Web App - counsellors-of-india
 
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
 
 jobs:
