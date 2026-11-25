@@ -769,7 +769,7 @@ with the design and details you chose. </p> </div>
       <label className="block text-sm font-medium text-[#6E685F] mb-1.5">
         Mobile Number
       </label>
-      <div className="flex gap-2">
+      <div className="flex w-full min-w-0 gap-2">
         <CountryCodeSelect value={countryIso} onChange={(iso) => setCountryIso(iso)} />
         <input
           type="tel"
@@ -779,7 +779,7 @@ with the design and details you chose. </p> </div>
           placeholder="Enter your mobile number here...."
           inputMode="tel"
           maxLength={16}
-          className="flex-1 h-10 px-4 rounded-lg border border-[#e8e4df] text-sm text-[#1c1c1e] placeholder-[#6b7280] focus:outline-none focus:ring-2"
+          className="w-0 min-w-0 flex-1 h-10 px-4 rounded-lg border border-[#e8e4df] text-sm text-[#1c1c1e] placeholder-[#6b7280] focus:outline-none focus:ring-2"
           style={{ ['--tw-ring-color' as string]: 'color-mix(in srgb, var(--auth-accent) 50%, transparent)' }}
         />
       </div>
