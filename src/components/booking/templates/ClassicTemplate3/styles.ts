@@ -911,7 +911,10 @@ export const ct3Styles = `
 
   /* Hero */
   .ct3-hero { padding-left: var(--gutter); padding-right: var(--gutter); gap: 1.5rem; }
-  .ct3-hero-photo { height: min(70vw, 420px); }
+  .ct3-hero-photo {
+    height: clamp(180px, 58vw, 320px);
+    object-position: center 35%;
+  }
   .ct3-hero-glow { width: 240px; height: 240px; filter: blur(22px); }
   .ct3-hero-title { font-size: clamp(2.4rem, 11vw, 3.4rem); line-height: 0.96; }
   .ct3-hero-subtitle { font-size: 0.95rem; line-height: 1.7; }

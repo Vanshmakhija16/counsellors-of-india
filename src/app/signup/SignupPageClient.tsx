@@ -490,7 +490,7 @@ return (
      border
      border-[#ece5d9]
      shadow-[0_25px_70px_-25px_rgba(31,28,24,0.35)]
-     p-6
+      p-5
      sm:p-8
    "
  >

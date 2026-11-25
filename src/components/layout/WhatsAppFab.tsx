@@ -50,9 +50,10 @@ export default function WhatsAppFab() {
   const [calendlyLoading, setCalendlyLoading] = useState(false)
 
   useEffect(() => {
+    if (tenantId === 'us') return
     const t = setTimeout(() => loadCalendlyAssets(() => {}), 4000)
     return () => clearTimeout(t)
-  }, [])
+  }, [tenantId])
 
   const openCalendly = useCallback((e: React.MouseEvent) => {
     e.preventDefault()
@@ -145,37 +146,39 @@ export default function WhatsAppFab() {
         }}
       >
         {/* Book a Demo — Calendly popup */}
-        <div className="fab-item-2" style={{ position: 'relative' }}>
-          <span className="fab-tip" aria-hidden="true">
-            {calendlyLoading ? 'Loading…' : 'Book a Demo'}
-          </span>
-          <a
-            href={CALENDLY_URL}
-            onClick={openCalendly}
-            aria-label="Book a demo call"
-            onMouseEnter={() => setDemoHovered(true)}
-            onMouseLeave={() => setDemoHovered(false)}
-            className="fab-btn"
-            style={{
-              width: 44,
-              height: 44,
-              background: 'var(--wn-saffron, #FF9933)',
-              boxShadow: demoHovered
-                ? '0 10px 22px -8px color-mix(in srgb, var(--wn-saffron, #FF9933) 50%, transparent), 0 2px 6px -2px rgba(31,28,24,.14)'
-                : '0 6px 16px -8px color-mix(in srgb, var(--wn-saffron, #FF9933) 38%, transparent), 0 1px 4px -1px rgba(31,28,24,.1)',
-              transform: demoHovered ? 'translateY(-2px)' : 'none',
-              cursor: 'pointer',
-            }}
-          >
-            <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-              <rect x="3" y="4" width="18" height="18" rx="4" />
-              <line x1="16" y1="2" x2="16" y2="6" />
-              <line x1="8" y1="2" x2="8" y2="6" />
-              <line x1="3" y1="10" x2="21" y2="10" />
-              <path d="M9 15l1.8 1.8L15 13" />
-            </svg>
-          </a>
-        </div>
+        {tenantId !== 'us' && (
+          <div className="fab-item-2" style={{ position: 'relative' }}>
+            <span className="fab-tip" aria-hidden="true">
+              {calendlyLoading ? 'Loading…' : 'Book a Demo'}
+            </span>
+            <a
+              href={CALENDLY_URL}
+              onClick={openCalendly}
+              aria-label="Book a demo call"
+              onMouseEnter={() => setDemoHovered(true)}
+              onMouseLeave={() => setDemoHovered(false)}
+              className="fab-btn"
+              style={{
+                width: 44,
+                height: 44,
+                background: 'var(--wn-saffron, #FF9933)',
+                boxShadow: demoHovered
+                  ? '0 10px 22px -8px color-mix(in srgb, var(--wn-saffron, #FF9933) 50%, transparent), 0 2px 6px -2px rgba(31,28,24,.14)'
+                  : '0 6px 16px -8px color-mix(in srgb, var(--wn-saffron, #FF9933) 38%, transparent), 0 1px 4px -1px rgba(31,28,24,.1)',
+                transform: demoHovered ? 'translateY(-2px)' : 'none',
+                cursor: 'pointer',
+              }}
+            >
+              <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="4" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+                <path d="M9 15l1.8 1.8L15 13" />
+              </svg>
+            </a>
+          </div>
+        )}
 
         {/* WhatsApp */}
         <div className="fab-item-1" style={{ position: 'relative' }}>

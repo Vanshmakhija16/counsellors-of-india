@@ -75,21 +75,21 @@ export default function AuthLayout({ children, title, brandName = 'Counsellors o
 
   return (
     <main
-      className="min-h-screen lg:h-screen grid lg:grid-cols-[46%_54%] lg:overflow-hidden"
+      className="min-h-[100dvh] lg:h-screen grid lg:grid-cols-[46%_54%] lg:overflow-hidden"
       style={{ background: '#FFFFFF', ['--auth-accent' as string]: accentColor, ['--auth-accent-dark' as string]: accentColorDark }}
     >
 
       {/* ── LEFT — the form ── */}
       <div
-        className="flex items-start justify-center px-6 sm:px-10 lg:px-14 py-6 lg:py-10 lg:h-screen lg:overflow-y-auto [&::-webkit-scrollbar]:hidden"
+        className="min-h-[100dvh] flex items-start sm:items-center lg:items-start justify-center overflow-y-auto overscroll-y-contain scroll-py-10 px-4 sm:px-10 lg:px-14 py-8 lg:py-10 focus-within:pb-[40vh] lg:focus-within:pb-10 lg:h-screen [&::-webkit-scrollbar]:hidden"
         style={{ background: '#FFFFFF', scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         <div className={`w-full ${wide ? 'max-w-2xl' : 'max-w-md'} ${contentClassName}`}>
 
-          <div className={`flex items-center justify-center lg:justify-start gap-3 ${headerClassName}`}>
+          <div className={`flex flex-col lg:flex-row items-center justify-center lg:justify-start gap-2 lg:gap-3 ${headerClassName}`}>
             <Link href="/" className="inline-flex items-center shrink-0 group">
               {logoPath ? (
-                <img src={logoPath} alt={brandName} className="h-16 w-auto" />
+                <img src={logoPath} alt={brandName} className="h-12 sm:h-16 w-auto" />
               ) : (
                 <span
                   className="inline-flex w-7 h-7 rounded-full items-center justify-center shrink-0"
@@ -100,7 +100,7 @@ export default function AuthLayout({ children, title, brandName = 'Counsellors o
               )}
             </Link>
 
-            <div>
+            <div className="text-center lg:text-left">
               {title && (
                 <p
                   className="text-[#2A2118] font-[var(--font-inter)]"

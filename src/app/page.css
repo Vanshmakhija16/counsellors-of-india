@@ -1633,24 +1633,6 @@ max-width:none;
     display: none;
   }
 
-  /* Centered brand text between logo icon and hamburger — mobile/tablet only.
-     margin-left guarantees a minimum gap from the logo on every screen width,
-     even if the pill or logo shrink/grow — the text never touches the logo. */
-  .nav-mobile-title{
-    display: block;
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    margin-left: 14px;
-    transform: translate(-50%, -50%);
-    font-size: 16px;
-    font-weight: 600;
-    letter-spacing: -.01em;
-    color: var(--ink);
-    white-space: nowrap;
-    pointer-events: none;
-  }
-
   .logo-img{
     width: auto;
     height: 100px;

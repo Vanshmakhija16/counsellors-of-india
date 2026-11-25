@@ -113,7 +113,7 @@ try {
 
 
       
-      <div className="bg-white rounded-2xl border border-[#ece5d9] shadow-[0_25px_70px_-25px_rgba(31,28,24,0.35)] p-7 sm:p-8">
+      <div className="bg-white rounded-2xl border border-[#ece5d9] shadow-[0_25px_70px_-25px_rgba(31,28,24,0.35)] p-5 sm:p-8">
         <form onSubmit={handleLogin} className="space-y-5">
 
           <Input
