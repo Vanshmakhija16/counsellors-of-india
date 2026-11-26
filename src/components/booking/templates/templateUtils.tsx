@@ -539,7 +539,7 @@ export const DEFAULT_CT4_CONTENT = {
       { quote: "There is no timestamp on trauma. There isn't a formula that you follow to heal.", quote_author: 'Tom Zuba' },
     ] as CT4HeroQuote[],
   },
-  ticker: { items: ['Licensed Practitioner', 'Confidential Sessions', 'Evidence-Based Practice', 'Online & In-Person', 'RCI Accredited', 'Integrative Approach', 'First Session Diagnostic'] },
+  ticker: { items: ['Licensed Practitioner', 'Confidential Sessions', 'Evidence-Based Practice', 'Online & In-Person', 'Accredited Professional', 'Integrative Approach', 'First Session Diagnostic'] },
   services: [
     { name: 'Individual Psychotherapy', desc: 'One-on-one sessions tailored to your unique history, needs, and goals. Evidence-based modalities in a confidential, non-judgmental space.', price: '1500' },
     { name: 'Couple Therapy',           desc: 'Restoring connection, communication, and mutual understanding between partners — from conflict navigation to deeper intimacy.', price: '2000' },
@@ -555,11 +555,11 @@ export const DEFAULT_CT4_CONTENT = {
     { q: 'What is your cancellation policy?', a: 'Please cancel or reschedule at least 48 hours before your session to avoid a charge. I understand life is unpredictable — emergencies are always considered individually.' },
     { q: 'Is everything I share confidential?', a: 'Absolutely. Confidentiality is both an ethical and legal obligation. The only exceptions are those required by law: imminent risk to yourself or others, or disclosure in cases of child or elder abuse.' },
   ] as EditableFAQ[],
-  insights: { trust_bar: [{ label: 'Approach', value: 'Integrative · Psychodynamic' }, { label: 'Accredited By', value: 'RCI · ICP' }, { label: 'Confidentiality', value: 'APA Ethics Code' }, { label: 'Availability', value: 'Online · In-Person' }] as CT4TrustItem[] },
+  insights: { trust_bar: [{ label: 'Approach', value: 'Integrative · Psychodynamic' }, { label: 'Accredited By', value: 'Licensed Professional' }, { label: 'Confidentiality', value: 'APA Ethics Code' }, { label: 'Availability', value: 'Online · In-Person' }] as CT4TrustItem[] },
 }
 
 export const DEFAULT_CT5_CONTENT: Required<CT5Content> = {
-  ticker: { items: ['Evidence-Based Therapy', 'Compassionate Care', 'Online & In-Person', 'Anxiety & Depression', 'Relationships', 'Trauma-Informed', 'Confidential Sessions', 'RCI Licensed', 'Personalised Approach'] },
+  ticker: { items: ['Evidence-Based Therapy', 'Compassionate Care', 'Online & In-Person', 'Anxiety & Depression', 'Relationships', 'Trauma-Informed', 'Confidential Sessions', 'Licensed Professional', 'Personalised Approach'] },
   services: [
     { name: 'Individual Therapy',   desc: 'One-on-one sessions tailored entirely to your unique needs, challenges, and goals.', tag: 'Core Service' },
     { name: 'Anxiety & Stress',     desc: 'Learn to recognise patterns, regulate responses, and build sustainable calm in your life.', tag: 'Speciality' },

@@ -12,7 +12,16 @@ import { loadDemo, saveDemo, emptyDemo, type DemoProfile } from '@/lib/demoSessi
 import { normalizeSpecialtyKey, titleCaseLabel } from '@/lib/specialties'
 import { localizeCounselorSpelling } from '@/lib/counselorSpelling'
 import { Check, Crown, Rocket, ArrowRight } from 'lucide-react'
+import { useTenantAccent } from '@/lib/useTenantAccent'
 import '@/app/page.css'
+
+// Tiny helper for the sample template thumbnails below: shows the India sample
+// text on the India site and the US sample text on the American portal, so no
+// rupee amounts, Indian cities or Indian names appear on counselorsofamerica.com.
+function Tn({ i, us }: { i: React.ReactNode; us: React.ReactNode }) {
+  const { tenantId } = useTenantAccent()
+  return <>{tenantId === 'us' ? us : i}</>
+}
 
 
 const HERO_STATIC = <>Your practice deserves </>;
@@ -53,13 +62,13 @@ const MINIS: Record<string,React.ReactNode> = {
   t1:(
     <div style={{background:'#F0EBE2',width:'100%',height:'100%',display:'flex',flexDirection:'column',fontFamily:'Georgia,serif'}}>
       <div style={{background:'rgba(240,235,226,.97)',borderBottom:'1px solid rgba(26,26,24,.08)',padding:'14px 28px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-        <span style={{fontSize:15,color:'#1a1a18',letterSpacing:'-.01em'}}>Dr. Karan </span>
+        <span style={{fontSize:15,color:'#1a1a18',letterSpacing:'-.01em'}}><Tn i="Dr. Karan " us="Dr. Emily Carter" /></span>
         <span style={{fontSize:10,background:'#1a1a18',color:'#f0ebe2',padding:'5px 14px',borderRadius:4,letterSpacing:'.08em'}}>BOOK SESSION</span>
       </div>
       <div style={{flex:1,padding:'48px 60px',display:'flex',gap:48,alignItems:'center'}}>
         <div style={{flex:1}}>
-          <div style={{fontSize:10,color:'#b46b50',letterSpacing:'.18em',textTransform:'uppercase',marginBottom:12}}>Clinical Psychologist · Mumbai</div>
-          <div style={{fontSize:64,fontWeight:300,color:'#1a1a18',lineHeight:.95,letterSpacing:'-.03em',marginBottom:24}}>Karan<br/>Sharma</div>
+          <div style={{fontSize:10,color:'#b46b50',letterSpacing:'.18em',textTransform:'uppercase',marginBottom:12}}><Tn i="Clinical Psychologist · Mumbai" us="Clinical Psychologist · New York" /></div>
+          <div style={{fontSize:64,fontWeight:300,color:'#1a1a18',lineHeight:.95,letterSpacing:'-.03em',marginBottom:24}}><Tn i={<>Karan<br/>Sharma</>} us={<>Emily<br/>Carter</>} /></div>
           <div style={{fontSize:11,color:'#6a6a60',lineHeight:1.7,maxWidth:'44ch',marginBottom:28}}>A calm, trusted space for healing. Specialising in anxiety, relationships, and life transitions.</div>
           <div style={{display:'inline-block',background:'#1a1a18',color:'#f0ebe2',fontSize:10,padding:'10px 22px',borderRadius:4,letterSpacing:'.08em'}}>Begin your journey</div>
         </div>
@@ -67,20 +76,20 @@ const MINIS: Record<string,React.ReactNode> = {
       </div>
       <div style={{background:'#1a1a18',padding:'18px 60px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
         <div style={{fontSize:12,color:'#f0ebe2',fontWeight:300,opacity:.55}}>Anxiety · Relationships · Life Transitions</div>
-        <div style={{fontSize:12,color:'#c9a35a',fontStyle:'italic'}}>₹1,200 / session</div>
+        <div style={{fontSize:12,color:'#c9a35a',fontStyle:'italic'}}><Tn i="₹1,200" us="$120" /> / session</div>
       </div>
     </div>
   ),
   t2:(
     <div style={{background:'#0b0d0e',width:'100%',height:'100%',display:'flex',flexDirection:'column',fontFamily:'Georgia,serif'}}>
       <div style={{padding:'14px 28px',display:'flex',justifyContent:'space-between',alignItems:'center',borderBottom:'.5px solid rgba(255,255,255,.06)'}}>
-        <span style={{fontSize:13,color:'rgba(236,229,215,.55)',letterSpacing:'.04em'}}>Vikram Nair</span>
+        <span style={{fontSize:13,color:'rgba(236,229,215,.55)',letterSpacing:'.04em'}}><Tn i="Vikram Nair" us="Daniel Brooks" /></span>
         <span style={{fontSize:10,background:'rgba(201,163,90,.15)',color:'#c9a35a',padding:'5px 14px',borderRadius:4,letterSpacing:'.08em',border:'.5px solid rgba(201,163,90,.3)'}}>ENQUIRE</span>
       </div>
       <div style={{flex:1,padding:'60px',display:'flex',alignItems:'center',gap:60}}>
         <div style={{flex:1}}>
           <div style={{fontSize:9,letterSpacing:'.28em',textTransform:'uppercase',color:'#c9a35a',marginBottom:18,opacity:.8}}>Psychotherapist</div>
-          <div style={{fontSize:72,color:'#ece5d7',lineHeight:.92,letterSpacing:'-.03em',marginBottom:28}}>Vikram<br/>Nair</div>
+          <div style={{fontSize:72,color:'#ece5d7',lineHeight:.92,letterSpacing:'-.03em',marginBottom:28}}><Tn i={<>Vikram<br/>Nair</>} us={<>Daniel<br/>Brooks</>} /></div>
           <div style={{fontSize:11,color:'rgba(236,229,215,.35)',lineHeight:1.75,maxWidth:'40ch',marginBottom:32}}>Integrative therapy for individuals navigating identity, grief, and relationship complexity.</div>
           <div style={{display:'inline-block',background:'#c9a35a',color:'#1a1410',fontSize:10,padding:'11px 24px',letterSpacing:'.08em'}}>Begin</div>
         </div>
@@ -93,27 +102,27 @@ const MINIS: Record<string,React.ReactNode> = {
       </div>
       <div style={{background:'#131618',borderTop:'.5px solid rgba(255,255,255,.05)',padding:'14px 60px',display:'flex',justifyContent:'space-between'}}>
         <div style={{fontSize:10,color:'rgba(236,229,215,.22)',letterSpacing:'.06em'}}>12+ years · Online & In-person</div>
-        <div style={{fontSize:12,color:'rgba(201,163,90,.6)',fontStyle:'italic'}}>₹2,000 / session</div>
+        <div style={{fontSize:12,color:'rgba(201,163,90,.6)',fontStyle:'italic'}}><Tn i="₹2,000" us="$200" /> / session</div>
       </div>
     </div>
   ),
   t3:(
     <div style={{background:'#F4F8F5',width:'100%',height:'100%',display:'flex',flexDirection:'column'}}>
       <div style={{background:'rgba(244,248,245,.96)',borderBottom:'1px solid rgba(28,43,38,.07)',padding:'14px 28px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-        <span style={{fontSize:14,color:'#1C2B26',fontFamily:'Georgia,serif',letterSpacing:'-.01em'}}>Karan Singh</span>
+        <span style={{fontSize:14,color:'#1C2B26',fontFamily:'Georgia,serif',letterSpacing:'-.01em'}}><Tn i="Karan Singh" us="Olivia Hayes" /></span>
         <span style={{fontSize:10,background:'#3A6655',color:'#fff',padding:'5px 14px',borderRadius:100,letterSpacing:'.04em'}}>Book a session</span>
       </div>
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',flex:1}}>
         <div style={{padding:'60px 48px',display:'flex',flexDirection:'column',justifyContent:'center'}}>
-          <div style={{fontSize:10,letterSpacing:'.16em',textTransform:'uppercase',color:'#3A6655',marginBottom:16,opacity:.7}}>Counsellor</div>
-          <div style={{fontFamily:'Georgia,serif',fontSize:64,color:'#1C2B26',lineHeight:.95,marginBottom:8}}>Karan<br/><em style={{color:'#3A6655'}}>Singh</em></div>
+          <div style={{fontSize:10,letterSpacing:'.16em',textTransform:'uppercase',color:'#3A6655',marginBottom:16,opacity:.7}}><Tn i="Counsellor" us="Counselor" /></div>
+          <div style={{fontFamily:'Georgia,serif',fontSize:64,color:'#1C2B26',lineHeight:.95,marginBottom:8}}><Tn i={<>Karan<br/><em style={{color:'#3A6655'}}>Singh</em></>} us={<>Olivia<br/><em style={{color:'#3A6655'}}>Hayes</em></>} /></div>
           <div style={{height:2,width:48,background:'#3A6655',opacity:.3,margin:'20px 0'}}/>
           <div style={{fontSize:11,color:'#5a6e6a',lineHeight:1.75,maxWidth:'36ch',marginBottom:32}}>Creating space for clarity, growth, and authentic self-understanding.</div>
           <div style={{display:'inline-block',background:'#3A6655',color:'#fff',fontSize:10,padding:'10px 22px',borderRadius:100,width:'fit-content'}}>Begin today</div>
         </div>
         <div style={{background:'#1C2B26',display:'flex',alignItems:'center',justifyContent:'center',position:'relative'}}>
           <span style={{fontFamily:'Georgia,serif',fontSize:160,fontStyle:'italic',color:'rgba(255,255,255,.04)',lineHeight:1}}>A</span>
-          <div style={{position:'absolute',bottom:32,left:0,right:0,textAlign:'center',fontSize:10,color:'rgba(255,255,255,.3)',letterSpacing:'.12em',textTransform:'uppercase'}}>Delhi · Online</div>
+          <div style={{position:'absolute',bottom:32,left:0,right:0,textAlign:'center',fontSize:10,color:'rgba(255,255,255,.3)',letterSpacing:'.12em',textTransform:'uppercase'}}><Tn i="Delhi · Online" us="Chicago · Online" /></div>
         </div>
       </div>
     </div>
@@ -121,33 +130,33 @@ const MINIS: Record<string,React.ReactNode> = {
   t4:(
     <div style={{background:'#080808',width:'100%',height:'100%',display:'flex',flexDirection:'column'}}>
       <div style={{padding:'14px 28px',display:'flex',justifyContent:'space-between',alignItems:'center',borderBottom:'.5px solid rgba(212,175,55,.06)'}}>
-        <span style={{fontSize:12,color:'rgba(232,232,232,.4)',letterSpacing:'.06em'}}>Dr. Rahul Verma</span>
+        <span style={{fontSize:12,color:'rgba(232,232,232,.4)',letterSpacing:'.06em'}}><Tn i="Dr. Rahul Verma" us="Dr. Michael Reed" /></span>
         <span style={{fontSize:10,background:'transparent',color:'#D4AF37',padding:'5px 14px',borderRadius:3,border:'.5px solid rgba(212,175,55,.3)',letterSpacing:'.1em'}}>CONSULT</span>
       </div>
       <div style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',padding:'60px',textAlign:'center',position:'relative'}}>
         <div style={{position:'absolute',inset:0,background:'radial-gradient(ellipse at center,rgba(212,175,55,.05) 0%,transparent 65%)'}}/>
         <div style={{fontSize:10,letterSpacing:'.22em',textTransform:'uppercase',color:'rgba(212,175,55,.5)',marginBottom:24}}>Trauma & EMDR Specialist</div>
-        <div style={{fontFamily:'Georgia,serif',fontSize:80,color:'#E8E8E8',lineHeight:.9,marginBottom:20,fontWeight:300,letterSpacing:'-.02em'}}>Dr. Rahul<br/>Verma</div>
+        <div style={{fontFamily:'Georgia,serif',fontSize:80,color:'#E8E8E8',lineHeight:.9,marginBottom:20,fontWeight:300,letterSpacing:'-.02em'}}><Tn i={<>Dr. Rahul<br/>Verma</>} us={<>Dr. Michael<br/>Reed</>} /></div>
         <div style={{height:.5,width:80,background:'rgba(212,175,55,.3)',margin:'0 auto 24px'}}/>
         <div style={{fontSize:11,color:'rgba(232,232,232,.28)',lineHeight:1.75,maxWidth:'42ch',marginBottom:40}}>Specialising in trauma recovery, EMDR, and complex PTSD with 12 years of clinical practice.</div>
         <div style={{display:'inline-block',background:'#D4AF37',color:'#080808',fontSize:10,padding:'12px 28px',letterSpacing:'.12em',textTransform:'uppercase',fontWeight:500}}>Begin</div>
       </div>
       <div style={{background:'#0e0e0e',borderTop:'.5px solid rgba(212,175,55,.06)',padding:'14px 60px',display:'flex',justifyContent:'space-between'}}>
         <div style={{fontSize:10,color:'rgba(232,232,232,.22)',letterSpacing:'.06em'}}>Trauma · EMDR · Complex PTSD · 12 Years</div>
-        <div style={{fontSize:11,color:'rgba(212,175,55,.45)',fontStyle:'italic',fontFamily:'Georgia,serif'}}>₹2,500 / session</div>
+        <div style={{fontSize:11,color:'rgba(212,175,55,.45)',fontStyle:'italic',fontFamily:'Georgia,serif'}}><Tn i="₹2,500" us="$250" /> / session</div>
       </div>
     </div>
   ),
   t5:(
     <div style={{background:'#F7F4EF',width:'100%',height:'100%',display:'flex',flexDirection:'column'}}>
       <div style={{background:'rgba(247,244,239,.97)',borderBottom:'1px solid rgba(30,26,20,.07)',padding:'14px 28px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-        <span style={{fontSize:14,fontFamily:'Georgia,serif',color:'#1E1A14',letterSpacing:'-.01em'}}>Meera Joshi</span>
+        <span style={{fontSize:14,fontFamily:'Georgia,serif',color:'#1E1A14',letterSpacing:'-.01em'}}><Tn i="Meera Joshi" us="Sarah Mitchell" /></span>
         <span style={{fontSize:10,background:'#2D4A32',color:'#F7F4EF',padding:'5px 14px',borderRadius:100,letterSpacing:'.04em'}}>Book session</span>
       </div>
       <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',flex:1}}>
         <div style={{padding:'60px 48px',display:'flex',flexDirection:'column',justifyContent:'center'}}>
-          <div style={{fontSize:9,letterSpacing:'.18em',textTransform:'uppercase',color:'#2D4A32',marginBottom:16,opacity:.65}}>CBT Therapist · Pune</div>
-          <div style={{fontFamily:'Georgia,serif',fontSize:62,color:'#1E1A14',lineHeight:.95,marginBottom:24}}>Meera<br/><em style={{color:'#2D4A32'}}>Joshi</em></div>
+          <div style={{fontSize:9,letterSpacing:'.18em',textTransform:'uppercase',color:'#2D4A32',marginBottom:16,opacity:.65}}><Tn i="CBT Therapist · Pune" us="CBT Therapist · Austin" /></div>
+          <div style={{fontFamily:'Georgia,serif',fontSize:62,color:'#1E1A14',lineHeight:.95,marginBottom:24}}><Tn i={<>Meera<br/><em style={{color:'#2D4A32'}}>Joshi</em></>} us={<>Sarah<br/><em style={{color:'#2D4A32'}}>Mitchell</em></>} /></div>
           <div style={{fontSize:11,color:'#5a5245',lineHeight:1.75,maxWidth:'36ch',marginBottom:32}}>Calm, structured support for anxiety, burnout, and the weight of everyday life.</div>
           <div style={{display:'inline-flex',alignItems:'center',gap:8,background:'#2D4A32',color:'#F7F4EF',fontSize:10,padding:'10px 22px',borderRadius:100,width:'fit-content'}}>
             Begin today
@@ -165,7 +174,7 @@ const MINIS: Record<string,React.ReactNode> = {
       </div>
       <div style={{background:'#EDE8DF',padding:'14px 60px',borderTop:'1px solid rgba(30,26,20,.07)',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
         <div style={{fontSize:11,fontFamily:'Georgia,serif',color:'#1E1A14',fontStyle:'italic',opacity:.5}}>Calm · Grounded · Safe</div>
-        <div style={{fontSize:11,color:'#2D4A32',fontFamily:'Georgia,serif',fontStyle:'italic'}}>₹1,500 / session</div>
+        <div style={{fontSize:11,color:'#2D4A32',fontFamily:'Georgia,serif',fontStyle:'italic'}}><Tn i="₹1,500" us="$150" /> / session</div>
       </div>
     </div>
   ),
@@ -2077,7 +2086,7 @@ export default function HomeClient({ tenant = DEFAULT_HOME_TENANT }: { tenant?: 
                           </div>
                           {fee != null && fee > 0 && (
                             <div className="td-card-fee">
-                              <span className="td-card-fee-n">{tenant.currencySymbol}{fee.toLocaleString('en-IN')}</span>
+                              <span className="td-card-fee-n">{tenant.currencySymbol}{fee.toLocaleString(isAmerica ? 'en-US' : 'en-IN')}</span>
                               <span className="td-card-fee-l">/ session</span>
                             </div>
                           )}

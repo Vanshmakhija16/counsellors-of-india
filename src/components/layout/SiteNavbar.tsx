@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { useTherapist } from '@/lib/useTherapist'
+import { useTenantAccent } from '@/lib/useTenantAccent'
 
 // See SiteFooter.tsx / SiteNav.tsx for why this is a small local shape
 // rather than the full server-only TenantConfig. Default is India's exact
@@ -24,6 +25,15 @@ export interface SiteNavbarTenant {
 
 const DEFAULT_TENANT: SiteNavbarTenant = { brandName: 'Counsellors of India', logoPath: '/coi.png' }
 
+// Used when a page renders <SiteNavbar /> without a tenant prop (client pages
+// such as /alltherapists), so the American portal never falls back to the
+// India brand. Values mirror src/lib/tenants/us.ts.
+const US_TENANT: SiteNavbarTenant = {
+  brandName: 'Counselors of America',
+  logoPath: '/COA2-counselors.png',
+  ctaColor: '#3C3B6E',
+}
+
 // The real site navbar (logo, section links, mobile sidebar, auth-aware
 // CTA) — shared by the homepage and any other marketing/directory page so
 // visitors get the exact same header + navigation everywhere. Section links
@@ -31,7 +41,9 @@ const DEFAULT_TENANT: SiteNavbarTenant = { brandName: 'Counsellors of India', lo
 // anchor jump (same path, browsers don't reload for a hash-only change);
 // from any other page it navigates back to the homepage and then jumps to
 // that section.
-export default function SiteNavbar({ tenant = DEFAULT_TENANT }: { tenant?: SiteNavbarTenant } = {}) {
+export default function SiteNavbar({ tenant: tenantProp }: { tenant?: SiteNavbarTenant } = {}) {
+  const { tenantId } = useTenantAccent()
+  const tenant = tenantProp ?? (tenantId === 'us' ? US_TENANT : DEFAULT_TENANT)
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const [brandFirst, brandRest] = tenant.brandName.split(' of ')

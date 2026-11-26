@@ -2,8 +2,11 @@
 
 import { useState } from 'react'
 import { ArrowRight, Loader2, CheckCircle2 } from 'lucide-react'
+import { useTenantAccent } from '@/lib/useTenantAccent'
 
 export default function ContactForm() {
+  const { tenantId } = useTenantAccent()
+  const phonePlaceholder = tenantId === 'us' ? 'e.g. (555) 123-4567' : 'e.g. 98765 43210'
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [phone, setPhone] = useState('')
@@ -97,7 +100,7 @@ export default function ContactForm() {
           type="tel"
           value={phone}
           onChange={e => setPhone(e.target.value)}
-          placeholder="e.g. 98765 43210"
+          placeholder={phonePlaceholder}
           className={inputClass}
         />
       </div>

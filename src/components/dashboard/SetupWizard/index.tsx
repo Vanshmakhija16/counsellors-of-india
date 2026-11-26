@@ -47,7 +47,7 @@ const STEPS = [
   { icon: Rocket,      label: 'Publish',        desc: 'Go live instantly'             },
 ]
 
-function VerticalStepper({ current, brand }: { current: number; brand: string }) {
+function VerticalStepper({ current, brand, tenantId }: { current: number; brand: string; tenantId?: string }) {
   return (
     <aside
       className="hidden lg:flex flex-col shrink-0 w-64 px-8 py-10 border-r"
@@ -155,8 +155,8 @@ function VerticalStepper({ current, brand }: { current: number; brand: string })
 
 interface Service { name: string; duration: string; price: string }
 
-function ServiceRow({ svc, onChange, onRemove, showRemove }: {
-  svc: Service; onChange: (s: Service) => void; onRemove: () => void; showRemove: boolean
+function ServiceRow({ svc, onChange, onRemove, showRemove, pricePlaceholder }: {
+  svc: Service; onChange: (s: Service) => void; onRemove: () => void; showRemove: boolean; pricePlaceholder: string
 }) {
   const inp = 'h-10 px-3 rounded-lg border border-[#e8e4df] text-sm text-[#1c1c1e] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[#FF9933] focus:border-transparent bg-white w-full'
   return (
@@ -164,7 +164,7 @@ function ServiceRow({ svc, onChange, onRemove, showRemove }: {
       <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2">
         <input className={inp} placeholder="e.g. Individual Therapy" value={svc.name} onChange={e => onChange({ ...svc, name: e.target.value })} />
         <input className={inp} placeholder="50 min" value={svc.duration} onChange={e => onChange({ ...svc, duration: e.target.value })} />
-        <input className={inp} placeholder="₹1,500" value={svc.price} onChange={e => onChange({ ...svc, price: e.target.value })} />
+        <input className={inp} placeholder={pricePlaceholder} value={svc.price} onChange={e => onChange({ ...svc, price: e.target.value })} />
       </div>
       {showRemove && (
         <button type="button" onClick={onRemove}
@@ -196,6 +196,9 @@ export default function SetupWizard({
   const supabase = createClient()
   const fileRef  = useRef<HTMLInputElement>(null)
   const { accent: BRAND, tenantId } = useTenantAccent()
+  const isUs      = tenantId === 'us'
+  const currency  = isUs ? '$' : '₹'
+  const siteHost  = isUs ? 'counselorsofamerica.com' : 'counsellorsofindia.com'
 
   const [step, setStep] = useState(0)
 
@@ -230,7 +233,7 @@ export default function SetupWizard({
   const step2Ready    = name.trim() && bio.trim() && fee.trim() && photo && hasMinService
   const filledFields  = [name.trim(), bio.trim(), fee.trim(), photo, hasMinService].filter(Boolean).length
   const progress      = Math.round((filledFields / 5) * 100)
-  const liveUrl       = `counsellorsofindia.com/${username}`
+  const liveUrl       = `${siteHost}/${username}`
   const hasSelectedTemplate = availableTemplates.some(t => t.id === selectedTemplate)
 
   function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
@@ -283,7 +286,7 @@ export default function SetupWizard({
   }
 
   function copyLink() {
-    navigator.clipboard.writeText(`https://counsellorsofindia.com/${username}`)
+    navigator.clipboard.writeText(`https://${siteHost}/${username}`)
     setCopied(true); setTimeout(() => setCopied(false), 2000)
   }
 
@@ -310,7 +313,7 @@ export default function SetupWizard({
       <div className="flex flex-1 overflow-hidden">
 
         {/* ── Left: vertical stepper ── */}
-        <VerticalStepper current={step} brand={BRAND} />
+        <VerticalStepper current={step} brand={BRAND} tenantId={tenantId} />
 
         {/* ── Right: scrollable step content ── */}
         <div className="flex-1 overflow-y-auto">
@@ -429,7 +432,7 @@ export default function SetupWizard({
                 <div>
                   <label className="block text-sm font-semibold text-[#1c1c1e] mb-1.5">Full name <span style={{ color: BRAND }}>*</span></label>
                   <input className="w-full h-11 px-4 rounded-xl border border-[#e8e4df] text-sm text-[#1c1c1e] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent bg-white transition"
-                    placeholder="e.g. Dr. Priya Sharma" value={name} onChange={e => setName(e.target.value)} />
+                    placeholder={isUs ? 'e.g. Dr. Sarah Johnson' : 'e.g. Dr. Priya Sharma'} value={name} onChange={e => setName(e.target.value)} />
                   <p className="text-xs text-[#9ca3af] mt-1">Include your title — clients trust "Dr." or "{tenantId === 'us' ? 'Counselor' : 'Counsellor'}" prefixes</p>
                 </div>
 
@@ -445,12 +448,12 @@ export default function SetupWizard({
 
                 {/* Fee */}
                 <div>
-                  <label className="block text-sm font-semibold text-[#1c1c1e] mb-1.5">Session fee (₹) <span style={{ color: BRAND }}>*</span></label>
+                  <label className="block text-sm font-semibold text-[#1c1c1e] mb-1.5">Session fee ({currency}) <span style={{ color: BRAND }}>*</span></label>
                   <div className="relative">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9ca3af] text-sm">₹</span>
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9ca3af] text-sm">{currency}</span>
                     <input type="number"
                       className="w-full h-11 pl-8 pr-4 rounded-xl border border-[#e8e4df] text-sm text-[#1c1c1e] placeholder-[#9ca3af] focus:outline-none focus:ring-2 focus:ring-[var(--brand)] focus:border-transparent bg-white transition"
-                      placeholder="1500" value={fee} onChange={e => setFee(e.target.value)} />
+                      placeholder={isUs ? '150' : '1500'} value={fee} onChange={e => setFee(e.target.value)} />
                   </div>
                 </div>
 
@@ -468,7 +471,7 @@ export default function SetupWizard({
                       <ServiceRow key={i} svc={svc}
                         onChange={u => setServices(s => s.map((x, j) => j === i ? u : x))}
                         onRemove={() => setServices(s => s.filter((_, j) => j !== i))}
-                        showRemove={services.length > 1} />
+                        showRemove={services.length > 1} pricePlaceholder={isUs ? '$150' : '₹1,500'} />
                     ))}
                     <button type="button"
                       onClick={() => setServices(s => [...s, { name: '', duration: '50 min', price: '' }])}
@@ -526,7 +529,7 @@ export default function SetupWizard({
                       {[
                         { label: 'Template', value: (TEMPLATES.find(t => t.id === selectedTemplate) ?? availableTemplates[0])?.name ?? selectedTemplate },
                         { label: 'Name',     value: name },
-                        { label: 'Fee',      value: `₹${fee} / session` },
+                        { label: 'Fee',      value: `${currency}${fee} / session` },
                         { label: 'Services', value: `${services.filter(s => s.name.trim()).length} service(s)` },
                       ].map(row => (
                         <div key={row.label} className="flex items-center justify-between gap-2">

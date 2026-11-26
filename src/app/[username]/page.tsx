@@ -117,7 +117,10 @@ export default async function TherapistPublicPage({
   const raw = decodeURIComponent(username).trim()
   const candidates = [...new Set([raw, raw.replace(/^@+/, ''), `@${raw.replace(/^@+/, '')}`])]
 
-  let therapist = null
+  // `any`: the select string is chosen at runtime (US vs India columns), so
+  // Supabase can't infer the row type from it.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let therapist: any = null
   for (const candidate of candidates) {
     let query = supabase
       .from('therapists')
@@ -152,6 +155,7 @@ export default async function TherapistPublicPage({
   const profile = {
     id:               therapist.id,
     brandName:        tenant.brandName,
+    currencySymbol:   tenant.currencySymbol,
     name:             therapist.full_name ?? '',
     credentials:      localizeCounselorSpelling(therapist.title ?? '', tenant.id === 'us'),
     bio:              therapist.bio ?? '',

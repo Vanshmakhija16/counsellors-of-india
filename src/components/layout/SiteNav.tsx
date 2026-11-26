@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { Menu, X } from 'lucide-react'
+import { useTenantAccent } from '@/lib/useTenantAccent'
 
 // See SiteFooter.tsx for why this is a small local shape rather than the
 // full server-only TenantConfig. Default is India's exact original copy.
@@ -17,6 +18,15 @@ export interface SiteNavTenant {
 }
 
 const DEFAULT_TENANT: SiteNavTenant = { brandName: 'Counsellors of India', logoPath: '/coi.png' }
+
+// Fallback for call sites that don't pass `tenant`: keeps the American portal
+// on its own brand instead of India's. Mirrors src/lib/tenants/us.ts.
+const US_TENANT: SiteNavTenant = {
+  brandName: 'Counselors of America',
+  logoPath: '/COA2-counselors.png',
+  primaryColor: '#3C3B6E',
+  primaryColorDark: '#2A2952',
+}
 
 // ── Shared design tokens — same warm-paper language as the blog pages,
 // so the nav reads as one coherent site instead of two unrelated
@@ -46,7 +56,9 @@ const NAV_LINKS = [
  * .mobile-sidebar / .menu-btn definitions living in app/page.css, which
  * were only ever meant for the homepage's own separate nav.
  */
-export default function SiteNav({ tenant = DEFAULT_TENANT }: { tenant?: SiteNavTenant } = {}) {
+export default function SiteNav({ tenant: tenantProp }: { tenant?: SiteNavTenant } = {}) {
+  const { tenantId } = useTenantAccent()
+  const tenant = tenantProp ?? (tenantId === 'us' ? US_TENANT : DEFAULT_TENANT)
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
   const pathname = usePathname()
