@@ -130,6 +130,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
   async function handleConfirm() {
     if (!selectedSlotIso) { setError('Please choose a time.'); return }
     if (!name.trim() || !phone.trim()) { setError('Please complete name and phone.'); return }
+    if (therapist.currencySymbol === '$' && !email.trim()) { setError('Please enter your email address.'); return }
     setError('')
     await book({
       therapist_id: therapist.id!,
@@ -147,7 +148,13 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
     : ''
 
   const displayFee = typeof therapist.fee === 'number' && therapist.fee > 0 ? therapist.fee : 500
-  const feeLabel = `\u20b9${new Intl.NumberFormat('en-IN').format(displayFee)}`
+  const currencySymbol = therapist.currencySymbol ?? '\u20b9'
+  const feeLocale = currencySymbol === '$' ? 'en-US' : 'en-IN'
+  const feeLabel = `${currencySymbol}${new Intl.NumberFormat(feeLocale).format(displayFee)}`
+  const namePlaceholder = currencySymbol === '$' ? 'e.g. Emily Johnson' : 'e.g. Aditi Sharma'
+  const phonePlaceholder = currencySymbol === '$' ? 'e.g. (212) 555-0147' : 'e.g. 98765 43210'
+  const timezoneLabel = currencySymbol === '$' ? '' : ' (IST)'
+  const emailLabel = currencySymbol === '$' ? 'Email (required)' : 'Email (optional)'
   const durationLabel = therapist.sessionDuration ? `${therapist.sessionDuration} min` : null
 
   const nameValid = name.trim().length > 0
@@ -460,7 +467,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
               {durationLabel && <span className="ct7-bk-meta-dot">&middot;</span>}
               <b>{feeLabel}</b>
               <span className="ct7-bk-meta-dot">&middot;</span>
-              <span>IST</span>
+              {currencySymbol !== '$' && <span>IST</span>}
             </div>
             <div className="ct7-bk-dots">
               {[1, 2, 3].map(n => (
@@ -557,7 +564,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                     <span className="ct7-bk-summary-text">
                       {selectedSlot ? (
                         <>
-                          {dateLabel} &middot; <b>{selectedSlot}</b> (IST)<br />
+                          {dateLabel} &middot; <b>{selectedSlot}</b>{timezoneLabel}<br />
                           {durationLabel && <>{durationLabel} &middot; </>}<b>{feeLabel}</b>
                         </>
                       ) : (
@@ -571,7 +578,7 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                       <label htmlFor="ct7-bk-name">Your name{touched.name && !nameValid && <span className="ct7-bk-field-err"> &mdash; required</span>}</label>
                       <input
                         id="ct7-bk-name"
-                        placeholder="e.g. Aditi Sharma"
+                        placeholder={namePlaceholder}
                         value={name}
                         onChange={e => setName(e.target.value)}
                         onBlur={() => setTouched(t => ({ ...t, name: true }))}
@@ -579,15 +586,15 @@ export default function Booking({ therapist, bookedTimes: initialBookedTimes = [
                       />
                     </div>
                     <div className="ct7-bk-field">
-                      <label htmlFor="ct7-bk-email">Email (optional)</label>
-                      <input id="ct7-bk-email" type="email" placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} />
+                      <label htmlFor="ct7-bk-email">{emailLabel}</label>
+                      <input id="ct7-bk-email" type="email" required={currencySymbol === '$'} placeholder="you@example.com" value={email} onChange={e => setEmail(e.target.value)} />
                     </div>
                     <div className="ct7-bk-field">
                       <label htmlFor="ct7-bk-phone">Phone{touched.phone && !phoneValid && <span className="ct7-bk-field-err"> &mdash; required</span>}</label>
                       <input
                         id="ct7-bk-phone"
                         type="tel"
-                        placeholder="e.g. 98765 43210"
+                        placeholder={phonePlaceholder}
                         value={phone}
                         onChange={e => setPhone(e.target.value)}
                         onBlur={() => setTouched(t => ({ ...t, phone: true }))}

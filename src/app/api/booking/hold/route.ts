@@ -28,6 +28,7 @@ import {
 } from '@/lib/payu'
 import { resolveBookingPrice } from '@/lib/pricing'
 import { notifyBookingConfirmed } from '@/lib/booking-notifications'
+import { getCurrentTenant } from '@/lib/tenants/server'
 
 const HOLD_MINUTES = 15
 
@@ -70,6 +71,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Slot must be at least 4 hours from now.' }, { status: 400 })
     }
 
+    const tenant = await getCurrentTenant()
     const supabase = await createServiceSupabaseClientForTenantOrLegacyIndia()
 
     const { data: therapist, error: therapistErr } = await supabase
@@ -79,6 +81,27 @@ export async function POST(req: NextRequest) {
       .single()
 
     if (therapistErr || !therapist) {
+      console.error('[booking/hold] therapist lookup failed:', {
+        therapist_id,
+        found: !!therapist,
+        code: therapistErr?.code,
+        message: therapistErr?.message,
+      })
+
+      // Postgres 42703 = undefined column. If the database has no
+      // `payments_enabled` column (e.g. the US project never ran the
+      // per-therapist payments migration), the therapist exists but can't
+      // take payments, so say that instead of "Therapist not found".
+      if (therapistErr?.code === '42703' && /payments_enabled/i.test(therapistErr.message ?? '')) {
+        return NextResponse.json(
+          {
+            error: 'Payments are not enabled for this therapist yet. Please contact the therapist to book.',
+            code:  'THERAPIST_PAYMENTS_NOT_CONNECTED',
+          },
+          { status: 422 },
+        )
+      }
+
       return NextResponse.json({ error: 'Therapist not found.' }, { status: 404 })
     }
 
@@ -162,6 +185,29 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // American paid bookings require a ready PayPal connection. Keep this
+    // lookup separate from the public therapist fields so missing PayPal
+    // columns cannot make the therapist itself appear not to exist.
+    if (tenant.id === 'us' && resolved.priceInr > 0) {
+      const { data: paypalSetup, error: paypalSetupErr } = await supabase
+        .from('therapists')
+        .select('paypal_merchant_id, paypal_onboarding_status, paypal_payments_receivable')
+        .eq('id', therapist_id)
+        .maybeSingle()
+
+      if (
+        paypalSetupErr ||
+        !paypalSetup?.paypal_merchant_id ||
+        paypalSetup.paypal_onboarding_status !== 'completed' ||
+        !paypalSetup.paypal_payments_receivable
+      ) {
+        return NextResponse.json(
+          { error: 'Payment is not set up yet. Please contact the therapist to book.' },
+          { status: 422 },
+        )
+      }
+    }
+
     // ── Razorpay-connection gate (paid sessions only) ───────────────
     // A therapist with no Razorpay connected (neither OAuth nor manual
     // keys -- payments_enabled covers both, see lib/razorpay-oauth.ts and
@@ -170,6 +216,7 @@ export async function POST(req: NextRequest) {
     // never be paid for. Free sessions (price 0) are unaffected -- they
     // don't touch Razorpay at all.
     if (
+      tenant.id !== 'us' &&
       PAYMENT_PROVIDER === 'razorpay' &&
       PAYMENTS_ENABLED &&
       resolved.priceInr > 0 &&
@@ -331,6 +378,21 @@ export async function POST(req: NextRequest) {
     // directly against the therapist's own connected account via
     // useRazorpayCheckout → /api/razorpay/therapist-order + therapist-verify.
     // None of the PayU code below runs when this branch is taken.
+    if (tenant.id === 'us') {
+      return NextResponse.json({
+        provider:       'paypal',
+        appointment_id: appointmentId,
+        therapist_id,
+        amount:         effectivePrice,
+        client_name,
+        client_email,
+        client_phone,
+        description:    resolved.serviceName
+          ? `${resolved.serviceName} with ${therapist?.full_name ?? 'Therapist'}`
+          : `Therapy session with ${therapist?.full_name ?? 'Therapist'}`,
+      })
+    }
+
     if (PAYMENT_PROVIDER === 'razorpay') {
       return NextResponse.json({
         provider:       'razorpay',

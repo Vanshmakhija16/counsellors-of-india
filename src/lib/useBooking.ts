@@ -86,6 +86,31 @@ export function useBooking({ onSuccess, onError, onSlotsRefresh }: UseBookingOpt
         return
       }
 
+      // Paid American bookings use PayPal's hosted approval flow.
+      if (data.provider === 'paypal') {
+        const orderRes = await fetch('/api/paypal/booking/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            therapist_id: data.therapist_id,
+            appointment_id: data.appointment_id,
+          }),
+        })
+        const orderData = await orderRes.json()
+        if (!orderRes.ok) {
+          setLoading(false)
+          onError?.(orderData.error ?? 'Payment is not set up yet. Please contact the therapist to book.')
+          return
+        }
+        if (!orderData.approve_url) {
+          setLoading(false)
+          onError?.('Payment is not set up yet. Please contact the therapist to book.')
+          return
+        }
+        window.location.href = orderData.approve_url
+        return
+      }
+
       // Paid booking, Razorpay — stays on this page and opens the therapist's
       // own Razorpay checkout (order + signature verification happen inside
       // useRazorpayCheckout). Kept as its own branch so the original PayU
