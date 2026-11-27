@@ -31,11 +31,9 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { username } = await params
   const tenant = await getCurrentTenant()
-  // COA revokes anonymous reads from `therapists`; use its tenant-scoped
-  // service client for this server-side, explicitly selected public metadata.
-  const supabase = tenant.id === 'us'
-    ? await createServiceSupabaseClientForTenant()
-    : await createServerSupabaseClient()
+  // Public profile metadata is read server-side with the tenant's service
+  // client because anonymous reads from India's `therapists` table are revoked.
+  const supabase = await createServiceSupabaseClientForTenant()
 
   const raw = decodeURIComponent(username).trim()
   const candidates = [...new Set([raw, raw.replace(/^@+/, ''), `@${raw.replace(/^@+/, '')}`])]
@@ -108,27 +106,61 @@ export default async function TherapistPublicPage({
 }) {
   const { username } = await params
   const tenant = await getCurrentTenant()
-  // COA revokes anonymous reads from `therapists`; keep India on its existing
-  // cookie-authenticated read path.
-  const supabase = tenant.id === 'us'
-    ? await createServiceSupabaseClientForTenant()
-    : await createServerSupabaseClient()
+  // Public profile data is read server-side with the tenant's service client;
+  // the cookie client below remains responsible for the visitor's auth state.
+  const supabase = await createServiceSupabaseClientForTenant()
 
   const raw = decodeURIComponent(username).trim()
   const candidates = [...new Set([raw, raw.replace(/^@+/, ''), `@${raw.replace(/^@+/, '')}`])]
+  const pageColumns = tenant.id === 'us' ? THERAPIST_PAGE_COLUMNS_US : THERAPIST_PAGE_COLUMNS
 
   // `any`: the select string is chosen at runtime (US vs India columns), so
   // Supabase can't infer the row type from it.
+  // Returns missingColumn=true when Postgres says a selected column doesn't
+  // exist (42703), so the caller can retry with the smaller column set instead
+  // of treating a schema mismatch as "profile not found".
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let therapist: any = null
-  for (const candidate of candidates) {
-    let query = supabase
-      .from('therapists')
-      .select(tenant.id === 'us' ? THERAPIST_PAGE_COLUMNS_US : THERAPIST_PAGE_COLUMNS)
-      .eq('username', candidate)
-    if (tenant.id === 'us') query = query.eq('is_active', true).eq('is_profile_complete', true)
-    const { data } = await query.maybeSingle()
-    if (data) { therapist = data; break }
+  const findTherapist = async (columns: string): Promise<{ row: any; missingColumn: boolean }> => {
+    for (const candidate of candidates) {
+      let query = supabase
+        .from('therapists')
+        .select(columns)
+        .eq('username', candidate)
+      if (tenant.id === 'us') query = query.eq('is_active', true).eq('is_profile_complete', true)
+      const { data, error } = await query.maybeSingle()
+      if (error) {
+        console.error('[profile lookup] query failed', { tenant: tenant.id, candidate, error })
+        if (error.code === '42703') return { row: null, missingColumn: true }
+      }
+      if (data) return { row: data, missingColumn: false }
+    }
+
+    // Fallback: case-insensitive match (URLs are typed by hand, e.g. /SindhuHerur
+    // vs stored `sindhuherur`). Only reached when the exact lookups found nothing.
+    const bare = raw.replace(/^@+/, '').replace(/[\\%_]/g, m => `\\${m}`)
+    for (const pattern of [bare, `@${bare}`]) {
+      let query = supabase
+        .from('therapists')
+        .select(columns)
+        .ilike('username', pattern)
+      if (tenant.id === 'us') query = query.eq('is_active', true).eq('is_profile_complete', true)
+      const { data, error } = await query.limit(1).maybeSingle()
+      if (error) {
+        console.error('[profile lookup] ilike query failed', { tenant: tenant.id, pattern, error })
+        if (error.code === '42703') return { row: null, missingColumn: true }
+      }
+      if (data) return { row: data, missingColumn: false }
+    }
+    return { row: null, missingColumn: false }
+  }
+
+  const firstTry = await findTherapist(pageColumns)
+  let therapist = firstTry.row
+  if (!therapist && firstTry.missingColumn && pageColumns !== THERAPIST_PAGE_COLUMNS_US) {
+    console.warn(
+      '[profile lookup] therapists table is missing optional columns (tagline / approach_text / education / certifications); retrying without them'
+    )
+    therapist = (await findTherapist(THERAPIST_PAGE_COLUMNS_US)).row
   }
 
   if (!therapist) notFound()
